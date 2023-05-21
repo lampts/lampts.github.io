@@ -34,3 +34,8 @@ social: true  # includes social icons at the bottom of the page
 * Built, led, and drove trueID product suite for the financial and banking industry, at more than a million revenue scale.
 * Built state-of-the-art NLP algorithm for social listening and fake news detection, the core engine of Viettel REPUTA, won 1st place in the ByteDance cup in 2019, Topic Relevant Scoring for Sentiment Analysis at Sentifi AG
 * Built and applied data science pipeline for marketing, and business operation platform at the leading game company
+
+**Experience**
+* Business Analyst, FPT SoftwareLead Data Scientist, Viettel, Sentifi AG, and VNG Corp
+* Senior AI Product Manager and Co-founder, TrueID a leading digital identity platform and eKYC. - ML/DL/AI Consultant/Advisor/Speaker, Vietnam DS group
+* Entrepreneur and startup founder, saigonapps
