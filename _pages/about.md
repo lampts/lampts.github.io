@@ -2,26 +2,35 @@
 layout: about
 title: about
 permalink: /
-subtitle: <a href='#'>Affiliations</a>. Address. Contacts. Moto. Etc.
+subtitle: <a href='#'>Data Science | AI/ML</a>. HCMC. laampt@gmail.com.
 
 profile:
   align: right
   image: prof_pic.jpg
   image_circular: false # crops the image to make it circular
   address: >
-    <p>555 your office number</p>
-    <p>123 your address street</p>
-    <p>Your City, State 12345</p>
+    <p>(+84)904165673</p>
+    <p>Vietnam, HCMC, 70000</p>
 
-news: true  # includes a list of news items
-latest_posts: true  # includes a list of the newest posts
-selected_papers: true # includes a list of papers marked as "selected={true}"
+news: false  # includes a list of news items
+latest_posts: false  # includes a list of the newest posts
+selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true  # includes social icons at the bottom of the page
 ---
-This will be updated for lampt.
+**Data Science Manager**
+* 15+ years of experience in the ICT industry, with a focus on big-scale projects in fintech, telco, software, gaming, payment, and marketing.
+* Proven track record of success in leading and managing data science teams, developing and implementing data-driven solutions, and driving business results.
+* Expertise in data mining, business intelligence, machine learning, deep learning, and big data technology.
+* Extensive experience in building and applying data science pipelines for marketing, business operations, and fraud detection.
+* Strong leadership, communication, and interpersonal skills.
+* Passion for data science and a commitment to continuous learning.
 
-Write your biography here. Tell the world about yourself. Link to your favorite [subreddit](http://reddit.com). You can put a picture in, too. The code is already in, just name your picture `prof_pic.jpg` and put it in the `img/` folder.
+**Awards and Honors**
+* WSDM 2019 Cup Winner for Fake News Detection
+* Semi-finalist in Analytic Cup CIKM 2017, 2018 (rank 4th/8th)
+* Kaggle Master
 
-Put your address / P.O. box / other info right below your picture. You can also disable any of these elements by editing `profile` property of the YAML header of your `_pages/about.md`. Edit `_bibliography/papers.bib` and Jekyll will render your [publications page](/al-folio/publications/) automatically.
-
-Link to your social media connections, too. This theme is set up to use [Font Awesome icons](http://fortawesome.github.io/Font-Awesome/) and [Academicons](https://jpswalsh.github.io/academicons/), like the ones below. Add your Facebook, Twitter, LinkedIn, Google Scholar, or just disable all of them.
+**Career Highlights**
+* Built, led, and drove trueID product suite for the financial and banking industry, at more than a million revenue scale.
+* Built state-of-the-art NLP algorithm for social listening and fake news detection, the core engine of Viettel REPUTA, won 1st place in the ByteDance cup in 2019, Topic Relevant Scoring for Sentiment Analysis at Sentifi AG
+* Built and applied data science pipeline for marketing, and business operation platform at the leading game company
