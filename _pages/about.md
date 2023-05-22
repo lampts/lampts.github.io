@@ -9,7 +9,7 @@ profile:
   image: prof_pic.jpg
   image_circular: false # crops the image to make it circular
   address: >
-    <p>(+84)904165673</p>
+    <p>(+84) phone</p>
     <p>Vietnam, HCMC, 70000</p>
 
 news: false  # includes a list of news items
@@ -37,5 +37,6 @@ social: true  # includes social icons at the bottom of the page
 
 **Experience**
 * Business Analyst, FPT SoftwareLead Data Scientist, Viettel, Sentifi AG, and VNG Corp
-* Senior AI Product Manager and Co-founder, TrueID a leading digital identity platform and eKYC. - ML/DL/AI Consultant/Advisor/Speaker, Vietnam DS group
+* Senior AI Product Manager and Co-founder, TrueID a leading digital identity platform and eKYC.
+* ML/DL/AI Consultant/Advisor/Speaker/Coach, Vietnam DS group
 * Entrepreneur and startup founder, saigonapps
