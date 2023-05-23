@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle: <a href='#'>Data Science | AI/ML</a>. HCMC. laampt@gmail.com.
+subtitle: <a href='#'>Data Science | AI/MLs | Products /a>. HCMC. laampt@gmail.com.
 
 profile:
   align: right
@@ -17,7 +17,7 @@ latest_posts: false  # includes a list of the newest posts
 selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true  # includes social icons at the bottom of the page
 ---
-**Data Science Manager**
+**Data Science Manager | Head of AI Product R&D**
 * 15+ years of experience in the ICT industry, with a focus on big-scale projects in fintech, telco, software, gaming, payment, and marketing.
 * Proven track record of success in leading and managing data science teams, developing and implementing data-driven solutions, and driving business results.
 * Expertise in data mining, business intelligence, machine learning, deep learning, and big data technology.
