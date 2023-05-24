@@ -2,14 +2,14 @@
 layout: about
 title: about
 permalink: /
-subtitle: <a href='#'>Data Science | AI/MLs | Products /a>. HCMC. laampt@gmail.com.
+subtitle: <a href='#'>Data Science | AI/MLs | Products /a>. HCMC. 
 
 profile:
   align: right
   image: prof_pic.jpg
   image_circular: false # crops the image to make it circular
   address: >
-    <p>(+84) phone</p>
+    <p>laampt@gmail.com.</p>
     <p>Vietnam, HCMC, 70000</p>
 
 news: false  # includes a list of news items
