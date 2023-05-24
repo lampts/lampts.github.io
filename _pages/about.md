@@ -27,18 +27,19 @@ social: true  # includes social icons at the bottom of the page
 
 **Awards and Honors**
 * WSDM 2019 Cup Winner for Fake News Detection (rank 1)
-* AICOVID115M Cup 2nd place of first stage for cough classification
+* AICOVID115M Cup 2nd place of first stage for cough classification in 2021
 * Semi-finalist in Analytic Cup CIKM 2017 for scoring product titles at Lazada (rank 8th), CIKM 2018 for question matching (rank 4th)
 * Kaggle Master
 
 **Career Highlights**
-* Built, led, and drove trueID product suite for the financial and banking industry, at more than a million revenue scale.
+* Built, led, and drove trueID product suite for the financial and banking industry, one of the leading eKYC in Vietnam.
 * Built state-of-the-art NLP algorithm for social listening and fake news detection, the core engine of Viettel REPUTA, won 1st place in the ByteDance cup in 2019, Topic Relevant Scoring for Sentiment Analysis at Sentifi AG
 * Built and applied data science pipeline for marketing, and business operation platform at the leading game company
 * Gave a talk at WorldBank IFC FIDN 2020, TopDev 2019, Pydata Singapore 2016, Vietnamwork Tech Expo 2016 
 
 **Experience**
-* Business Analyst, FPT SoftwareLead Data Scientist, Viettel, Sentifi AG, and VNG Corp
+* Business Analyst, FPT Software
+* Lead Data Scientist, Viettel, Sentifi AG, and VNG Corp
 * Senior AI Product Manager and Co-founder, TrueID a leading digital identity platform and eKYC.
 * ML/DL/AI Consultant/Advisor/Speaker/Coach, Vietnam DS group
 * Entrepreneur and startup founder, saigonapps
