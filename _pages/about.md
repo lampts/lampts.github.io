@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle: <a href='#'>Data Science | AI/MLs | Products /a>. HCMC. 
+subtitle: <a href='#'>Data Science | AI/MLs | Products </a>. 
 
 profile:
   align: right
@@ -26,14 +26,16 @@ social: true  # includes social icons at the bottom of the page
 * Passion for data science and a commitment to continuous learning.
 
 **Awards and Honors**
-* WSDM 2019 Cup Winner for Fake News Detection
-* Semi-finalist in Analytic Cup CIKM 2017, 2018 (rank 4th/8th)
+* WSDM 2019 Cup Winner for Fake News Detection (rank 1)
+* AICOVID115M Cup 2nd place of first stage for cough classification
+* Semi-finalist in Analytic Cup CIKM 2017 for scoring product titles at Lazada (rank 8th), CIKM 2018 for question matching (rank 4th)
 * Kaggle Master
 
 **Career Highlights**
 * Built, led, and drove trueID product suite for the financial and banking industry, at more than a million revenue scale.
 * Built state-of-the-art NLP algorithm for social listening and fake news detection, the core engine of Viettel REPUTA, won 1st place in the ByteDance cup in 2019, Topic Relevant Scoring for Sentiment Analysis at Sentifi AG
 * Built and applied data science pipeline for marketing, and business operation platform at the leading game company
+* Gave a talk at WorldBank IFC FIDN 2020, TopDev 2019, Pydata Singapore 2016, Vietnamwork Tech Expo 2016 
 
 **Experience**
 * Business Analyst, FPT SoftwareLead Data Scientist, Viettel, Sentifi AG, and VNG Corp
