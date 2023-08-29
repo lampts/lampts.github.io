@@ -9,7 +9,7 @@ profile:
   image: prof_pic.jpg
   image_circular: false # crops the image to make it circular
   address: >
-    <p>laampt@gmail.com.</p>
+    <p>2543@lampt.org.</p>
     <p>Vietnam, HCMC, 70000</p>
 
 news: false  # includes a list of news items
