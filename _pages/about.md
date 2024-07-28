@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle: <a href='#'>Data Science | AI/MLs | Products </a>. 
+subtitle: <a href='#'>Big/Small Data | AI/ML/LLMs | Products </a>. 
 
 profile:
   align: right
@@ -18,7 +18,8 @@ selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true  # includes social icons at the bottom of the page
 ---
 **Data/Product Science Manager | Head of AI Product R&D | AI Tech founder**
-* 15+ years of experience in the ICT industry, with a focus on big-scale projects in fintech, telco, software, gaming, payment, and marketing. VNG, Sentifi, Viettel, FPT.
+* Built an AI product generating over $1M in annual recurring revenue
+* Over 15 years of diversified experience in the ICT industry, focusing on large-scale projects across fintech, telecom, software, gaming, payment/banking, and marketing sectors, with roles in corporations, startups, unicorns, and tech giants like Cake by VPB, VNG, Sentifi, Viettel, and FPT. 
 * Proven track record of success in leading and managing data science teams, developing and implementing data-driven solutions, and driving business results.
 * Expertise in data mining, business intelligence, machine learning, deep learning, and big data technology.
 * Extensive experience in building and applying data science pipelines for marketing, business operations, and fraud detection.
