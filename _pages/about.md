@@ -17,7 +17,7 @@ latest_posts: false  # includes a list of the newest posts
 selected_papers: false # includes a list of papers marked as "selected={true}"
 social: true  # includes social icons at the bottom of the page
 ---
-I am building nextgen AI bank for the largest digital bank in Vietnam in 2024.
+I am building nextgen AI bank for the largest digital bank in Vietnam.
 
 I’ve built AI products with over $1M in ARR and 10M+ users for B2B2C at Vietnam's first tech unicorn from 2019 to 2023.
 
