@@ -23,7 +23,7 @@ I’ve built AI products with over $1M in ARR and 10M+ users for B2B2C at Vietna
 
 I delivered a keynote on digital identity platforms at IFC World Bank FIDN in 2020.
 
-I won the WSDM Analytics Cup for deep fake detection in 2019.
+I won the WSDM Analytics Cup for fake news detection in 2019.
 
 I work with vast amounts of data and numbers daily.
 
