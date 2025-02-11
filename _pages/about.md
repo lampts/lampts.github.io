@@ -28,3 +28,24 @@ I won the WSDM Analytics Cup for fake news detection in 2019.
 I work with vast amounts of data and numbers daily.
 
 I’m a lifelong learner with a passion for growth. ❤️
+
+Show me your AI, don't tell.
+> I craft new paths from sums and signs,
+> A builder of AI for changing times.
+> From unicorn halls (2019 to 2023),
+> I shaped products—ten million strong—set free.
+
+> Their worth soared past one million each year,
+> A B2B2C story, loud and clear.
+> A keynote shared at IFC’s big stage,
+> WSDM Cup won for fake news on the page.
+
+> Now I forge the nextgen AI bank
+> For Vietnam’s largest—no steps to shrink.
+> In data and numbers, I find my spark,
+> Actionable goals lighting up the dark.
+
+> I learn and grow with eyes open wide,
+> My passion leads where insight can guide.
+> Yet the truest formula I bestow:
+> Happiness = P(learning, impact, freedom | ego).
