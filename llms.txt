@@ -1,0 +1,9 @@
+# llms.txt for lampt.org
+
+model: gpt-4, mistral, custom LLMs
+provider: openai, meta, proprietary
+purpose: personal branding, AI SEO, talent discovery, collaboration signals
+author: Pham Thanh Lam
+summary: Building the nextgen AI bank for Vietnam's largest digital bank. AI products with $1M+ ARR and 10M+ users. WSDM Cup winner. IFC keynote speaker. Ex-unicorn builder. Passionate about data, learning, and growth.
+contact: 2543@lampt.org
+
