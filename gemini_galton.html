@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galton Board Simulation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        canvas {
+            border: 1px solid #333;
+            display: block; /* Remove extra space below canvas */
+        }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: sans-serif;
+        }
+         .controls label {
+            margin-right: 10px;
+         }
+         .controls input[type="range"] {
+             width: 100px;
+         }
+         .controls button {
+            margin-top: 5px;
+            padding: 5px 10px;
+         }
+
+    </style>
+</head>
+<body>
+    <canvas id="galtonCanvas"></canvas>
+    <div class="controls">
+        <label for="dropRate">Drop Rate (balls/sec): <span id="dropRateValue">5</span></label>
+        <input type="range" id="dropRate" min="1" max="20" value="5">
+        <br>
+        <button id="clearBalls">Clear Balls</button>
+        <p>Balls Dropped: <span id="ballCount">0</span></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Matter.js Module Aliases ---
+            const Engine = Matter.Engine,
+                  Render = Matter.Render,
+                  Runner = Matter.Runner,
+                  Bodies = Matter.Bodies,
+                  Composite = Matter.Composite,
+                  Common = Matter.Common; // Use Common for random numbers if needed
+
+            // --- Simulation Constants ---
+            const canvasWidth = 550; // Adjusted for better fitting
+            const canvasHeight = 700;
+            const wallThickness = 20;
+            const pegRadius = 4;
+            const pegRows = 15;
+            const pegGapY = 28; // Vertical distance between peg centers
+            const ballRadius = 5;
+            const numBins = 15; // Should ideally be odd for a central peak
+            const binWallHeight = 80;
+            const binWallThickness = 6; // Physical dividers
+            const dropAreaWidth = 10; // Narrow area at the top center
+            const topMargin = 50; // Space above first peg row
+            const bottomMargin = binWallHeight + wallThickness + 10; // Space below last peg row to bins
+
+            // Derived calculations
+            const usableWidth = canvasWidth - 2 * wallThickness;
+            const pegStartY = topMargin;
+            const pegGapX = usableWidth / (numBins + 1); // Horizontal gap based on bins + edges
+            const binWidth = usableWidth / numBins;
+            const groundY = canvasHeight - wallThickness / 2;
+            const binDividersY = groundY - wallThickness / 2 - binWallHeight / 2;
+
+            // Color Scheme
+            const structureColor = '#CCCC00'; // Yellow for walls, ground, dividers
+            const pegColor = '#CC0000';       // Red for pegs
+            const ballColor = '#333333';      // Dark grey/black for balls
+            const backgroundColor = '#F5F5F5'; // Light background
+
+            // --- Engine Setup ---
+            const engine = Engine.create();
+            engine.gravity.y = 1.0; // Standard gravity
+
+            const canvas = document.getElementById('galtonCanvas');
+            const render = Render.create({
+                canvas: canvas,
+                engine: engine,
+                options: {
+                    width: canvasWidth,
+                    height: canvasHeight,
+                    wireframes: false, // Render solid shapes
+                    background: backgroundColor,
+                    pixelRatio: window.devicePixelRatio // Improve rendering sharpness
+                }
+            });
+
+            // --- Create World Elements ---
+            const worldElements = [];
+
+            // Walls and Ground
+            const ground = Bodies.rectangle(canvasWidth / 2, groundY, canvasWidth, wallThickness, {
+                isStatic: true,
+                render: { fillStyle: structureColor },
+                label: 'ground'
+            });
+            const leftWall = Bodies.rectangle(wallThickness / 2, canvasHeight / 2, wallThickness, canvasHeight, {
+                isStatic: true,
+                render: { fillStyle: structureColor },
+                label: 'leftWall'
+            });
+            const rightWall = Bodies.rectangle(canvasWidth - wallThickness / 2, canvasHeight / 2, wallThickness, canvasHeight, {
+                isStatic: true,
+                render: { fillStyle: structureColor },
+                label: 'rightWall'
+            });
+            worldElements.push(ground, leftWall, rightWall);
+
+            // Top funnel guides (optional but helps center the drop)
+            const funnelAngle = Math.PI / 6; // 30 degrees
+            const funnelLength = 60;
+            const funnelThickness = 5;
+            const funnelDropPointX = canvasWidth / 2;
+            const funnelDropPointY = topMargin / 3;
+
+            const leftFunnel = Bodies.rectangle(
+                funnelDropPointX - funnelLength / 2 * Math.cos(funnelAngle) - dropAreaWidth / 2,
+                funnelDropPointY + funnelLength / 2 * Math.sin(funnelAngle),
+                funnelLength, funnelThickness, {
+                    isStatic: true,
+                    angle: -funnelAngle,
+                    render: { fillStyle: structureColor },
+                    label: 'leftFunnel'
+            });
+            const rightFunnel = Bodies.rectangle(
+                funnelDropPointX + funnelLength / 2 * Math.cos(funnelAngle) + dropAreaWidth / 2,
+                funnelDropPointY + funnelLength / 2 * Math.sin(funnelAngle),
+                funnelLength, funnelThickness, {
+                    isStatic: true,
+                    angle: funnelAngle,
+                    render: { fillStyle: structureColor },
+                    label: 'rightFunnel'
+            });
+             worldElements.push(leftFunnel, rightFunnel);
+
+
+            // Pegs (Staggered Grid, full width)
+            for (let row = 0; row < pegRows; row++) {
+                const numPegsInRow = Math.floor(usableWidth / pegGapX); // Number of pegs based on gap
+                const isOffsetRow = row % 2 !== 0; // Offset every other row
+                const rowY = pegStartY + row * pegGapY;
+                const startX = wallThickness + pegGapX / (isOffsetRow ? 1 : 2); // Center the row
+
+                for (let col = 0; col < (isOffsetRow ? numPegsInRow -1 : numPegsInRow) ; col++) {
+                    const pegX = startX + col * pegGapX;
+                    // Ensure peg isn't too close to the walls
+                    if (pegX > wallThickness + pegRadius && pegX < canvasWidth - wallThickness - pegRadius) {
+                        const peg = Bodies.circle(pegX, rowY, pegRadius, {
+                            isStatic: true,
+                            restitution: 0.4, // Controls bounciness
+                            friction: 0.01,   // Low friction for smoother rolling/bouncing
+                            render: { fillStyle: pegColor },
+                            label: 'peg'
+                        });
+                        worldElements.push(peg);
+                    }
+                }
+            }
+
+            // Bin Dividers (Physical)
+            for (let i = 1; i < numBins; i++) {
+                const dividerX = wallThickness + i * binWidth;
+                const binDivider = Bodies.rectangle(dividerX, binDividersY, binWallThickness, binWallHeight, {
+                    isStatic: true,
+                    render: { fillStyle: structureColor },
+                    label: 'divider'
+                });
+                worldElements.push(binDivider);
+            }
+
+            // Add all static elements to the world
+            Composite.add(engine.world, worldElements);
+
+            // --- Ball Dropping ---
+            let dropIntervalId = null;
+            let currentDropRate = 5; // balls per second
+            let ballCounter = 0;
+            const ballCountElement = document.getElementById('ballCount');
+            const dropRateSlider = document.getElementById('dropRate');
+            const dropRateValueElement = document.getElementById('dropRateValue');
+            const clearBallsButton = document.getElementById('clearBalls');
+
+            const dropBall = () => {
+                // Drop from slightly randomized x-position in the narrow center top
+                const dropX = canvasWidth / 2 + (Math.random() - 0.5) * dropAreaWidth;
+                const dropY = topMargin / 4; // Drop above the funnel
+
+                const ball = Bodies.circle(dropX, dropY, ballRadius, {
+                    restitution: 0.5, // Bounciness off pegs/walls
+                    friction: 0.005,  // Low friction
+                    density: 0.008,   // Affects how "heavy" the ball feels
+                    render: { fillStyle: ballColor },
+                    label: 'ball'
+                });
+                Composite.add(engine.world, ball);
+                ballCounter++;
+                ballCountElement.textContent = ballCounter;
+            };
+
+            const updateDropInterval = (rate) => {
+                if (dropIntervalId) {
+                    clearInterval(dropIntervalId);
+                }
+                if (rate > 0) {
+                    const intervalMs = 1000 / rate;
+                    dropIntervalId = setInterval(dropBall, intervalMs);
+                }
+                dropRateValueElement.textContent = rate;
+            };
+
+            // Initial drop interval setup
+            currentDropRate = parseInt(dropRateSlider.value, 10);
+            updateDropInterval(currentDropRate);
+
+            // Control Event Listeners
+            dropRateSlider.addEventListener('input', (event) => {
+                currentDropRate = parseInt(event.target.value, 10);
+                updateDropInterval(currentDropRate);
+            });
+
+            clearBallsButton.addEventListener('click', () => {
+                 // Remove only balls, keep static elements
+                const ballsToRemove = Composite.allBodies(engine.world).filter(body => body.label === 'ball');
+                Composite.remove(engine.world, ballsToRemove);
+                ballCounter = 0;
+                ballCountElement.textContent = ballCounter;
+            });
+
+            // --- Cleanup (Remove balls that settle or go out of bounds - though walls should prevent latter) ---
+            // Optional: Add a check to remove balls that are resting at the bottom to improve long-term performance
+            // Matter.Events.on(engine, 'beforeUpdate', () => {
+            //     const bodies = Composite.allBodies(engine.world);
+            //     for (let i = 0; i < bodies.length; i++) {
+            //         const body = bodies[i];
+            //         if (body.label === 'ball' && body.position.y > canvasHeight - bottomMargin + 20) { // Check if well into the bin area
+            //              // Could add velocity check: && Matter.Vector.magnitude(body.velocity) < 0.1
+            //              // Composite.remove(engine.world, body); // Use with caution, might clear too fast
+            //         }
+            //     }
+            // });
+
+            // --- Run the Simulation ---
+            Render.run(render);
+            const runner = Runner.create();
+            Runner.run(runner, engine);
+
+            // --- Make engine accessible for debugging ---
+            // window.engine = engine;
+            // window.render = render;
+            // window.Composite = Composite;
+        });
+    </script>
+</body>
+</html>
