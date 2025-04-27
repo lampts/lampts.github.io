@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Book of Answers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Using fonts from the "Sonnet" version -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=EB+Garamond:wght@400;500;700&display=swap" rel="stylesheet"> <!-- Added 700 weight for Garamond -->
+
+    <style>
+        /* style.css content starts here */
+        :root {
+            /* Adjusted to match Sonnet version colors where appropriate */
+            --background-color: #000;
+            --title-font: 'Cinzel', serif;
+            --body-font: 'EB Garamond', serif;
+            --primary-text-color: #f0f0f0;
+            --subtitle-color: #b0b0b0;
+            --answer-bg-color: #fbf3b5; /* Approximation from SVG */
+            --answer-text-color: #3a2c1d;
+            --stamp-bg-color: rgba(128, 0, 0, 0.2);
+            --stamp-text-color: rgba(128, 0, 0, 0.8);
+            --glow-color: rgba(255, 255, 255, 0.3);
+            --orb-glow-color: rgba(173, 216, 230, 0.3); /* Light blue glow for orb */
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--primary-text-color);
+            font-family: var(--body-font); /* Default to EB Garamond */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        #app {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Screen Management - Keep existing mechanism */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.7s ease-in-out, visibility 0s linear 0.7s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .screen.active {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.7s ease-in-out;
+        }
+
+        /* Landing Screen - Adjusted fonts/colors */
+        #landing-screen {
+            justify-content: space-around; /* Space out elements vertically */
+        }
+
+        .title {
+            font-family: var(--title-font);
+            font-size: clamp(2.5rem, 6vw, 3rem); /* Sonnet size */
+            color: var(--primary-text-color); /* Sonnet h1 color */
+            text-shadow: 0 0 10px var(--glow-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-family: var(--body-font); /* Sonnet h2 font */
+            font-size: clamp(1.2rem, 3vw, 1.5rem); /* Sonnet size */
+            font-weight: 400;
+            color: var(--subtitle-color); /* Sonnet h2 color */
+            opacity: 1; /* Remove previous opacity */
+            margin-top: 0;
+            margin-bottom: 2rem; /* Sonnet margin */
+        }
+
+        #introtext {
+            font-family: var(--body-font); /* Ensure consistent font */
+            font-size: clamp(1rem, 2.5vw, 1.2rem); /* Sonnet size */
+            line-height: 1.8; /* Sonnet line height */
+            font-weight: 400;
+            opacity: 0; /* Start hidden for fade-in */
+            color: var(--primary-text-color); /* Match body text */
+            margin-top: 2rem; /* Sonnet margin */
+            max-width: 90%;
+            animation: fadeIn 2s ease-in-out 0.5s forwards; /* Keep existing fade */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 0.9; }
+        }
+
+        /* Crystal Ball - Use Sonnet's base style + keep canvas */
+        #crystal-ball-container {
+            position: relative;
+            width: clamp(200px, 40vmin, 250px); /* Sonnet size */
+            height: clamp(200px, 40vmin, 250px);
+            margin: 0 auto; /* Center horizontally */
+            cursor: pointer;
+        }
+
+        #crystal-ball {
+            width: 100%;
+            height: 100%;
+            /* Sonnet base gradient */
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), rgba(173, 216, 230, 0.2) 70%);
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden; /* Important for clipping canvas */
+            /* Sonnet shadow */
+            box-shadow: 0 0 30px var(--orb-glow-color);
+            /* Keep interaction pulse effect */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #crystal-ball:hover {
+            transform: scale(1.03);
+             box-shadow: 0 0 40px var(--orb-glow-color); /* Slightly increased glow */
+        }
+
+        #crystal-ball.clicked {
+            animation: pulse 0.5s ease-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 50px var(--orb-glow-color); }
+            100% { transform: scale(1); }
+        }
+
+        /* Style for the canvas */
+        #crystal-canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            z-index: 1;
+            opacity: 0.7; /* Blend canvas effect slightly */
+        }
+
+        /* Keep reflection if desired, or remove if Sonnet style is preferred */
+        .reflection {
+             display: none; /* Hide previous reflection to match Sonnet */
+        }
+
+        /* Countdown Overlay - Keep previous style */
+        #countdown-overlay {
+            background-color: rgba(0, 0, 0, 0.8); /* Sonnet background */
+            z-index: 20; /* Above answer screen potentially */
+            font-family: var(--title-font); /* Use Cinzel */
+            font-size: clamp(5rem, 20vw, 8rem); /* Adjusted size */
+            color: #ffffff;
+            /* Keep existing screen transition */
+        }
+
+        #countdown-content {
+            position: relative;
+        }
+
+        #countdown-number {
+             /* Use styles directly on #countdown-overlay or its text content */
+             opacity: 0;
+             transform: scale(0.8);
+             animation: countdownAnim 1s ease-out forwards;
+        }
+
+         @keyframes countdownAnim {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+
+        /* --- START: Updated Answer Screen Styles based on Sonnet --- */
+
+        #answer-screen {
+            /* Fade is handled by .screen.active */
+            /* Sonnet background overlay */
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 10; /* Ensure it's above landing */
+        }
+
+        /* Renamed .parchment to .answer-container */
+        .answer-container {
+            /* Use Sonnet's SVG background for paper texture */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600"><filter id="paper" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise" /><feDiffuseLighting in="noise" lighting-color="rgb(251, 239, 181)" surfaceScale="2" result="diffLight"><feDistantLight azimuth="45" elevation="60" /></feDiffuseLighting></filter><rect width="100%" height="100%" filter="url(%23paper)" /></svg>');
+            color: var(--answer-text-color);
+            padding: 40px; /* Sonnet padding */
+            border-radius: 10px; /* Sonnet radius */
+            /* Sonnet shadow using approximated paper color */
+            box-shadow: 0 0 50px rgba(251, 239, 181, 0.2);
+            width: 80%; /* Sonnet width */
+            max-width: 500px; /* Sonnet max-width */
+            min-height: auto; /* Remove previous min-height if not needed */
+            position: relative; /* For absolute positioning of stamp */
+            display: flex; /* Use flex for internal layout if needed */
+            flex-direction: column;
+            align-items: center;
+            /* Transition handled by parent #answer-screen.active */
+        }
+
+        .answer-content {
+            width: 100%;
+        }
+
+        #answer-text {
+            font-family: var(--body-font); /* EB Garamond */
+            font-size: clamp(1.5rem, 4vw, 2rem); /* Sonnet responsive size */
+            color: var(--answer-text-color); /* Sonnet color */
+            text-align: center;
+            padding: 20px 20px 5px 20px; /* Reduced bottom padding slightly */
+            position: relative;
+            line-height: 1.5; /* Adjusted line height slightly for two lines */
+            width: 100%;
+            /* Removed default font-weight, now controlled by strong tag */
+            margin-bottom: 50px; /* Adjusted margin if needed */
+        }
+
+        /* Ensure strong tag uses a bolder weight */
+        #answer-text strong {
+            font-weight: 700; /* Explicitly set bold weight */
+        }
+
+        /* ****** Updated CSS RULE for Vietnamese translation ****** */
+        .vietnamese-translation {
+            display: inline-block; /* Or block if more spacing needed */
+            margin-top: 0.5em;     /* Space between En and Vi */
+            font-family: var(--body-font); /* Use normal font (EB Garamond) */
+            font-size: 0.8em;      /* Make it slightly smaller */
+            font-weight: 400;      /* Ensure Normal weight */
+            color: var(--answer-text-color); /* Same color as answer... */
+            opacity: 0.85;         /* ...but slightly less prominent */
+            line-height: 1.4;      /* Adjust line height for the smaller text */
+        }
+
+        /* NEW: Stamp element styling */
+        #stamp {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            background-color: var(--stamp-bg-color);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column; /* Stack lines */
+            align-items: center;
+            justify-content: center;
+            font-family: var(--title-font); /* Cinzel */
+            font-size: 0.7rem; /* Sonnet size */
+            color: var(--stamp-text-color);
+            transform: rotate(-15deg); /* Sonnet rotation */
+            line-height: 1.2; /* Sonnet line height */
+            padding: 5px;
+            text-align: center;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3); /* Subtle shadow */
+        }
+        #stamp small {
+             font-size: 0.6rem; /* Smaller font for date/time */
+             margin-top: 3px;
+             display: block; /* Ensure line breaks work */
+        }
+
+
+        /* Updated Ask Again link styling */
+        #ask-again {
+            font-family: var(--body-font); /* EB Garamond */
+            text-decoration: none;
+            color: var(--subtitle-color); /* Sonnet color */
+            font-size: 1.2rem; /* Sonnet size */
+            margin-top: 30px; /* Sonnet margin */
+            padding: 5px 10px;
+            border-radius: 3px;
+            transition: color 0.3s ease, text-shadow 0.3s ease; /* Sonnet transition */
+            z-index: 5;
+            position: relative;
+        }
+
+        #ask-again:hover {
+            color: #ffffff; /* Sonnet hover color */
+            text-shadow: 0 0 5px var(--glow-color); /* Sonnet hover shadow */
+            text-decoration: none; /* Keep no underline */
+        }
+
+        /* --- END: Updated Answer Screen Styles --- */
+
+
+        /* Responsive Adjustments - Incorporate Sonnet's breakpoints/styles */
+        @media (max-width: 600px) {
+            .title { font-size: 2rem; }
+            .subtitle { font-size: 1.2rem; }
+            #introtext { font-size: 1rem; }
+            #crystal-ball-container { width: 200px; height: 200px; }
+            .answer-container { width: 90%; padding: 30px; }
+            #answer-text { font-size: 1.5rem; padding: 15px 15px 5px 15px; margin-bottom: 50px;}
+             .vietnamese-translation { font-size: 0.75em; } /* Adjust Vi size */
+            #stamp { width: 65px; height: 65px; font-size: 0.6rem; bottom: 15px; right: 15px;}
+            #stamp small { font-size: 0.5rem;}
+            #ask-again { font-size: 1.1rem; margin-top: 25px;}
+            #countdown-overlay { font-size: clamp(4rem, 18vw, 6rem); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+          #crystal-canvas { display: none; } /* Hide complex canvas animation */
+        }
+
+    </style>
+
+</head>
+<body>
+    <div id="app">
+        <!-- Landing Screen -->
+        <div id="landing-screen" class="screen active">
+            <h1 class="title">The Book of Answers</h1>
+            <h2 class="subtitle">Ask anything you need to know</h2>
+
+            <div id="crystal-ball-container">
+                <div id="crystal-ball">
+                    <canvas id="crystal-canvas"></canvas>
+                    <!-- Removed reflection div -->
+                </div>
+            </div>
+
+            <h3 id="introtext">
+                Think of a question you wish to ask<br>
+                [It should be a serious question, not just for fun]<br><br>
+                Close your eyes<br>
+                and meditate for a few seconds<br><br>
+                Click anywhere on the crystal ball when you're ready<br>
+                The Book will answer for you<br>
+                it may take a few seconds
+            </h3>
+        </div>
+
+        <!-- Countdown Overlay -->
+        <div id="countdown-overlay" class="screen">
+            <div id="countdown-content">
+                 <span id="countdown-number">3</span>
+            </div>
+        </div>
+
+        <!-- ****** MODIFIED Answer Screen ****** -->
+        <div id="answer-screen" class="screen">
+            <!-- Changed class from .parchment -->
+            <div class="answer-container">
+                 <div id="answer-text">The answer awaits...</div>
+                 <div id="stamp">
+                     <!-- Content set by JS -->
+                 </div>
+            </div>
+            <!-- Ask Again link is outside container, but inside screen -->
+             <a href="#" id="ask-again">Ask Again</a>
+        </div>
+         <!-- ****** END MODIFIED Answer Screen ****** -->
+
+    </div>
+
+    <script>
+        // ****** answers array structure with VIETNAMESE TRANSLATIONS ******
+        const answers = [
+            { en: "It will require significant effort", vi: "Sẽ cần nỗ lực đáng kể." },
+            { en: "A year from now it won't matter", vi: "Một năm nữa chuyện đó sẽ không còn quan trọng." },
+            { en: "Absolutely not", vi: "Tuyệt đối không." },
+            { en: "Accept changing your habits", vi: "Hãy chấp nhận thay đổi thói quen." },
+            { en: "Act as if it were already real", vi: "Hãy hành động như thể nó đã là sự thật." },
+            { en: "Adopt a risk-taking attitude", vi: "Hãy có thái độ chấp nhận rủi ro." },
+            { en: "Allow yourself to rest first", vi: "Hãy cho phép bản thân nghỉ ngơi trước đã." },
+            { en: "Approach with caution", vi: "Hãy tiếp cận một cách thận trọng." },
+            { en: "Ask your father", vi: "Hãy hỏi cha của bạn." },
+            { en: "Ask your mother", vi: "Hãy hỏi mẹ của bạn." },
+            { en: "Support will make your progress successful", vi: "Sự hỗ trợ sẽ giúp bạn tiến bộ thành công." },
+            { en: "Avoid the first solution", vi: "Hãy tránh giải pháp đầu tiên." },
+            { en: "Be playfully certain about it", vi: "Hãy vui tươi và chắc chắn về nó." },
+            { en: "Be more generous", vi: "Hãy hào phóng hơn." },
+            { en: "Be patient", vi: "Hãy kiên nhẫn." },
+            { en: "Be practical", vi: "Hãy thực tế." },
+            { en: "Take a chance", vi: "Hãy nắm lấy cơ hội." },
+            { en: "Better to wait", vi: "Tốt hơn là nên chờ đợi." },
+            { en: "Collaboration will be key", vi: "Sự hợp tác sẽ là chìa khóa." },
+            { en: "Consider it an opportunity", vi: "Hãy xem đó là một cơ hội." },
+            { en: "Count to 10; Ask again", vi: "Đếm đến 10; Hỏi lại lần nữa." },
+            { en: "Deal with it later", vi: "Hãy giải quyết sau." },
+            { en: "Definitely", vi: "Chắc chắn rồi." },
+            { en: "Do it early", vi: "Hãy làm điều đó sớm." },
+            { en: "Don't ask any more at this time", vi: "Đừng hỏi thêm vào lúc này." },
+            { en: "Don't care", vi: "Đừng bận tâm." },
+            { en: "Don't feel pressured to act too quickly", vi: "Đừng cảm thấy áp lực phải hành động quá nhanh." },
+            { en: "Don't be ridiculous", vi: "Đừng nực cười." },
+            { en: "Don't bet on it", vi: "Đừng đặt cược vào nó." },
+            { en: "Don't doubt it", vi: "Đừng nghi ngờ điều đó." },
+            { en: "Don't forget to have fun", vi: "Đừng quên vui vẻ." },
+            { en: "Don't get carried away by your emotions", vi: "Đừng để cảm xúc cuốn đi." },
+            { en: "Don't hesitate", vi: "Đừng do dự." },
+            { en: "Don't ignore the obvious", vi: "Đừng bỏ qua điều hiển nhiên." },
+            { en: "Don't overdo it", vi: "Đừng làm quá sức." },
+            { en: "Don't wait", vi: "Đừng chờ đợi." },
+            { en: "Don't waste your time", vi: "Đừng lãng phí thời gian của bạn." },
+            { en: "Doubt it", vi: "Nghi ngờ điều đó." },
+            { en: "Enjoy the experience", vi: "Hãy tận hưởng trải nghiệm." },
+            { en: "Expect resolution", vi: "Mong đợi sự giải quyết." },
+            { en: "Explore it with cheerful curiosity", vi: "Khám phá nó với sự tò mò vui vẻ." },
+            { en: "Finish something else first", vi: "Hãy hoàn thành việc khác trước." },
+            { en: "Focus on your family life", vi: "Tập trung vào cuộc sống gia đình bạn." },
+            { en: "Follow someone else's lead", vi: "Hãy làm theo sự dẫn dắt của người khác." },
+            { en: "Follow expert advice", vi: "Hãy làm theo lời khuyên của chuyên gia." },
+            { en: "Fulfill your obligations", vi: "Hãy hoàn thành nghĩa vụ của bạn." },
+            { en: "Follow your good intentions", vi: "Hãy làm theo ý định tốt của bạn." },
+            { en: "Gentle persistence will be rewarded", vi: "Sự kiên trì nhẹ nhàng sẽ được đền đáp." },
+            { en: "Get a clearer view", vi: "Có được một cái nhìn rõ ràng hơn." },
+            { en: "Get it in writing", vi: "Hãy lấy văn bản giấy trắng mực đen." },
+            { en: "Give it everything you've got", vi: "Hãy cống hiến hết mình." },
+            { en: "If it's well done; If not, don't do it at all", vi: "Nếu làm tốt thì hãy làm; Nếu không, đừng làm gì cả." },
+            { en: "If you do as you're told", vi: "Nếu bạn làm theo những gì được bảo." },
+            { en: "If you don't resist", vi: "Nếu bạn không chống cự." },
+            { en: "Investigate and then enjoy it", vi: "Hãy điều tra và sau đó tận hưởng nó." },
+            { en: "It cannot fail", vi: "Nó không thể thất bại." },
+            { en: "It could be extraordinary", vi: "Nó có thể phi thường." },
+            { en: "It's certain", vi: "Điều đó là chắc chắn." },
+            { en: "It's insignificant", vi: "Nó không đáng kể." },
+            { en: "It's very important", vi: "Nó rất quan trọng." },
+            { en: "It's something you won't forget", vi: "Đó là điều bạn sẽ không quên." },
+            { en: "It will certainly make things interesting", vi: "Nó chắc chắn sẽ làm mọi thứ thú vị." },
+            { en: "It's uncertain", vi: "Điều đó không chắc chắn." },
+            { en: "It's worth the trouble", vi: "Nó đáng để gặp rắc rối." },
+            { en: "It may have been a deal already made", vi: "Nó có thể là một thỏa thuận đã được thực hiện." },
+            { en: "It might be difficult but you'll find value in it", vi: "Có thể sẽ khó khăn nhưng bạn sẽ tìm thấy giá trị trong đó." },
+            { en: "It seems reassuring", vi: "Nó có vẻ trấn an." },
+            { en: "It will affect how others see you", vi: "Nó sẽ ảnh hưởng đến cách người khác nhìn bạn." },
+            { en: "It will be a pleasure", vi: "Đó sẽ là một niềm vui." },
+            { en: "It will bring good luck", vi: "Nó sẽ mang lại may mắn." },
+            { en: "It will create a stir", vi: "Nó sẽ gây xôn xao." },
+            { en: "It will remain unpredictable", vi: "Nó sẽ vẫn khó đoán." },
+            { en: "It will sustain you", vi: "Nó sẽ duy trì bạn." },
+            { en: "It would be better if you focus on your work", vi: "Sẽ tốt hơn nếu bạn tập trung vào công việc." },
+            { en: "It would be inadvisable", vi: "Sẽ là không nên." },
+            { en: "It will cost you", vi: "Nó sẽ khiến bạn phải trả giá." },
+            { en: "Now is a good time to make plans", vi: "Bây giờ là thời điểm tốt để lập kế hoạch." },
+            { en: "It will be great", vi: "Sẽ rất tuyệt." },
+            { en: "It's not worth fighting for", vi: "Nó không đáng để đấu tranh." },
+            { en: "It's time for you to go", vi: "Đã đến lúc bạn phải đi." },
+            { en: "Think broadly", vi: "Hãy suy nghĩ rộng hơn." },
+            { en: "Keep it to yourself", vi: "Hãy giữ nó cho riêng mình." },
+            { en: "Laugh about it", vi: "Hãy cười về nó." },
+            { en: "Leave old solutions behind", vi: "Hãy bỏ lại các giải pháp cũ." },
+            { en: "Let it go", vi: "Hãy buông bỏ nó." },
+            { en: "Listen more carefully; Then you'll know", vi: "Hãy lắng nghe cẩn thận hơn; Rồi bạn sẽ biết." },
+            { en: "Make a list of reasons why", vi: "Lập danh sách lý do tại sao." },
+            { en: "Make a list of why not", vi: "Lập danh sách lý do tại sao không." },
+            { en: "Maybe", vi: "Có lẽ." },
+            { en: "Risks are likely", vi: "Có khả năng gặp rủi ro." },
+            { en: "Proceed", vi: "Hãy tiếp tục." },
+            { en: "Never", vi: "Không bao giờ." },
+            { en: "NO", vi: "KHÔNG." },
+            { en: "No problem", vi: "Không vấn đề gì." },
+            { en: "Not if you're alone", vi: "Không nếu bạn ở một mình." },
+            { en: "Now you can", vi: "Bây giờ bạn có thể." },
+            { en: "Only do it once", vi: "Chỉ làm một lần thôi." },
+            { en: "Others will depend on your choice", vi: "Những người khác sẽ phụ thuộc vào lựa chọn của bạn." },
+            { en: "Pay attention to details", vi: "Hãy chú ý đến các chi tiết." },
+            { en: "Perhaps when you're older", vi: "Có lẽ khi bạn lớn hơn." },
+            { en: "Prepare for surprises", vi: "Chuẩn bị cho những bất ngờ." },
+            { en: "Press to close", vi: "Nhấn để đóng lại." },
+            { en: "Proceed at a more relaxed pace", vi: "Tiến hành với tốc độ thoải mái hơn." },
+            { en: "Realize that too many choices is as difficult as too few", vi: "Nhận ra rằng quá nhiều lựa chọn cũng khó khăn như quá ít." },
+            { en: "Reconsider your approach", vi: "Xem xét lại cách tiếp cận của bạn." },
+            { en: "Related issues may arise", vi: "Các vấn đề liên quan có thể phát sinh." },
+            { en: "Remain flexible", vi: "Hãy giữ sự linh hoạt." },
+            { en: "Remove your own obstacles", vi: "Hãy loại bỏ những trở ngại của chính bạn." },
+            { en: "Rearrange what's important", vi: "Sắp xếp lại những gì quan trọng." },
+            { en: "Respect the rules", vi: "Hãy tôn trọng các quy tắc." },
+            { en: "Save your energy", vi: "Hãy tiết kiệm năng lượng của bạn." },
+            { en: "Search for more options", vi: "Tìm kiếm thêm các lựa chọn khác." },
+            { en: "Setting priorities will be a necessary part of the process", vi: "Đặt ra các ưu tiên sẽ là một phần cần thiết của quá trình." },
+            { en: "Solve it early", vi: "Hãy giải quyết sớm." },
+            { en: "Change your focus", vi: "Hãy thay đổi sự tập trung của bạn." },
+            { en: "Speak up about it", vi: "Hãy lên tiếng về nó." },
+            { en: "The result is that amazing events may occur", vi: "Kết quả là những sự kiện đáng kinh ngạc có thể xảy ra." },
+            { en: "Seize the opportunity", vi: "Hãy nắm bắt cơ hội." },
+            { en: "Take responsibility", vi: "Hãy chịu trách nhiệm." },
+            { en: "Spend more time deciding", vi: "Dành nhiều thời gian hơn để quyết định." },
+            { en: "Tell someone what it means to you", vi: "Nói cho ai đó biết điều đó có ý nghĩa gì với bạn." },
+            { en: "That would be a waste of money", vi: "Đó sẽ là một sự lãng phí tiền bạc." },
+            { en: "That's beyond your control", vi: "Điều đó nằm ngoài tầm kiểm soát của bạn." },
+            { en: "The answer lies in your backyard", vi: "Câu trả lời nằm ở sân sau nhà bạn." },
+            { en: "The answer may come to you in another language", vi: "Câu trả lời có thể đến với bạn bằng một ngôn ngữ khác." },
+            { en: "The best solution may not be the obvious one", vi: "Giải pháp tốt nhất có thể không phải là giải pháp hiển nhiên." },
+            { en: "The opportunity won't come again soon", vi: "Cơ hội sẽ không sớm trở lại." },
+            { en: "Circumstances will change very quickly", vi: "Hoàn cảnh sẽ thay đổi rất nhanh." },
+            { en: "The outcome will be positive", vi: "Kết quả sẽ tích cực." },
+            { en: "The situation is unclear", vi: "Tình hình không rõ ràng." },
+            { en: "There is a significant connection with another situation", vi: "Có một mối liên hệ đáng kể với một tình huống khác." },
+            { en: "There is good reason to be optimistic", vi: "Có lý do chính đáng để lạc quan." },
+            { en: "There are no guarantees", vi: "Không có gì đảm bảo cả." },
+            { en: "There will be obstacles to overcome", vi: "Sẽ có những trở ngại cần vượt qua." },
+            { en: "This is a good time for new plans", vi: "Đây là thời điểm tốt cho những kế hoạch mới." },
+            { en: "To ensure making the best decision, stay calm", vi: "Để đảm bảo đưa ra quyết định tốt nhất, hãy giữ bình tĩnh." },
+            { en: "Trust your intuition", vi: "Hãy tin vào trực giác của bạn." },
+            { en: "Trust your initial thoughts", vi: "Hãy tin vào những suy nghĩ ban đầu của bạn." },
+            { en: "Try a more unlikely solution", vi: "Hãy thử một giải pháp khó xảy ra hơn." },
+            { en: "Unfavorable at this time", vi: "Không thuận lợi vào lúc này." },
+            { en: "Without a doubt", vi: "Không còn nghi ngờ gì nữa." },
+            { en: "Upgrade in every way you can", vi: "Nâng cấp bằng mọi cách có thể." },
+            { en: "Use your imagination", vi: "Hãy sử dụng trí tưởng tượng của bạn." },
+            { en: "Wait", vi: "Chờ đợi." },
+            { en: "Wait for a better offer", vi: "Hãy đợi một lời đề nghị tốt hơn." },
+            { en: "Watch and see what happens", vi: "Hãy quan sát và xem điều gì xảy ra." },
+            { en: "Watch your step as you go", vi: "Hãy cẩn thận bước đi." },
+            { en: "Whatever you do, the results will last", vi: "Dù bạn làm gì, kết quả sẽ kéo dài." },
+            { en: "Yes", vi: "Có." },
+            { en: "Yes, but don't force it", vi: "Có, nhưng đừng ép buộc." },
+            { en: "You will certainly be supported", vi: "Bạn chắc chắn sẽ được hỗ trợ." },
+            { en: "You are too close to see", vi: "Bạn ở quá gần nên không thấy rõ." },
+            { en: "You may find yourself unable to compromise", vi: "Bạn có thể thấy mình không thể thỏa hiệp." },
+            { en: "You don't really care", vi: "Bạn không thực sự quan tâm." },
+            { en: "Now you know better than ever", vi: "Bây giờ bạn biết rõ hơn bao giờ hết." },
+            { en: "You may have objections", vi: "Bạn có thể có phản đối." },
+            { en: "You may have to give up other things", vi: "Bạn có thể phải từ bỏ những thứ khác." },
+            { en: "You must", vi: "Bạn phải." },
+            { en: "You must act now", vi: "Bạn phải hành động ngay bây giờ." },
+            { en: "You will find out everything you need to know", vi: "Bạn sẽ tìm ra mọi thứ bạn cần biết." },
+            { en: "You will need to contain it", vi: "Bạn sẽ cần phải kiểm soát nó." },
+            { en: "You won't be disappointed", vi: "Bạn sẽ không thất vọng." },
+            { en: "You'll be happy you did it", vi: "Bạn sẽ vui vì đã làm điều đó." },
+            { en: "You'll have the last word", vi: "Bạn sẽ là người nói lời cuối cùng." },
+            { en: "You'll have to compromise", vi: "Bạn sẽ phải thỏa hiệp." },
+            { en: "You'll have to make it up as you go", vi: "Bạn sẽ phải tùy cơ ứng biến." },
+            { en: "You'll need more information", vi: "Bạn sẽ cần thêm thông tin." },
+            { en: "You'll need to consider other ways", vi: "Bạn sẽ cần xem xét những cách khác." },
+            { en: "You'll need to be proactive", vi: "Bạn sẽ cần phải chủ động." },
+            { en: "You'll regret it", vi: "Bạn sẽ hối tiếc." },
+            { en: "Your actions will show improvement", vi: "Hành động của bạn sẽ cho thấy sự cải thiện." }
+        ];
+        // ****** END answers array structure ******
+
+
+        // script.js content starts here
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elements
+            const landingScreen = document.getElementById('landing-screen');
+            const countdownOverlay = document.getElementById('countdown-overlay');
+            const answerScreen = document.getElementById('answer-screen');
+            const crystalBallContainer = document.getElementById('crystal-ball-container');
+            const crystalBall = document.getElementById('crystal-ball');
+            const countdownNumber = document.getElementById('countdown-number');
+            const answerText = document.getElementById('answer-text');
+            const askAgainLink = document.getElementById('ask-again');
+            const stampElement = document.getElementById('stamp');
+
+            // Canvas elements
+            const canvas = document.getElementById('crystal-canvas');
+            const ctx = canvas.getContext('2d');
+            let animationFrameId;
+            let stars = [];
+            const numStars = 100;
+            let nebulaAngle = 0;
+            let animationSpeedFactor = 1.0;
+
+            let lastAnswerIndex = -1;
+
+            // --- Canvas Setup and Animation ---
+
+            function resizeCanvas() {
+                const containerWidth = crystalBallContainer.offsetWidth;
+                const containerHeight = crystalBallContainer.offsetHeight;
+                 if (containerWidth > 0 && containerHeight > 0) {
+                    const size = Math.min(containerWidth, containerHeight);
+                    canvas.width = size;
+                    canvas.height = size;
+                    initStars();
+                } else {
+                    requestAnimationFrame(resizeCanvas);
+                }
+            }
+
+            function initStars() {
+                stars = [];
+                const radius = canvas.width / 2;
+                 if (radius <= 0) return;
+                for (let i = 0; i < numStars; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = Math.random() * radius * 0.95;
+                    const x = radius + Math.cos(angle) * dist;
+                    const y = radius + Math.sin(angle) * dist;
+                    stars.push({
+                        x: x, y: y,
+                        radius: Math.random() * 1.2 + 0.4,
+                        alpha: Math.random() * 0.4 + 0.3,
+                        speed: (Math.random() * 0.08 + 0.04),
+                        angle: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+
+            function drawNebula(radius) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                const baseNebulaAlpha = 0.15;
+                const speedNebulaAlphaFactor = Math.min(1.5, animationSpeedFactor);
+
+                let grad1 = ctx.createRadialGradient(radius, radius, radius * 0.1, radius, radius, radius);
+                grad1.addColorStop(0, `rgba(173, 216, 230, ${baseNebulaAlpha * speedNebulaAlphaFactor * 0.8})`);
+                grad1.addColorStop(0.4, `rgba(200, 220, 255, ${baseNebulaAlpha * speedNebulaAlphaFactor * 0.6})`);
+                grad1.addColorStop(1, 'rgba(173, 216, 230, 0)');
+                ctx.fillStyle = grad1;
+                ctx.beginPath(); ctx.arc(radius, radius, radius, 0, Math.PI * 2); ctx.fill();
+
+                ctx.translate(radius, radius); ctx.rotate(nebulaAngle * 0.6); ctx.translate(-radius, -radius);
+
+                let grad2 = ctx.createRadialGradient(radius * 0.7, radius * 0.7, radius * 0.05, radius, radius, radius * 1.1);
+                 grad2.addColorStop(0, `rgba(220, 220, 255, ${baseNebulaAlpha * speedNebulaAlphaFactor * 0.5})`);
+                 grad2.addColorStop(0.5, `rgba(180, 200, 230, ${baseNebulaAlpha * speedNebulaAlphaFactor * 0.3})`);
+                grad2.addColorStop(1, 'rgba(173, 216, 230, 0)');
+                ctx.fillStyle = grad2;
+                ctx.beginPath(); ctx.arc(radius, radius, radius, 0, Math.PI * 2); ctx.fill();
+
+                ctx.restore();
+            }
+
+            function drawStars(radius) {
+                ctx.save();
+                stars.forEach(star => {
+                    const currentSpeed = star.speed * animationSpeedFactor;
+                    star.x += Math.cos(star.angle) * currentSpeed;
+                    star.y += Math.sin(star.angle) * currentSpeed;
+
+                    const dx = star.x - radius; const dy = star.y - radius;
+                    const distSq = dx*dx + dy*dy;
+                    const edgeThreshold = (radius * 0.98) * (radius * 0.98);
+
+                    if (distSq > edgeThreshold || star.x < 0 || star.x > radius*2 || star.y < 0 || star.y > radius*2) {
+                         const newAngle = Math.random() * Math.PI * 2;
+                         const newDist = Math.random() * radius * 0.5;
+                         star.x = radius + Math.cos(newAngle) * newDist;
+                         star.y = radius + Math.sin(newAngle) * newDist;
+                         star.angle = Math.random() * Math.PI * 2;
+                    }
+
+                     const baseStarAlpha = star.alpha;
+                     const currentStarAlpha = Math.min(0.8, baseStarAlpha * (0.8 + animationSpeedFactor * 0.2));
+
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 240, ${currentStarAlpha})`;
+                    ctx.shadowColor = 'rgba(255, 255, 240, 0.5)';
+                    ctx.shadowBlur = star.radius * 2;
+                    ctx.fill();
+                });
+                ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0;
+                ctx.restore();
+            }
+
+            function animateCanvas() {
+                const radius = canvas.width / 2;
+                if (radius <= 0 || !ctx) {
+                     animationFrameId = requestAnimationFrame(animateCanvas); return;
+                }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.beginPath(); ctx.arc(radius, radius, radius, 0, Math.PI * 2); ctx.clip();
+                drawNebula(radius);
+                drawStars(radius);
+                ctx.restore();
+                nebulaAngle += 0.0025 * animationSpeedFactor;
+                animationFrameId = requestAnimationFrame(animateCanvas);
+            }
+
+             function startCanvasAnimation() {
+                 stopCanvasAnimation();
+                 resizeCanvas();
+                 setTimeout(() => {
+                      if (canvas.width > 0 && canvas.height > 0) {
+                         animateCanvas();
+                     } else {
+                         console.warn("Canvas size still 0, retrying animation start.");
+                         startCanvasAnimation();
+                     }
+                 }, 50);
+             }
+
+            function stopCanvasAnimation() {
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+            }
+
+            // --- Core App Logic ---
+
+            function getRandomAnswer() {
+                 if (typeof answers === 'undefined' || answers.length === 0) {
+                    console.error("Answers array is not loaded or empty!");
+                    return { en: "The mists are unclear...", vi: "(Answers not loaded)" };
+                }
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * answers.length);
+                } while (answers.length > 1 && randomIndex === lastAnswerIndex);
+                lastAnswerIndex = randomIndex;
+                return answers[randomIndex];
+            }
+
+            function updateTimestamp() {
+                const now = new Date();
+                const dateString = now.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' });
+                 if (stampElement) {
+                     stampElement.innerHTML = `THE BOOK<br>OF<br>ANSWERS<br><small>${dateString}<br>${timeString}</small>`;
+                 } else {
+                     console.error("Stamp element not found!");
+                 }
+            }
+
+            function switchScreen(hideScreen, showScreen) {
+                if (showScreen === landingScreen) {
+                    animationSpeedFactor = 1.0;
+                    startCanvasAnimation();
+                }
+
+                hideScreen.classList.remove('active');
+                setTimeout(() => {
+                    showScreen.classList.add('active');
+                    if (showScreen === answerScreen) {
+                        stopCanvasAnimation();
+                    }
+                     if (hideScreen === countdownOverlay) {
+                         countdownNumber.style.opacity = 0;
+                     }
+                }, 700);
+            }
+
+            // ****** MODIFIED: Displays **English** / Vietnamese / ******
+            function showAnswer() {
+                const answerObj = getRandomAnswer();
+
+                // Wrap English part in <strong> tags
+                let answerHTML = `<strong>${answerObj.en}</strong>`;
+
+                // Check if Vietnamese translation exists and is not a placeholder
+                if (answerObj.vi && answerObj.vi !== "[Vietnamese Translation]") {
+                    // Add line break and the Vietnamese part wrapped in a span
+                    answerHTML += `<br><span class="vietnamese-translation">/ ${answerObj.vi} /</span>`; // Added trailing slash
+                }
+
+                answerText.innerHTML = answerHTML; // Set the combined HTML
+                updateTimestamp(); // Update the stamp content
+                switchScreen(countdownOverlay, answerScreen);
+                crystalBall.classList.remove('clicked');
+            }
+
+            function startCountdown() {
+                animationSpeedFactor = 4.0;
+                let count = 3;
+                countdownNumber.textContent = count;
+                 countdownNumber.style.opacity = 0;
+                 countdownNumber.style.transform = 'scale(0.8)';
+                 requestAnimationFrame(() => {
+                     countdownNumber.style.animation = 'none';
+                     void countdownNumber.offsetWidth;
+                     countdownNumber.style.animation = 'countdownAnim 1s ease-out forwards';
+                      countdownNumber.style.opacity = 1;
+                 });
+
+                switchScreen(landingScreen, countdownOverlay);
+
+                const interval = setInterval(() => {
+                    count--;
+                    if (count > 0) {
+                        countdownNumber.textContent = count;
+                          countdownNumber.style.animation = 'none';
+                         void countdownNumber.offsetWidth;
+                         countdownNumber.style.animation = 'countdownAnim 1s ease-out forwards';
+                    } else {
+                        clearInterval(interval);
+                        setTimeout(showAnswer, 800);
+                    }
+                }, 1000);
+            }
+
+            // --- Event Listeners ---
+
+            crystalBall.addEventListener('click', () => {
+                crystalBall.classList.add('clicked');
+                 setTimeout(() => {
+                     crystalBall.classList.remove('clicked');
+                 }, 500);
+
+                startCountdown();
+            });
+
+            askAgainLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchScreen(answerScreen, landingScreen);
+            });
+
+            window.addEventListener('resize', () => {
+                 if (landingScreen.classList.contains('active')) {
+                     startCanvasAnimation();
+                 }
+             });
+
+            // --- Initial Setup ---
+            setTimeout(startCanvasAnimation, 100);
+
+        });
+        // script.js content ends here
+    </script>
+
+</body>
+</html>
