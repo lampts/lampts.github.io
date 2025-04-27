@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplified TVM Calculator</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .calculator {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 450px; /* Increased width */
+        }
+        h1 {
+            text-align: center;
+            color: #c00; /* Red color like example */
+            margin-bottom: 25px;
+        }
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px; /* Add gap between elements */
+        }
+        .input-row label {
+            flex-basis: 140px; /* Fixed width for labels */
+            text-align: right;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .input-row input[type="number"],
+        .input-row select {
+            flex-grow: 1; /* Allow input/select to take remaining space */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box; /* Include padding/border in width */
+        }
+        .input-row input[type="radio"] {
+            margin-left: 10px;
+        }
+        .input-row button {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            background-color: #e9e9e9;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            min-width: 70px; /* Ensure buttons have minimum width */
+            text-align: center;
+        }
+        .input-row button:hover {
+            background-color: #ddd;
+        }
+        .mode-selection label {
+             flex-basis: auto; /* Override fixed width for mode */
+             margin-right: 5px;
+             font-weight: normal;
+        }
+        .button-row {
+            text-align: center;
+            margin-top: 25px;
+        }
+        .button-row button {
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            background-color: #e9e9e9;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+         .button-row button:hover {
+            background-color: #ddd;
+        }
+
+        /* Style for disabled inputs (where result is shown) */
+        input:read-only {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator">
+    <h1>TVM Calculator</h1>
+
+    <form id="tvm-form">
+        <div class="input-row">
+            <label for="mode">Mode</label>
+            <div> <!-- Group radio buttons -->
+                <input type="radio" id="mode-end" name="mode" value="0" checked>
+                <label for="mode-end" class="mode-selection">End</label>
+                <input type="radio" id="mode-begin" name="mode" value="1">
+                <label for="mode-begin" class="mode-selection">Beginning</label>
+            </div>
+            <span></span> <!-- Placeholder for alignment -->
+        </div>
+
+        <div class="input-row">
+            <label for="pv">Present Value</label>
+            <input type="number" id="pv" step="any">
+            <button type="button" onclick="calculate('pv')">PV</button>
+        </div>
+
+        <div class="input-row">
+            <label for="pmt">Payments</label>
+            <input type="number" id="pmt" step="any">
+            <button type="button" onclick="calculate('pmt')">PMT</button>
+        </div>
+
+        <div class="input-row">
+            <label for="fv">Future Value</label>
+            <input type="number" id="fv" step="any">
+            <button type="button" onclick="calculate('fv')">FV</button>
+        </div>
+
+        <div class="input-row">
+            <label for="rate">Annual Rate (%)</label>
+            <input type="number" id="rate" step="any">
+            <button type="button" onclick="calculate('rate')">Rate</button>
+        </div>
+
+        <div class="input-row">
+            <label for="nper">Periods</label>
+            <input type="number" id="nper" step="any">
+            <button type="button" onclick="calculate('nper')">Periods</button>
+        </div>
+
+         <div class="input-row">
+            <label for="compounding">Compounding</label>
+            <select id="compounding">
+                <option value="12" selected>Monthly</option>
+                <option value="4">Quarterly</option>
+                <option value="2">Semi-Annually</option>
+                <option value="1">Annually</option>
+            </select>
+             <span></span> <!-- Placeholder for alignment -->
+        </div>
+
+
+        <div class="button-row">
+            <button type="button" onclick="resetForm()">Reset</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Financial constants
+    const MAX_ITERATIONS = 100;
+    const PRECISION = 1e-6; // Increased precision
+
+    // Helper to get numeric value from input field
+    function getVal(id) {
+        const el = document.getElementById(id);
+        // Treat empty string as NaN to indicate missing input for calculations
+        return el.value === '' ? NaN : parseFloat(el.value);
+    }
+
+    // Helper to set value and style calculated field
+    function setVal(id, value) {
+        const el = document.getElementById(id);
+        if (isNaN(value) || !isFinite(value)) {
+            el.value = 'Error';
+            el.readOnly = false; // Allow editing if error
+        } else {
+            // Format currency/percentage appropriately
+            if (id === 'rate') {
+                 // Rate is calculated as decimal, convert back to %
+                 el.value = (value * 100).toFixed(4);
+            } else if (id === 'nper') {
+                 el.value = value.toFixed(2); // Periods might not be integer
+            }
+            else {
+                el.value = value.toFixed(2); // Currency values
+            }
+           // el.readOnly = true; // Make calculated field read-only visually (optional)
+        }
+    }
+
+    // Reset form
+    function resetForm() {
+        document.getElementById('tvm-form').reset();
+        const inputs = ['pv', 'pmt', 'fv', 'rate', 'nper'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+           // el.readOnly = false;
+            el.value = '';
+        });
+         document.getElementById('mode-end').checked = true;
+         document.getElementById('compounding').value = '12';
+    }
+
+    // Get compounding periods per year
+    function getCompoundingPeriods() {
+        return parseInt(document.getElementById('compounding').value, 10);
+    }
+
+    // Get payment mode (0 for End, 1 for Beginning)
+    function getMode() {
+        return parseInt(document.querySelector('input[name="mode"]:checked').value, 10);
+    }
+
+    // --- Core TVM Calculation Functions ---
+
+    function calculatePV(ratePerPeriod, nper, pmt, fv, type) {
+        if (ratePerPeriod === 0) { // Rate is 0
+            return -(fv + pmt * nper);
+        } else {
+            const pvif = Math.pow(1 + ratePerPeriod, nper);
+            const pva = pmt * (1 + ratePerPeriod * type) * ( (1 - Math.pow(1 + ratePerPeriod, -nper)) / ratePerPeriod );
+            return -(fv / pvif + pva);
+        }
+    }
+
+    function calculateFV(ratePerPeriod, nper, pmt, pv, type) {
+        if (ratePerPeriod === 0) {
+             return -(pv + pmt * nper);
+        } else {
+            const fvifa = (Math.pow(1 + ratePerPeriod, nper) - 1) / ratePerPeriod;
+            return -(pv * Math.pow(1 + ratePerPeriod, nper) + pmt * (1 + ratePerPeriod * type) * fvifa);
+        }
+    }
+
+     function calculatePMT(ratePerPeriod, nper, pv, fv, type) {
+        if (ratePerPeriod === 0) {
+            if (nper === 0) return NaN; // Avoid division by zero if nper is also 0
+             return -(fv + pv) / nper;
+        } else {
+            const pvif = Math.pow(1 + ratePerPeriod, nper);
+            const denominator = (1 + ratePerPeriod * type) * ( (1 - Math.pow(1 + ratePerPeriod, -nper)) / ratePerPeriod );
+             if (Math.abs(denominator) < 1e-10) return NaN; // Avoid division by near zero
+            return -(fv + pv * pvif) / denominator;
+        }
+    }
+
+     function calculateNPER(ratePerPeriod, pmt, pv, fv, type) {
+        if (ratePerPeriod === 0) {
+            if (pmt === 0) return NaN; // Indeterminate if rate and pmt are 0
+            return -(fv + pv) / pmt;
+        } else {
+            const pmtAdjusted = pmt * (1 + ratePerPeriod * type);
+            // Ensure values are such that logarithm arguments are positive
+            const term1 = pmtAdjusted - fv * ratePerPeriod;
+            const term2 = pmtAdjusted + pv * ratePerPeriod;
+
+            if (term1 <= 0 || term2 <= 0 || Math.abs(ratePerPeriod) < 1e-10) {
+                 // Try without type adjustment if basic formula fails (might handle some edge cases)
+                 const simpleTerm1 = pmt - fv * ratePerPeriod;
+                 const simpleTerm2 = pmt + pv * ratePerPeriod;
+                 if (simpleTerm1 > 0 && simpleTerm2 > 0 && simpleTerm1/simpleTerm2 > 0) {
+                     return Math.log(simpleTerm1 / simpleTerm2) / Math.log(1 + ratePerPeriod);
+                 }
+                 // console.warn("NPER calculation resulted in log of non-positive number.", {ratePerPeriod, pmt, pv, fv, type, term1, term2});
+                 return NaN; // Cannot compute NPER
+            }
+
+            return Math.log(term1 / term2) / Math.log(1 + ratePerPeriod);
+        }
+    }
+
+    // Rate requires iteration (Newton-Raphson method)
+    function calculateRATE(nper, pmt, pv, fv, type) {
+        if (nper <= 0) return NaN;
+
+        // Define the function f(rate) = pv*(1+rate)^n + pmt*(1+rate*type)*[(1+rate)^n - 1]/rate + fv = 0
+        // Special handling for rate = 0
+        if (Math.abs(pv + fv + pmt * nper) < PRECISION) {
+             return 0;
+        }
+
+        let rateGuess = 0.1; // Initial guess for annual rate -> periodic rate
+        let rate = rateGuess;
+
+        for (let i = 0; i < MAX_ITERATIONS; i++) {
+            if (Math.abs(rate) < 1e-10) { // Handle rate close to 0 separately in the formula
+                // Simplified formula for f(rate) as rate approaches 0 (using L'Hopital's rule for pmt term)
+                // f(rate) ≈ pv * (1 + n*rate) + pmt * (1 + rate*type) * n + fv
+                 const f = pv + fv + pmt * nper + rate * ( nper*pv + type*pmt*nper + nper*(nper-1)/2 * pmt); // Added higher order term approx
+                 // Derivative f'(rate) as rate approaches 0
+                 const df = nper*pv + type*pmt*nper + nper*(nper-1)/2*pmt;
+                  if (Math.abs(df) < 1e-10) break; // Avoid division by zero if derivative is zero
+                 rate = rate - f / df;
+
+            } else { // Standard formula for non-zero rate
+                const term = Math.pow(1 + rate, nper);
+                const f = pv * term + pmt * (1 + rate * type) * (term - 1) / rate + fv;
+
+                // Derivative f'(rate)
+                const df = nper * pv * Math.pow(1 + rate, nper - 1) +
+                           pmt * type * (term - 1) / rate +
+                           pmt * (1 + rate * type) * (nper * term / rate - (term - 1) / (rate * rate));
+
+                if (Math.abs(df) < 1e-10) break; // Avoid division by zero
+
+                const newRate = rate - f / df;
+                if (Math.abs(newRate - rate) < PRECISION) {
+                    return newRate; // Converged
+                }
+                rate = newRate;
+            }
+
+            // Check for divergence or invalid rate
+            if (rate <= -1) { // Rate cannot be less than -100%
+                rate = (i === 0) ? -0.05 : rate * 0.5 ; // Adjust guess downwards if it goes too low
+                 // break; // Stop if rate becomes invalid
+            }
+        }
+
+        // Check final result makes sense
+        const termFinal = Math.pow(1 + rate, nper);
+        const fFinal = (Math.abs(rate) < 1e-10)
+            ? pv + fv + pmt * nper // Approx for rate = 0
+            : pv * termFinal + pmt * (1 + rate * type) * (termFinal - 1) / rate + fv;
+
+        if (Math.abs(fFinal) < PRECISION * 100) { // Check if final value is close enough to zero
+            return rate;
+        } else {
+             console.warn("Rate calculation did not converge accurately.", { nper, pmt, pv, fv, type, finalRate: rate, finalF: fFinal });
+            return NaN; // Did not converge
+        }
+    }
+
+
+    // Main calculation dispatcher
+    function calculate(variableToCalc) {
+        // Reset readOnly status potentially set by previous calculation
+       // ['pv', 'pmt', 'fv', 'rate', 'nper'].forEach(id => document.getElementById(id).readOnly = false);
+
+        // Get inputs
+        const pv = getVal('pv');
+        const pmt = getVal('pmt');
+        const fv = getVal('fv');
+        const annualRatePercent = getVal('rate');
+        const nper = getVal('nper');
+        const compoundingPeriods = getCompoundingPeriods();
+        const type = getMode();
+
+        // Adjust rate and potentially nper for compounding
+        // Rate is entered annually, needs to be per period
+        const ratePerPeriod = isNaN(annualRatePercent) ? NaN : (annualRatePercent / 100) / compoundingPeriods;
+
+        let result = NaN;
+
+        try {
+            switch (variableToCalc) {
+                case 'pv':
+                    if (isNaN(ratePerPeriod) || isNaN(nper) || isNaN(pmt) || isNaN(fv)) throw new Error("Missing inputs for PV calculation.");
+                    result = calculatePV(ratePerPeriod, nper, pmt, fv, type);
+                    break;
+                case 'pmt':
+                     if (isNaN(ratePerPeriod) || isNaN(nper) || isNaN(pv) || isNaN(fv)) throw new Error("Missing inputs for PMT calculation.");
+                    result = calculatePMT(ratePerPeriod, nper, pv, fv, type);
+                    break;
+                case 'fv':
+                     if (isNaN(ratePerPeriod) || isNaN(nper) || isNaN(pmt) || isNaN(pv)) throw new Error("Missing inputs for FV calculation.");
+                    result = calculateFV(ratePerPeriod, nper, pmt, pv, type);
+                    break;
+                case 'rate':
+                     if (isNaN(nper) || isNaN(pmt) || isNaN(pv) || isNaN(fv)) throw new Error("Missing inputs for Rate calculation.");
+                    // RATE function returns periodic rate, needs conversion back to annual %
+                    const periodicRateResult = calculateRATE(nper, pmt, pv, fv, type);
+                    result = isNaN(periodicRateResult) ? NaN : periodicRateResult * compoundingPeriods; // Convert periodic rate result back to annual
+                    break;
+                case 'nper':
+                     if (isNaN(ratePerPeriod) || isNaN(pmt) || isNaN(pv) || isNaN(fv)) throw new Error("Missing inputs for Periods calculation.");
+                     // NPER function returns total number of periods
+                    result = calculateNPER(ratePerPeriod, pmt, pv, fv, type);
+                    break;
+                default:
+                    throw new Error("Unknown calculation type");
+            }
+
+            setVal(variableToCalc, result);
+
+        } catch (e) {
+             alert("Calculation Error: " + e.message);
+             console.error("Calculation Error:", e);
+             setVal(variableToCalc, NaN); // Show error in the field
+        }
+    }
+
+</script>
+
+</body>
+</html>
