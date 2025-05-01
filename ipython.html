@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAssembly IPython (with NumPy)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.4;
+            margin: 15px;
+            background-color: #f4f4f4;
+        }
+        #container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #status {
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .loading {
+            color: #888;
+            background-color: #eee;
+        }
+        .ready {
+            color: green;
+            background-color: #e6ffed;
+        }
+        .error {
+            color: red;
+            background-color: #ffe6e6;
+        }
+        #output {
+            background-color: #282c34; /* Dark background */
+            color: #abb2bf;  /* Light text */
+            padding: 15px;
+            border-radius: 5px;
+            min-height: 200px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap; /* Wrap long lines */
+            word-wrap: break-word; /* Break long words */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        .output-input {
+            color: #61afef; /* Blue for input lines */
+        }
+        .output-error {
+            color: #e06c75; /* Red for errors */
+        }
+        .output-result {
+            color: #98c379; /* Green for results */
+        }
+        textarea {
+            width: calc(100% - 22px); /* Account for padding/border */
+            min-height: 100px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+    </style>
+    <!-- Load Pyodide -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+</head>
+<body>
+    <div id="container">
+        <h1>WebAssembly IPython (with NumPy)</h1>
+
+        <div id="status" class="loading">Loading Pyodide runtime...</div>
+
+        <div id="output"></div>
+
+        <label for="codeInput">Enter Python code (Shift+Enter to run):</label>
+        <textarea id="codeInput" rows="5" placeholder="import numpy as np
+a = np.arange(5)
+print(a)
+a * 2" disabled></textarea>
+        <button id="runButton" disabled>Run Code</button>
+         <p><small>Tip: You can use Shift+Enter in the text area to run the code.</small></p>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const outputDiv = document.getElementById('output');
+        const codeInput = document.getElementById('codeInput');
+        const runButton = document.getElementById('runButton');
+        let pyodide = null;
+
+        function updateStatus(message, type = 'loading') {
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + type; // 'loading', 'ready', or 'error'
+        }
+
+        function appendToOutput(text, type = 'stdout') {
+            const span = document.createElement('span');
+            span.textContent = text + '\n';
+            if (type === 'input') {
+                span.className = 'output-input';
+                span.textContent = '>>> ' + text.trimEnd() + '\n'; // Add prompt styling
+            } else if (type === 'error') {
+                span.className = 'output-error';
+            } else if (type === 'result') {
+                span.className = 'output-result';
+            }
+            outputDiv.appendChild(span);
+            // Scroll to bottom
+            outputDiv.scrollTop = outputDiv.scrollHeight;
+        }
+
+        async function runCode() {
+            if (!pyodide) {
+                appendToOutput("Pyodide not loaded yet.", 'error');
+                return;
+            }
+            const code = codeInput.value;
+            if (!code.trim()) {
+                return; // Don't run empty code
+            }
+
+            appendToOutput(code, 'input'); // Echo input
+            codeInput.value = ''; // Clear input area
+            runButton.disabled = true; // Disable during execution
+            codeInput.disabled = true;
+
+            try {
+                 // Redirect stdout and stderr
+                pyodide.runPython(`
+                    import sys
+                    import io
+                    sys.stdout = io.StringIO()
+                    sys.stderr = io.StringIO()
+                `);
+
+                // Execute the user's code
+                // Using runPythonAsync for potentially long-running code or async Python code
+                let result = await pyodide.runPythonAsync(code);
+
+                // Get stdout and stderr
+                let stdout = pyodide.runPython("sys.stdout.getvalue()");
+                let stderr = pyodide.runPython("sys.stderr.getvalue()");
+
+                if (stdout) {
+                    appendToOutput(stdout.trimEnd(), 'stdout');
+                }
+                if (stderr) {
+                    appendToOutput(stderr.trimEnd(), 'error');
+                }
+
+                // Display the result of the last expression if it's not None
+                if (result !== undefined && result !== null) {
+                     // Try to get a useful representation
+                    let reprResult;
+                    try {
+                        // Use Python's repr() for a more code-like representation
+                        reprResult = pyodide.globals.get('repr')(result);
+                    } catch (reprErr) {
+                        // Fallback to JS toString if repr fails (e.g., for complex JS objects)
+                        reprResult = result.toString();
+                    }
+                    appendToOutput(reprResult, 'result');
+                }
+
+            } catch (err) {
+                 // Also try to capture any stderr Python might have produced before crashing
+                let stderr = "";
+                try {
+                    stderr = pyodide.runPython("sys.stderr.getvalue()");
+                } catch(ignoreErr) {}
+
+                if (stderr) {
+                    appendToOutput(stderr.trimEnd(), 'error');
+                }
+                 appendToOutput(`Error: ${err.message || err}`, 'error');
+                 // Log the full error to the browser console for debugging
+                 console.error("Pyodide Execution Error:", err);
+            } finally {
+                // Restore stdout/stderr (optional, good practice)
+                pyodide.runPython(`
+                    import sys
+                    # Attempt to restore original std streams if they exist
+                    # Pyodide might handle this internally, but being explicit can help
+                    if hasattr(sys, '__stdout__'): sys.stdout = sys.__stdout__
+                    if hasattr(sys, '__stderr__'): sys.stderr = sys.__stderr__
+                `);
+                runButton.disabled = false; // Re-enable button
+                codeInput.disabled = false;
+                codeInput.focus(); // Set focus back to input
+            }
+        }
+
+        async function main() {
+            try {
+                pyodide = await loadPyodide();
+                updateStatus("Pyodide loaded. Loading NumPy...");
+                appendToOutput("Python environment ready.");
+
+                await pyodide.loadPackage("numpy");
+                updateStatus("NumPy loaded. Ready!", 'ready');
+                appendToOutput("NumPy installed and ready to import (e.g., import numpy as np).");
+
+                // Pre-import numpy for convenience (optional)
+                 try {
+                    await pyodide.runPythonAsync("import numpy as np");
+                     appendToOutput("Auto-imported numpy as np.");
+                 } catch(e) {
+                     appendToOutput("Could not auto-import numpy.", 'error');
+                 }
+
+
+                codeInput.disabled = false;
+                runButton.disabled = false;
+
+                // Add event listeners
+                runButton.addEventListener('click', runCode);
+                codeInput.addEventListener('keydown', (event) => {
+                    // Run code on Shift+Enter
+                    if (event.key === 'Enter' && event.shiftKey) {
+                        event.preventDefault(); // Prevent default newline insertion
+                        runCode();
+                    }
+                });
+
+            } catch (error) {
+                updateStatus(`Error loading Pyodide or NumPy: ${error}`, 'error');
+                console.error(error);
+            }
+        }
+
+        main(); // Start the loading process
+    </script>
+</body>
+</html>
