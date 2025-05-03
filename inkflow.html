@@ -67,7 +67,6 @@
 
       /* --- Centered Text Block (Padding) --- */
       /* top | left/right | bottom */
-      /* Increased bottom padding to avoid overlap with stats bar */
       padding: 6vh max(5vw, calc((100vw - 70ch) / 2)) 10vh;
 
       /* --- Core Styling --- */
@@ -80,6 +79,9 @@
       line-height: inherit;
       overflow-y: auto;
       caret-color: var(--text-color);
+      white-space: pre-wrap; /* Respect user's whitespace and wrap lines */
+      tab-size: 4; /* Standard tab size */
+      -moz-tab-size: 4; /* Firefox */
     }
 
     #editor::placeholder {
@@ -106,16 +108,16 @@
       box-sizing: border-box;
       padding: 0.5rem max(5vw, calc((100vw - 70ch) / 2)); /* Align padding with editor */
       background-color: var(--stats-bg-color);
-      backdrop-filter: blur(5px); /* Subtle blur effect (optional) */
-      -webkit-backdrop-filter: blur(5px); /* Safari */
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
       border-top: 1px solid var(--stats-border-color);
       color: var(--stats-text-color);
       font-size: 0.8rem;
       text-align: center;
-      z-index: 5; /* Below theme toggle, above editor content */
+      z-index: 5;
       transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-      user-select: none; /* Prevent selecting stats text */
-      white-space: nowrap; /* Prevent wrapping */
+      user-select: none;
+      white-space: nowrap;
     }
 
     /* --- Theme Toggle (remains the same) --- */
@@ -138,7 +140,7 @@
       outline: none;
       user-select: none;
       opacity: 0.6;
-      z-index: 10; /* Ensure it stays on top */
+      z-index: 10;
     }
 
     #theme-toggle:hover {
@@ -156,7 +158,7 @@
 </head>
 <body>
 
-  <textarea id="editor" placeholder="Just write…" spellcheck="true" autofocus></textarea>
+  <textarea id="editor" placeholder="Just write… (Tab=Quote, Ctrl/Cmd+U=Underline)" spellcheck="true" autofocus></textarea>
 
   <div id="stats-bar">0 words · 0 characters · 1 line</div>
 
@@ -166,38 +168,34 @@
     (function() {
       const editor = document.getElementById('editor');
       const themeToggleButton = document.getElementById('theme-toggle');
-      const statsBar = document.getElementById('stats-bar'); // Get stats bar element
+      const statsBar = document.getElementById('stats-bar');
       const storageKey = 'inkflowContent';
       const themeKey = 'inkflowTheme';
+      const underlineSyntax = '++'; // Define the syntax characters
 
       // --- Stats Calculation Function ---
       const updateStats = () => {
         const text = editor.value;
         const characters = text.length;
-
-        // Word Count: Trim whitespace, split by spaces (handles multiple spaces)
         const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-
-        // Line Count: Split by newlines. Handle empty case (still 1 line).
         const lines = text.length === 0 ? 1 : text.split('\n').length;
-
-        // Update the stats bar content
         statsBar.textContent = `${words} words · ${characters} characters · ${lines} lines`;
       };
 
-      // 1. Load saved content
-      const savedContent = localStorage.getItem(storageKey);
-      if (savedContent) {
-        editor.value = savedContent;
-      }
+      // --- Content Persistence ---
+      const saveContent = () => {
+          localStorage.setItem(storageKey, editor.value);
+      };
 
-      // 2. Save content on input & Update Stats
-      editor.addEventListener('input', () => {
-        localStorage.setItem(storageKey, editor.value);
-        updateStats(); // Call stats update on every input
-      });
+      const loadContent = () => {
+          const savedContent = localStorage.getItem(storageKey);
+          if (savedContent) {
+            editor.value = savedContent;
+          }
+          updateStats(); // Update stats after loading
+      };
 
-      // 3. Theme Management
+      // --- Theme Management ---
       const applyTheme = (theme) => {
         if (theme === 'dark') {
           document.body.classList.add('dark-mode');
@@ -214,10 +212,135 @@
         applyTheme(currentThemeIsDark ? 'light' : 'dark');
       };
 
-      // 4. Set initial theme
+      // --- Text Formatting Helpers ---
+      const triggerInputEvent = () => {
+          editor.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+
+      // --- Quote Handling (Tab / Shift+Tab on Selection) ---
+      const handleQuoteKeyPress = (event) => {
+          if (event.key === 'Tab') {
+              const start = editor.selectionStart;
+              const end = editor.selectionEnd;
+              const selectedText = editor.value.substring(start, end);
+
+              if (start !== end && selectedText.length > 0) {
+                  event.preventDefault();
+                  const originalValue = editor.value;
+                  const lineStart = originalValue.lastIndexOf('\n', start - 1) + 1;
+                  let lineEnd = originalValue.indexOf('\n', end);
+                  if (lineEnd === -1) lineEnd = originalValue.length;
+                   if (originalValue[end] === '\n') {
+                       lineEnd = end;
+                   } else {
+                        let actualLineEnd = originalValue.indexOf('\n', end);
+                        if (actualLineEnd === -1) actualLineEnd = originalValue.length;
+                        lineEnd = actualLineEnd;
+                   }
+
+                  const affectedLinesText = originalValue.substring(lineStart, lineEnd);
+                  const lines = affectedLinesText.split('\n');
+                  let modified = false;
+
+                  const newLines = lines.map(line => {
+                      if (event.shiftKey) { // Unquote
+                          if (line.startsWith('> ')) {
+                              modified = true;
+                              return line.substring(2);
+                          } else if (line.startsWith('>')) {
+                               modified = true;
+                               return line.substring(1);
+                          }
+                      } else { // Quote
+                          if (line.trim().length > 0 || line.length > 0) {
+                               modified = true;
+                               return '> ' + line;
+                          }
+                      }
+                      return line;
+                  });
+
+                  if (modified) {
+                      const newAffectedLinesText = newLines.join('\n');
+                      editor.value = originalValue.substring(0, lineStart) + newAffectedLinesText + originalValue.substring(lineEnd);
+                      editor.selectionStart = lineStart;
+                      editor.selectionEnd = lineStart + newAffectedLinesText.length;
+                      triggerInputEvent(); // Update stats and save
+                  }
+              }
+          }
+      };
+
+      // --- Underline Handling (Ctrl+U / Cmd+U on Selection) ---
+      const handleUnderlineKeyPress = (event) => {
+          // Check for Ctrl+U or Cmd+U
+          if (event.key === 'u' && (event.ctrlKey || event.metaKey)) {
+              const start = editor.selectionStart;
+              const end = editor.selectionEnd;
+              const selectedText = editor.value.substring(start, end);
+
+              // Only act if text is selected
+              if (start !== end && selectedText.length > 0) {
+                  event.preventDefault(); // Prevent browser default (e.g., view source)
+
+                  const originalValue = editor.value;
+                  const syntaxLen = underlineSyntax.length;
+
+                  // Check if the selection is already wrapped with the syntax
+                  const prefix = originalValue.substring(start - syntaxLen, start);
+                  const suffix = originalValue.substring(end, end + syntaxLen);
+                  const isUnderlined = prefix === underlineSyntax && suffix === underlineSyntax;
+
+                  let newValue;
+                  let newStart;
+                  let newEnd;
+
+                  if (isUnderlined) {
+                      // Remove the syntax
+                      newValue = originalValue.substring(0, start - syntaxLen) +
+                                 selectedText +
+                                 originalValue.substring(end + syntaxLen);
+                      // Reselect the original text
+                      newStart = start - syntaxLen;
+                      newEnd = newStart + selectedText.length;
+                  } else {
+                      // Add the syntax
+                      newValue = originalValue.substring(0, start) +
+                                 underlineSyntax +
+                                 selectedText +
+                                 underlineSyntax +
+                                 originalValue.substring(end);
+                      // Reselect the original text *within* the syntax
+                      newStart = start + syntaxLen;
+                      newEnd = newStart + selectedText.length;
+                  }
+
+                  editor.value = newValue;
+                  editor.selectionStart = newStart;
+                  editor.selectionEnd = newEnd;
+                  triggerInputEvent(); // Update stats and save
+              }
+          }
+      };
+
+      // --- Initialization ---
+      // Add Event Listeners
+      editor.addEventListener('input', () => {
+          saveContent();
+          updateStats();
+      });
+      editor.addEventListener('keydown', handleQuoteKeyPress);    // Listen for Tab key (quoting)
+      editor.addEventListener('keydown', handleUnderlineKeyPress); // Listen for Ctrl/Cmd+U (underline)
+      themeToggleButton.addEventListener('click', toggleTheme);
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+         if (!localStorage.getItem(themeKey)) {
+            applyTheme(event.matches ? 'dark' : 'light');
+         }
+      });
+
+      // Set initial theme
       const savedTheme = localStorage.getItem(themeKey);
       const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
       if (savedTheme) {
         applyTheme(savedTheme);
       } else if (prefersDark) {
@@ -226,16 +349,11 @@
          applyTheme('light');
       }
 
-      // 5. Add Theme Listeners
-      themeToggleButton.addEventListener('click', toggleTheme);
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-         if (!localStorage.getItem(themeKey)) {
-            applyTheme(event.matches ? 'dark' : 'light');
-         }
-      });
+      // Load initial content
+      loadContent();
 
-      // 6. Initial Stats Calculation on Load
-      updateStats();
+      // Update placeholder text
+      editor.placeholder = "Just write… (Tab=Quote, Ctrl/Cmd+U=Underline)";
 
     })(); // IIFE
   </script>
