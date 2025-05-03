@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Inkflow – Focus Mode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tiny Favicon using Data URI -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✒️</text></svg>">
+  <style>
+    :root {
+      /* --- Font Stack --- */
+      --font-body: 'Söhne Buch', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+      /* --- Light Mode --- */
+      --bg-color: #f8f8f8;
+      --text-color: #1a1a1a;
+      --placeholder-color: #a0a0a0;
+      --selection-bg: #cccccc;
+      --button-bg: rgba(0, 0, 0, 0.05);
+      --button-hover-bg: rgba(0, 0, 0, 0.1);
+      --button-icon: '☀️';
+      --stats-bg-color: rgba(248, 248, 248, 0.85); /* Slightly transparent */
+      --stats-text-color: #555;
+      --stats-border-color: rgba(0, 0, 0, 0.08);
+      --vintage-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+    }
+
+    body.dark-mode {
+      /* --- Dark Mode --- */
+      --bg-color: #1c1c1c;
+      --text-color: #d1d1d1;
+      --placeholder-color: #585858;
+      --selection-bg: #4a4a4a;
+      --button-bg: rgba(255, 255, 255, 0.1);
+      --button-hover-bg: rgba(255, 255, 255, 0.18);
+      --button-icon: '🌙';
+      --stats-bg-color: rgba(28, 28, 28, 0.85); /* Slightly transparent */
+      --stats-text-color: #888;
+      --stats-border-color: rgba(255, 255, 255, 0.08);
+      --vintage-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: var(--font-body);
+      font-size: 1.15rem;
+      line-height: 1.65;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image: var(--vintage-texture);
+      color: var(--text-color);
+      overflow: hidden; /* Prevent body scrollbars */
+    }
+
+    #editor {
+      /* --- Canvas Layout --- */
+      width: 100%;
+      height: 100vh; /* Full viewport height */
+      box-sizing: border-box;
+
+      /* --- Centered Text Block (Padding) --- */
+      /* top | left/right | bottom */
+      /* Increased bottom padding to avoid overlap with stats bar */
+      padding: 6vh max(5vw, calc((100vw - 70ch) / 2)) 10vh;
+
+      /* --- Core Styling --- */
+      border: none;
+      resize: none;
+      outline: none;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      line-height: inherit;
+      overflow-y: auto;
+      caret-color: var(--text-color);
+    }
+
+    #editor::placeholder {
+      color: var(--placeholder-color);
+      opacity: 1;
+      font-style: normal;
+    }
+
+    #editor:focus {
+       outline: none;
+    }
+
+    ::selection {
+      background: var(--selection-bg);
+      color: inherit;
+    }
+
+    /* --- Stats Bar --- */
+    #stats-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.5rem max(5vw, calc((100vw - 70ch) / 2)); /* Align padding with editor */
+      background-color: var(--stats-bg-color);
+      backdrop-filter: blur(5px); /* Subtle blur effect (optional) */
+      -webkit-backdrop-filter: blur(5px); /* Safari */
+      border-top: 1px solid var(--stats-border-color);
+      color: var(--stats-text-color);
+      font-size: 0.8rem;
+      text-align: center;
+      z-index: 5; /* Below theme toggle, above editor content */
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      user-select: none; /* Prevent selecting stats text */
+      white-space: nowrap; /* Prevent wrapping */
+    }
+
+    /* --- Theme Toggle (remains the same) --- */
+    #theme-toggle {
+      position: fixed;
+      top: 15px;
+      right: 15px;
+      background-color: var(--button-bg);
+      color: var(--text-color);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+      outline: none;
+      user-select: none;
+      opacity: 0.6;
+      z-index: 10; /* Ensure it stays on top */
+    }
+
+    #theme-toggle:hover {
+      background-color: var(--button-hover-bg);
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    #theme-toggle::before {
+      content: var(--button-icon);
+      line-height: 1;
+    }
+
+  </style>
+</head>
+<body>
+
+  <textarea id="editor" placeholder="Just write…" spellcheck="true" autofocus></textarea>
+
+  <div id="stats-bar">0 words · 0 characters · 1 line</div>
+
+  <button id="theme-toggle" aria-label="Toggle dark mode"></button>
+
+  <script>
+    (function() {
+      const editor = document.getElementById('editor');
+      const themeToggleButton = document.getElementById('theme-toggle');
+      const statsBar = document.getElementById('stats-bar'); // Get stats bar element
+      const storageKey = 'inkflowContent';
+      const themeKey = 'inkflowTheme';
+
+      // --- Stats Calculation Function ---
+      const updateStats = () => {
+        const text = editor.value;
+        const characters = text.length;
+
+        // Word Count: Trim whitespace, split by spaces (handles multiple spaces)
+        const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+
+        // Line Count: Split by newlines. Handle empty case (still 1 line).
+        const lines = text.length === 0 ? 1 : text.split('\n').length;
+
+        // Update the stats bar content
+        statsBar.textContent = `${words} words · ${characters} characters · ${lines} lines`;
+      };
+
+      // 1. Load saved content
+      const savedContent = localStorage.getItem(storageKey);
+      if (savedContent) {
+        editor.value = savedContent;
+      }
+
+      // 2. Save content on input & Update Stats
+      editor.addEventListener('input', () => {
+        localStorage.setItem(storageKey, editor.value);
+        updateStats(); // Call stats update on every input
+      });
+
+      // 3. Theme Management
+      const applyTheme = (theme) => {
+        if (theme === 'dark') {
+          document.body.classList.add('dark-mode');
+          localStorage.setItem(themeKey, 'dark');
+        } else {
+          document.body.classList.remove('dark-mode');
+          localStorage.setItem(themeKey, 'light');
+        }
+        themeToggleButton.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      };
+
+      const toggleTheme = () => {
+        const currentThemeIsDark = document.body.classList.contains('dark-mode');
+        applyTheme(currentThemeIsDark ? 'light' : 'dark');
+      };
+
+      // 4. Set initial theme
+      const savedTheme = localStorage.getItem(themeKey);
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+      if (savedTheme) {
+        applyTheme(savedTheme);
+      } else if (prefersDark) {
+        applyTheme('dark');
+      } else {
+         applyTheme('light');
+      }
+
+      // 5. Add Theme Listeners
+      themeToggleButton.addEventListener('click', toggleTheme);
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+         if (!localStorage.getItem(themeKey)) {
+            applyTheme(event.matches ? 'dark' : 'light');
+         }
+      });
+
+      // 6. Initial Stats Calculation on Load
+      updateStats();
+
+    })(); // IIFE
+  </script>
+</body>
+</html>
