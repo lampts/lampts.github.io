@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeCun Net Digit Recognizer</title>
+    <!-- ONNX Runtime Web -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.17.0/ort.webgpu.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --border-color: #d0d7de;
+            --primary-color: #3f51b5; /* Indigo */
+            --primary-dark: #303f9f;
+            --accent-color: #d73a49; /* GitHub Red */
+            --accent-dark: #b32231;
+            --highlight-color: #ffab40; /* Amber A400 */
+            --text-color: #24292f;
+            --text-muted: #57606a;
+            --text-light: #6e7781;
+            --bg-color: #f6f8fa; /* GitHub background */
+            --canvas-bg: black;
+            --button-text: white;
+        }
+        html { box-sizing: border-box; }
+        *, *:before, *:after { box-sizing: inherit; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            font-size: 14px; /* Base font size */
+        }
+        h1 { text-align: center; color: var(--text-color); margin: 20px 0; font-weight: 600; font-size: 2em; }
+        h2 { margin: 0 0 15px 0; font-size: 1.25em; color: var(--text-color); text-align: center; font-weight: 600; }
+        h3 { margin: 0 0 10px 0; font-size: 1.0em; color: var(--text-muted); text-align: center; font-weight: 600; width: 100%; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+
+        /* Main Layout */
+        #app-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px; /* Increased gap */
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-grow: 1;
+        }
+
+        /* Left Column: Drawing */
+        #drawing-column {
+            flex: 1 1 320px; /* Grow, shrink, base width */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        #canvas-area {
+            background-color: white;
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #drawing-canvas {
+            border: 1px solid var(--text-muted);
+            cursor: crosshair;
+            background-color: var(--canvas-bg);
+            touch-action: none;
+            border-radius: 4px;
+            max-width: 280px; /* Fixed size */
+            height: 280px;
+            width: 280px;
+            display: block; /* Remove extra space */
+        }
+        .prediction-result {
+            font-size: 1.8em; /* Slightly smaller */
+            font-weight: 600;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--primary-color);
+        }
+        .prediction-result span {
+            font-size: 1.2em;
+            color: var(--accent-color);
+            padding: 0 8px;
+            font-weight: 700;
+        }
+
+        /* Right Column: Results */
+        #results-column {
+            flex: 2 1 500px; /* Grow more, base width */
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            /* No background/border needed here, sections have it */
+        }
+        .result-section {
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        #resampled-canvas {
+            border: 1px solid var(--border-color);
+            image-rendering: pixelated;
+            background-color: #eee;
+            width: 96px; /* Smaller resampled view */
+            height: 96px;
+        }
+        .feature-maps {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr); /* Fixed 6 columns */
+            gap: 6px; /* Slightly smaller gap */
+            justify-content: center;
+            width: 100%;
+            max-width: 360px; /* Limit width */
+            margin-top: 10px;
+        }
+        .feature-map { text-align: center; }
+        .feature-map canvas {
+            border: 1px solid var(--border-color);
+            display: block;
+            margin: 0 auto;
+            background-color: var(--bg-color); /* Match body bg */
+        }
+        .feature-map-title { font-size: 9px; margin-top: 2px; color: var(--text-light); }
+        #prediction-chart-container {
+            width: 100%;
+            height: 300px; /* Adjust height as needed */
+            min-height: 250px;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        /* Controls Area at the bottom */
+        #controls-area {
+            display: flex;
+            flex-direction: column; /* Stack buttons and status */
+            align-items: center;
+            gap: 15px;
+            padding: 20px;
+            width: 100%;
+            margin-top: 10px; /* Space above controls */
+            border-top: 1px solid var(--border-color);
+        }
+        #control-buttons {
+             display: flex;
+             gap: 15px;
+        }
+        #status-messages {
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             gap: 10px;
+             width: 100%;
+             max-width: 400px; /* Limit width of status/progress */
+        }
+        button {
+            padding: 8px 16px; /* Slightly smaller buttons */
+            color: var(--button-text);
+            border: 1px solid rgba(27, 31, 36, 0.15); /* GitHub style border */
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 20px;
+            white-space: nowrap;
+            vertical-align: middle;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04), inset 0 1px 0 hsla(0, 0%, 100%, 0.25);
+        }
+        #recognize-button { background-color: #2c974b; /* GitHub Green */}
+        #recognize-button:hover { background-color: #288c44; }
+        #recognize-button:disabled { background-color: #94d3a2; cursor: not-allowed; opacity: 0.7; }
+        #clear-button { background-color: #d73a49; /* GitHub Red */ }
+        #clear-button:hover { background-color: #b32231; }
+        .status { text-align: center; font-style: italic; color: var(--text-muted); font-size: 0.9em; margin: 0; }
+        .progress-container { width: 100%; background-color: hsla(210, 18%, 87%, 1); border-radius: 6px; height: 8px; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 6px; background-color: var(--primary-color); width: 0%; transition: width 0.4s ease-out; }
+        .hidden { display: none !important; }
+        .error-message { width: 100%; color: var(--accent-dark); font-weight: 600; text-align: center; padding: 5px 8px; background-color: #ffdce0; border: 1px solid #ff959e; border-radius: 6px; font-size: 0.9em; }
+        .disclaimer { display: none; } /* Hide old disclaimer */
+
+         /* Responsive adjustments */
+         @media (max-width: 768px) {
+             #app-container { flex-direction: column; }
+             #drawing-panel { flex-basis: auto; } /* Allow natural height */
+             #results-column { flex-basis: auto; }
+             .feature-maps { max-width: none; grid-template-columns: repeat(auto-fit, minmax(45px, 1fr)); }
+             h1 { font-size: 1.6em; }
+             #prediction-chart-container { height: 250px; }
+         }
+
+    </style>
+</head>
+<body>
+    <h1>LeCun Net Digit Recognizer</h1>
+
+    <div id="app-container">
+        <!-- Drawing Column -->
+        <div id="drawing-column">
+            <div id="canvas-area">
+                <h2>Draw Digit (0-9)</h2>
+                <canvas id="drawing-canvas" width="280" height="280"></canvas>
+                <div class="prediction-result hidden" id="prediction-result">
+                    Predicted: <span id="predicted-digit">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Column -->
+        <div id="results-column" class="hidden"> <!-- Hide initially -->
+             <div class="result-section" id="resampled-section">
+                <h3>Resampled (16x16)</h3>
+                <canvas id="resampled-canvas" width="16" height="16"></canvas>
+            </div>
+            <div class="result-section" id="h1-maps-section">
+                <h3>H1 Feature Maps (8x8)</h3>
+                <div class="feature-maps" id="h1-feature-maps">Awaiting Inference...</div>
+            </div>
+             <div class="result-section" id="h2-maps-section">
+                <h3>H2 Feature Maps (4x4)</h3>
+                <div class="feature-maps" id="h2-feature-maps">Awaiting Inference...</div>
+            </div>
+            <div class="result-section" id="chart-section">
+                 <h3>Probabilities (Softmax)</h3>
+                <div id="prediction-chart-container">
+                    <canvas id="prediction-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Area -->
+    <div id="controls-area">
+         <div id="status-messages">
+             <div id="model-status" class="status">Loading model...</div>
+             <div class="progress-container hidden" id="progress-container">
+                 <div class="progress-bar" id="progress-bar"></div>
+             </div>
+             <div id="error-message" class="error-message hidden"></div>
+         </div>
+         <div id="control-buttons">
+             <button id="clear-button">Clear Canvas</button>
+             <button id="recognize-button" disabled>Recognize Digit</button>
+         </div>
+         <p style="font-size: 0.8em; color: var(--text-light); text-align: center; margin-top: 10px;">Model runs entirely in your browser. Ensure model.onnx includes H1/H2 outputs for feature maps.</p>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const MODEL_URLS = { main: 'model.onnx' };
+        const INPUT_NAME = 'input';
+        const OUTPUT_NAMES = { main: 'output', h1: 'h1_features', h2: 'h2_features', classifier: null };
+        const MODEL_INPUT_SHAPE = [1, 1, 16, 16];
+        const DRAWING_LINE_WIDTH = 20;
+        const HIGHLIGHT_COLOR = 'rgba(255, 171, 64, 0.8)';
+        const BASE_COLOR = 'rgba(44, 151, 74, 0.7)'; // Greener base color
+        const BASE_BORDER_COLOR = 'rgba(44, 151, 74, 1)';
+        const HIGHLIGHT_BORDER_COLOR = 'rgba(255, 171, 64, 1)';
+        const VIRIDIS_256 = [ /* ... Full Viridis array ... */
+             [68,1,84],[68,2,85],[68,3,86],[69,4,87],[69,5,88],[69,6,89],[70,7,90],[70,8,91],[70,9,92],[71,10,93],[71,11,94],[71,12,95],[72,13,96],[72,14,97],[72,15,98],[72,17,99],[73,18,100],[73,19,101],[73,20,102],[73,21,103],[74,22,104],[74,23,105],[74,24,106],[74,25,107],[74,26,108],[75,27,109],[75,28,110],[75,29,111],[75,30,112],[75,31,113],[75,32,114],[75,33,114],[76,34,115],[76,35,116],[76,36,117],[76,37,118],[76,38,119],[76,39,119],[76,40,120],[76,41,121],[76,42,122],[75,43,122],[75,44,123],[75,45,124],[75,46,125],[75,47,125],[75,48,126],[74,49,127],[74,50,127],[74,51,128],[74,52,128],[73,53,129],[73,54,129],[73,55,130],[72,56,130],[72,57,131],[72,58,131],[71,59,132],[71,60,132],[71,61,133],[70,62,133],[70,63,133],[70,64,134],[69,65,134],[69,66,134],[69,67,135],[68,68,135],[68,69,135],[68,70,135],[67,71,136],[67,72,136],[67,73,136],[66,74,136],[66,75,136],[66,76,137],[65,77,137],[65,78,137],[64,79,137],[64,80,137],[64,81,137],[63,82,137],[63,83,137],[63,84,138],[62,85,138],[62,86,138],[61,87,138],[61,88,138],[61,89,138],[60,90,138],[60,91,138],[59,92,138],[59,93,138],[59,94,138],[58,95,138],[58,96,138],[57,97,138],[57,98,138],[57,99,138],[56,100,138],[56,101,138],[55,102,138],[55,103,138],[55,104,138],[54,105,138],[54,106,138],[53,107,138],[53,108,138],[53,109,138],[52,110,138],[52,111,138],[51,112,138],[51,113,138],[51,114,138],[50,115,138],[50,116,138],[49,117,138],[49,118,138],[48,119,139],[48,120,139],[48,121,139],[47,122,139],[47,123,139],[46,124,139],[46,125,139],[45,126,139],[45,127,139],[45,128,139],[44,129,139],[44,130,139],[43,131,140],[43,132,140],[42,133,140],[42,134,140],[42,135,140],[41,136,140],[41,137,140],[40,138,140],[40,139,140],[39,140,140],[39,141,140],[39,142,140],[38,143,140],[38,144,140],[37,145,140],[37,146,141],[36,147,141],[36,148,141],[36,149,141],[35,150,141],[35,151,141],[34,152,141],[34,153,141],[34,154,141],[33,155,141],[33,156,141],[33,157,141],[32,158,141],[32,159,141],[32,160,141],[31,161,141],[31,162,141],[31,163,141],[31,164,141],[30,165,140],[30,166,140],[30,167,140],[30,168,140],[30,169,139],[29,170,139],[29,171,139],[29,172,138],[29,173,138],[29,174,137],[29,175,137],[30,176,136],[30,177,136],[30,178,135],[31,179,134],[31,180,133],[32,181,133],[32,182,132],[33,183,131],[34,184,130],[35,185,129],[36,186,128],[37,187,127],[38,188,126],[39,189,125],[41,190,124],[42,191,123],[44,192,121],[45,193,120],[47,194,119],[49,195,118],[51,196,116],[53,197,115],[55,198,114],[57,199,112],[59,200,111],[61,201,110],[64,202,108],[66,203,107],[68,204,106],[71,205,104],[73,206,103],[76,207,102],[78,208,100],[81,209,99],[84,210,98],[86,211,96],[89,212,95],[92,213,94],[95,214,93],[98,214,91],[101,215,90],[104,216,89],[107,217,88],[110,218,87],[113,219,86],[116,219,85],[120,220,84],[123,221,83],[126,222,82],[130,223,81],[133,223,80],[137,224,79],[140,225,78],[144,226,77],[147,226,76],[151,227,75],[155,228,74],[158,228,73],[162,229,72],[166,230,71],[170,230,70],[174,231,69],[177,231,68],[181,232,67],[185,232,66],[189,233,65],[193,233,64],[197,234,63],[201,234,62],[205,235,61],[209,235,61],[213,235,60],[217,236,59],[221,236,58],[225,236,58],[229,237,57],[233,237,56],[237,237,55],[241,237,55],[245,237,54],[249,237,53],[253,237,51]
+         ];
+
+        // DOM Element Variables (Initialized in window.onload)
+        let canvas, ctx, resampledCanvas, resampledCtx, clearButton, recognizeButton, modelStatus,
+            errorMessage, predictionResult, predictedDigit, progressContainer,
+            progressBar, h1FeatureMapsContainer, h2FeatureMapsContainer,
+            chartContainer, resultsColumnElement; // Changed resultsPanelElement to resultsColumnElement
+
+        // State Variables
+        let isDrawing = false, lastPos = { x: 0, y: 0 }, models = { main: null },
+            modelsLoaded = { main: false }, probabilityChart = null, inferenceRunning = false;
+
+        // --- Initialization ---
+        window.onload = async () => {
+            // Initialize DOM variables
+            canvas = document.getElementById('drawing-canvas'); if (!canvas) { console.error("FATAL: Drawing canvas not found!"); return; }
+            ctx = canvas.getContext('2d', { willReadFrequently: true });
+            resampledCanvas = document.getElementById('resampled-canvas'); if (!resampledCanvas) { console.error("FATAL: Resampled canvas not found!"); return; }
+            resampledCtx = resampledCanvas.getContext('2d');
+            clearButton = document.getElementById('clear-button'); recognizeButton = document.getElementById('recognize-button'); modelStatus = document.getElementById('model-status');
+            errorMessage = document.getElementById('error-message'); resultsColumnElement = document.getElementById('results-column'); // Get results column
+            predictionResult = document.getElementById('prediction-result');
+            predictedDigit = document.getElementById('predicted-digit'); progressContainer = document.getElementById('progress-container'); progressBar = document.getElementById('progress-bar');
+            h1FeatureMapsContainer = document.getElementById('h1-feature-maps'); h2FeatureMapsContainer = document.getElementById('h2-feature-maps');
+            chartContainer = document.getElementById('prediction-chart-container');
+
+            // Basic check for required elements
+            if (!canvas || !ctx || !resampledCanvas || !resampledCtx || !clearButton || !recognizeButton || !modelStatus || !errorMessage || !resultsColumnElement || !predictionResult || !predictedDigit || !progressContainer || !progressBar || !h1FeatureMapsContainer || !h2FeatureMapsContainer || !chartContainer) { console.error("FATAL: One or more UI elements not found!"); modelStatus.textContent="UI Init Error!"; return; }
+
+            setupCanvas();
+            addEventListeners();
+            await loadModels();
+        };
+
+        function setupCanvas() { if(!ctx){console.error("ctx null in setup"); return;} ctx.fillStyle='black'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.lineWidth=DRAWING_LINE_WIDTH; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='white'; console.log("Canvas initialized."); }
+        function addEventListeners() { if(!canvas||!clearButton||!recognizeButton){console.error("elements null in listeners"); return;} canvas.addEventListener('mousedown', startDrawing); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stopDrawing); canvas.addEventListener('mouseleave', stopDrawing); canvas.addEventListener('touchstart', handleTouch,{passive:false}); canvas.addEventListener('touchmove', handleTouch,{passive:false}); canvas.addEventListener('touchend', stopDrawing); canvas.addEventListener('touchcancel', stopDrawing); clearButton.addEventListener('click', clearAll); recognizeButton.addEventListener('click', runRecognition); console.log("Listeners added."); }
+        async function loadModels() { /* ...unchanged... */ modelStatus.textContent = 'Loading model (WASM)...'; showProgress(0, "Init"); progressContainer.classList.remove('hidden'); errorMessage.classList.add('hidden'); recognizeButton.disabled = true; const modelsToLoad = Object.entries(MODEL_URLS).filter(([k, url]) => url && k === 'main'); if (modelsToLoad.length === 0) { showError("MODEL_URLS.main not config."); modelStatus.textContent = 'Config error.'; progressContainer.classList.add('hidden'); return; } const [modelKey, modelUrl] = modelsToLoad[0]; const executionProviders = ['wasm']; console.log(`Loading ORT (${executionProviders[0]})...`); modelStatus.textContent = `Initializing ORT (${executionProviders[0]})...`; try { ort.env.wasm.wasmPaths = 'https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.17.0/'; console.log("Set ORT WASM paths."); showProgress(10, "ORT Init"); await loadSingleModel(modelKey, modelUrl, executionProviders); if (modelsLoaded[modelKey]) { modelStatus.textContent = 'Model loaded!'; recognizeButton.disabled = false; console.log("Model loading complete."); await new Promise(r => setTimeout(r, 500)); progressContainer.classList.add('hidden'); } else { modelStatus.textContent = 'Model loading failed.'; progressContainer.classList.add('hidden'); } } catch (error) { console.error('Init/Load Error:', error); showError(`Init/Load Error: ${error.message}.`); modelStatus.textContent = 'Model loading failed.'; progressContainer.classList.add('hidden'); } }
+        async function loadSingleModel(key, url, executionProviders) { /* ...unchanged... */ console.log(`Loading model "${key}" from ${url} (${executionProviders.join(',')})...`); showProgress(20, `Loading ${url}`); try { const session = await ort.InferenceSession.create(url, { executionProviders }); if (!session) { throw new Error("Session creation returned null/undefined."); } models[key] = session; const actualProvider = models[key]?.executionProvider; if (actualProvider) { console.log(`Model "${key}" loaded via ${actualProvider}.`); if (actualProvider.toLowerCase() !== 'wasm') { console.warn(`Expected WASM, got ${actualProvider}.`); } } else { console.warn(`Model "${key}" loaded, provider info missing.`); } modelsLoaded[key] = true; showProgress(100, `Loaded ${url}`); } catch (error) { console.error(`Error loading ${key}:`, error); modelsLoaded[key] = false; showProgress(100, `Error`); /* ... error reporting ... */ if (error.message.includes('404') || error.message.includes('failed to fetch')) { showError(`Failed to load ${key}: File not found at "${url}". Check location/server.`); } else if (error.message.includes('invalid model') || error.message.includes('parse')) { showError(`Failed to load ${key}: File "${url}" might be corrupted/invalid ONNX.`); } else if (error.message.includes('no available backend')) { showError(`Failed to load ${key}: ONNX Runtime backend (${executionProviders.join('/')}) failed. Check console.`); } else { showError(`Failed to load ${key}: ${error.message}. Check console.`); } } }
+        function startDrawing(e) { /* ...unchanged... */ if (e.button !== 0 && e.type.startsWith('mouse')) return; isDrawing = true; lastPos = getMousePos(e); if(lastPos) draw(e); }
+        function draw(e) { /* ...unchanged... */ if (!isDrawing) return; const currentPos = getMousePos(e); if (!currentPos) return; ctx.beginPath(); ctx.moveTo(lastPos.x, lastPos.y); ctx.lineTo(currentPos.x, currentPos.y); ctx.stroke(); lastPos = currentPos; }
+        function stopDrawing() { /* ...unchanged... */ if (isDrawing) { isDrawing = false; console.log("Drawing stopped."); } }
+        function getMousePos(e) { /* ...unchanged... */ const rect = canvas.getBoundingClientRect(); const clientX = e.clientX ?? e.touches?.[0]?.clientX; const clientY = e.clientY ?? e.touches?.[0]?.clientY; if (typeof clientX !== 'number' || typeof clientY !== 'number') { console.warn("Invalid coords:", e); return null; } return { x: clientX - rect.left, y: clientY - rect.top }; }
+        function handleTouch(e) { /* ...unchanged... */ e.preventDefault(); if (e.touches.length > 1) { stopDrawing(); return; } if (e.type === 'touchstart') { isDrawing = true; lastPos = getMousePos(e); if(lastPos) draw(e); } else if (e.type === 'touchmove') { if (isDrawing) draw(e); } }
+        function clearAll() { console.log("Clearing..."); setupCanvas(); resultsColumnElement.classList.add('hidden'); predictionResult.classList.add('hidden'); h1FeatureMapsContainer.innerHTML = ''; h2FeatureMapsContainer.innerHTML = ''; errorMessage.classList.add('hidden'); if(resampledCtx) resampledCtx.clearRect(0, 0, resampledCanvas.width, resampledCanvas.height); if (probabilityChart) { try { probabilityChart.destroy(); console.log("Chart destroyed."); } catch (e) { console.error("Error destroying chart:", e); } finally { probabilityChart = null; } } }
+        function preprocessImage() { /* ...unchanged... */ console.log("Preprocessing image..."); const tempCanvas = document.createElement('canvas'); tempCanvas.width = MODEL_INPUT_SHAPE[2]; tempCanvas.height = MODEL_INPUT_SHAPE[3]; const tempCtx = tempCanvas.getContext('2d'); tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, tempCanvas.width, tempCanvas.height); const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height); const data = imageData.data; const float32Data = new Float32Array(tempCanvas.width * tempCanvas.height); for (let i = 0; i < float32Data.length; i++) { const pixelValue = data[i * 4]; float32Data[i] = (pixelValue / 255.0) * 2.0 - 1.0; } /* Adjust norm if needed */ const inputTensor = new ort.Tensor('float32', float32Data, MODEL_INPUT_SHAPE); if (resampledCtx) {resampledCtx.clearRect(0, 0, resampledCanvas.width, resampledCanvas.height); resampledCtx.drawImage(tempCanvas, 0, 0, resampledCanvas.width, resampledCanvas.height);} console.log("Preprocessing complete."); return inputTensor; }
+        async function runRecognition() {
+             if (inferenceRunning) { console.warn("Inference busy."); return; } if (!modelsLoaded.main) { showError("Model not loaded."); return; } if (isCanvasBlank()) { showError("Canvas empty."); return; }
+             inferenceRunning = true; recognizeButton.disabled = true; recognizeButton.textContent = 'Recognizing...'; errorMessage.classList.add('hidden');
+             resultsColumnElement.classList.add('hidden'); // Hide results column initially
+             predictionResult.classList.add('hidden');
+             h1FeatureMapsContainer.innerHTML = 'Processing...'; h2FeatureMapsContainer.innerHTML = 'Processing...';
+             showProgress(0, "Start recognition"); progressContainer.classList.remove('hidden');
+            try {
+                console.time("Recognition Pipeline"); console.time("Preprocessing"); showProgress(10, "Preprocessing"); const inputTensor = preprocessImage();
+                console.timeEnd("Preprocessing"); console.time("ONNX Inference"); showProgress(40, "Running model"); const feeds = { [INPUT_NAME]: inputTensor }; console.log(`Running inference with input: "${INPUT_NAME}"`);
+                const requestedOutputNames = [OUTPUT_NAMES.main, OUTPUT_NAMES.h1, OUTPUT_NAMES.h2].filter(name => name); console.log("Requesting outputs:", requestedOutputNames); const outputs = await models.main.run(feeds, requestedOutputNames);
+                console.log("Inference complete. Raw outputs:", outputs); console.timeEnd("ONNX Inference"); showProgress(80, "Inference done"); console.time("Output Processing"); showProgress(90, "Processing results");
+                const logitsTensor = outputs[OUTPUT_NAMES.main]; if (!logitsTensor || !logitsTensor.data || !(logitsTensor.data instanceof Float32Array)) { console.error("Logits tensor missing/invalid:", outputs); throw new Error(`Output tensor "${OUTPUT_NAMES.main}" (logits) not found/invalid.`); } const rawLogits = logitsTensor.data;
+                const { predictedClass, probabilities } = processLogits(rawLogits); predictedDigit.textContent = predictedClass; predictionResult.classList.remove('hidden');
+                updateProbabilitiesChart(probabilities, predictedClass);
+                const h1Features = outputs[OUTPUT_NAMES.h1]; if (h1Features && OUTPUT_NAMES.h1) { console.log("Visualizing H1"); if (h1Features.dims && h1Features.dims.length === 4 && h1Features.dims[1] === 12 && h1Features.dims[2] === 8 && h1Features.dims[3] === 8) { visualizeFeatureMaps(h1Features, h1FeatureMapsContainer, 'H1 Map'); } else { console.warn(`H1 output "${OUTPUT_NAMES.h1}" has unexpected dimensions:`, h1Features.dims); h1FeatureMapsContainer.innerHTML = 'H1 Dim Mismatch'; } } else { console.log(`H1 features missing/not config (${OUTPUT_NAMES.h1||'N/A'}).`); h1FeatureMapsContainer.innerHTML = 'H1 N/A'; }
+                const h2Features = outputs[OUTPUT_NAMES.h2]; if (h2Features && OUTPUT_NAMES.h2) { console.log("Visualizing H2"); if (h2Features.dims && h2Features.dims.length === 4 && h2Features.dims[1] === 12 && h2Features.dims[2] === 4 && h2Features.dims[3] === 4) { visualizeFeatureMaps(h2Features, h2FeatureMapsContainer, 'H2 Map'); } else { console.warn(`H2 output "${OUTPUT_NAMES.h2}" has unexpected dimensions:`, h2Features.dims); h2FeatureMapsContainer.innerHTML = 'H2 Dim Mismatch'; } } else { console.log(`H2 features missing/not config (${OUTPUT_NAMES.h2||'N/A'}).`); h2FeatureMapsContainer.innerHTML = 'H2 N/A'; }
+                resultsColumnElement.classList.remove('hidden'); // Show results column
+                console.timeEnd("Output Processing"); showProgress(100, "Done"); console.timeEnd("Recognition Pipeline");
+            } catch (error) { console.error("Recognition failed:", error); showError(`Recognition Error: ${error.message}.`); showProgress(100, "Error"); }
+            finally { await new Promise(r => setTimeout(r, 500)); progressContainer.classList.add('hidden'); recognizeButton.textContent = 'Recognize Digit'; recognizeButton.disabled = false; inferenceRunning = false; }
+        }
+        function isCanvasBlank() { try { const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data; for (let i = 0; i < data.length; i += 4) { if (data[i + 3] !== 0 || data[i] !== 0 || data[i + 1] !== 0 || data[i + 2] !== 0) return false; } return true; } catch (e) { console.error("Canvas check error:", e); return false; } }
+        function softmax(logits) { const maxLogit = Math.max(...logits); const exps = logits.map(l => Math.exp(l - maxLogit)); const sumExps = exps.reduce((a, b) => a + b, 0); return exps.map(e => e / sumExps); }
+        function processLogits(logits) { if (!(logits instanceof Float32Array) || logits.length !== 10) { console.error("Invalid logits:", logits); showError("Invalid logits data."); return { predictedClass: '?', probabilities: [] }; } console.log("Raw Logits:", Array.from(logits)); const probabilities = softmax(logits); console.log("Softmax Probs:", probabilities.map(p=>p.toFixed(4))); let maxProb = -1; let predictedClass = -1; for (let i = 0; i < probabilities.length; i++) { if (probabilities[i] > maxProb) { maxProb = probabilities[i]; predictedClass = i; } } if (predictedClass === -1) { console.error("Prediction failed:", probabilities); showError("Prediction failed."); return { predictedClass: '?', probabilities }; } console.log(`Predicted: ${predictedClass} (Prob: ${maxProb.toFixed(4)})`); return { predictedClass, probabilities }; }
+        function updateProbabilitiesChart(probabilities, predictedClass) { const labels = ['0','1','2','3','4','5','6','7','8','9']; const dataArray = Array.isArray(probabilities)?probabilities:Array.from(probabilities); const sumProbs = dataArray.reduce((a,b)=>a+b,0); if(Math.abs(sumProbs-1.0)>0.01){console.warn(`Probs sum to ${sumProbs.toFixed(4)}`);} const backgroundColors=labels.map((l,i)=>i===predictedClass?HIGHLIGHT_COLOR:BASE_COLOR); const borderColors=labels.map((l,i)=>i===predictedClass?HIGHLIGHT_BORDER_COLOR:BASE_BORDER_COLOR); const chartData={labels:labels,datasets:[{label:'Probability',data:dataArray,backgroundColor:backgroundColors,borderColor:borderColors,borderWidth:1}]}; const chartCtx=document.getElementById('prediction-chart').getContext('2d'); if(probabilityChart && probabilityChart.ctx){probabilityChart.data=chartData; probabilityChart.update(); console.log("Prob chart updated.");} else {if(probabilityChart) console.warn("Prev chart instance invalid, recreating."); else console.log("Creating new prob chart."); probabilityChart = new Chart(chartCtx, createChartConfig(chartData));} }
+        function createChartConfig(chartData) { return { type: 'bar', data: chartData, options: { indexAxis: 'y', scales: { x: { beginAtZero: true, max: 1.0, title: { display: true, text: 'Probability'} }, y: { grid: { display: false }, title: { display: true, text: 'Digit'} } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += Number(context.parsed.x).toFixed(4); } return label; } } } }, responsive: true, maintainAspectRatio: false } }; }
+        function visualizeFeatureMaps(featureTensor, containerElement, baseTitle) { containerElement.innerHTML = ''; if (!featureTensor || !featureTensor.dims || !Array.isArray(featureTensor.dims) || featureTensor.dims.length !== 4 || !featureTensor.data || !(featureTensor.data instanceof Float32Array)) { console.warn(`Invalid feature tensor for ${baseTitle}:`, featureTensor); containerElement.textContent = "Invalid data."; containerElement.style.color = 'red'; return; } const [batch, channels, height, width] = featureTensor.dims; const mapData = featureTensor.data; const mapSize = height * width; if (channels <= 0 || height <= 0 || width <= 0 || mapSize * channels > mapData.length) { console.warn(`Invalid dimensions for ${baseTitle}:`, featureTensor.dims); containerElement.textContent = "Invalid dims."; containerElement.style.color = 'red'; return; } const minDisplaySize = (width === 8) ? 64 : (width === 4) ? 48 : 48; const displayScale = Math.max(1, Math.floor(minDisplaySize / Math.max(width, height))); console.log(`Visualizing ${channels} maps (${width}x${height}) for ${baseTitle} scale ${displayScale}`); for (let c = 0; c < channels; c++) { const mapOffset = c * mapSize; let minVal = Infinity; let maxVal = -Infinity; let hasValidNumber = false; for (let i = 0; i < mapSize; i++) { const val = mapData[mapOffset + i]; if (!isNaN(val)) { if (val < minVal) minVal = val; if (val > maxVal) maxVal = val; hasValidNumber = true; } } if (!hasValidNumber) { minVal = 0; maxVal = 0; } else if (minVal === maxVal) { maxVal = minVal + 1e-6; } const range = maxVal - minVal; const mapCanvas = document.createElement('canvas'); mapCanvas.width = width; mapCanvas.height = height; mapCanvas.style.width = `${width * displayScale}px`; mapCanvas.style.height = `${height * displayScale}px`; mapCanvas.style.imageRendering = 'pixelated'; const mapCtx = mapCanvas.getContext('2d'); const imageData = mapCtx.createImageData(width, height); for (let y = 0; y < height; y++) { for (let x = 0; x < width; x++) { const val = mapData[mapOffset + y * width + x]; let normalized = 0.5; if (!isNaN(val) && range > 1e-9) { normalized = (val - minVal) / range; } else if (!isNaN(val)) { normalized = 0.5; } const clampedNorm = Math.max(0, Math.min(1, normalized)); const colorIndex = Math.min(255, Math.floor(clampedNorm * 255)); const [r, g, b] = VIRIDIS_256[colorIndex]; const pixelIndex = (y * width + x) * 4; imageData.data[pixelIndex] = r; imageData.data[pixelIndex + 1] = g; imageData.data[pixelIndex + 2] = b; imageData.data[pixelIndex + 3] = 255; } } mapCtx.putImageData(imageData, 0, 0); const mapDiv = document.createElement('div'); mapDiv.className = 'feature-map'; mapDiv.appendChild(mapCanvas); const titleDiv = document.createElement('div'); titleDiv.className = 'feature-map-title'; titleDiv.textContent = `Map ${c + 1}`; mapDiv.appendChild(titleDiv); containerElement.appendChild(mapDiv); } }
+        function showError(message) { errorMessage.textContent = `❌ ERROR: ${message}`; errorMessage.classList.remove('hidden'); console.error("APP ERROR:", message); }
+        function updateProgress(percent, message = "") { const clampedPercent = Math.max(0, Math.min(100, Math.round(percent))); progressBar.style.width = `${clampedPercent}%`; progressBar.textContent = `${clampedPercent}% ${message}`; }
+        const showProgress = updateProgress;
+
+    </script>
+</body>
+</html>
