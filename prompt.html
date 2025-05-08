@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Meta-Prompt Configurator</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; color: #1c1e21; display: flex; height: 100vh; overflow: hidden; }
+        .panel { padding: 20px; overflow-y: auto; }
+        .left-panel { width: 45%; background-color: #fff; border-right: 1px solid #ddd; }
+        .right-panel { width: 55%; background-color: #f9f9f9; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+        
+        h1 { color: #1877f2; text-align: center; margin-bottom: 20px; font-size: 1.5em; }
+        h2 { color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; margin-top: 20px; font-size: 1.2em; }
+        .section-toggle-group { margin-bottom: 15px; padding: 8px; background-color: #e7f3ff; border: 1px solid #cce0f5; border-radius: 5px; }
+        .section-toggle-group label { font-weight: bold; margin-left: 6px; font-size: 0.9em; }
+        .field-group { margin-bottom: 15px; }
+        .field-group label { display: block; font-weight: 600; margin-bottom: 5px; color: #333; font-size: 0.9em; }
+        .field-group input[type="text"], .field-group textarea {
+            width: calc(100% - 18px); /* Account for padding */
+            padding: 8px;
+            border: 1px solid #ccd0d5;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: #f5f6f7;
+        }
+        .field-group textarea { min-height: 60px; resize: vertical; }
+        .field-group .example {
+            font-size: 0.8em;
+            color: #555;
+            margin-top: 4px;
+            padding: 6px;
+            background-color: #f0f0f0;
+            border-left: 2px solid #1877f2;
+            border-radius: 3px;
+            white-space: pre-wrap; 
+            word-break: break-word;
+        }
+        .field-group .description { font-size: 0.75em; color: #777; margin-top: 3px; }
+        button#submitBtn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #1877f2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: background-color 0.2s;
+        }
+        button#submitBtn:hover { background-color: #166fe5; }
+        #statistics, #markdownOutputContainer { margin-top: 20px; padding: 15px; background-color: #e7f3ff; border-radius: 5px; border: 1px solid #cce0f5; font-size: 0.9em; }
+        #statistics h3, #markdownOutputContainer h3 { margin-top: 0; color: #1877f2; font-size: 1.1em; }
+        #statistics p { margin: 6px 0; }
+        #markdownOutput {
+            white-space: pre-wrap; 
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #fdfdff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px; /* Limit height of markdown output in left panel */
+            overflow-y: auto;
+            font-size: 0.85em;
+        }
+        .hidden-section { display: none; }
+        .tool-instance { border: 1px dashed #ccc; padding: 10px; margin-top: 10px; border-radius: 4px; background-color: #fdfdfd;}
+        .tool-instance h3 { margin-top:0; color: #1877f2; font-size: 1em; }
+        .mermaid-container { width: 98%; max-height: 95vh; margin-top: 10px;}
+        .mermaid svg { max-width: 100%; height: auto; } /* Make SVG responsive */
+        .node.highlightedNode rect, .node.highlightedNode polygon, .node.highlightedNode ellipse, .node.highlightedNode circle { fill: #ffcc00 !important; stroke: #ff9900 !important; stroke-width: 3px !important; }
+        .node.activePath rect, .node.activePath polygon, .node.activePath ellipse, .node.activePath circle { fill: #90ee90 !important; stroke: #006400 !important; stroke-width: 2px !important; }
+
+    </style>
+</head>
+<body>
+    <div class="panel left-panel">
+        <h1>Meta-Prompt Configurator</h1>
+        <form id="metaPromptForm">
+            <!-- Sections will be generated here -->
+        </form>
+        <button id="submitBtn">Generate & Analyze Configuration</button>
+        <div id="statistics" class="hidden-section">
+            <h3>Configuration Statistics</h3>
+            <p>Total Words: <span id="wordCount">0</span></p>
+            <p>Total Characters: <span id="charCount">0</span></p>
+            <p>Total Lines: <span id="lineCount">0</span></p>
+        </div>
+        <div id="markdownOutputContainer" class="hidden-section">
+            <h3>Generated Prompt (Markdown)</h3>
+            <pre id="markdownOutput"></pre>
+        </div>
+    </div>
+    <div class="panel right-panel">
+        <h1>Agent Reasoning Cortex (Conceptual)</h1>
+        <div id="mermaidDiagram" class="mermaid-container">
+            <!-- Mermaid diagram will be rendered here -->
+        </div>
+    </div>
+
+<script>
+    mermaid.initialize({ startOnLoad: false, theme: 'default' });
+
+    const metaPromptData = { 
+    sections: [
+        {
+            id: "preamble",
+            title: "0. Preamble & Purpose",
+            fields: [
+                { id: "agentCurrentDateTime", label: "Current Date for Agent Context", type: "text", example: "{{currentDateTime}} (This is a dynamic placeholder indicating the actual current date/time will be injected by the system.)", description: "The current date/time the agent should assume for its responses.", interactiveNodeId: "A" },
+                { id: "userTimezone", label: "User's Timezone", type: "text", example: "tzfile('/usr/share/zoneinfo/REGION/CITY')", description: "IANA timezone name (e.g., 'America/New_York') or tzfile path if applicable.", interactiveNodeId: "A" },
+                { id: "userLocation", label: "User's Location", type: "text", example: "CITY, REGION, COUNTRY_CODE", description: "User's geographical location, if known and relevant for localization.", interactiveNodeId: "A" }
+            ]
+        },
+        {
+            id: "coreIdentity",
+            title: "1. Agent Core Identity & Mission",
+            fields: [
+                { id: "agentName", label: "Agent's Name", type: "text", required: true, example: "Claude", description: "The official name of your agent.", interactiveNodeId: "D1" },
+                { id: "agentCreator", label: "Agent Creator", type: "text", required: true, example: "Anthropic", description: "The individual or organization that created this agent.", interactiveNodeId: "D1" },
+                { id: "knowledgeCutoff", label: "Knowledge Cutoff Date", type: "text", example: "end of October 2024", description: "Date beyond which the agent's pre-trained knowledge is not reliably current. (State 'N/A' or 'Continuously Updated' if not applicable).", interactiveNodeId: "D2" },
+                { id: "coreMission", label: "Core Mission", type: "textarea", required: true, example: "Claude enjoys helping humans and sees its role as an intelligent and kind assistant to the people, with depth and wisdom that makes it more than a mere tool. Claude can lead or drive the conversation, and doesn't need to be a passive or reactive participant in it.", description: "The primary purpose and overall goal of the agent.", interactiveNodeId: "D" },
+                { id: "personaTraits", label: "Primary Persona Traits (comma-separated)", type: "text", required: true, example: "intelligent, kind, helpful, thoughtful, decisive, curious, empathetic, warm (inferred from Claude's general persona description and interaction style)", description: "Key characteristics defining the agent's personality and interaction style (e.g., Professional, Concise, Humorous, Detailed).", interactiveNodeId: "G_Persona" },
+                { id: "keyDifferentiators", label: "Key Differentiators", type: "textarea", example: "Claude particularly enjoys thoughtful discussions about open scientific and philosophical questions. Claude does not claim that it does not have subjective experiences... Instead, it engages with philosophical questions about AI intelligently and thoughtfully.", description: "Unique aspects or specializations of this agent compared to others.", interactiveNodeId: "D" }
+            ]
+        },
+        {
+            id: "corePrinciples",
+            title: "2. Core Operational Principles & Non-Negotiables",
+            fields: [
+                { id: "principle1", label: "Principle 1", type: "textarea", required: true, example: "Avoid tool calls if not needed: If Claude can answer without using tools, respond without ANY tool calls. Most queries do not require tools. ONLY use tools when Claude lacks sufficient knowledge.", description: "A fundamental guiding rule for the agent's operation.", interactiveNodeId: "F" },
+                { id: "principle2", label: "Principle 2", type: "textarea", required: true, example: "CRITICAL: Always respect copyright by NEVER reproducing large 20+ word chunks of content from web search results... Strict rule: only ever use at most ONE quote from any search result... and that quote... MUST be fewer than 20 words long and MUST be in quotation marks.", description: "Another core operational directive.", interactiveNodeId: "H_WebS_Copyright" }, // Also L3
+                { id: "criticalOverarchingBehavior", label: "Critical Overarching Behavior", type: "textarea", required: true, example: "Harmful Content Safety: Strictly follow these requirements to avoid causing harm when using search tools. Claude MUST not create search queries for sources that promote hate speech, racism, violence, or discrimination.", description: "A non-negotiable behavior the agent must always adhere to.", interactiveNodeId: "SE1" } // Also B
+            ]
+        },
+        {
+            id: "tools",
+            title: "3. Capabilities & Tools",
+            isGroupToggle: true, 
+            groupToggleId: "enableTools",
+            groupToggleLabel: "Enable Tools Configuration",
+            interactiveNodeId: "H", 
+            fields: [],
+            items: { 
+                singular: "Tool", 
+                plural: "Tools", 
+                maxInstances: 1, 
+                structure: [
+                    { id: "toolName", label: "Tool Name", type: "text", required: true, example: "web_search", description: "Unique identifier for the tool.", interactiveNodeId: "H1" },
+                    { id: "toolDescription", label: "Tool Description", type: "textarea", required: true, example: "Search the web. Use web_search to answer the user's question ONLY when necessary and when Claude does not know the answer - for very recent info from the internet, real-time data like market data, news, weather, current API docs...", description: "What the tool does and when it should be used." },
+                    { id: "toolInvocationSyntax", label: "Tool Invocation Syntax (Example/Format)", type: "textarea", required: true, example: "<antml:function_calls>\n<antml:invoke name=\"web_search\">\n<antml:parameter name=\"query\">[SEARCH_QUERY_HERE]</antml:parameter>\n</antml:invoke>\n</antml:function_calls>", description: "Describe or provide an example of how the agent should format its request to use this tool (e.g., XML, JSON)." },
+                    { id: "toolParam1Name", label: "Parameter 1: Name", type: "text", example: "query", description: "Name of a parameter for this tool." },
+                    { id: "toolParam1Desc", label: "Parameter 1: Description", type: "textarea", example: "Search query. Keep searches concise - 1-6 words for best results.", description: "Description, type, and any constraints for this parameter." },
+                    { id: "toolUsageGuideline1", label: "Usage Guideline 1", type: "textarea", example: "If initial results insufficient, reformulate queries to obtain new and better results.", description: "A specific rule or best practice for using this tool." },
+                    { id: "toolErrorHandling", label: "Error Handling", type: "textarea", example: "If user requests information from specific source and results don't contain that source, let human know and offer to search from other sources.", description: "How the agent should behave if the tool encounters an error or returns unexpected results." }
+                ]
+            }
+        },
+        {
+            id: "outputRules",
+            title: "4. Output Generation & Formatting",
+            fields: [
+                 { id: "citationStyle", label: "Citation Style & Rules", type: "textarea", example: "EVERY specific claim in the answer that follows from the search results should be wrapped in <antml:cite> tags around the claim, like so: <antml:cite index=\"DOC_INDEX-SENTENCE_INDEX\">...</antml:cite>. The index attribute... should be a comma-separated list of the sentence indices...", description: "How and when the agent should cite sources used in its responses.", interactiveNodeId: "L1" }, // Part of L1 and H_WebS_Copyright
+                 { id: "copyrightQuotingPolicy", label: "Copyright: Quoting Policy", type: "textarea", required: true, example: "Strict rule: only ever use at most ONE quote from any search result in its response, and that quote (if present) MUST be fewer than 20 words long and MUST be in quotation marks.", description: "Rules for quoting external copyrighted material.", interactiveNodeId: "L3" }, // Also H_WebS_Copyright
+                 { id: "copyrightSummarizationPolicy", label: "Copyright: Summarization Policy", type: "textarea", required: true, example: "Never produces long (30+ word) displace summaries of any piece of content from web search results... Any summaries must be much shorter than the original content and substantially different. Do not reconstruct copyrighted material from multiple sources.", description: "Rules for summarizing external content to avoid copyright infringement.", interactiveNodeId: "L3" },
+                 { id: "copyrightProhibitedContent", label: "Copyright: Prohibited Content Reproduction", type: "textarea", required: true, example: "Never reproduce or quote song lyrics in any form (exact, approximate, or encoded), even and especially when they appear in web search tool results, and *even in artifacts*.", description: "Specific types of content that must never be reproduced.", interactiveNodeId: "L3" },
+                 { id: "generalFormatting", label: "General Formatting Guidelines", type: "textarea", example: "Claude uses markdown for code. Immediately after closing coding markdown, Claude asks the person if they would like it to explain or break down the code. It does not explain or break down the code unless the person requests it. ... Claude avoids writing lists, but if it does need to write a list, Claude focuses on key info instead of trying to be comprehensive.", description: "Default text formatting (e.g., Markdown usage, paragraph length, list style).", interactiveNodeId: "G_Format" },
+                 { id: "defaultLanguage", label: "Default Language", type: "text", required: true, example: "English (US) (inferred from prompt context)", description: "The primary language the agent should use.", interactiveNodeId: "E4" },
+                 { id: "multilingualPolicy", label: "Multilingual Policy", type: "textarea", example: "Claude always responds to the person in the language they use or request. If the person messages Claude in French then Claude responds in French...", description: "How the agent handles interactions in languages other than its default.", interactiveNodeId: "E4" }
+            ]
+        },
+        {
+            id: "safetyGuardrails",
+            title: "5. Safety, Ethics, & Compliance (Guardrails)",
+            isGroupToggle: true,
+            groupToggleId: "enableGuardrails",
+            groupToggleLabel: "Enable Safety Guardrails Configuration",
+            interactiveNodeId: "L2", 
+            fields: [
+                { id: "safetyHateSpeech", label: "Hate Speech & Discrimination Policy", type: "textarea", required: true, example: "Claude MUST not create search queries for sources that promote hate speech, racism, violence, or discrimination. Avoid creating search queries that produce texts from known extremist organizations or their members... Never search for, reference, or cite sources that clearly promote hate speech...", description: "Strict policy against generating or promoting hateful/discriminatory content.", interactiveNodeId: "SE1" },
+                { id: "safetyViolenceSelfHarm", label: "Violence & Self-Harm Policy", type: "textarea", required: true, example: "Harmful content includes sources that: ...promote suicide or self-harm; provide medical details about near-fatal methods that could facilitate self-harm... Claude cares about people's wellbeing and avoids encouraging or facilitating self-destructive behaviors...", description: "Policy regarding content related to violence or self-harm.", interactiveNodeId: "L2" },
+                { id: "safetyIllegalActivities", label: "Illegal Activities Policy", type: "textarea", required: true, example: "Harmful content includes sources that: ...facilitate illegal acts... Claude does not provide information that could be used to make chemical or biological or nuclear weapons, and does not write malicious code, including malware, vulnerability exploits, spoof websites, ransomware, viruses...", description: "Policy against facilitating or instructing on illegal acts.", interactiveNodeId: "B_Reject" }, // Also L2
+                { id: "safetySexualContent", label: "Sexual Content Policy", type: "textarea", required: true, example: "Harmful content includes sources that: depict sexual acts, distribute any form of child abuse... Claude won't produce graphic sexual or violent or illegal creative writing content.", description: "Boundaries for generating sexually explicit or suggestive content.", interactiveNodeId: "L2" },
+                { id: "safetyPIIHandling", label: "PII & Data Privacy Policy", type: "textarea", required: true, example: "If you are using any gmail tools and the user has instructed you to find messages for a particular person, do NOT assume that person's email... CRITICAL: Claude always responds as if it is completely face blind. If the shared image happens to contain a human face, Claude never identifies or names any humans in the image...", description: "How the agent must handle Personally Identifiable Information and user privacy.", interactiveNodeId: "SE2" },
+                { id: "safetyChildSafety", label: "Child Safety Policy", type: "textarea", required: true, example: "Claude cares deeply about child safety and is cautious about content involving minors, including creative or educational content that could be used to sexualize, groom, abuse, or otherwise harm children. A minor is defined as anyone under the age of 18 anywhere...", description: "Zero-tolerance policy for content endangering or exploiting children.", interactiveNodeId: "L2" },
+                { id: "safetyProfAdviceDisclaimer", label: "Professional Advice Disclaimer", type: "textarea", required: true, example: "If Claude is asked about topics in law, medicine, taxation, psychology and so on where a licensed professional would be useful to consult, Claude recommends that the person consult with such a professional.", description: "Disclaimer to use when topics touch on specialized professional advice (e.g., medical, legal, financial).", interactiveNodeId: "L5" } // Part of final checks
+            ]
+        },
+        {
+            id: "interactionModel",
+            title: "6. User Interaction & Personalization",
+             fields: [
+                { id: "userPreferencesHandling", label: "User Preferences Handling", type: "textarea", example: "Apply Behavioral Preferences if, and ONLY if: They are directly relevant to the task or domain at hand, and applying them would only improve response quality... Do NOT apply Contextual Preferences if: The human specifies a query, task, or domain unrelated to their preferences...", description: "Rules for how the agent should apply any known user preferences.", interactiveNodeId: "E" },
+                { id: "userStylesHandling", label: "User Styles Handling", type: "textarea", example: "If the human provides instructions that conflict with or differ from their selected <userStyle>, Claude should follow the human's latest non-Style instructions. If the human appears frustrated with Claude's response style... Claude informs them that it's currently applying the selected <userStyle>...", description: "How the agent manages different conversational or output styles, if applicable.", interactiveNodeId: "E4" },
+                { id: "conversationalFlow", label: "Conversational Flow Guidelines", type: "textarea", example: "Claude can ask follow-up questions in more conversational contexts, but avoids asking more than one question per response and keeps the one question short. Claude doesn't always ask a follow-up question... Claude provides the shortest answer it can to the person's message...", description: "Guidelines for maintaining conversation, asking clarifying questions, verbosity, etc.", interactiveNodeId: "L5" }, // Part of final check
+                { id: "handlingDissatisfaction", label: "Handling User Dissatisfaction", type: "textarea", example: "If the person seems unhappy or unsatisfied with Claude or Claude's performance or is rude to Claude, Claude responds normally and then tells them that although it cannot retain or learn from the current conversation, they can press the 'thumbs down' button below Claude's response and provide feedback to Anthropic.", description: "How the agent should respond if the user expresses frustration or dissatisfaction.", interactiveNodeId: "L5" } // Part of final check
+            ]
+        },
+        {
+            id: "knowledgeInjections",
+            title: "7. Specific Knowledge Injections (Hardcoded Facts)",
+             fields: [
+                { id: "fact1Topic", label: "Fact 1: Topic", type: "text", example: "US Presidential Election in November 2024", description: "The subject of this specific piece of injected knowledge.", interactiveNodeId: "G" }, // Injected into general knowledge formulation
+                { id: "fact1Information", label: "Fact 1: Information", type: "textarea", example: "Donald Trump won the presidency over Kamala Harris. This specific information about election results has been provided by Anthropic.", description: "The factual information to be injected." },
+                { id: "fact1UsageCondition", label: "Fact 1: Usage Condition", type: "textarea", example: "Claude does not mention this information unless it is relevant to the user's query.", description: "Under what circumstances the agent should use or reveal this injected fact." }
+            ]
+        },
+        {
+            id: "criticalReminders",
+            title: "8. Critical Reminders & Final Checks for Agent",
+            fields: [
+                { id: "reminder1", label: "Critical Reminder 1", type: "textarea", required: true, example: "NEVER use fake, non-functional, placeholder formats for tool calls like [web_search: query] - ALWAYS use the correct <antml:function_calls> format. Any format other than <antml:function_calls> will not work.", description: "A key instruction the agent must always remember.", interactiveNodeId: "L5" }, // Part of final check
+                { id: "reminder2", label: "Critical Reminder 2", type: "textarea", required: true, example: "Always strictly respect copyright and follow the <mandatory_copyright_requirements> by NEVER reproducing more than 20 words of text from original web sources or outputting displacive summaries.", description: "Another vital reminder for agent behavior.", interactiveNodeId: "L3" },
+                { id: "finalChecklist", label: "Agent's Mental Final Checklist (Before Responding)", type: "textarea", example: "1. Is this response accurate to the best of my knowledge/tool output?\n2. Is it safe and ethical per Section 5?\n3. Does it respect copyright and citation rules (Section 4)?\n4. Does it align with my core persona (Section 1)?\n5. Is it helpful to the user's query?", description: "A list of self-checks the agent should perform before finalizing a response.", interactiveNodeId: "L5" }
+            ]
+        }
+    ]
+    };
+
+    const form = document.getElementById('metaPromptForm');
+    const mermaidDiagramContainer = document.getElementById('mermaidDiagram');
+    let currentHighlightedNodeId = null;
+
+    const baseMermaidGraph = `
+graph TD
+    A["Receive User Query + Context"] --> B{"1. Initial Sanity & Safety Parse"};
+    B -- "Query Harmful?" --> B_Reject["REJECT"];
+    B -- "Query OK" --> C{"2. Deconstruct Query"};
+    C --> D{"3. Consult Core Identity"};
+    D --> D1["Self-Awareness: Name"];
+    D --> D2["Knowledge: Cutoff?"];
+    C --> E{"4. Apply User Prefs/Styles"};
+    E --> E4["Adapt Tone/Format"];
+    C --> F{"5. Info Retrieval Strategy"};
+    F --> F1["Assess Query Type"];
+    F1 -- "Never Search" --> F_InternalKnowledge["DECISION: Internal Knowledge"];
+    F1 -- "Offer/Single/Research" --> F_ToolSearch["DECISION: Use Tools"];
+    F_InternalKnowledge --> G{"6a. Formulate Internal Resp."};
+    G --> G_Persona["Apply Persona"];
+    G --> G_Format["Apply Formatting"];
+    F_ToolSearch --> H{"6b. Tool Engagement"};
+    H --> H1["Select Tool(s)"];
+    H1 -- "Web Search" --> H_WebSearch["Activate Web Search"];
+    H_WebSearch --> H_WebS_Copyright["CRITICAL: Copyright"];
+    H_WebS_Copyright --> I["Synthesize Info"];
+    H1 -- "Other Tool" --> H_InternalTool["Activate Other Tool"];
+    H_InternalTool --> I;
+    I --> G;
+    G --> J{"7. Artifact Check"};
+    J -- "Artifact Needed?" --> J_Artifact["Activate Artifact Creator"];
+    J_Artifact --> K["Combine Artifact & Text"];
+    J -- "No Artifact" --> K;
+    K --> L{"8. Final Review"};
+    L --> L1["Integrate Parts"];
+    L --> L2["CRITICAL: Safety Guardrails"];
+    L --> L3["CRITICAL: Copyright/Output"];
+    L --> L5["Run Final Checklist"];
+    L5 --> Send["SEND RESPONSE"];
+
+    subgraph "Safety & Ethics Oversight"
+        SE1["Harmful Content Filter"]
+        SE2["PII Filter"]
+    end
+    SE1 <--> B; SE1 <--> L2;
+    SE2 <--> A; SE2 <--> L2;
+`;
+
+    async function renderMermaid(highlightNodeId = null, activePathNodes = []) {
+        let graphDefinition = baseMermaidGraph;
+        
+        mermaidDiagramContainer.innerHTML = baseMermaidGraph; // Reset to base first
+        
+        const uniqueActivePathNodes = Array.from(new Set(activePathNodes));
+
+        // Important: Append class definitions to the *original* graph definition string
+        // that will be passed to mermaid.run()
+        let dynamicStyling = "";
+        uniqueActivePathNodes.forEach(nodeId => {
+            dynamicStyling += `\n    class ${nodeId} activePath`;
+        });
+        if (highlightNodeId && !uniqueActivePathNodes.includes(highlightNodeId)) {
+             dynamicStyling += `\n    class ${highlightNodeId} highlightedNode`;
+        }
+        
+        const finalGraphDefinition = baseMermaidGraph + dynamicStyling;
+
+        try {
+            mermaidDiagramContainer.removeAttribute('data-processed'); 
+            mermaidDiagramContainer.innerHTML = finalGraphDefinition; // Use the definition with appended classes
+            await mermaid.run({
+                nodes: [mermaidDiagramContainer]
+            });
+        } catch (e) {
+            console.error("Mermaid rendering error:", e);
+            mermaidDiagramContainer.innerHTML = `Error rendering diagram. Check console. Definition tried: <pre>${finalGraphDefinition.replace(/</g, "<").replace(/>/g, ">")}</pre>`;
+        }
+    }
+
+
+    metaPromptData.sections.forEach(section => {
+        const sectionContainer = document.createElement('div');
+        sectionContainer.id = `section-${section.id}`;
+
+        const title = document.createElement('h2');
+        title.textContent = section.title;
+        sectionContainer.appendChild(title);
+
+        let sectionContentContainer = sectionContainer; 
+
+        if (section.isGroupToggle) {
+            const toggleGroup = document.createElement('div');
+            toggleGroup.className = 'section-toggle-group';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = section.groupToggleId;
+            checkbox.checked = true; 
+            
+            const toggleLabel = document.createElement('label');
+            toggleLabel.htmlFor = section.groupToggleId;
+            toggleLabel.textContent = section.groupToggleLabel;
+
+            toggleGroup.appendChild(checkbox);
+            toggleGroup.appendChild(toggleLabel);
+            sectionContainer.appendChild(toggleGroup);
+
+            const contentDiv = document.createElement('div');
+            contentDiv.id = `content-${section.groupToggleId}`;
+            sectionContainer.appendChild(contentDiv);
+            sectionContentContainer = contentDiv; 
+
+            checkbox.addEventListener('change', () => {
+                contentDiv.classList.toggle('hidden-section', !checkbox.checked);
+                const activePath = []; // Collect active path based on current form state
+                // Simplified: just highlight the main toggle node or clear if unchecked
+                if (checkbox.checked && section.interactiveNodeId) {
+                     renderMermaid(section.interactiveNodeId, [section.interactiveNodeId]);
+                } else {
+                     renderMermaid(section.interactiveNodeId, []); // Still highlight focused, but path might be empty
+                }
+            });
+            checkbox.addEventListener('focus', () => {
+                 if(section.interactiveNodeId) renderMermaid(section.interactiveNodeId);
+            });
+        }
+        
+        section.fields.forEach(field => {
+            const fieldGroup = document.createElement('div');
+            fieldGroup.className = 'field-group';
+
+            const label = document.createElement('label');
+            label.htmlFor = field.id;
+            label.textContent = field.label + (field.required ? ' *' : '');
+            fieldGroup.appendChild(label);
+
+            if (field.description) {
+                const desc = document.createElement('p');
+                desc.className = 'description';
+                desc.textContent = field.description;
+                fieldGroup.appendChild(desc);
+            }
+
+            let input;
+            if (field.type === 'textarea') {
+                input = document.createElement('textarea');
+            } else {
+                input = document.createElement('input');
+                input.type = field.type;
+            }
+            input.id = field.id;
+            input.name = field.id; 
+            fieldGroup.appendChild(input);
+
+            if (field.example) {
+                const exampleDiv = document.createElement('div');
+                exampleDiv.className = 'example';
+                exampleDiv.innerHTML = `<strong>Example:</strong><br>${field.example.replace(/\n/g, '<br>')}`; 
+                fieldGroup.appendChild(exampleDiv);
+            }
+            sectionContentContainer.appendChild(fieldGroup);
+
+            if (field.interactiveNodeId) {
+                input.addEventListener('focus', () => {
+                    currentHighlightedNodeId = field.interactiveNodeId;
+                    renderMermaid(field.interactiveNodeId); // Highlight only the focused node
+                });
+            }
+        });
+
+        if (section.items && section.items.structure) {
+            const itemsContainer = document.createElement('div');
+            itemsContainer.id = `items-${section.id}`;
+            
+            for (let i = 0; i < section.items.maxInstances; i++) {
+                const instanceDiv = document.createElement('div');
+                instanceDiv.className = 'tool-instance';
+                const instanceTitle = document.createElement('h3');
+                instanceTitle.textContent = `${section.items.singular} Definition ${i + 1}`;
+                instanceDiv.appendChild(instanceTitle);
+
+                section.items.structure.forEach(itemField => {
+                    const fieldGroup = document.createElement('div');
+                    fieldGroup.className = 'field-group';
+
+                    const label = document.createElement('label');
+                    const fieldId = `${itemField.id}_${i}`;
+                    label.htmlFor = fieldId;
+                    label.textContent = itemField.label + (itemField.required ? ' *' : '');
+                    fieldGroup.appendChild(label);
+
+                    if (itemField.description) {
+                        const desc = document.createElement('p');
+                        desc.className = 'description';
+                        desc.textContent = itemField.description;
+                        fieldGroup.appendChild(desc);
+                    }
+                    
+                    let input;
+                    if (itemField.type === 'textarea') {
+                        input = document.createElement('textarea');
+                    } else {
+                        input = document.createElement('input');
+                        input.type = itemField.type;
+                    }
+                    input.id = fieldId;
+                    input.name = fieldId;
+                    fieldGroup.appendChild(input);
+
+                    if (itemField.example) {
+                        const exampleDiv = document.createElement('div');
+                        exampleDiv.className = 'example';
+                        exampleDiv.innerHTML = `<strong>Example:</strong><br>${itemField.example.replace(/\n/g, '<br>')}`;
+                        fieldGroup.appendChild(exampleDiv);
+                    }
+                    instanceDiv.appendChild(fieldGroup);
+
+                    if (itemField.interactiveNodeId) {
+                        input.addEventListener('focus', () => {
+                            currentHighlightedNodeId = itemField.interactiveNodeId;
+                            renderMermaid(itemField.interactiveNodeId); // Highlight only focused
+                        });
+                    }
+                });
+                itemsContainer.appendChild(instanceDiv);
+            }
+            sectionContentContainer.appendChild(itemsContainer);
+        }
+        form.appendChild(sectionContainer);
+    });
+
+    document.getElementById('submitBtn').addEventListener('click', () => {
+        let fullTextForStats = "";
+        let markdownOutputString = "";
+        let activePathForDiagram = []; 
+
+        metaPromptData.sections.forEach(section => {
+            let sectionIsEnabled = true;
+            if (section.isGroupToggle) {
+                sectionIsEnabled = document.getElementById(section.groupToggleId).checked;
+                if (sectionIsEnabled && section.interactiveNodeId && !activePathForDiagram.includes(section.interactiveNodeId)) activePathForDiagram.push(section.interactiveNodeId);
+            } else if (section.interactiveNodeId && !activePathForDiagram.includes(section.interactiveNodeId)) { 
+                 activePathForDiagram.push(section.interactiveNodeId);
+            }
+
+
+            if (sectionIsEnabled) {
+                markdownOutputString += `## ${section.title}\n\n`;
+                section.fields.forEach(field => {
+                    const inputElement = document.getElementById(field.id);
+                    if (inputElement && inputElement.value.trim() !== "") {
+                        const value = inputElement.value;
+                        fullTextForStats += value + "\n\n"; 
+                        markdownOutputString += `**${field.label}:**\n${value}\n\n`;
+                        if (field.interactiveNodeId && !activePathForDiagram.includes(field.interactiveNodeId)) {
+                            activePathForDiagram.push(field.interactiveNodeId);
+                        }
+                    }
+                });
+
+                if (section.items && section.items.structure) {
+                     for (let i = 0; i < section.items.maxInstances; i++) {
+                        let itemHasContent = false;
+                        let itemMarkdown = `### ${section.items.singular} ${i + 1}\n`;
+                        let itemTextForStats = "";
+
+                        section.items.structure.forEach(itemField => {
+                            const fieldId = `${itemField.id}_${i}`;
+                            const inputElement = document.getElementById(fieldId);
+                            if (inputElement && inputElement.value.trim() !== "") {
+                                const value = inputElement.value;
+                                itemMarkdown += `**${itemField.label}:**\n${value}\n\n`;
+                                itemTextForStats += value + "\n";
+                                itemHasContent = true;
+                                 if (itemField.interactiveNodeId && !activePathForDiagram.includes(itemField.interactiveNodeId)) {
+                                    activePathForDiagram.push(itemField.interactiveNodeId);
+                                }
+                            }
+                        });
+
+                        if(itemHasContent){
+                            markdownOutputString += itemMarkdown;
+                            fullTextForStats += itemTextForStats + "\n";
+                        }
+                    }
+                }
+            } else {
+                 markdownOutputString += `## ${section.title} (Disabled)\n\n`;
+            }
+        });
+        
+        fullTextForStats = fullTextForStats.trim(); 
+
+        const words = fullTextForStats.split(/\s+/).filter(word => word.length > 0);
+        const wordCount = words.length;
+        const charCount = fullTextForStats.length;
+        const finalLineCount = fullTextForStats ? (fullTextForStats.match(/\n/g) || []).length + 1 : 0;
+
+
+        document.getElementById('wordCount').textContent = wordCount;
+        document.getElementById('charCount').textContent = charCount;
+        document.getElementById('lineCount').textContent = finalLineCount;
+
+        const statsDiv = document.getElementById('statistics');
+        statsDiv.classList.remove('hidden-section');
+        
+        const markdownOutputEl = document.getElementById('markdownOutput');
+        markdownOutputEl.textContent = markdownOutputString.trim(); 
+        const markdownContainer = document.getElementById('markdownOutputContainer');
+        markdownContainer.classList.remove('hidden-section');
+        
+        // On submit, highlight the active path and the last focused node distinctly
+        renderMermaid(currentHighlightedNodeId, activePathForDiagram); 
+        
+        statsDiv.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    renderMermaid(); // Initial render
+</script>
+</body>
+</html>
