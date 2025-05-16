@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Annotated Presentation Creator</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+    <style>
+      :root {
+        --primary-color: #4f46e5;
+        --primary-hover: #4338ca;
+        --text-color: #1f2937;
+        --light-bg: #f3f4f6;
+        --border-color: #d1d5db;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        --radius: 6px;
+        --spacing: 1rem;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        line-height: 1.5;
+        color: var(--text-color);
+        background-color: #fff;
+        padding: 1rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+      }
+
+      h2 {
+        font-size: 1.25rem;
+        margin: 1.5rem 0 0.75rem;
+      }
+
+      p {
+        margin-bottom: 1rem;
+      }
+
+      a {
+        color: var(--primary-color);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: var(--radius);
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        font-size: 0.9rem;
+      }
+
+      button:hover {
+        background-color: var(--primary-hover);
+      }
+
+      input[type="file"] {
+        margin-bottom: 1rem;
+        width: 100%;
+      }
+
+      textarea {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 0.75rem;
+        font-family: inherit;
+        resize: vertical;
+        width: 100%;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing);
+      }
+
+      .controls {
+        background-color: var(--light-bg);
+        padding: var(--spacing);
+        border-radius: var(--radius);
+        margin-bottom: 1.5rem;
+      }
+
+      .file-input-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin: 1rem 0;
+      }
+
+      @media (min-width: 768px) {
+        .file-input-container {
+          flex-direction: row;
+          align-items: center;
+        }
+      }
+
+      .bundle {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+      }
+
+      .slide-image {
+        display: flex;
+        align-items: flex-start;
+        padding: 1rem;
+        background-color: var(--light-bg);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .slide-image img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: var(--shadow);
+      }
+
+      .slide-content {
+        padding: 1rem;
+      }
+
+      .annotation-section {
+        margin-top: 1rem;
+      }
+
+      .annotation-preview {
+        background-color: var(--light-bg);
+        padding: 1rem;
+        border-radius: var(--radius);
+        margin-bottom: 0.75rem;
+        min-height: 2rem;
+      }
+
+      .annotation-preview:empty {
+        display: none;
+      }
+
+      .textarea-alt {
+        height: 5rem;
+        margin-bottom: 1rem;
+      }
+
+      .textarea-annotation {
+        height: 8rem;
+      }
+
+      .template-tool {
+        background-color: var(--light-bg);
+        padding: var(--spacing);
+        border-radius: var(--radius);
+        margin: 2rem 0;
+      }
+
+      pre {
+        background-color: #f8fafc;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 1rem;
+        overflow-x: auto;
+        font-size: 0.85rem;
+        margin: 1rem 0;
+      }
+
+      progress {
+        width: 100%;
+        height: 10px;
+        border-radius: var(--radius);
+      }
+
+      .button-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+      }
+
+      #templateOutput {
+        margin-top: 1rem;
+      }
+
+      @media (min-width: 768px) {
+        .slide-image {
+          display: block;
+        }
+        
+        .textarea-alt {
+          height: 6rem;
+        }
+        
+        .textarea-annotation {
+          height: 10rem;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        body {
+          padding: 2rem;
+        }
+        
+        h1 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked@4.3.0/lib/marked.umd.min.js"></script>
+    <script defer data-domain="til.simonwillison.net" src="https://plausible.io/js/plausible.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div id="controls" class="controls">
+        <h1>Annotated Presentation Creator</h1>
+        <p><strong>A new, improved version of this tool <a href="https://tools.simonwillison.net/annotated-presentations">lives over here</a>.</strong></p>
+        <p>See <a href="https://simonwillison.net/2023/Aug/6/annotated-presentations/">How I make annotated presentations</a> for instructions on using this tool.</p>
+        <p>Enter "skip" as alt text to skip a slide.</p>
+        
+        <div class="file-input-container">
+          <input type="file" id="imageInput" multiple accept="image/*" />
+          <div class="button-group">
+            <button id="loadImagesButton">Load Images</button>
+          </div>
+        </div>
+        
+        <div id="ocrContainer" style="display: none">
+          <button id="ocrMissingButton">OCR Missing Alt Text</button>
+          <div style="margin-top: 0.5rem;">
+            <progress id="ocrProgressBar" value="0" max="80"></progress>
+          </div>
+        </div>
+      </div>
+
+      <div id="preview"></div>
+
+      <div id="templateTool" class="template-tool">
+        <h2>Template Generator</h2>
+        <p>
+          Execute the following template against the slides on the page. An
+          <code>escapeHtml()</code> function is available.
+        </p>
+        <textarea id="templateToRun" rows="5">
+<div class="slide">
+  <img src="${filename}" alt="${escapeHtml(alt)}">
+  ${markdownAsHtml}
+</div></textarea>
+        <div style="margin-top: 1rem;">
+          <button id="executeTemplatesButton">Execute Templates</button>
+        </div>
+        
+        <h2>Example Template</h2>
+        <p>I often use a template like this one:</p>
+        <pre>&lt;div class=&quot;slide&quot; id=&quot;${filename}&quot;&gt;
+  &lt;img src=&quot;https://static.simonwillison.net/static/2023/universe/${filename}&quot; alt=&quot;${escapeHtml(alt)}&quot;&gt;
+  &lt;a style=&quot;float: right; padding-left: 1em; border: none&quot; href=&quot;https://simonwillison.net/2023/Nov/10/universe/#${filename}&quot;&gt;#&lt;/a&gt;
+  ${markdownAsHtml}
+&lt;/div&gt;</pre>
+      </div>
+    </div>
+
+    <script type="module">
+      var images = [];
+
+      document
+        .getElementById("loadImagesButton")
+        .addEventListener("click", createSlidesForImages);
+
+      const ocrButton = document.getElementById("ocrMissingButton");
+      ocrButton.addEventListener("click", ocrMissingAltText);
+      const progressBar = document.querySelector("#ocrProgressBar");
+
+      async function ocrMissingAltText() {
+        // Load Tesseract
+        var s = document.createElement("script");
+        s.src = "https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js";
+        document.head.appendChild(s);
+
+        s.onload = async () => {
+          const images = document.getElementsByTagName("img");
+          const worker = Tesseract.createWorker();
+          await worker.load();
+          await worker.loadLanguage("eng");
+          await worker.initialize("eng");
+          ocrButton.innerText = "Running OCR...";
+
+          // Iterate through all the images in the output div
+          for (const img of images) {
+            const altTextarea = img.closest('.bundle').querySelector(".textarea-alt");
+            // Check if the alt textarea is empty
+            if (altTextarea.value === "") {
+              const imageUrl = img.src;
+              var {
+                data: { text },
+              } = await worker.recognize(imageUrl);
+              altTextarea.value = text; // Set the OCR result to the alt textarea
+              progressBar.value += 1;
+            }
+          }
+
+          await worker.terminate();
+          ocrButton.innerText = "OCR complete";
+        };
+      }
+
+      function createSlidesForImages() {
+        // Clear previous data
+        var previewDiv = document.getElementById("preview");
+        images = [];
+        previewDiv.innerHTML = "";
+
+        var files = document.getElementById("imageInput").files;
+        var processedCount = 0;
+        Array.from(files).forEach(function (file) {
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            var base64content = e.target.result;
+            var filename = file.name;
+            // Append to the images array
+            images.push({ filename: filename, base64content: base64content });
+
+            processedCount++;
+            if (processedCount === files.length) {
+              allFilesProcessed();
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+
+        function allFilesProcessed() {
+          // Sort the images array by filename
+          images.sort((a, b) => a.filename.localeCompare(b.filename));
+
+          // Create slides for each image
+          images.forEach((image) => {
+            var div = document.createElement("div");
+            div.classList.add("bundle");
+            
+            // Image container
+            var imgContainer = document.createElement("div");
+            imgContainer.classList.add("slide-image");
+            
+            var imgTag = document.createElement("img");
+            imgTag.src = image.base64content;
+            imgContainer.appendChild(imgTag);
+            
+            // Content container
+            var contentContainer = document.createElement("div");
+            contentContainer.classList.add("slide-content");
+            
+            // Alt text label and textarea
+            var altLabel = document.createElement("label");
+            altLabel.textContent = "Alt Text:";
+            altLabel.setAttribute("for", `image-${image.filename}-alt`);
+            
+            var altTextarea = document.createElement("textarea");
+            altTextarea.placeholder = "Enter alt text for this image (or 'skip' to skip this slide)";
+            altTextarea.className = "textarea-alt";
+            altTextarea.id = `image-${image.filename}-alt`;
+            altTextarea.name = `image-${image.filename}-alt`;
+            altTextarea.dataset.filename = image.filename;
+            altTextarea.dataset.name = "alt";
+            
+            // Annotation section
+            var annotationSection = document.createElement("div");
+            annotationSection.classList.add("annotation-section");
+            
+            var annotationLabel = document.createElement("label");
+            annotationLabel.textContent = "Annotation:";
+            annotationLabel.setAttribute("for", `image-${image.filename}-annotation`);
+            
+            var annotationPreview = document.createElement("div");
+            annotationPreview.className = "annotation-preview";
+            annotationPreview.dataset.name = "markdownAsHtml";
+
+            var annotationTextarea = document.createElement("textarea");
+            annotationTextarea.placeholder = "Enter markdown annotation for this slide";
+            annotationTextarea.className = "textarea-annotation";
+            annotationTextarea.id = `image-${image.filename}-annotation`;
+            annotationTextarea.dataset.filename = image.filename;
+            annotationTextarea.name = `image-${image.filename}-annotation`;
+            annotationTextarea.dataset.name = "annotation";
+            annotationTextarea.addEventListener("input", function () {
+              updatePreview(this);
+            });
+            
+            // Assemble everything
+            contentContainer.appendChild(altLabel);
+            contentContainer.appendChild(altTextarea);
+            
+            annotationSection.appendChild(annotationLabel);
+            annotationSection.appendChild(annotationPreview);
+            annotationSection.appendChild(annotationTextarea);
+            contentContainer.appendChild(annotationSection);
+            
+            div.appendChild(imgContainer);
+            div.appendChild(contentContainer);
+            
+            previewDiv.appendChild(div);
+          });
+
+          document.querySelector("#ocrContainer").style.display = "block";
+          progressBar.setAttribute("max", images.length);
+
+          addRestoreButton();
+        }
+
+        function updatePreview(textarea) {
+          var previewDiv = textarea.closest('.annotation-section').querySelector('.annotation-preview');
+          var html = marked
+            .parse(textarea.value, { headerIds: false, mangle: false })
+            .trim();
+          previewDiv.innerHTML = html;
+        }
+      }
+
+      // Variable to store previous state of textareas
+      var previousTextareaState = "";
+
+      // Function to save textareas
+      function saveTextAreas() {
+        var textareas = document.querySelectorAll("textarea");
+        var savedTextAreas = {};
+
+        textareas.forEach(function (textarea) {
+          if (textarea.name && textarea.value.trim() !== "") {
+            savedTextAreas[textarea.name] = textarea.value;
+          }
+        });
+
+        var currentState = JSON.stringify(savedTextAreas);
+        if (currentState !== previousTextareaState && currentState != "{}") {
+          localStorage.setItem("savedTextAreas", currentState);
+          previousTextareaState = currentState;
+        }
+      }
+
+      // Function to restore textareas
+      function restoreTextAreas() {
+        var savedTextAreas = JSON.parse(
+          localStorage.getItem("savedTextAreas") || "{}",
+        );
+
+        for (var key in savedTextAreas) {
+          var textarea = document.querySelector(`textarea[name="${key}"]`);
+          if (textarea) {
+            textarea.value = savedTextAreas[key];
+            // Trigger markdown rendering
+            textarea.dispatchEvent(new Event('input', {
+              'bubbles': true,
+              'cancelable': true
+            }));
+          }
+        }
+      }
+
+      // Function to add restore button
+      function addRestoreButton() {
+        var savedTextAreas = JSON.parse(
+          localStorage.getItem("savedTextAreas") || "{}",
+        );
+        var count = Object.keys(savedTextAreas).filter(
+          (key) => savedTextAreas[key].trim() !== "",
+        ).length;
+        // Only show if there are enough textareas on the page
+        if (count > document.querySelectorAll("textarea").length) {
+          return;
+        }
+        var button;
+        if (count > 0) {
+          button = document.querySelector("#restoreButton");
+          if (!button) {
+            button = document.createElement("button");
+            button.setAttribute("id", "restoreButton");
+            button.addEventListener("click", restoreTextAreas);
+            document.querySelector(".button-group").appendChild(button);
+          }
+          button.textContent = `Restore ${
+            count === 1 ? "1 stored textarea" : `${count} stored textareas`
+          }`;
+        }
+      }
+
+      setInterval(saveTextAreas, 1000);
+
+      // Check if there's saved textareas in localStorage and add restore button
+      window.addEventListener("load", addRestoreButton);
+
+      function gatherData(selector) {
+        const elements = document.querySelectorAll(selector);
+        const dataObjects = [];
+        elements.forEach((element) => {
+          const inputs = Array.from(
+            element.querySelectorAll("input,textarea,[data-name]"),
+          );
+          const elementData = {};
+          inputs.forEach((el) => {
+            if (el.dataset["name"] && el.tagName.toLowerCase() == "div") {
+              elementData[el.dataset["name"]] = el.innerHTML.trim();
+              return;
+            }
+            const elementName = el.dataset["name"] || el.getAttribute("name");
+
+            // Get the value of the input/textarea element
+            const elementValue = el.value;
+
+            // Add the name-value pair to the data object
+            elementData[elementName] = elementValue;
+
+            // Get data attributes (attributes starting with "data-")
+            const dataAttributes = el.dataset;
+            for (const attribute in dataAttributes) {
+              if (attribute != "name") {
+                elementData[attribute] = dataAttributes[attribute];
+              }
+            }
+          });
+          if (elementData.alt && elementData.alt.toLowerCase() == 'skip') {
+            // Skip this slide
+          } else {
+            dataObjects.push(elementData);
+          }
+        });
+        return dataObjects;
+      }
+      window.gatherData = gatherData;
+
+      function executeTemplates(template, arrayOfObjects) {
+        return arrayOfObjects.map((obj) => {
+          let keys = Array.from(Object.keys(obj));
+          let values = Array.from(Object.values(obj));
+          keys.push("escapeHtml");
+          values.push(escapeHtml);
+          const templateFunction = new Function(
+            ...keys,
+            `return \`${template}\`;`,
+          );
+          return templateFunction(...values);
+        });
+      }
+
+      document
+        .querySelector("#executeTemplatesButton")
+        .addEventListener("click", executeAllTemplates);
+
+      function executeAllTemplates() {
+        var template = document.querySelector("#templateToRun");
+        try {
+          var objects = gatherData(".bundle");
+          var strings = executeTemplates(template.value, objects);
+        } catch (e) {
+          alert(e);
+          return;
+        }
+        var textarea = document.querySelector("#templateOutput");
+        if (!textarea) {
+          textarea = document.createElement("textarea");
+          textarea.setAttribute("id", "templateOutput");
+          textarea.rows = 10;
+          document.querySelector("#templateTool").appendChild(textarea);
+        }
+        textarea.value = strings.join("\n");
+      }
+      
+      function escapeHtml(s) {
+        return s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+    </script>
+  </body>
+</html>
