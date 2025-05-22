@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Waveform Visualizer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #191d23;
+    }
+    body {
+      width: 100vw;
+      height: 100vh;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: #191d23;
+      /* Subtle noise overlay, optional: */
+      /* background-image: url('data:image/png;base64,...'); */
+    }
+  </style>
+</head>
+<body>
+<canvas id="waveform"></canvas>
+<script>
+const canvas = document.getElementById('waveform');
+const ctx = canvas.getContext('2d');
+let dpr = window.devicePixelRatio || 1;
+let W = 0, H = 0;
+
+// --- Configuration ---
+const WAVE_TIME_SCALE_DIVISOR = 900; // Affects overall speed of animation
+const WAVE_DIRECTION = 1; // 1 for right-to-left, -1 for left-to-right
+
+function resize() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  // Note: setTransform is used here. If you were using ctx.scale(dpr, dpr),
+  // you'd need to adjust W and H in drawing functions if they expect unscaled coords.
+  // With setTransform, W and H can be used as CSS pixels.
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+// Generate N waves with random phase/speed/amplitude/frequency
+const waves = [
+  { color: 'rgba(66,255,211,0.8)', amp: 0.23, freq: 1.2, speed: 0.7, offset: 0, glow: 16 },
+  { color: 'rgba(84,150,255,0.65)', amp: 0.18, freq: 2.3, speed: 0.5, offset: Math.PI/2, glow: 20 },
+  { color: 'rgba(91,232,255,0.2)', amp: 0.10, freq: 5.5, speed: 0.2, offset: Math.PI/1.5, glow: 26 }
+];
+
+function drawWave({color, amp, freq, speed, offset, glow}, t) {
+  ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.shadowBlur = glow;
+  ctx.shadowColor = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+
+  // The time component (t * speed) is modified by WAVE_DIRECTION.
+  // A positive WAVE_DIRECTION (e.g., 1) combined with positive freq and speed
+  // results in right-to-left movement because the phase kx + ωt means
+  // x = (C - ωt)/k, so as t increases, x decreases.
+  // If WAVE_DIRECTION were -1, it would be kx - ωt, and waves would move left-to-right.
+
+  for (let x = 0; x <= W; x += 2) { // x steps by 2 pixels for performance
+    let normX = x / W; // Normalized x coordinate (0 to 1)
+
+    // Randomly modulate amplitude to create voice-like effect
+    // The time-dependent parts of this modulation also respect WAVE_DIRECTION
+    let localAmp = amp * (H / 2) * (
+      0.9 + 0.1 * Math.sin(
+        WAVE_DIRECTION * t * speed + // Time evolution of amplitude modulation
+        normX * 7 +                  // Spatial variation of amplitude modulation
+        Math.sin(normX * 5 + WAVE_DIRECTION * t) // Nested modulation
+      )
+    );
+
+    let y = H / 2 // Center line
+      + localAmp * Math.sin(
+        2 * Math.PI * freq * normX +              // Spatial frequency component (determines waviness across screen)
+        WAVE_DIRECTION * t * speed +              // Time-based animation component (moves the wave)
+        offset +                                  // Initial phase offset for this wave
+        1.5 * Math.sin(normX * 5 + WAVE_DIRECTION * t) // Another spatial and time-based modulation for complexity
+      );
+    ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawIngredientOverlay() {
+  // Subtle gradient or “ingredient” overlay effect
+  let grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, "rgba(80,255,230,0.03)");
+  grad.addColorStop(1, "rgba(40,100,255,0.05)");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function animate(currentTime) {
+  // currentTime is from performance.now()
+  let t = currentTime / WAVE_TIME_SCALE_DIVISOR; // Scale time
+  ctx.clearRect(0, 0, W, H);
+
+  // Subtle blurred background “glow”
+  ctx.save();
+  ctx.filter = 'blur(8px)';
+  waves.forEach((w, i) => drawWave({...w, glow: w.glow*1.5}, t + i*0.5)); // Stagger time slightly for layers
+  ctx.restore();
+
+  // Sharp, glowing main lines
+  waves.forEach((w, i) => drawWave(w, t + i*0.5)); // Stagger time slightly for layers
+
+  drawIngredientOverlay();
+  requestAnimationFrame(animate);
+}
+
+animate(performance.now());
+</script>
+</body>
+</html>
