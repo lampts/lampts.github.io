@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reservoir-Sampling Log Rate Limiter</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f6f8;
+      color: #333;
+      font-size: 14px;
+    }
+
+    /* General page title */
+    .page-title {
+      text-align: center;
+      color: #2c3e50;
+      font-weight: 300;
+      margin-bottom: 30px;
+      font-size: 24px; /* Main page title size */
+    }
+
+    /* Container for the reservoir display - styled to match chart-container */
+    #reservoir-box {
+      max-width: 1000px; /* Match chart container's max-width */
+      margin: 20px auto;   /* Center it like the chart container */
+      padding: 20px 25px 15px 25px; /* Consistent padding with chart container */
+      background-color: #fff; /* Same background as chart */
+      border: 1px solid #e0e0e0; /* Same border as chart */
+      border-radius: 6px; /* Same border-radius as chart */
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Same shadow as chart */
+    }
+
+    /* Title for the reservoir box */
+    #reservoir-box h2 {
+      margin-top: 0;
+      margin-bottom: 15px; /* Space below the title */
+      font-size: 18px;     /* Align with chart title's visual hierarchy */
+      font-weight: 300;    /* Softer weight like chart title */
+      color: #2c3e50;     /* Consistent title color */
+      padding: 0;          /* Remove default H2 padding if any */
+    }
+
+    /* The actual log display area */
+    #reservoir {
+      height: 140px;
+      overflow-y: auto;
+      white-space: pre;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+      font-size: 13px;
+      background-color: transparent; /* Make background transparent to show parent's #fff */
+      line-height: 1.5;      /* More readable line spacing */
+      color: #333;          /* Standard dark grey for log text */
+      padding: 0;            /* No padding, text flows within parent's padding */
+      border: none;          /* Ensure no border for the inner div */
+    }
+
+    .chart-container {
+      position: relative;
+      margin: 20px auto;
+      max-width: 1000px;
+      background-color: #fff;
+      padding: 20px 25px 15px 20px;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    canvas {
+      width: 100% !important;
+    }
+  </style>
+</head>
+<body>
+
+  <h1 class="page-title">Reservoir Sampling: Log Rate Limiter Visualization</h1>
+
+  <!-- Top box: current 5-item reservoir -->
+  <div id="reservoir-box"> <!-- Removed class="box", styles now target this ID -->
+    <h2>Current Reservoir (Max K=5 Logs Sent This Second)</h2> <!-- Inline styles removed -->
+    <div id="reservoir">Waiting for logs…</div>
+  </div>
+
+
+  <!-- Bottom: chart -->
+  <div class="chart-container">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <!-- Chart.js and Date Adapter -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+  <script>
+    // ---- CONFIGURATION ----
+    const K = 5;
+    const HISTORY = 60;
+    const MAX_INCOMING_RATE = 10;
+
+    // ---- STATE ----
+    let reservoir = [];
+    let count = 0;
+    let currentSec = Math.floor(Date.now() / 1000);
+    let targetRateForCurrentSecond = Math.random() * MAX_INCOMING_RATE;
+
+    const reservoirDiv = document.getElementById('reservoir');
+
+    // ---- HELPER: update the top-box display ----
+    function updateReservoirDisplay() {
+      if (reservoir.length === 0) {
+        reservoirDiv.innerHTML = '<span style="color: #888;">— no logs sent this second —</span>';
+      } else {
+        reservoirDiv.textContent = reservoir.join('\n');
+      }
+      reservoirDiv.scrollTop = reservoirDiv.scrollHeight;
+    }
+
+    // ---- SIMULATE one incoming log event ----
+    function addLogEvent() {
+      const msgs = [
+        // ── Vitality (physical & mental health)
+        'Completed a 30-minute yoga session', 'Had a balanced, nutritious meal', 'Slept a full 8 hours', 'Drank 2L of water', 'Ran a 5K', 'Did a 15-minute meditation',
+        // ── Tribe (deep relationships)
+        'Called your best friend to catch up', 'Reconnected with a family member', 'Shared a laugh with a colleague', 'Attended a community meetup', 'Helped a friend in need', 'Celebrated a loved one’s success',
+        // ── PurposeGrowth (meaning & learning)
+        'Read a chapter of a personal development book', 'Learned a new programming concept', 'Updated your quarterly goals', 'Took an online course module', 'Completed a side-project milestone', 'Reflected on lessons learned',
+        // ── FreedomBuffer (money & time optionality)
+        'Reviewed your monthly budget and saved extra', 'Took a spontaneous day trip', 'Cleared your email inbox', 'Delegated a task at work', 'Negotiated a flexible schedule', 'Paused to plan your next adventure',
+        // ── JoyPlay (fun & creativity)
+        'Watched your favorite movie', 'Created a piece of art', 'Danced to uplifting music', 'Played with your pet', 'Tried a new coffee recipe', 'Enjoyed a moment of mindfulness'
+      ];
+      const msg = msgs[Math.floor(Math.random() * msgs.length)];
+      const ts  = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 2 });
+      const logEntry = `${ts} – ${msg}`;
+
+      count++;
+      let replaced = false;
+      if (count <= K) {
+        reservoir.push(logEntry);
+        replaced = true;
+      } else {
+        const j = Math.floor(Math.random() * count);
+        if (j < K) {
+          reservoir[j] = logEntry;
+          replaced = true;
+        }
+      }
+      if (replaced) updateReservoirDisplay();
+    }
+
+    // ---- CHART SETUP ----
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chartData = {
+      datasets: [
+        {
+          label: 'Total Incoming Logs/s',
+          data: [],
+          borderColor: 'rgba(150, 150, 150, 1)',
+          backgroundColor: 'rgba(180, 180, 180, 0.15)',
+          fill: true,
+          tension: 0.2,
+          borderWidth: 1.5,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+        },
+        {
+          label: 'Sent Logs/s (Reservoir)',
+          data: [],
+          borderColor: 'rgba(0, 0, 0, 0.85)',
+          backgroundColor: 'rgba(80, 80, 80, 0.15)',
+          fill: true,
+          tension: 0.2,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+        },
+        {
+          label: `Threshold (K=${K})`,
+          data: [],
+          borderColor: 'rgba(230, 126, 34, 0.9)',
+          borderDash: [5, 3],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+        }
+      ]
+    };
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2.0,
+        animation: false,
+        layout: {
+          padding: {
+            top: 5, right: 5, bottom: 0, left: 0
+          }
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: {
+              unit: 'second',
+              tooltipFormat: 'HH:mm:ss',
+              displayFormats: {
+                second: 'HH:mm:ss'
+              }
+            },
+            title: {
+              display: true,
+              text: 'Time',
+              font: { size: 12, weight: 'normal' },
+              color: '#666',
+              padding: { top: 10 }
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)',
+              drawBorder: false,
+            },
+            ticks: {
+              font: { size: 11 },
+              color: '#555',
+              autoSkip: true,
+              maxTicksLimit: 12,
+              maxRotation: 0,
+              minRotation: 0
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Logs per Second',
+              font: { size: 12, weight: 'normal' },
+              color: '#666',
+              padding: { bottom: 10 }
+            },
+            grid: {
+              color: 'rgba(0, 0, 0, 0.07)',
+              drawBorder: false,
+            },
+            ticks: {
+              font: { size: 11 },
+              color: '#555',
+              padding: 8,
+              stepSize: Math.ceil(K/2) > 0 ? Math.ceil(K/2) : 1,
+            },
+            suggestedMax: MAX_INCOMING_RATE + Math.ceil(MAX_INCOMING_RATE * 0.25)
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            align: 'end',
+            labels: {
+              usePointStyle: true,
+              pointStyle: 'line',
+              boxHeight: 6,
+              padding: 20,
+              font: { size: 12 },
+              color: '#333'
+            }
+          },
+          title: {
+            display: true,
+            text: 'Log Ingestion Rate & Reservoir Sampling',
+            align: 'start',
+            font: { size: 18, weight: '300', family: "'Helvetica Neue', Arial, sans-serif" },
+            color: '#2c3e50',
+            padding: { top: 0, bottom: 25 }
+          },
+          tooltip: {
+            enabled: true,
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            titleColor: '#333',
+            titleFont: { weight: 'bold', size: 13 },
+            bodyColor: '#555',
+            bodyFont: { size: 12 },
+            borderColor: '#ddd',
+            borderWidth: 1,
+            padding: 10,
+            usePointStyle: true,
+            boxHeight: 7,
+            callbacks: {
+                label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) { label += ': '; }
+                    if (context.parsed.y !== null) {
+                        label += context.parsed.y.toFixed(0);
+                    }
+                    return label;
+                }
+              }
+          }
+        }
+      }
+    });
+
+    // ---- MAIN LOOP: every 100ms ----
+    setInterval(() => {
+      const nowMs = Date.now();
+      const newSecondBoundary = Math.floor(nowMs / 1000);
+
+      if (newSecondBoundary !== currentSec) {
+        const finishedSecTimestamp = new Date(currentSec * 1000);
+        chartData.datasets[0].data.push({ x: finishedSecTimestamp, y: count });
+        chartData.datasets[1].data.push({ x: finishedSecTimestamp, y: reservoir.length });
+        chartData.datasets[2].data.push({ x: finishedSecTimestamp, y: K });
+
+        chartData.datasets.forEach(ds => {
+          if (ds.data.length > HISTORY) {
+            ds.data.shift();
+          }
+        });
+        chart.update('none');
+        reservoir = [];
+        count = 0;
+        updateReservoirDisplay();
+        currentSec = newSecondBoundary;
+        targetRateForCurrentSecond = Math.random() * MAX_INCOMING_RATE;
+      }
+
+      if (Math.random() < (targetRateForCurrentSecond / 10)) {
+        addLogEvent();
+      }
+    }, 100);
+
+    // Initial display update
+    updateReservoirDisplay();
+  </script>
+</body>
+</html>
