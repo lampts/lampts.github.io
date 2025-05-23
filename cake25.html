@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cake by VPBank: SEA Digital Banking Strategy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices:
+        - Exec Summary: Stat cards for key takeaways. Goal: Quick overview. Interaction: Static. Justification: High-level summary. Method: HTML/Tailwind.
+        - Market Growth (II.A): Bar chart (Chart.js) for market sizes. Goal: Show scale. Interaction: Hover. Justification: Clear trend/size comparison.
+        - Cake's Profile (II.B): Stat cards for customers, ARPU, profitability. Goal: Highlight Cake's status. Interaction: Static. Justification: Key metrics. Method: HTML/Tailwind.
+        - Competitor Comparison (Table 1, II.C): Styled HTML table. Goal: Compare key players. Interaction: Static. Justification: Structured data. Method: HTML/Tailwind.
+        - Unbanked Population (III.A): Bar chart (Chart.js). Goal: Show opportunity size. Interaction: Hover. Justification: Visual data comparison.
+        - Regulatory Snapshot (Table 2, III.B): Styled HTML table. Goal: Detail regulations. Interaction: Static. Justification: Structured complex info. Method: HTML/Tailwind.
+        - AI Adoption/Market (IV.B): Bar/Pie chart (Chart.js). Goal: Show AI trend. Interaction: Hover. Justification: Visual trend.
+        - Recommendations (V): Accordions for Market Entry, Product Diff., Op. Model. Goal: Organize detailed advice. Interaction: Click. Justification: Digestible sections. Method: HTML/JS.
+        - Partnership Opportunities (Table 3, V.C): Styled HTML table. Goal: Illustrate partner types. Interaction: Static. Justification: Structured examples. Method: HTML/Tailwind.
+        - 7 Powers Moats (VI.B): Accordions for each power. Goal: Detail moat strategies. Interaction: Click. Justification: Structured dense info. Method: HTML/JS.
+        - Moat Scorecard (Table 4, VI.C): Styled HTML table. Goal: Summarize moat actions. Interaction: Static. Justification: Strategic overview. Method: HTML/Tailwind.
+        All choices support the report's structure and aim for clarity without SVG/Mermaid. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 320px; max-height: 400px; }
+        @media (min-width: 768px) { .chart-container { height: 350px; max-width: 700px;} }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .nav-link { transition: color 0.3s, background-color 0.3s; }
+        
+        .stat-card { background-color: #fdf2f8; border-left: 4px solid #ec4899; } /* pink-50, pink-500 */
+        .section-title { border-bottom: 2px solid #ec4899; padding-bottom: 0.5rem; color: #db2777; } /* pink-500, pink-600 */
+        .table th, .table td { border: 1px solid #fbcfe8; padding: 0.5rem 0.75rem; text-align: left; font-size: 0.875rem; } 
+        .table th { background-color: #fce7f3; font-weight: 600; } 
+        
+        .primary-bg { background-color: #db2777; } 
+        .primary-text { color: #db2777; } 
+        .secondary-bg { background-color: #ec4899; } 
+        .secondary-text { color: #ec4899; } 
+        .accent-bg { background-color: #fdf2f8; } 
+        .accent-text { color: #be185d; } 
+    </style>
+</head>
+<body class="bg-stone-100 text-neutral-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <img src="https://cake.vn/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FCake-logo-01.e915daf7.webp&w=256&q=75" alt="Cake Logo" class="h-8 mr-3"> 
+                    <h1 class="text-xl sm:text-2xl font-bold text-pink-600">Cake's SEA Strategy</h1>
+                </div>
+                <nav class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-1 lg:space-x-2">
+                        <a href="#executive-summary" class="nav-link px-2 py-2 rounded-md text-xs sm:text-sm font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">Summary</a>
+                        <a href="#introduction" class="nav-link px-2 py-2 rounded-md text-xs sm:text-sm font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">Intro</a>
+                        <a href="#what" class="nav-link px-2 py-2 rounded-md text-xs sm:text-sm font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">What?</a>
+                        <a href="#so-what" class="nav-link px-2 py-2 rounded-md text-xs sm:text-sm font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">So What?</a>
+                        <a href="#why-now" class="nav-link px-2 py-2 rounded-md text-xs sm:text-sm font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">Why Now?</a>
+                        <a href="#what-now" class="nav-link px-2 py-2 rounded-md text-xs sm:text-sm font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">What Now?</a>
+                        <a href="#how-come" class="nav-link px-2 py-2 rounded-md text-xs sm:text-sm font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">How Come?</a>
+                        <a href="#conclusion" class="nav-link px-2 py-2 rounded-md text-xs sm:text-sm font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">Conclusion</a>
+                    </div>
+                </nav>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-pink-600 hover:text-pink-700 hover:bg-pink-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-pink-500">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <svg class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-pink-200">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#executive-summary" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">Executive Summary</a>
+                <a href="#introduction" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">Introduction</a>
+                <a href="#what" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">What?</a>
+                <a href="#so-what" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">So What?</a>
+                <a href="#why-now" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">Why Now?</a>
+                <a href="#what-now" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">What Now?</a>
+                <a href="#how-come" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">How Come?</a>
+                <a href="#conclusion" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-pink-600 hover:bg-pink-100 hover:text-pink-700">Conclusion</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <section id="executive-summary" class="py-8 sm:py-12">
+            <h2 class="text-3xl font-bold mb-6 section-title">Executive Summary</h2>
+            <p class="mb-4 text-lg leading-relaxed">
+                This interactive report outlines a strategic blueprint for Cake by VPBank's expansion into the Southeast Asian (SEA) digital banking market. It analyzes the dynamic landscape, characterized by rapid growth, high mobile penetration, a significant unbanked population, and burgeoning AI adoption, alongside intense competition and diverse regulatory frameworks.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="stat-card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold secondary-text mb-2">Cake's Foundation</h3>
+                    <p class="text-3xl font-bold">Profitable</p>
+                    <p class="text-sm text-neutral-600">Proven AI, lean model, early profitability in Vietnam.</p>
+                </div>
+                <div class="stat-card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold secondary-text mb-2">SEA Opportunity</h3>
+                    <p class="text-3xl font-bold">Strong</p>
+                    <p class="text-sm text-neutral-600">Market momentum & mature AI tech offer differentiation.</p>
+                </div>
+                <div class="stat-card p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-semibold secondary-text mb-2">Core Strategy</h3>
+                    <p class="text-3xl font-bold">AI-Centric</p>
+                    <p class="text-sm text-neutral-600">Phased entry, hyper-localization, partnerships, AI-driven niches.</p>
+                </div>
+            </div>
+            <p class="text-base leading-relaxed">
+                Key recommendations focus on building sustainable competitive moats through an "AI Flywheel." Actionable items include market assessments, regulatory engagement, talent acquisition, and building a scalable, AI-first tech infrastructure.
+            </p>
+        </section>
+
+        <section id="introduction" class="py-8 sm:py-12 bg-white rounded-lg shadow-lg p-6 my-8">
+            <h2 class="text-3xl font-bold mb-6 section-title">I. Introduction: Charting Regional Leadership</h2>
+            <p class="mb-4 text-lg leading-relaxed">
+                Cake by VPBank, a distinguished AI-powered digital bank in Vietnam, is poised for expansion. This report uses the Sequoia Capital "What - So What - Why Now - What Now - How Come" framework to analyze Cake's potential SEA market entry.
+            </p>
+            <p class="text-base leading-relaxed">
+                The goal is to provide Cake with a strategic blueprint to navigate the dynamic SEA landscape, compete effectively against players like Maya Bank and GXS Bank, and establish a sustainable, winning position by building clear, defensible moats.
+            </p>
+        </section>
+
+        <section id="what" class="py-8 sm:py-12">
+            <h2 class="text-3xl font-bold mb-6 section-title">II. What? The Current Landscape</h2>
+            <p class="mb-8 text-lg leading-relaxed">
+                The SEA financial services sector is transforming due to rapid digitalization and AI. Understanding this terrain, Cake's standing, and competitive forces is key.
+            </p>
+
+            <div class="mb-12 p-6 bg-white rounded-lg shadow-md">
+                <h3 class="text-2xl font-semibold mb-4 accent-text">A. The SEA Digital Banking & AI Scene</h3>
+                <p class="mb-4">SEA is a hotbed for digital banking: high growth, mobile-first, large unbanked population, and accelerating AI adoption. Competition is fierce, and regulations are evolving. Digital banks show lower costs ($15-25/customer) and better CAC ($20-40) vs. traditional banks.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <p class="font-medium text-neutral-700 text-lg mb-2">Key Market Indicators:</p>
+                        <ul class="list-disc list-inside space-y-1 text-sm text-neutral-600 mb-4">
+                            <li>Digital Financial Services Revenue (2025): ~$38 Billion</li>
+                            <li>Digital Payments GTV (2025): >$1 Trillion</li>
+                            <li>SEA Digital Transformation Market (2029): ~$131.49 Billion (19.51% CAGR)</li>
+                            <li>APAC GenAI in Finance Revenue (2024): $440.2 Million (42.3% CAGR 2025-30)</li>
+                            <li>Digital Banking Adoption (APAC): ~90%</li>
+                        </ul>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="seaMarketGrowthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-12 p-6 bg-white rounded-lg shadow-md">
+                <h3 class="text-2xl font-semibold mb-4 accent-text">B. Profiling Cake by VPBank</h3>
+                <p class="mb-4">Cake is a leader in Vietnam's digital banking, known for AI innovation, a lean team (250 people, 40% tech/data), and early profitability.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div class="stat-card p-4 rounded-lg">
+                        <h4 class="text-lg font-semibold secondary-text">Customers</h4>
+                        <p class="text-2xl font-bold">5 Million+</p>
+                        <p class="text-xs text-neutral-600">Highest in Vietnam (4 years).</p>
+                    </div>
+                    <div class="stat-card p-4 rounded-lg">
+                        <h4 class="text-lg font-semibold secondary-text">Profitability</h4>
+                        <p class="text-2xl font-bold">EBITDA Profitable</p>
+                        <p class="text-xs text-neutral-600">First in Vietnam (2024).</p>
+                    </div>
+                    <div class="stat-card p-4 rounded-lg">
+                        <h4 class="text-lg font-semibold secondary-text">ARPU (2024)</h4>
+                        <p class="text-2xl font-bold">$12</p>
+                        <p class="text-xs text-neutral-600">Tripled YoY.</p>
+                    </div>
+                </div>
+                <p class="mb-1"><span class="font-semibold">Strengths:</span> Proven AI, profitability, lean ops, niche focus (VN), skilled local tech team.</p>
+                <p class="mb-1"><span class="font-semibold">Weaknesses (for SEA):</span> Limited brand recognition outside VN, no native super-app ecosystem, talent scaling challenges.</p>
+                <p class="mt-1 italic text-sm">CEO's Ambition: Become SEA's leading digital bank in 5 years.</p>
+            </div>
+
+            <div class="p-6 bg-white rounded-lg shadow-md">
+                <h3 class="text-2xl font-semibold mb-4 accent-text">C. Key Competitor Deep Dive (Table 1 Summary)</h3>
+                <p class="mb-4">Maya Bank (PH) and GXS Bank (SEA) are key competitors, leveraging ecosystems and AI. Cake's AI must deliver superior niche value and partnerships are critical.</p>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table" id="competitorComparisonTable">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th>Cake (VN)</th>
+                                <th>Maya (PH)</th>
+                                <th>GXS (SEA)</th>
+                                <th>Tonik (PH)</th>
+                                <th>Bank Jago (ID)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Market</td><td>VN</td><td>PH</td><td>SG, MY, ID</td><td>PH</td><td>ID</td></tr>
+                            <tr><td>Customers</td><td>5M</td><td>5.4M (Bank)</td><td>>1M (GXBank MY)</td><td>>1M loans</td><td>16.3M total</td></tr>
+                            <tr><td>Key AI Use</td><td>Tailoring, Credit, CX</td><td>Credit, Fraud, Marketing</td><td>Monitoring, Fraud, GenAI</td><td>Ops, CX, GenAI</td><td>Insights, Cloud AI</td></tr>
+                            <tr><td>Ecosystem</td><td>Partnerships</td><td>Voyager</td><td>Grab, Singtel</td><td>Standalone</td><td>Gojek</td></tr>
+                            <tr><td>Profitability</td><td>Yes (EBITDA '24)</td><td>Yes (Q1 '25)</td><td>Investing</td><td>Operational</td><td>Yes (Q1 '25)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                 <p class="mt-2 text-xs text-neutral-500 italic">Full details in Table 1 of the source report.</p>
+            </div>
+        </section>
+
+        <section id="so-what" class="py-8 sm:py-12 bg-pink-50 p-6 my-8 rounded-lg shadow-inner">
+            <h2 class="text-3xl font-bold mb-6 section-title">III. So What? Implications for Cake</h2>
+            <p class="mb-8 text-lg leading-relaxed">
+                The SEA landscape offers significant opportunities but also formidable challenges for Cake.
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="mb-6">
+                    <h3 class="text-2xl font-semibold mb-4 accent-text">A. Opportunities for Cake in SEA</h3>
+                    <ul class="list-disc list-inside space-y-2 text-neutral-700 mb-6 text-sm">
+                        <li><span class="font-semibold">AI for Hyper-Personalization & Niches:</span> Target gig economy (PH: ~1.5M, ID: ~0.4-2.3M) and MSMEs (97% of SEA businesses, $300B credit gap).</li>
+                        <li><span class="font-semibold">High Mobile Penetration & Digital Adoption:</span> APAC digital banking use near 90%.</li>
+                        <li><span class="font-semibold">Address Unbanked/Underbanked:</span> PH: 37.6M adults, ID: 97.74M adults.</li>
+                        <li><span class="font-semibold">Cross-Border Services Potential:</span> Leverage ASEAN payment integration.</li>
+                    </ul>
+                    <p class="text-sm text-neutral-600">Cake can position as an AI-powered financial wellness partner ("Financial Inclusion 2.0").</p>
+                </div>
+                 <div class="chart-container">
+                    <canvas id="unbankedPopulationChart"></canvas>
+                </div>
+            </div>
+            <div class="mt-8">
+                <h3 class="text-2xl font-semibold mb-4 accent-text">B. Challenges and Risks & Regulatory Snapshot (Table 2 Summary)</h3>
+                <p class="mb-2 text-sm text-neutral-700">Intense competition, diverse/evolving regulations, cybersecurity, talent, and achieving profitability are key challenges.</p>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table">
+                        <thead>
+                            <tr><th>Feature</th><th>Vietnam</th><th>Philippines</th><th>Indonesia</th><th>Singapore</th><th>Malaysia</th><th>Thailand</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Digital License</td><td>No (Partner)</td><td>Yes (Moratorium)</td><td>No (Convert/New)</td><td>Yes</td><td>Yes</td><td>Yes (Ongoing)</td></tr>
+                            <tr><td>Min. Capital (Approx USD)</td><td>N/A</td><td>$17M</td><td>$625M (New)</td><td>DFB: SGD 1.5B</td><td>$22.8M-$68.4M</td><td>$135M-$270M</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-2 text-xs text-neutral-500 italic">Full details in Table 2 of the source report.</p>
+            </div>
+        </section>
+
+        <section id="why-now" class="py-8 sm:py-12">
+            <h2 class="text-3xl font-bold mb-6 section-title">IV. Why Now? Urgency & Timeliness</h2>
+            <p class="mb-8 text-lg leading-relaxed">
+                The current juncture presents a compelling case for Cake's SEA expansion: market momentum, AI as a catalyst, and competitive imperative.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div class="p-6 bg-white rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-3 accent-text">A. Market Momentum & Maturation</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm text-neutral-600">
+                        <li>Rapid growth window (SEA DFS to $38B by 2025).</li>
+                        <li>High consumer readiness for digital solutions.</li>
+                        <li>Closing window of opportunity due to rising competition.</li>
+                        <li>"Goldilocks" moment: Market mature for AI, AI tech mature for differentiation.</li>
+                    </ul>
+                </div>
+                <div class="p-6 bg-white rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-3 accent-text">B. AI as a Catalyst</h3>
+                     <ul class="list-disc list-inside space-y-1 text-sm text-neutral-600 mb-4">
+                        <li>AI evolving from retriever to agent; 92% SEA consumers use AI for recommendations.</li>
+                        <li>Cake's existing AI advantage is proven.</li>
+                        <li>APAC GenAI in Finance: $440.2M (2024), 42.3% CAGR (2025-30).</li>
+                    </ul>
+                    <div class="chart-container" style="height:280px">
+                        <canvas id="aiAdoptionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="what-now" class="py-8 sm:py-12 bg-pink-50 p-6 my-8 rounded-lg shadow-inner">
+            <h2 class="text-3xl font-bold mb-6 section-title">V. What Now? Strategic Recommendations</h2>
+            <p class="mb-8 text-lg leading-relaxed">
+                To capitalize on the "Why Now," Cake needs clear strategic actions centered on its AI strengths. This includes a phased, hyper-localized market entry, AI-driven product differentiation for niches, and a scalable operating model.
+            </p>
+            <div id="recommendations-accordion-main" class="space-y-3">
+                <div class="accordion-item bg-white rounded-md shadow">
+                    <button class="accordion-header w-full flex justify-between items-center text-left p-4 font-semibold text-neutral-700 hover:bg-pink-100 transition">
+                        Market Entry: Phased & Hyper-Localized (Incl. Partnerships - Table 3 Ideas)
+                        <span class="accordion-icon secondary-text transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content p-4 border-t border-pink-200 text-sm text-neutral-600">
+                        <p class="font-semibold mb-2">Strategy:</p>
+                        <ul class="list-disc list-inside space-y-1 mb-3">
+                            <li><strong>Prioritize Markets:</strong> Phased entry (1-2 initial: PH, ID, or TH).</li>
+                            <li><strong>Hyper-Localization:</strong> Adapt products, UI/UX, customer service, marketing.</li>
+                            <li><strong>Partnership Models:</strong> Essential for ecosystem access (e-commerce, gig platforms, telcos), financial inclusion orgs, BaaS. "Partnership-first, AI-enhanced."</li>
+                        </ul>
+                        <p class="font-semibold mb-1">Potential Partnership Examples (from Table 3):</p>
+                        <ul class="list-disc list-inside space-y-1 text-xs">
+                            <li>PH E-commerce (Lazada/Shopee): Embedded finance, AI credit for sellers.</li>
+                            <li>ID MSME Aggregators: Working capital, AI credit using supply chain data.</li>
+                            <li>TH Tourism SMEs: Seasonal loans, AI cash flow lending.</li>
+                        </ul>
+                         <p class="mt-2 text-xs text-neutral-500 italic">Full details in Table 3 of the source report.</p>
+                    </div>
+                </div>
+                <div class="accordion-item bg-white rounded-md shadow">
+                    <button class="accordion-header w-full flex justify-between items-center text-left p-4 font-semibold text-neutral-700 hover:bg-pink-100 transition">
+                        Product & Service Differentiation with AI
+                        <span class="accordion-icon secondary-text transform transition-transform duration-300">▼</span>
+                    </button>
+                    <div class="accordion-content p-4 border-t border-pink-200 text-sm text-neutral-600">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li><strong>Unique Value Propositions for Niches:</strong> AI financial advisory (gig economy); Alt-data credit scoring (MSMEs); Hyper-personalized savings/investment (youth).</li>
+                            <li><strong>Superior CX via AI:</strong> Personalized onboarding, dynamic content, intelligent chatbots.</li>
+                            <li><strong>AI for Operational Excellence:</strong> Advanced fraud prevention, efficient risk management, automated compliance. "AI-first, niche-focused."</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-come" class="py-8 sm:py-12">
+            <h2 class="text-3xl font-bold mb-6 section-title">VI. How Come? Building Sustainable Moats</h2>
+            <p class="mb-8 text-lg leading-relaxed">
+                Cake must construct strong, AI-centric moats using Helmer's 7 Powers, focusing on its "AI Flywheel."
+            </p>
+            
+            <h3 class="text-xl font-semibold mb-4 accent-text">Building AI-Centric Moats (7 Powers & Table 4 Summary)</h3>
+            <div id="moats-accordion" class="space-y-3 mb-6">
+                <div class="accordion-item bg-white rounded-md shadow"><button class="accordion-header w-full flex justify-between items-center text-left p-3 font-medium text-neutral-700 hover:bg-pink-100 transition text-sm">Network Effects (AI Communities)<span class="accordion-icon secondary-text transform transition-transform duration-300">▼</span></button><div class="accordion-content p-3 border-t border-pink-200 text-xs text-neutral-600">AI-powered niche communities, deep partner ecosystem integration. Action: Pilot "Cake Collective" type products.</div></div>
+                <div class="accordion-item bg-white rounded-md shadow"><button class="accordion-header w-full flex justify-between items-center text-left p-3 font-medium text-neutral-700 hover:bg-pink-100 transition text-sm">Scale Economies (AI Automation)<span class="accordion-icon secondary-text transform transition-transform duration-300">▼</span></button><div class="accordion-content p-3 border-t border-pink-200 text-xs text-neutral-600">Unified AI-driven tech platform, extreme operational automation. Action: Analyze centralized AI ops hub.</div></div>
+                <div class="accordion-item bg-white rounded-md shadow"><button class="accordion-header w-full flex justify-between items-center text-left p-3 font-medium text-neutral-700 hover:bg-pink-100 transition text-sm">Switching Costs (AI Personalization)<span class="accordion-icon secondary-text transform transition-transform duration-300">▼</span></button><div class="accordion-content p-3 border-t border-pink-200 text-xs text-neutral-600">AI-driven hyper-personalization, deep embedded finance. Action: Develop "Financial Health Score".</div></div>
+                <div class="accordion-item bg-white rounded-md shadow"><button class="accordion-header w-full flex justify-between items-center text-left p-3 font-medium text-neutral-700 hover:bg-pink-100 transition text-sm">Counter-Positioning (AI Niches)<span class="accordion-icon secondary-text transform transition-transform duration-300">▼</span></button><div class="accordion-content p-3 border-t border-pink-200 text-xs text-neutral-600">AI-powered niche domination, radical transparency. Action: Identify counter-positioning moves.</div></div>
+                <div class="accordion-item bg-white rounded-md shadow"><button class="accordion-header w-full flex justify-between items-center text-left p-3 font-medium text-neutral-700 hover:bg-pink-100 transition text-sm">Cornered Resource (AI Models/Data)<span class="accordion-icon secondary-text transform transition-transform duration-300">▼</span></button><div class="accordion-content p-3 border-t border-pink-200 text-xs text-neutral-600">Proprietary AI models, unique hyper-local SEA alternative datasets. Action: Strategy for ethical alt-data acquisition.</div></div>
+            </div>
+            <p class="mt-2 text-xs text-neutral-500 italic text-center">Full Moat Scorecard in Table 4 of the source report.</p>
+        </section>
+
+        <section id="conclusion" class="py-8 sm:py-12 bg-pink-600 text-white rounded-lg shadow-lg p-6 my-8">
+            <h2 class="text-3xl font-bold mb-6 border-b-2 border-pink-400 pb-2">VII. Conclusion & Call to Action</h2>
+            <p class="mb-6 text-lg leading-relaxed">
+                The SEA digital banking market offers transformative growth for Cake. Realizing this demands a bold, AI-driven, meticulously localized strategy. The "Why Now" is clear: market momentum, mature AI, and competitive pressures.
+            </p>
+            <h3 class="text-xl font-semibold mb-3">Immediate Next Steps:</h3>
+            <ul class="list-disc list-inside space-y-1 text-pink-100 text-sm">
+                <li>Establish dedicated SEA Expansion Task Force.</li>
+                <li>Allocate initial budget for research, regulatory engagement, talent.</li>
+                <li>Prioritize AI platform scalability for multi-market ops.</li>
+                <li>Initiate strategic partnership dialogues.</li>
+            </ul>
+            <p class="mt-6 font-semibold">Cake can transcend domestic success to become a formidable SEA digital banking leader. The time for decisive action is now.</p>
+        </section>
+    </main>
+
+    <footer class="bg-neutral-800 text-neutral-300 py-8 text-center">
+        <div class="container mx-auto px-4">
+            <p class="text-sm">&copy; 2025 Cake by VPBank: SEA Strategy Analysis.</p>
+            <p class="text-xs mt-1">Content derived from "Navigating the Next Wave" strategy document.</p>
+        </div>
+    </footer>
+
+    <script>
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true' || false;
+            mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
+            mobileMenu.classList.toggle('hidden');
+            mobileMenuButton.querySelectorAll('svg').forEach(svg => svg.classList.toggle('hidden'));
+        });
+
+        document.querySelectorAll('#mobile-menu a, .nav-link:not([href="#!"])').forEach(link => {
+            link.addEventListener('click', () => {
+                if (mobileMenu.classList.contains('hidden') === false) {
+                    mobileMenu.classList.add('hidden');
+                    mobileMenuButton.setAttribute('aria-expanded', 'false');
+                    const svgs = mobileMenuButton.querySelectorAll('svg');
+                    svgs[0].classList.remove('hidden'); 
+                    svgs[1].classList.add('hidden');    
+                }
+            });
+        });
+
+        function setupAccordion(accordionContainerId) {
+            const accordionContainer = document.getElementById(accordionContainerId);
+            if (!accordionContainer) return;
+
+            const accordionItems = accordionContainer.querySelectorAll('.accordion-item');
+
+            headers = accordionContainer.querySelectorAll('.accordion-header'); // Ensure headers are correctly scoped if needed, or use accordionItems to find them.
+
+            headers.forEach(header => {
+                header.addEventListener('click', () => {
+                    const currentItem = header.closest('.accordion-item');
+                    const content = currentItem.querySelector('.accordion-content');
+                    const icon = header.querySelector('.accordion-icon');
+                    const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+
+                    // Close all other items in this accordion group
+                    accordionItems.forEach(item => {
+                        if (item !== currentItem) {
+                            const otherContent = item.querySelector('.accordion-content');
+                            const otherIcon = item.querySelector('.accordion-icon');
+                            otherContent.style.maxHeight = '0px';
+                            if (otherIcon) otherIcon.style.transform = 'rotate(0deg)';
+                        }
+                    });
+                    
+                    // Toggle the clicked item
+                    if (isOpen) {
+                        content.style.maxHeight = '0px';
+                        if (icon) icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                        if (icon) icon.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+        }
+        
+        setupAccordion('recommendations-accordion-main');
+        setupAccordion('moats-accordion');
+
+        function wrapText(str, maxWidth, maxLines = 2) {
+            if (typeof str !== 'string') return [String(str)];
+            const words = str.split(' ');
+            let lines = [];
+            let currentLine = words[0] || '';
+            for (let i = 1; i < words.length; i++) {
+                if (currentLine.length + words[i].length + 1 < maxWidth) {
+                    currentLine += ' ' + words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            if (lines.length > maxLines) {
+                return lines.slice(0, maxLines-1).concat(lines.slice(maxLines-1).join(' ').substring(0, maxWidth -3) + '...');
+            }
+            return lines;
+        }
+
+        const defaultChartOptions = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 15, padding:10 } }, tooltip: { enabled: true, mode: 'index', intersect: false, bodyFont: { size: 11 }, titleFont: { size: 13, weight: 'bold' } } },
+            scales: { y: { beginAtZero: true, ticks: { font: { size: 10 } } }, x: { ticks: { font: { size: 10 }, callback: function(value) { const label = this.getLabelForValue(value); return wrapText(label, 12, 2); } } } }
+        };
+        
+        const pieChartOptions = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } }, tooltip: { enabled: true, bodyFont: { size: 11 }, titleFont: { size: 13, weight: 'bold' }, callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += context.parsed + '%'; } return label; } } } }
+        };
+
+        const chartPink1 = 'rgba(236, 72, 153, 0.7)'; const chartPink2 = 'rgba(219, 39, 119, 0.7)'; const chartPink3 = 'rgba(190, 24, 93, 0.7)';
+        const chartBorderPink1 = '#ec4899'; const chartBorderPink2 = '#db2777'; const chartBorderPink3 = '#be185d';
+
+        const seaMarketCtx = document.getElementById('seaMarketGrowthChart')?.getContext('2d');
+        if (seaMarketCtx) {
+            new Chart(seaMarketCtx, {
+                type: 'bar',
+                data: { labels: ['DFS Rev (25)', 'Digital Transform. (29)', 'GenAI Fin (24)'], datasets: [{ label: 'Market Size ($B, GenAI in $M)', data: [38, 131.49, 440.2/1000], backgroundColor: [chartPink1, chartPink2, chartPink3], borderColor: [chartBorderPink1, chartBorderPink2, chartBorderPink3], borderWidth: 1 }] },
+                options: { ...defaultChartOptions, scales: {...defaultChartOptions.scales, y: {ticks: {callback: function(value){return '$'+value+(this.chart.data.datasets[0].data.indexOf(value) === 2 ? 'M' : 'B')}}}}, plugins: { ...defaultChartOptions.plugins, title: { display: true, text: 'SEA Digital Market Growth', font: {size: 12}, padding: {bottom:5} } } }
+            });
+        }
+
+        const unbankedCtx = document.getElementById('unbankedPopulationChart')?.getContext('2d');
+        if (unbankedCtx) {
+            new Chart(unbankedCtx, {
+                type: 'bar',
+                data: { labels: ['Philippines', 'Indonesia'], datasets: [{ label: 'Unbanked Adults (Millions)', data: [37.6, 97.74], backgroundColor: [chartPink1, chartPink2], borderColor: [chartBorderPink1, chartBorderPink2], borderWidth: 1 }] },
+                options: { ...defaultChartOptions, scales: {...defaultChartOptions.scales, y: {ticks: {callback: function(value) { return value + 'M';}}}}, plugins: { ...defaultChartOptions.plugins, title: { display: true, text: 'Unbanked Adults in Key SEA Markets', font: {size: 12}, padding: {bottom:5} } } }
+            });
+        }
+        
+        const aiAdoptionCtx = document.getElementById('aiAdoptionChart')?.getContext('2d');
+        if(aiAdoptionCtx) {
+            new Chart(aiAdoptionCtx, {
+                type: 'pie',
+                data: { labels: ['Transformative AI Use (23%)', 'Early/Intermediate (77%)'], datasets: [{ data: [23, 77], backgroundColor: [chartPink1, 'rgba(253, 242, 248, 0.8)'], borderColor: [chartBorderPink1, '#fbcfe8'], borderWidth: 1 }] },
+                options: { ...pieChartOptions, plugins: { ...pieChartOptions.plugins, title: { display: true, text: 'AI Adoption Stages (SEA Orgs)', font: {size: 12}, padding: {bottom:0} } } }
+            });
+        }
+    </script>
+</body>
+</html>
+
