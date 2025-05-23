@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infographic: Cake by VPBank's SEA Digital Banking Strategy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices:
+        - Hero: Large text for ambition. Goal: Inform. Interaction: Static. Justification: Impactful intro. Method: HTML/Tailwind.
+        - SEA Market Size (DFS Rev, Digital Payments GTV, Digital Transformation): Bar Chart (Chart.js). Goal: Compare/Show Scale. Interaction: Tooltips. Justification: Clear visual comparison of large numbers.
+        - APAC GenAI in Finance Growth: Line Chart (Chart.js). Goal: Show Change/Trend. Interaction: Tooltips. Justification: Illustrates rapid growth.
+        - Unbanked Population (PH, ID): Bar Chart (Chart.js). Goal: Show Scale/Opportunity. Interaction: Tooltips. Justification: Highlights key target segment size.
+        - Gig Economy/MSME Opportunity: Stat cards/Key numbers. Goal: Inform. Interaction: Static. Justification: Quantifies niche opportunities. Method: HTML/Tailwind.
+        - Cake's Profile (Customers, ARPU, Profitability): Stat cards. Goal: Inform. Interaction: Static. Justification: Highlights Cake's current strengths. Method: HTML/Tailwind.
+        - AI Flywheel: HTML/CSS diagram. Goal: Organize/Explain Process. Interaction: Static/Subtle hover. Justification: Visualizes core AI strategy.
+        - Key Challenges (Competition, Regulation): Bullet points. Goal: Inform. Interaction: Static. Justification: Concise summary. Method: HTML/Tailwind.
+        - 7 Powers Moats (Simplified): Interactive cards/accordion (HTML/JS). Goal: Organize/Inform. Interaction: Click to expand. Justification: Digestible detail on complex strategy.
+        - Key Recommendations: Bullet points. Goal: Inform. Interaction: Static. Justification: Actionable summary. Method: HTML/Tailwind.
+        All visualizations use Chart.js (Canvas) or HTML/CSS. NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; background-color: #FFF7ED; /* orange-50 */ color: #374151; /* neutral-700 */ }
+        .chart-container { position: relative; width: 100%; max-width: 550px; margin-left: auto; margin-right: auto; height: 300px; max-height: 350px; }
+        @media (min-width: 768px) { .chart-container { height: 320px; max-height: 400px; } }
+        .stat-value { color: #F97316; /* orange-500 */ }
+        .section-heading { color: #EA580C; /* orange-600 */ }
+        .accent-text { color: #C2410C; /* orange-700 */ }
+        .card { background-color: white; border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
+        .hero-bg { background: linear-gradient(135deg, #FFF7ED 0%, #FED7AA 100%); /* orange-50 to orange-200 */ }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-in-out; }
+        .nav-item { transition: transform 0.2s; }
+        .nav-item:hover { transform: translateY(-2px); }
+        .ai-flywheel-stage { border: 2px solid #FDBA74; /* orange-300 */ background-color: #FFEDD5; /* orange-100 */ }
+        .ai-flywheel-arrow { color: #FB923C; /* orange-400 */ }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="https://cake.vn/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FCake-logo-01.e915daf7.webp&w=256&q=75" alt="Cake Logo" class="h-8 mr-2">
+                <h1 class="text-xl font-bold section-heading">Cake's SEA Strategy Infographic</h1>
+            </div>
+            <div class="hidden md:flex space-x-4">
+                <a href="#sea-landscape" class="nav-item text-neutral-600 hover:text-orange-600 text-sm font-medium">SEA Landscape</a>
+                <a href="#opportunities" class="nav-item text-neutral-600 hover:text-orange-600 text-sm font-medium">Opportunities</a>
+                <a href="#cake-ai-edge" class="nav-item text-neutral-600 hover:text-orange-600 text-sm font-medium">Cake's AI Edge</a>
+                <a href="#moats-strategy" class="nav-item text-neutral-600 hover:text-orange-600 text-sm font-medium">Moat Strategy</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-bg py-16 sm:py-24">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl sm:text-5xl md:text-6xl font-extrabold section-heading mb-6">Navigating the Next Wave</h2>
+            <p class="text-xl sm:text-2xl text-neutral-700 mb-4 max-w-3xl mx-auto">Cake by VPBank's ambition: Become Southeast Asia's leading AI-powered digital bank within <span class="stat-value font-bold">5 years</span>.</p>
+            <p class="text-lg text-neutral-600 max-w-2xl mx-auto">This infographic explores the strategy for Cake's ascendancy in the dynamic SEA market, leveraging its core AI capabilities.</p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+
+        <section id="sea-landscape" class="mb-16">
+            <h3 class="text-3xl font-bold section-heading text-center mb-2">The Booming SEA Digital Landscape</h3>
+            <p class="text-center text-neutral-600 mb-10 max-w-2xl mx-auto">Southeast Asia is a digital hotspot with massive growth in financial services, high mobile adoption, and accelerating AI integration.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="card p-6">
+                    <h4 class="text-xl font-semibold accent-text mb-3 text-center">Market Growth Projections</h4>
+                    <div class="chart-container">
+                        <canvas id="seaMarketSizeChart"></canvas>
+                    </div>
+                    <p class="text-xs text-neutral-500 mt-2 text-center">SEA DFS Revenue, Digital Payments GTV, and Digital Transformation Market.</p>
+                </div>
+                <div class="card p-6">
+                    <h4 class="text-xl font-semibold accent-text mb-3 text-center">AI in Finance: APAC GenAI Growth</h4>
+                    <div class="chart-container">
+                        <canvas id="apacGenAiGrowthChart"></canvas>
+                    </div>
+                     <p class="text-xs text-neutral-500 mt-2 text-center">Projected CAGR of 42.3% (2025-2030) for GenAI in APAC Finance.</p>
+                </div>
+            </div>
+            <div class="mt-8 text-center">
+                <p class="text-lg text-neutral-700"><span class="stat-value font-bold">~90%</span> of APAC consumers actively use digital banking. Digital banks globally captured <span class="stat-value font-bold">28%</span> of new banking relationships in 2023.</p>
+            </div>
+        </section>
+
+        <section id="opportunities" class="mb-16">
+            <h3 class="text-3xl font-bold section-heading text-center mb-2">Vast Untapped Opportunities</h3>
+            <p class="text-center text-neutral-600 mb-10 max-w-2xl mx-auto">Significant unbanked populations and underserved niches like the gig economy and MSMEs present fertile ground for AI-driven financial inclusion.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <div class="card p-6">
+                    <h4 class="text-xl font-semibold accent-text mb-3 text-center">The Unbanked Population</h4>
+                    <div class="chart-container" style="height: 280px;">
+                        <canvas id="unbankedPopulationChart"></canvas>
+                    </div>
+                    <p class="text-xs text-neutral-500 mt-2 text-center">Millions of adults remain unbanked in key SEA markets.</p>
+                </div>
+                <div class="space-y-6">
+                    <div class="card p-6">
+                        <h4 class="text-xl font-semibold accent-text mb-2">Gig Economy Potential</h4>
+                        <p class="text-neutral-600 text-sm">Philippines: <span class="stat-value font-semibold">~1.5 Million</span> gig workers.</p>
+                        <p class="text-neutral-600 text-sm">Indonesia: <span class="stat-value font-semibold">~0.4 - 2.3 Million</span> gig workers.</p>
+                    </div>
+                    <div class="card p-6">
+                        <h4 class="text-xl font-semibold accent-text mb-2">MSME Credit Gap</h4>
+                        <p class="text-neutral-600 text-sm"><span class="stat-value font-semibold">97%</span> of SEA businesses are MSMEs, facing a <span class="stat-value font-semibold">$300 Billion</span> credit gap.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="cake-ai-edge" class="mb-16">
+            <h3 class="text-3xl font-bold section-heading text-center mb-2">Cake's Profile & AI-Powered Edge</h3>
+            <p class="text-center text-neutral-600 mb-10 max-w-2xl mx-auto">Cake's proven AI capabilities, lean model, and early profitability in Vietnam provide a strong foundation for SEA expansion.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 text-center">
+                <div class="card p-6">
+                    <p class="text-4xl font-bold stat-value">5M+</p>
+                    <p class="text-neutral-600 mt-1 text-sm">Customers in Vietnam</p>
+                </div>
+                <div class="card p-6">
+                    <p class="text-4xl font-bold stat-value">$12</p>
+                    <p class="text-neutral-600 mt-1 text-sm">ARPU (2024, Tripled YoY)</p>
+                </div>
+                <div class="card p-6">
+                    <p class="text-3xl font-bold stat-value">EBITDA</p>
+                    <p class="text-neutral-600 mt-1 text-sm">Profitable (2024 - VN)</p>
+                </div>
+            </div>
+
+            <div class="card p-8">
+                <h4 class="text-2xl font-semibold accent-text mb-6 text-center">The Core Strategy: Cake's AI Flywheel</h4>
+                <div class="flex flex-col md:flex-row justify-around items-center space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="ai-flywheel-stage p-4 rounded-lg text-center w-full md:w-1/4">
+                        <p class="text-2xl mb-2">🎯</p>
+                        <h5 class="font-semibold text-orange-700">Better AI Products</h5>
+                        <p class="text-xs text-neutral-600">For niche segments</p>
+                    </div>
+                    <div class="ai-flywheel-arrow text-4xl font-bold hidden md:block">&rarr;</div>
+                    <div class="ai-flywheel-arrow text-4xl font-bold md:hidden mx-auto">&darr;</div>
+                    <div class="ai-flywheel-stage p-4 rounded-lg text-center w-full md:w-1/4">
+                        <p class="text-2xl mb-2">📈</p>
+                        <h5 class="font-semibold text-orange-700">More Users & Data</h5>
+                        <p class="text-xs text-neutral-600">From target niches</p>
+                    </div>
+                    <div class="ai-flywheel-arrow text-4xl font-bold hidden md:block">&rarr;</div>
+                    <div class="ai-flywheel-arrow text-4xl font-bold md:hidden mx-auto">&darr;</div>
+                    <div class="ai-flywheel-stage p-4 rounded-lg text-center w-full md:w-1/4">
+                         <p class="text-2xl mb-2">🧠</p>
+                        <h5 class="font-semibold text-orange-700">Smarter AI</h5>
+                        <p class="text-xs text-neutral-600">Enhanced models</p>
+                    </div>
+                    <div class="ai-flywheel-arrow text-4xl font-bold hidden md:block">&rarr;</div>
+                     <div class="ai-flywheel-arrow text-4xl font-bold md:hidden mx-auto">&darr;</div>
+                    <div class="ai-flywheel-stage p-4 rounded-lg text-center w-full md:w-1/4">
+                        <p class="text-2xl mb-2">🌟</p>
+                        <h5 class="font-semibold text-orange-700">Superior Offerings</h5>
+                        <p class="text-xs text-neutral-600">Increased value</p>
+                    </div>
+                </div>
+                <p class="text-center text-sm text-neutral-600 mt-6">This virtuous cycle is Cake's core defensible advantage.</p>
+            </div>
+        </section>
+
+        <section id="moats-strategy" class="mb-16">
+            <h3 class="text-3xl font-bold section-heading text-center mb-2">Building Defensible Moats with AI</h3>
+            <p class="text-center text-neutral-600 mb-10 max-w-2xl mx-auto">Cake will leverage Hamilton Helmer's 7 Powers, infused with AI, to create sustainable competitive advantages against players like Maya and GXS.</p>
+            <div id="moats-accordion" class="space-y-3">
+                <div class="card accordion-item">
+                    <button class="accordion-header w-full flex justify-between items-center text-left p-4 font-semibold text-orange-700 hover:bg-orange-50 transition">
+                        Network Effects (AI Communities)
+                        <span class="accordion-icon text-orange-500 transform transition-transform duration-300 text-xl font-bold">&plus;</span>
+                    </button>
+                    <div class="accordion-content px-4 pb-4 text-sm text-neutral-600">
+                        Foster niche-specific AI-driven tools that increase in value as more community members join. Deep partner ecosystem integration is key.
+                    </div>
+                </div>
+                <div class="card accordion-item">
+                    <button class="accordion-header w-full flex justify-between items-center text-left p-4 font-semibold text-orange-700 hover:bg-orange-50 transition">
+                        Cornered Resource (Proprietary AI & Data)
+                        <span class="accordion-icon text-orange-500 transform transition-transform duration-300 text-xl font-bold">&plus;</span>
+                    </button>
+                    <div class="accordion-content px-4 pb-4 text-sm text-neutral-600">
+                        Develop and protect proprietary AI models trained on unique, hyper-local SEA alternative datasets, creating an algorithmic advantage.
+                    </div>
+                </div>
+                <div class="card accordion-item">
+                    <button class="accordion-header w-full flex justify-between items-center text-left p-4 font-semibold text-orange-700 hover:bg-orange-50 transition">
+                        Switching Costs (AI Personalization)
+                        <span class="accordion-icon text-orange-500 transform transition-transform duration-300 text-xl font-bold">&plus;</span>
+                    </button>
+                    <div class="accordion-content px-4 pb-4 text-sm text-neutral-600">
+                        Utilize AI for deep personalization and embedded finance, making Cake's intelligent assistance indispensable to users.
+                    </div>
+                </div>
+            </div>
+            <p class="text-center text-neutral-600 mt-8">Key Challenges: Intense competition and diverse, evolving regulatory landscapes.</p>
+        </section>
+
+        <section id="path-forward" class="text-center py-12 bg-orange-600 text-white rounded-lg shadow-xl">
+            <h3 class="text-3xl font-bold mb-6">Strategic Path Forward for Cake</h3>
+            <div class="max-w-3xl mx-auto space-y-4 text-orange-50">
+                <p><span class="font-semibold">Phased Market Entry:</span> Focus on 1-2 initial markets (PH, ID, or TH).</p>
+                <p><span class="font-semibold">Hyper-Localization:</span> Adapt products and services deeply to local needs.</p>
+                <p><span class="font-semibold">Ecosystem Partnerships:</span> Crucial for customer acquisition and data access.</p>
+                <p><span class="font-semibold">AI-Centric Differentiation:</span> Target underserved niches (gig economy, MSMEs) with unique AI-powered value.</p>
+            </div>
+            <p class="mt-8 text-lg font-semibold">Cake's decisive action now can pave the way to becoming a leading digital banking force in Southeast Asia.</p>
+        </section>
+    </div>
+
+    <footer class="text-center py-8 bg-neutral-800 text-neutral-300">
+        <p class="text-sm">&copy; 2025 Cake by VPBank Strategy Infographic. Based on "Navigating the Next Wave" report.</p>
+    </footer>
+
+    <script>
+        function initAccordions() {
+            const accordionContainers = document.querySelectorAll('#moats-accordion');
+            accordionContainers.forEach(container => {
+                const items = container.querySelectorAll('.accordion-item');
+                items.forEach(item => {
+                    const header = item.querySelector('.accordion-header');
+                    const content = item.querySelector('.accordion-content');
+                    const icon = header.querySelector('.accordion-icon');
+
+                    header.addEventListener('click', () => {
+                        const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+                        
+                        // Close all other items in this specific accordion group
+                        items.forEach(otherItem => {
+                            if (otherItem !== item) {
+                                otherItem.querySelector('.accordion-content').style.maxHeight = '0px';
+                                const otherIcon = otherItem.querySelector('.accordion-icon');
+                                if (otherIcon) {
+                                    otherIcon.textContent = '+';
+                                    otherIcon.classList.remove('rotate-45');
+                                }
+                            }
+                        });
+
+                        if (isOpen) {
+                            content.style.maxHeight = '0px';
+                            if (icon) {
+                                icon.textContent = '+';
+                                icon.classList.remove('rotate-45');
+                            }
+                        } else {
+                            content.style.maxHeight = content.scrollHeight + 'px';
+                            if (icon) {
+                                icon.textContent = '-';
+                                icon.classList.add('rotate-45'); // Simple transform for minus-like look
+                            }
+                        }
+                    });
+                });
+            });
+        }
+        initAccordions();
+
+        function wrapChartLabels(str, maxWidth = 16) {
+            if (typeof str !== 'string') return [String(str)];
+            const words = str.split(' ');
+            let lines = [];
+            let currentLine = words[0] || '';
+            for (let i = 1; i < words.length; i++) {
+                if ((currentLine + ' ' + words[i]).length > maxWidth) {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                } else {
+                    currentLine += ' ' + words[i];
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        const chartTooltipTitleCallback = function(tooltipItems) {
+            const item = tooltipItems[0];
+            let label = item.chart.data.labels[item.dataIndex];
+            if (Array.isArray(label)) {
+                return label.join(' ');
+            }
+            return label;
+        };
+        
+        const commonChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: { title: chartTooltipTitleCallback },
+                    backgroundColor: '#4B5563', titleFont: { weight: 'bold' }, bodyFont: { size: 12 }, padding: 10, cornerRadius: 4
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: '#E5E7EB' }, 
+                    ticks: { color: '#4B5563', font: {size: 10} } 
+                },
+                x: { 
+                    grid: { display: false }, 
+                    ticks: { color: '#4B5563', font: {size: 10}, callback: function(value) { const label = this.getLabelForValue(value); return wrapChartLabels(label);}}
+                }
+            }
+        };
+        
+        const seaMarketSizeCtx = document.getElementById('seaMarketSizeChart')?.getContext('2d');
+        if (seaMarketSizeCtx) {
+            new Chart(seaMarketSizeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['DFS Revenue ($38B, 2025)', 'Digital Payments GTV (>$1T, 2025)', 'Digital Transform. Market ($131.5B, 2029)'],
+                    datasets: [{
+                        label: 'Market Size',
+                        data: [38, 1000, 131.5], // Using 1000 for $1T for scale
+                        backgroundColor: ['#FDBA74', '#FB923C', '#F97316'], // orange-300, orange-400, orange-500
+                        borderRadius: 4,
+                    }]
+                },
+                options: { ...commonChartOptions, scales: {...commonChartOptions.scales, y: {ticks: {callback: function(value) {return '$' + value + (value === 1000 ? 'T*' : 'B')}}}}}
+            });
+        }
+
+        const apacGenAiGrowthCtx = document.getElementById('apacGenAiGrowthChart')?.getContext('2d');
+        if (apacGenAiGrowthCtx) {
+            new Chart(apacGenAiGrowthCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2024', '2025', '2026', '2027', '2028', '2029', '2030'],
+                    datasets: [{
+                        label: 'APAC GenAI in Finance Revenue ($M)',
+                        data: [440.2, 440.2 * 1.423, 440.2 * Math.pow(1.423, 2), 440.2 * Math.pow(1.423, 3), 440.2 * Math.pow(1.423, 4), 440.2 * Math.pow(1.423, 5), 440.2 * Math.pow(1.423, 6)],
+                        borderColor: '#F97316', // orange-500
+                        backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#F97316'
+                    }]
+                },
+                options: { ...commonChartOptions, scales: {...commonChartOptions.scales, y: {ticks: {callback: function(value) {return '$' + Math.round(value) + 'M';}}}}}
+            });
+        }
+        
+        const unbankedPopulationCtx = document.getElementById('unbankedPopulationChart')?.getContext('2d');
+        if (unbankedPopulationCtx) {
+            new Chart(unbankedPopulationCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Philippines Unbanked Adults', 'Indonesia Unbanked Adults'],
+                    datasets: [{
+                        label: 'Unbanked Adults (Millions)',
+                        data: [37.6, 97.74],
+                        backgroundColor: ['#FB923C', '#F97316'], // orange-400, orange-500
+                        borderRadius: 4,
+                    }]
+                },
+                options: { ...commonChartOptions, scales: {...commonChartOptions.scales, y: {ticks: {callback: function(value) {return value + 'M';}}}}}
+            });
+        }
+        
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    const offsetTop = targetElement.offsetTop - 80; // Adjust for sticky nav height
+                    window.scrollTo({ top: offsetTop, behavior: 'smooth' });
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
