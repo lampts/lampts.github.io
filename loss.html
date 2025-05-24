@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loss Landscapes - Interactive 3D Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        #header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            text-align: center;
+        }
+        
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        
+        #model-selector {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .model-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        
+        .model-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .model-btn.active {
+            background: #00ff88;
+            color: #000000;
+            border-color: #00ff88;
+        }
+        
+        #info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+        }
+        
+        #info h3 {
+            margin: 0 0 10px 0;
+            color: #00ff88;
+            font-size: 18px;
+        }
+        
+        #info p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #cccccc;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            color: #888;
+        }
+        
+        #logo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 12px;
+            color: #888;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+        
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Loss Landscapes</h1>
+        <div id="model-selector">
+            <button class="model-btn active" data-model="gpt2">GPT-2</button>
+            <button class="model-btn" data-model="llama">LLaMA-3.2-1B</button>
+            <button class="model-btn" data-model="deepseek">DeepSeek-R1-Distill-LLaMA-8B</button>
+            <button class="model-btn" data-model="gemma">Gemma-2-1B</button>
+            <button class="model-btn" data-model="qwen">Qwen2-8B</button>
+            <button class="model-btn" data-model="qwen-instruct">Qwen2.5-7B-Instruct</button>
+        </div>
+    </div>
+    
+    <div id="logo">W Welch Labs</div>
+    
+    <div id="info">
+        <h3 id="model-name">GPT-2</h3>
+        <p id="model-description">A simpler model which results in a smoother, simpler landscape with clear valleys and peaks.</p>
+    </div>
+    
+    <div id="controls">
+        <p><strong>Controls:</strong><br>
+        Left click + drag: Rotate<br>
+        Right click + drag: Pan<br>
+        Scroll: Zoom</p>
+    </div>
+
+    <script>
+        // Model information
+        const models = {
+            gpt2: {
+                name: "GPT-2",
+                description: "A simpler model which results in a smoother, simpler landscape with clear valleys and peaks.",
+                color1: 0x00ff88,
+                color2: 0x0088ff,
+                roughness: 0.3,
+                scale: 2.0
+            },
+            llama: {
+                name: "LLaMA-3.2-1B",
+                description: "The Llama 1 billion parameter landscape shows more complex terrain with multiple local minima.",
+                color1: 0x00ffaa,
+                color2: 0x00aaff,
+                roughness: 0.5,
+                scale: 2.5
+            },
+            deepseek: {
+                name: "DeepSeek-R1-Distill-LLaMA-8B",
+                description: "A distilled version with larger smooth areas, possibly due to instruction tuning.",
+                color1: 0x00ff99,
+                color2: 0x0099ff,
+                roughness: 0.4,
+                scale: 2.2
+            },
+            gemma: {
+                name: "Gemma-2-1B",
+                description: "The smaller open source version of Google's Gemini model with distinctive ridge patterns.",
+                color1: 0x88ff00,
+                color2: 0x00ffff,
+                roughness: 0.6,
+                scale: 2.8
+            },
+            qwen: {
+                name: "Qwen2-8B",
+                description: "Shows a unique circular pattern in the loss landscape, characteristic of the Qwen architecture.",
+                color1: 0xaaff00,
+                color2: 0x00ddff,
+                roughness: 0.45,
+                scale: 2.4
+            },
+            "qwen-instruct": {
+                name: "Qwen2.5-7B-Instruct",
+                description: "The instruction-tuned variant shows smoother regions compared to the base model.",
+                color1: 0xddff00,
+                color2: 0x00bbff,
+                roughness: 0.35,
+                scale: 2.3
+            }
+        };
+
+        let scene, camera, renderer, terrain, controls;
+        let currentModel = 'gpt2';
+        let animationId;
+        
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.fog = new THREE.Fog(0x0a0a0a, 50, 200);
+            
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(
+                60,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(50, 30, 50);
+            camera.lookAt(0, 0, 0);
+            
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight1.position.set(50, 100, 50);
+            scene.add(directionalLight1);
+            
+            const directionalLight2 = new THREE.DirectionalLight(0x88ccff, 0.4);
+            directionalLight2.position.set(-50, 50, -50);
+            scene.add(directionalLight2);
+            
+            // Manual orbit controls
+            setupControls();
+            
+            // Create initial terrain
+            createTerrain(currentModel);
+            
+            // Event listeners
+            window.addEventListener('resize', onWindowResize);
+            
+            // Model selector buttons
+            document.querySelectorAll('.model-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const modelKey = e.target.dataset.model;
+                    switchModel(modelKey);
+                    
+                    // Update active button
+                    document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+            });
+        }
+        
+        function setupControls() {
+            let mouseX = 0, mouseY = 0;
+            let targetRotationX = 0, targetRotationY = 0;
+            let isMouseDown = false;
+            let isPanning = false;
+            let startX = 0, startY = 0;
+            let panX = 0, panY = 0;
+            let zoom = 1;
+            
+            renderer.domElement.addEventListener('mousedown', (e) => {
+                isMouseDown = true;
+                isPanning = e.button === 2; // Right click for panning
+                startX = e.clientX;
+                startY = e.clientY;
+                e.preventDefault();
+            });
+            
+            renderer.domElement.addEventListener('mouseup', () => {
+                isMouseDown = false;
+            });
+            
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                if (!isMouseDown) return;
+                
+                if (isPanning) {
+                    panX += (e.clientX - startX) * 0.1;
+                    panY -= (e.clientY - startY) * 0.1;
+                } else {
+                    targetRotationY += (e.clientX - startX) * 0.01;
+                    targetRotationX += (e.clientY - startY) * 0.01;
+                }
+                
+                startX = e.clientX;
+                startY = e.clientY;
+            });
+            
+            renderer.domElement.addEventListener('wheel', (e) => {
+                zoom *= e.deltaY > 0 ? 1.1 : 0.9;
+                zoom = Math.max(0.5, Math.min(3, zoom));
+                e.preventDefault();
+            });
+            
+            renderer.domElement.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
+            
+            // Update camera in animation loop
+            controls = {
+                update: function() {
+                    camera.position.x = 50 * zoom * Math.sin(targetRotationY) + panX;
+                    camera.position.y = 30 * zoom + panY;
+                    camera.position.z = 50 * zoom * Math.cos(targetRotationY);
+                    camera.lookAt(panX, 0, 0);
+                }
+            };
+        }
+        
+        function createTerrain(modelKey) {
+            // Remove existing terrain
+            if (terrain) {
+                scene.remove(terrain);
+                terrain.geometry.dispose();
+                terrain.material.dispose();
+            }
+            
+            const model = models[modelKey];
+            
+            // Create geometry
+            const geometry = new THREE.PlaneGeometry(80, 80, 128, 128);
+            
+            // Generate height map based on model characteristics
+            const vertices = geometry.attributes.position.array;
+            for (let i = 0; i < vertices.length; i += 3) {
+                const x = vertices[i];
+                const z = vertices[i + 1];
+                
+                // Create different patterns for each model
+                let height = 0;
+                
+                switch(modelKey) {
+                    case 'gpt2':
+                        // Simple smooth landscape
+                        height = Math.sin(x * 0.1) * Math.cos(z * 0.1) * 10;
+                        height += Math.sin(x * 0.05) * Math.sin(z * 0.05) * 5;
+                        break;
+                    
+                    case 'llama':
+                        // More complex with multiple valleys
+                        height = Math.sin(x * 0.15) * Math.cos(z * 0.15) * 8;
+                        height += Math.sin(x * 0.08) * Math.sin(z * 0.08) * 6;
+                        height += Math.cos(x * 0.2 + z * 0.2) * 3;
+                        break;
+                    
+                    case 'deepseek':
+                        // Larger smooth areas with some ridges
+                        height = Math.sin(x * 0.08) * Math.cos(z * 0.08) * 12;
+                        height += Math.tanh(x * 0.1) * Math.tanh(z * 0.1) * 5;
+                        break;
+                    
+                    case 'gemma':
+                        // Ridge patterns
+                        height = Math.sin(x * 0.2) * 8 + Math.cos(z * 0.2) * 8;
+                        height += Math.sin(x * 0.1 + z * 0.1) * 4;
+                        break;
+                    
+                    case 'qwen':
+                        // Circular pattern
+                        const dist = Math.sqrt(x * x + z * z);
+                        height = Math.sin(dist * 0.2) * 10;
+                        height += Math.cos(x * 0.1) * Math.sin(z * 0.1) * 5;
+                        break;
+                    
+                    case 'qwen-instruct':
+                        // Smoother variant of qwen
+                        const dist2 = Math.sqrt(x * x + z * z);
+                        height = Math.sin(dist2 * 0.15) * 8;
+                        height += Math.sin(x * 0.08) * Math.cos(z * 0.08) * 4;
+                        break;
+                }
+                
+                // Add some noise
+                height += (Math.random() - 0.5) * model.roughness * 2;
+                
+                vertices[i + 2] = height * model.scale;
+            }
+            
+            geometry.computeVertexNormals();
+            
+            // Create material with gradient colors
+            const material = new THREE.MeshPhongMaterial({
+                color: model.color1,
+                emissive: model.color2,
+                emissiveIntensity: 0.2,
+                shininess: 30,
+                flatShading: false,
+                side: THREE.DoubleSide
+            });
+            
+            // Create mesh
+            terrain = new THREE.Mesh(geometry, material);
+            terrain.rotation.x = -Math.PI / 2;
+            scene.add(terrain);
+            
+            // Update info
+            document.getElementById('model-name').textContent = model.name;
+            document.getElementById('model-description').textContent = model.description;
+        }
+        
+        function switchModel(modelKey) {
+            currentModel = modelKey;
+            createTerrain(modelKey);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            // Update controls
+            controls.update();
+            
+            // Render scene
+            renderer.render(scene, camera);
+        }
+        
+        // Initialize and start
+        init();
+        animate();
+    </script>
+</body>
+</html>
