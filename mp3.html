@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Spotify - Offline Music Player</title>
+    <!-- START FAVICON SECTION -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='%231DB954' d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/></svg>">
+    <!-- END FAVICON SECTION -->
+    <style>
+        /* CSS remains the same, ensure it's included here */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2em;
+            background: linear-gradient(45deg, #1db954, #1ed760);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .upload-section {
+            padding: 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin: 20px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #1db954;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .file-input-label:hover {
+            background: #1ed760;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(29, 185, 84, 0.4);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .playlist-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            max-height: 500px; /* Or use flexbox to control height relative to player */
+            overflow-y: auto;
+        }
+
+        .playlist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .playlist-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .playlist-item.active {
+            background: rgba(29, 185, 84, 0.2);
+            border-left: 4px solid #1db954;
+        }
+
+        .playlist-item-info {
+            flex: 1;
+            margin-left: 15px;
+            overflow: hidden; /* For long titles */
+        }
+
+        .playlist-item-title {
+            font-weight: 600;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .playlist-item-duration {
+            font-size: 0.85em;
+            opacity: 0.7;
+        }
+
+        .player-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .visualizer-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #waveformCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .now-playing {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .now-playing-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            min-height: 36px; /* To prevent layout shift */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1db954, #1ed760);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s linear; /* Smoother transition */
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.85em;
+            opacity: 0.7;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        .control-btn.active {
+            color: #1db954;
+        }
+
+        .play-btn {
+            background: #1db954;
+            padding: 15px;
+        }
+
+        .play-btn:hover {
+            background: #1ed760;
+        }
+
+        /* SVG Icons */
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .play-btn .icon {
+            width: 30px;
+            height: 30px;
+        }
+
+        /* Scrollbar styling */
+        .playlist-section::-webkit-scrollbar {
+            width: 8px;
+        }
+        .playlist-section::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        .playlist-section::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        .playlist-section::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            opacity: 0.5;
+            padding: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+             .playlist-section {
+                max-height: 300px; /* Adjust for smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Mini Spotify</h1>
+        <p>Your Offline Music Player</p>
+    </div>
+
+    <div class="upload-section">
+        <label for="fileInput" class="file-input-label">
+            Upload Audio Files
+        </label>
+        <input type="file" id="fileInput" accept="audio/mp3,audio/mpeg,audio/wav" multiple>
+    </div>
+
+    <div class="main-content">
+        <div class="playlist-section">
+            <div class="playlist-header">
+                <h2>Playlist</h2>
+                <span id="trackCount">0 tracks</span>
+            </div>
+            <div id="playlist">
+                <div class="empty-state">No tracks uploaded yet. Upload MP3 or WAV files.</div>
+            </div>
+        </div>
+
+        <div class="player-section">
+            <div class="visualizer-container">
+                <canvas id="waveformCanvas"></canvas>
+            </div>
+
+            <div class="now-playing">
+                <div class="now-playing-title" id="nowPlayingTitle">No track selected</div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="time-display">
+                        <span id="currentTime">0:00</span>
+                        <span id="totalTime">0:00</span>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="control-btn" id="prevBtn" title="Previous">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+                    </button>
+                    <button class="control-btn play-btn" id="playBtn" title="Play/Pause">
+                        <svg class="icon" id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <svg class="icon" id="pauseIcon" viewBox="0 0 24 24" style="display: none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </button>
+                    <button class="control-btn" id="nextBtn" title="Next">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+                    </button>
+                    <button class="control-btn" id="shuffleBtn" title="Shuffle">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Audio player state
+        let audioContext;
+        let analyser;
+        let sourceNode; // MODIFIED: Renamed from 'source' and will be the single MediaElementSourceNode
+        let audio = new Audio();
+        let playlist = []; // Will store { id, name, duration, fileType }
+        let currentTrackIndex = -1;
+        let isPlaying = false;
+        let isShuffle = false;
+        let animationId;
+        let currentObjectUrl = null; 
+
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const playlistEl = document.getElementById('playlist');
+        const trackCountEl = document.getElementById('trackCount');
+        const playBtn = document.getElementById('playBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeEl = document.getElementById('currentTime');
+        const totalTimeEl = document.getElementById('totalTime');
+        const nowPlayingTitle = document.getElementById('nowPlayingTitle');
+        const playIcon = document.getElementById('playIcon');
+        const pauseIcon = document.getElementById('pauseIcon');
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- IndexedDB Setup ---
+        const DB_NAME = 'miniSpotifyDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'audioTracks';
+        let db;
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                if (db) {
+                    resolve(db);
+                    return;
+                }
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.error);
+                    reject('IndexedDB error: ' + event.target.error.name);
+                };
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('IndexedDB opened successfully.');
+                    resolve(db);
+                };
+                request.onupgradeneeded = (event) => {
+                    const tempDb = event.target.result;
+                    if (!tempDb.objectStoreNames.contains(STORE_NAME)) {
+                        tempDb.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        console.log('IndexedDB object store created.');
+                    }
+                };
+            });
+        }
+
+        async function saveTrackDataToDB(trackData) {
+            if (!db) await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.put(trackData);
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => {
+                    console.error('Error saving track to DB:', event.target.error.name, event.target.error.message);
+                    if (event.target.error.name === 'QuotaExceededError') {
+                        reject(new Error('QuotaExceededError'));
+                    } else {
+                        reject(event.target.error);
+                    }
+                };
+            });
+        }
+
+        async function getTrackDataFromDB(id) {
+            if (!db) await openDB();
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.get(id);
+                request.onsuccess = (event) => resolve(event.target.result);
+                request.onerror = (event) => {
+                    console.error('Error getting track from DB:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+        
+        // Initialize audio context
+        function initAudioContext() {
+            if (!audioContext) { // Create context and graph only once
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 256;
+
+                    // MODIFIED: Create MediaElementSourceNode ONCE and connect the graph
+                    sourceNode = audioContext.createMediaElementSource(audio); // 'audio' is your global HTMLAudioElement
+                    sourceNode.connect(analyser);
+                    analyser.connect(audioContext.destination); // Connect analyser to output
+                    console.log("Audio graph (sourceNode -> analyser -> destination) established.");
+                } catch (e) {
+                    console.error("Error initializing AudioContext or audio graph:", e);
+                    // Potentially disable visualizer or notify user if this critical step fails
+                    return; 
+                }
+            }
+            // Always try to resume if suspended
+            if (audioContext && audioContext.state === 'suspended') { // Ensure audioContext exists before resuming
+                audioContext.resume().catch(e => console.error("Error resuming AudioContext:", e));
+            }
+        }
+
+        // File upload handler
+        fileInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            const newTracksPromises = files.map(file => {
+                return new Promise(async (resolveFile, rejectFile) => {
+                    if (file.type.includes('audio')) {
+                        const reader = new FileReader();
+                        reader.onload = async (event) => {
+                            const audioArrayBuffer = event.target.result;
+                            const trackId = Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+                            let duration = 0;
+
+                            const tempBlob = new Blob([audioArrayBuffer], { type: file.type });
+                            const tempUrl = URL.createObjectURL(tempBlob);
+                            const tempAudioForDuration = new Audio(tempUrl);
+
+                            tempAudioForDuration.onloadedmetadata = async () => {
+                                duration = tempAudioForDuration.duration;
+                                URL.revokeObjectURL(tempUrl);
+
+                                const trackFullData = {
+                                    id: trackId,
+                                    name: file.name.replace(/\.[^/.]+$/, ''),
+                                    fileType: file.type,
+                                    audioData: audioArrayBuffer,
+                                    duration: duration
+                                };
+                                
+                                try {
+                                    await saveTrackDataToDB(trackFullData);
+                                    resolveFile({
+                                        id: trackId,
+                                        name: trackFullData.name,
+                                        duration: duration,
+                                        fileType: file.type
+                                    });
+                                } catch (dbError) {
+                                    console.error("Failed to save track to DB:", file.name, dbError);
+                                    if (dbError.message === 'QuotaExceededError') {
+                                        alert(`Offline storage quota exceeded. Could not save ${file.name}.`);
+                                    } else {
+                                        alert(`Could not save ${file.name} to offline storage. Error: ${dbError.message}`);
+                                    }
+                                    rejectFile(dbError);
+                                }
+                            };
+                            tempAudioForDuration.onerror = () => {
+                                URL.revokeObjectURL(tempUrl);
+                                console.error("Error loading metadata for", file.name);
+                                alert(`Could not read metadata for ${file.name}. File might be corrupt or unsupported.`);
+                                rejectFile(new Error("Metadata load error for " + file.name));
+                            };
+                        };
+                        reader.onerror = () => {
+                            console.error("FileReader error for", file.name);
+                            rejectFile(new Error("FileReader error for " + file.name));
+                        };
+                        reader.readAsArrayBuffer(file);
+                    } else {
+                        resolveFile(null); 
+                    }
+                });
+            });
+
+            try {
+                const results = await Promise.allSettled(newTracksPromises);
+                const successfullyProcessedTracks = results
+                    .filter(result => result.status === 'fulfilled' && result.value)
+                    .map(result => result.value);
+
+                if (successfullyProcessedTracks.length > 0) {
+                    playlist.push(...successfullyProcessedTracks);
+                    savePlaylistMetaToLocalStorage();
+                    updatePlaylistUI();
+                }
+                results.filter(result => result.status === 'rejected').forEach(result => {
+                    console.error("Track processing failed:", result.reason);
+                });
+
+            } catch (error) { 
+                console.error("Unexpected error processing uploaded files:", error);
+            } finally {
+                fileInput.value = '';
+            }
+        });
+
+        // Save playlist metadata to localStorage
+        function savePlaylistMetaToLocalStorage() {
+            try {
+                localStorage.setItem('miniSpotifyPlaylistMeta', JSON.stringify(playlist));
+            } catch (e) {
+                console.error('Failed to save playlist metadata to localStorage:', e);
+            }
+        }
+
+        // Load playlist metadata from localStorage
+        function loadPlaylistMetaFromLocalStorage() {
+            try {
+                const playlistMetaString = localStorage.getItem('miniSpotifyPlaylistMeta');
+                if (playlistMetaString) {
+                    playlist = JSON.parse(playlistMetaString);
+                } else {
+                    playlist = [];
+                }
+            } catch (e) {
+                console.error('Failed to load playlist metadata from localStorage:', e);
+                playlist = [];
+            }
+            updatePlaylistUI(); 
+        }
+
+        // Update playlist UI
+        function updatePlaylistUI() {
+            if (playlist.length === 0) {
+                playlistEl.innerHTML = '<div class="empty-state">No tracks uploaded yet. Upload MP3 or WAV files.</div>';
+                trackCountEl.textContent = '0 tracks';
+                if (currentTrackIndex === -1) { 
+                    nowPlayingTitle.textContent = 'No track selected';
+                    progressFill.style.width = '0%';
+                    currentTimeEl.textContent = '0:00';
+                    totalTimeEl.textContent = '0:00';
+                    if (animationId) cancelAnimationFrame(animationId);
+                    if(ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+                return;
+            }
+            
+            trackCountEl.textContent = `${playlist.length} track${playlist.length > 1 ? 's' : ''}`;
+            playlistEl.innerHTML = playlist.map((track, index) => `
+                <div class="playlist-item ${index === currentTrackIndex ? 'active' : ''}" data-index="${index}" title="${track.name} (${formatTime(track.duration)})">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                    <div class="playlist-item-info">
+                        <div class="playlist-item-title">${track.name}</div>
+                        <div class="playlist-item-duration">${formatTime(track.duration)}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.querySelectorAll('.playlist-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const index = parseInt(item.dataset.index);
+                    playTrack(index);
+                });
+            });
+        }
+
+        // Play track
+        async function playTrack(index) {
+            if (playlist.length === 0) {
+                audio.pause();
+                isPlaying = false;
+                currentTrackIndex = -1;
+                updatePlayButton();
+                updatePlaylistUI(); 
+                if (currentObjectUrl) {
+                    URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = null;
+                }
+                return;
+            }
+
+            if (index < 0 || index >= playlist.length) {
+                index = 0; 
+            }
+            currentTrackIndex = index;
+            const trackMeta = playlist[currentTrackIndex];
+
+            if (!trackMeta || !trackMeta.id) {
+                console.error("Track metadata or ID is missing for index:", currentTrackIndex);
+                return;
+            }
+
+            try {
+                const trackFullData = await getTrackDataFromDB(trackMeta.id);
+                if (!trackFullData || !trackFullData.audioData) {
+                    console.error('Audio data not found in DB for track:', trackMeta.name);
+                    alert(`Could not load audio for ${trackMeta.name}. It might be missing from offline storage or corrupted.`);
+                    return;
+                }
+
+                if (currentObjectUrl) { 
+                    URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = null;
+                }
+
+                const blob = new Blob([trackFullData.audioData], { type: trackFullData.fileType });
+                currentObjectUrl = URL.createObjectURL(blob);
+                audio.src = currentObjectUrl;
+                nowPlayingTitle.textContent = trackMeta.name;
+                
+                currentTimeEl.textContent = '0:00';
+                totalTimeEl.textContent = formatTime(trackMeta.duration);
+                progressFill.style.width = '0%';
+
+                audio.play().then(() => {
+                    isPlaying = true;
+                    updatePlayButton();
+                    updatePlaylistUI(); 
+                    
+                    initAudioContext(); // Ensures AudioContext is initialized/resumed and graph is connected.
+
+                    // MODIFIED: The audio graph (sourceNode -> analyser -> destination) is now persistent.
+                    // No need to disconnect/recreate sourceNode or reconnect analyser here.
+
+                    if (animationId) cancelAnimationFrame(animationId);
+                    
+                    // Start visualization if analyser is ready and context is running
+                    if (analyser && audioContext && audioContext.state === 'running') {
+                        startVisualization();
+                    } else {
+                        console.warn("Visualizer not starting: AudioContext not running or analyser not ready.");
+                    }
+
+                }).catch(playError => {
+                    console.error('Playback failed for:', trackMeta.name, playError);
+                    alert(`Could not play ${trackMeta.name}. The file might be unsupported or corrupted.`);
+                    isPlaying = false;
+                    updatePlayButton();
+                    if (currentObjectUrl) {
+                        URL.revokeObjectURL(currentObjectUrl);
+                        currentObjectUrl = null;
+                    }
+                });
+
+            } catch (dbError) {
+                console.error('Failed to retrieve track from DB:', trackMeta.name, dbError);
+                alert(`Error loading ${trackMeta.name} from storage.`);
+            }
+        }
+
+        // Controls
+        playBtn.addEventListener('click', () => {
+            initAudioContext(); // Crucial for first interaction, ensures graph is ready.
+
+            if (currentTrackIndex === -1 && playlist.length > 0) {
+                playTrack(0); 
+            } else if (playlist.length > 0) {
+                if (isPlaying) {
+                    audio.pause();
+                    isPlaying = false;
+                    if (animationId) cancelAnimationFrame(animationId);
+                } else {
+                    if (audio.src && audio.src !== window.location.href) { 
+                         audio.play().then(() => {
+                            isPlaying = true;
+                            // Restart visualization if it was stopped and graph is ready
+                            if (sourceNode && analyser && audioContext && audioContext.state === 'running') { // MODIFIED: check sourceNode
+                                startVisualization(); 
+                            }
+                        }).catch(e => {
+                             console.error("Error resuming play:", e);
+                             isPlaying = false; 
+                        });
+                    } else if (currentTrackIndex !== -1) {
+                        console.warn("Audio source missing, attempting to reload track:", currentTrackIndex);
+                        playTrack(currentTrackIndex);
+                    }
+                }
+            }
+            updatePlayButton();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (playlist.length === 0) return;
+            let newIndex = currentTrackIndex - 1;
+            if (newIndex < 0) newIndex = playlist.length - 1;
+            playTrack(newIndex);
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (playlist.length === 0) return;
+            let newIndex;
+            if (isShuffle && playlist.length > 1) {
+                do { newIndex = Math.floor(Math.random() * playlist.length); }
+                while (newIndex === currentTrackIndex);
+            } else {
+                newIndex = currentTrackIndex + 1;
+                if (newIndex >= playlist.length) newIndex = 0;
+            }
+            playTrack(newIndex);
+        });
+
+        shuffleBtn.addEventListener('click', () => {
+            isShuffle = !isShuffle;
+            shuffleBtn.classList.toggle('active', isShuffle);
+        });
+
+        // Progress bar
+        progressBar.addEventListener('click', (e) => {
+            if (currentTrackIndex === -1 || !audio.duration || isNaN(audio.duration)) return;
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = percent * audio.duration;
+        });
+
+        // Audio events
+        audio.addEventListener('loadedmetadata', () => { 
+            if (audio.duration && !isNaN(audio.duration)) {
+                totalTimeEl.textContent = formatTime(audio.duration);
+            }
+        });
+        audio.addEventListener('timeupdate', () => {
+            if (audio.duration && !isNaN(audio.duration)) {
+                const percent = (audio.currentTime / audio.duration) * 100;
+                progressFill.style.width = percent + '%';
+                currentTimeEl.textContent = formatTime(audio.currentTime);
+            } else { 
+                progressFill.style.width = '0%';
+                currentTimeEl.textContent = '0:00';
+                if (currentTrackIndex !== -1 && playlist[currentTrackIndex]) {
+                    totalTimeEl.textContent = formatTime(playlist[currentTrackIndex].duration); 
+                } else {
+                    totalTimeEl.textContent = '0:00';
+                }
+            }
+        });
+        audio.addEventListener('ended', () => { nextBtn.click(); });
+        audio.addEventListener('error', (e) => {
+            console.error("Audio playback error:", audio.error, e);
+            nowPlayingTitle.textContent = "Error playing track";
+            isPlaying = false;
+            updatePlayButton();
+            if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+        });
+
+        // Waveform visualization
+        function startVisualization() {
+            if (!analyser || !audioContext || audioContext.state !== 'running') { // MODIFIED: Check state is 'running'
+                console.warn("Visualizer: Analyser/AudioContext not ready or not running.");
+                return;
+            }
+            if (animationId) cancelAnimationFrame(animationId); 
+
+            canvas.width = canvas.offsetWidth; 
+            canvas.height = canvas.offsetHeight;
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            function draw() {
+                animationId = requestAnimationFrame(draw);
+                if (!isPlaying) { 
+                    return; 
+                }
+                
+                analyser.getByteFrequencyData(dataArray);
+                
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const barWidth = (canvas.width / bufferLength) * 1.5;
+                let barHeight;
+                let x = 0;
+                
+                for (let i = 0; i < bufferLength; i++) {
+                    barHeight = (dataArray[i] / 255) * canvas.height * 0.9;
+                    const intensity = dataArray[i] / 255;
+                    const hue = 120 + intensity * 60; 
+                    const saturation = 60 + intensity * 40;
+                    const lightness = 40 + intensity * 20;
+                    
+                    ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1;
+                }
+            }
+            draw();
+        }
+
+        // Utility functions
+        function formatTime(seconds) {
+            if (seconds === null || typeof seconds === 'undefined' || isNaN(seconds) || seconds < 0) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updatePlayButton() {
+            if (isPlaying) {
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = 'block';
+                playBtn.title = "Pause";
+            } else {
+                playIcon.style.display = 'block';
+                pauseIcon.style.display = 'none';
+                playBtn.title = "Play";
+            }
+        }
+
+        // Initialize
+        async function initializeApp() {
+            try {
+                await openDB();
+                console.log("IndexedDB is ready.");
+            } catch (err) {
+                console.error("IndexedDB could not be initialized. Offline storage will not work correctly.", err);
+                alert("Offline storage system (IndexedDB) could not be initialized. Tracks cannot be saved or loaded reliably for offline play.");
+            }
+            loadPlaylistMetaFromLocalStorage(); 
+            updatePlayButton(); 
+        }
+
+        initializeApp();
+        
+        // Handle window resize for canvas
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0) {
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = canvas.offsetHeight;
+                    if (isPlaying && sourceNode && analyser && audioContext && audioContext.state === 'running') { // MODIFIED: Check sourceNode and context state
+                        // Visualization will continue via its own animation loop if active
+                    } else if (currentTrackIndex === -1 || !isPlaying) { 
+                        if(ctx && canvas) ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                    }
+                }
+            }, 100);
+        });
+
+        // Clean up Object URL on page unload
+        window.addEventListener('beforeunload', () => {
+            if (currentObjectUrl) {
+                URL.revokeObjectURL(currentObjectUrl);
+                currentObjectUrl = null;
+            }
+        });
+
+         // Handle page visibility for visualizer
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (animationId) cancelAnimationFrame(animationId);
+            } else {
+                if (isPlaying && sourceNode && analyser && audioContext && audioContext.state === 'running') { // MODIFIED: Check sourceNode and context state
+                     startVisualization();
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
