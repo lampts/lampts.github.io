@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bird Stories - by AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    <style>
+        /* Basic Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lora', serif; /* Default serif font for text */
+            background-color: #F5F5F0; /* Off-white/cream background */
+            color: #333333; /* Dark gray text */
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden; /* Prevent horizontal scrollbar from app-container potentially */
+        }
+
+        #app-container {
+            display: flex;
+            flex-grow: 1; /* Allow app-container to fill vertical space */
+            width: 100%;
+            max-width: 1600px; /* Optional: Max width for very large screens */
+            margin: 0 auto; /* Center the app container */
+        }
+
+        /* Sidebar Styling */
+        #sidebar {
+            width: 250px; /* Fixed width for sidebar */
+            background-color: #F5F5F0; /* Same as body or slightly different */
+            padding: 40px 20px 20px 40px;
+            font-family: 'Courier Prime', monospace; /* Monospace font */
+            font-size: 14px;
+            border-right: 1px solid #e0e0e0; /* Subtle separator */
+            position: fixed; /* Fixed position */
+            left: 0;
+            top: 0;
+            bottom: 0;
+            overflow-y: auto; /* Scroll if many stories */
+            display: flex;
+            flex-direction: column;
+        }
+
+        #story-list {
+            list-style-type: none;
+            flex-grow: 1; /* Allow list to take available space before button */
+        }
+
+        #story-list li {
+            margin-bottom: 12px;
+            cursor: pointer;
+            color: #777;
+            transition: color 0.2s ease-in-out;
+        }
+
+        #story-list li:hover {
+            color: #333;
+        }
+
+        #story-list li.active {
+            color: #000;
+            font-weight: 700; /* Bold for active item */
+        }
+
+        #toggle-visual-btn {
+            display: block; 
+            margin-top: 20px; 
+            padding: 8px 10px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 13px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            width: 100%; 
+        }
+
+        #toggle-visual-btn:hover {
+            background-color: #d0d0d0;
+        }
+
+
+        /* Main Content Area */
+        #main-content {
+            flex-grow: 1; /* Takes remaining space */
+            display: flex;
+            padding: 40px;
+            margin-left: 250px; /* Account for fixed sidebar width */
+            overflow-y: hidden; /* Prevent this container from scrolling, panes will scroll */
+            transition: margin-left 0.3s ease-in-out; /* Smooth transition for text pane expansion */
+        }
+
+        #visual-pane {
+            width: 45%; /* Adjust as needed */
+            padding-right: 30px; /* Space between visual and text */
+            display: flex;
+            align-items: flex-start; /* Align image to the top */
+            justify-content: center;
+            transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out, padding-right 0.3s ease-in-out;
+            opacity: 1;
+        }
+
+        #story-image {
+            max-width: 100%;
+            max-height: 80vh; /* Limit image height */
+            height: auto; /* Maintain aspect ratio */
+            object-fit: contain;
+            border: 1px solid #ddd; /* Optional: subtle border for image */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        #text-pane {
+            width: 55%; /* Adjust as needed */
+            padding-left: 30px;
+            border-left: 1px solid #e0e0e0; /* Separator for text pane */
+            overflow-y: auto; /* Allow text pane to scroll */
+            max-height: calc(100vh - 80px); /* Adjust based on padding, roughly full viewport height */
+            transition: width 0.3s ease-in-out, padding-left 0.3s ease-in-out, border-left 0.3s ease-in-out;
+        }
+
+        /* Styles for when visual pane is hidden */
+        #main-content.visual-hidden #visual-pane {
+            width: 0;
+            opacity: 0;
+            padding-right: 0;
+            overflow: hidden; /* Prevent content from showing during transition */
+        }
+
+        #main-content.visual-hidden #text-pane {
+            width: 100%;
+            border-left: none;
+            padding-left: 0;
+        }
+
+
+        #story-main-title {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            color: #222;
+        }
+
+        #text-pane p {
+            margin-bottom: 1em;
+            font-size: 1em; /* Base font size for story text */
+        }
+
+        #text-pane ul {
+            margin-left: 20px;
+            margin-bottom: 1em;
+        }
+
+        #text-pane li {
+            margin-bottom: 0.5em;
+        }
+
+        /* Footer Styling */
+        #page-footer {
+            text-align: center;
+            padding: 20px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.9em;
+            color: #555;
+            width: calc(100% - 250px); /* Align with main content */
+            margin-left: 250px; /* Account for fixed sidebar */
+            border-top: 1px solid #e0e0e0;
+            transition: width 0.3s ease-in-out, margin-left 0.3s ease-in-out;
+        }
+        
+        /* Responsive Adjustments (Basic) */
+        @media (max-width: 900px) {
+            #sidebar {
+                width: 200px;
+                padding: 30px 15px 15px 30px;
+            }
+            #main-content {
+                margin-left: 200px;
+                padding: 30px;
+            }
+            #page-footer {
+                width: calc(100% - 200px);
+                margin-left: 200px;
+            }
+            #visual-pane {
+                width: 40%;
+            }
+            #text-pane {
+                width: 60%;
+            }
+            /* When visual hidden on medium screens */
+            #main-content.visual-hidden #visual-pane {
+                 /* Already handled by global .visual-hidden */
+            }
+            #main-content.visual-hidden #text-pane {
+                 /* Already handled by global .visual-hidden */
+            }
+        }
+
+        @media (max-width: 768px) {
+            #app-container {
+                flex-direction: column;
+            }
+            #sidebar {
+                position: relative; /* Change from fixed for stacking */
+                width: 100%;
+                height: auto; /* Auto height for content */
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+                padding: 20px;
+                overflow-y: visible; /* Allow natural scroll if needed */
+                flex-direction: row; /* For button and list */
+                align-items: center; /* Align items vertically */
+            }
+            #story-list {
+                display: flex; /* Horizontal list for smaller screens */
+                flex-wrap: wrap; /* Allow wrapping */
+                justify-content: flex-start; /* Align to start */
+                flex-grow: 1;
+            }
+            #story-list li {
+                margin-right: 15px; /* Spacing for horizontal items */
+                margin-bottom: 10px; /* Spacing if they wrap */
+            }
+            #toggle-visual-btn {
+                margin-top: 0;
+                margin-left: 15px; /* Space from story list */
+                width: auto; /* Don't take full width */
+                padding: 6px 12px;
+            }
+
+            #main-content {
+                flex-direction: column; /* Stack visual and text panes */
+                margin-left: 0;
+                padding: 20px;
+            }
+            #visual-pane { /* Default when stacked */
+                width: 100%;
+                padding-right: 0;
+                margin-bottom: 20px;
+                align-items: center; /* Center image when stacked */
+            }
+            #story-image {
+                max-height: 50vh; /* Adjust for smaller layout */
+            }
+            #text-pane { /* Default when stacked */
+                width: 100%;
+                padding-left: 0;
+                border-left: none;
+                max-height: none; /* Allow natural height based on content */
+                overflow-y: visible;
+            }
+
+            /* When visual hidden on small screens (stacked) */
+            #main-content.visual-hidden #visual-pane {
+                display: none; /* Just hide it, no fancy width transition needed here */
+                margin-bottom: 0;
+            }
+            #main-content.visual-hidden #text-pane {
+                /* Text pane already takes 100% width in stacked mode */
+            }
+
+            #page-footer {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <aside id="sidebar">
+            <ul id="story-list">
+                <!-- Story navigation will be populated by JavaScript -->
+            </ul>
+            <button id="toggle-visual-btn">Hide Image</button> 
+        </aside>
+
+        <main id="main-content">
+            <div id="visual-pane">
+                <img id="story-image" src="" alt="Story illustration">
+            </div>
+            <div id="text-pane">
+                <h2 id="story-main-title"></h2>
+                <div id="story-body-content">
+                    <!-- Story text will be populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer id="page-footer">
+        <p>BIRD STORIES – by AI</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const storyListData = [
+                {
+                    id: "story1",
+                    sidebarTitle: "01. GIỌT NƯỚC CUỐI CÙNG",
+                    mainTitle: "1. GIỌT NƯỚC CUỐI CÙNG (THE LAST DROP)",
+                    imageUrl: "the-last-drop.jpg", 
+                    storyHtmlContent: `
+                        <p>Mùa hè năm ấy nắng hạn khủng khiếp, ao hồ cạn dần. (That summer had terrible drought, ponds slowly dried up.)</p>
+                        <p>Bói-Cá lo lắng nhìn mực nước xuống thấp mỗi ngày. (Kingfisher worriedly watched water level drop each day.)</p>
+                        <p>Cá ít dần, nhiều con chết nổi lềnh bềnh. (Fish became fewer, many died floating around.)</p>
+                        <p>Ngài phải bay xa hơn để kiếm ăn, có khi cả ngày mới bắt được một con cá nhỏ. (He had to fly farther to find food, sometimes whole day caught only one small fish.)</p>
+                        <p>Một buổi chiều, khi trở về ao cũ, Ngài sửng sốt thấy chỉ còn một vũng nước nhỏ. (One evening, returning to old pond, he was shocked to see only a small puddle left.)</p>
+                        <p>Trong vũng, vài con cá cuối cùng đang thoi thóp. (In the puddle, last few fish were gasping.)</p>
+                        <p>Bói-Cá đậu trên cành, nhìn xuống. (Kingfisher perched on branch, looking down.)</p>
+                        <p>Dễ dàng quá - chỉ cần lao xuống là có bữa ăn. (Too easy - just dive down and have a meal.)</p>
+                        <p>Nhưng Ngài chần chừ. (But he hesitated.)</p>
+                        <p>Một con cá già ngước lên, thều thào: (An old fish looked up, whispered:)</p>
+                        <ul><li>Ngài Bói-Cá, xin hãy tha cho chúng tôi. (- Mr. Kingfisher, please spare us.)</li></ul>
+                        <p>Chúng tôi là những con cuối cùng của ao này rồi. (We are the last ones of this pond.)</p>
+                        <p>Bói-Cá im lặng một lúc lâu. (Kingfisher was silent for a long time.)</p>
+                        <p>Ngài nhớ lại bao nhiêu năm sống ở ao này. (He remembered many years living at this pond.)</p>
+                        <p>Nhớ những buổi sáng sương mù, chiều hoàng hôn tuyệt đẹp. (Remembered misty mornings, beautiful sunsets.)</p>
+                        <p>Nhớ tiếng cá quẫy nước vui vẻ khi trời mưa. (Remembered happy fish splashing sounds when it rained.)</p>
+                        <p>Cuối cùng, Ngài quyết định một điều kỳ lạ. (Finally, he decided something strange.)</p>
+                        <p>Bay đi khắp nơi, Ngài kêu gọi các loài chim về giúp. (Flying everywhere, he called all bird species to come help.)</p>
+                        <ul><li>Ao của chúng ta sắp chết! (- Our pond is dying!)</li></ul>
+                        <p>Chúng ta phải cứu nó! (We must save it!)</p>
+                        <p>Lúc đầu, bọn chim cười nhạo: (At first, birds laughed mockingly:)</p>
+                        <ul><li>Bói-Cá điên rồi! (- Kingfisher is crazy!)</li></ul>
+                        <p>Cứu ao làm gì? (Save pond for what?)</p>
+                        <p>Tìm ao khác là xong! (Just find another pond!)</p>
+                        <p>Nhưng Ngài không bỏ cuộc. (But he didn't give up.)</p>
+                        <p>Ngài kể về những kỷ niệm, về tổ tiên đã sống ở đây. (He told about memories, about ancestors who lived here.)</p>
+                        <p>Về những mùa xuân chim về làm tổ, mùa hè bắt cá, mùa thu soi bóng, mùa đông tránh rét. (About springs when birds came to nest, summers catching fish, autumns reflecting shadows, winters avoiding cold.)</p>
+                        <p>Dần dần, lòng chim được lay động. (Gradually, birds' hearts were moved.)</p>
+                        <p>Cò đề nghị: (Stork suggested:)</p>
+                        <ul><li>Mỗi chúng ta ngậm một giọt nước từ sông về! (- Each of us carry one drop of water from the river!)</li></ul>
+                        <p>Sáo phản đối: (Magpie objected:)</p>
+                        <ul><li>Làm sao đủ? (- How is that enough?)</li></ul>
+                        <p>Ao to mà giọt nước thì nhỏ! (Pond is big but water drop is small!)</p>
+                        <p>Nhưng Chim-Sâu lên tiếng: (But Worm-Bird spoke up:)</p>
+                        <ul><li>Giọt nhỏ nhưng nhiều thành ao! (- Small drops but many become pond!)</li></ul>
+                        <p>Thế là cuộc vận động bắt đầu. (So the campaign began.)</p>
+                        <p>Hàng trăm con chim bay đi bay về, mỗi con ngậm một giọt nước. (Hundreds of birds flew back and forth, each carrying one water drop.)</p>
+                        <p>Từ sáng đến chiều, từ chiều đến tối. (From morning to afternoon, from afternoon to evening.)</p>
+                        <p>Người trong làng thấy cảnh lạ: đàn chim bay thành hàng dài bất tận. (Village people saw strange sight: birds flying in endless long lines.)</p>
+                        <p>Họ không hiểu chuyện gì đang xảy ra. (They didn't understand what was happening.)</p>
+                        <p>Ngày thứ nhất, vũng nước chỉ lớn thêm chút xíu. (First day, puddle only grew tiny bit.)</p>
+                        <p>Ngày thứ hai, đã thành một vũng nhỏ. (Second day, became a small pool.)</p>
+                        <p>Ngày thứ ba, mưa bất ngờ đổ xuống! (Third day, rain suddenly poured down!)</p>
+                        <p>Trời như thương cảm công sức của loài chim. (Heaven seemed to sympathize with birds' effort.)</p>
+                        <p>Mưa to suốt đêm, ao được hồi sinh. (Heavy rain all night, pond was revived.)</p>
+                        <p>Những con cá cuối cùng vui mừng bơi lội. (The last fish happily swam around.)</p>
+                        <p>Bọn chim mệt lả nhưng hạnh phúc. (Birds were exhausted but happy.)</p>
+                        <p>Bói-Cá đậu bên bờ ao, mỉm cười nhìn mặt nước trong xanh. (Kingfisher perched by pond shore, smiling at clear blue water.)</p>
+                        <p>Ngài chưa bao giờ bắt cá ở ao này nữa. (He never caught fish in this pond again.)</p>
+                        <p>Thay vào đó, Ngài bay xa hơn để kiếm ăn. (Instead, he flew farther to find food.)</p>
+                        <p>Bọn cá trong ao lớn lên, sinh sôi nảy nở. (Fish in pond grew up, multiplied.)</p>
+                        <p>Chúng kể cho con cháu nghe về ngày hạn hán khủng khiếp. (They told children and grandchildren about the terrible drought day.)</p>
+                        <p>Và về con chim Bói-Cá đã cứu cả ao. (And about the Kingfisher who saved the whole pond.)</p>
+                        <p>Còn Ngài? (And him?)</p>
+                        <p>Ngài già đi trong sự tôn trọng của muôn loài. (He grew old in respect of all species.)</p>
+                        <p>Ai cũng gọi Ngài là "Bói-Cá Nhân Từ". (Everyone called him "Merciful Kingfisher".)</p>
+                        <p>Và khi những chú Bói-Cá trẻ hỏi tại sao không bắt cá ở ao nhà. (And when young Kingfishers asked why not catch fish in home pond.)</p>
+                        <p>Ngài chỉ mỉm cười: (He just smiled:)</p>
+                        <ul><li>Có những thứ quý hơn bữa ăn. (- There are things more precious than meals.)</li></ul>
+                        <p>Đó là nhà, là tình, là nghĩa đồng loại. (That is home, is love, is fellowship.)</p>
+                        <p>Mỗi giọt nước ta cho đi, sẽ trở thành cả một đại dương. (Each water drop we give away, will become a whole ocean.)</p>
+                        <p>Câu chuyện này được truyền lại mãi mãi trong xóm chim. (This story was passed down forever in bird village.)</p>
+                        <p>Về một vị Bói-Cá biết chọn lựa giữa no bụng và no lòng. (About a Kingfisher who knew to choose between full stomach and full heart.)</p>
+                        <p>Và về sức mạnh của những giọt nước nhỏ bé khi cùng chung một ý chí. (And about the power of tiny water drops when sharing one will.)</p>
+                    `
+                },
+                {
+                    id: "story2",
+                    sidebarTitle: "02. KẾ HOẠCH HOÀN HẢO",
+                    mainTitle: "2. KẾ HOẠCH HOÀN HẢO (THE PERFECT PLAN)",
+                    imageUrl: "perfect-plan.jpg",
+                    storyHtmlContent: `
+                        <p>Ngài Bói-Cá hiểu sâu biết rộng, lại cũng có đầu óc lập kế hoạch chi li. (Mr. Kingfisher was very smart and loved to make detailed plans.)</p>
+                        <p>Bữa nay, từ mờ sáng ngài đã đậu trên cành cao suy tư. (This morning, he sat on a high branch thinking hard.)</p>
+                        <p>Ngài có thể kiểm soát tốc độ bay, khi nhanh lúc chậm. (He could control how fast he flew - sometimes fast, sometimes slow.)</p>
+                        <p>Vậy tính sao cho khi thư thả, lúc khẩn trương, việc bắt cá đỡ tốn sức. (He wanted to plan when to relax and when to hurry, so catching fish would be easier.)</p>
+                        <p>Kinh nghiệm xử lý bọn cá dưới ao giúp ngài đoán biết con nào to hay bé, mau lẹ hay lờ đờ. (His experience helped him know which fish were big or small, fast or slow.)</p>
+                        <p>Nhờ vậy, làm chủ được cơ hội về chộp chuẩn nhất, thế mới còn nhiều thời gian để suy ngẫm chuyện thiên địa. (This way, he could catch fish perfectly and have time to think about other things.)</p>
+                        <p>Ngài lại hiểu cả lòng mình, sức vóc ấy ngày mấy bữa, mỗi bữa mấy con, biết rõ sự dành dụm nay mai. (He knew himself well - how many meals a day, how many fish each meal, and how to save for tomorrow.)</p>
+                        <p>Cá con chờ lớn, cá to xơi trước... (Small fish wait to grow, big fish eat first...)</p>
+                        <p>Vạn chuyện, ngài tính được cả. (He could calculate everything.)</p>
+                        <p>Nghĩ nháp, rồi lên kế hoạch để hành động. (He made drafts, then made plans for action.)</p>
+                        <p>Việc "vạn trù" ấy ngài cũng thạo lắm. (He was very good at this "planning everything".)</p>
+                        <p>Kế hoạch xong, chưa yên tâm, lại chỉnh. (When the plan was done, he wasn't satisfied and fixed it again.)</p>
+                        <p>Phàm là sự hoàn hảo thì đòi hỏi kỳ công. (Perfect things need lots of work.)</p>
+                        <p>Có phải làm lại bao lần Bói-Cá cũng không nề hà... (Even if he had to redo it many times, Kingfisher didn't mind...)</p>
+                        <p>Cứ thế, ngài miệt mài sự nghiệp toán học. (So he kept working on his math project.)</p>
+                        <p>Hết ngày, ngài hết sức tâm đắc với kế hoạch kiếm ăn hoàn hảo được soạn ra. (By the end of the day, he was very proud of his perfect eating plan.)</p>
+                        <p>Ngài Bói-Cá thổn thức, không sao ngủ được. (Mr. Kingfisher was so excited, he couldn't sleep.)</p>
+                        <p>Cảm giác cồn cào ở bụng. (He felt something rumbling in his stomach.)</p>
+                        <p>Hóa ra Ngài... đói. (It turned out he was... hungry.)</p>
+                    `
+                },
+                {
+                    id: "story3",
+                    sidebarTitle: "03. NHẸ GÁNH, THẢNH THƠI",
+                    mainTitle: "3. NHẸ GÁNH, THẢNH THƠI (LIGHT LOAD, CAREFREE)",
+                    imageUrl: "light-load.jpg",
+                    storyHtmlContent: `
+                        <p>Dạo này thấy ngài Bói-Cá ít giao thiệp, hay trầm tư. (These days, Mr. Kingfisher was quiet and thoughtful.)</p>
+                        <p>Chim-Gáy tới thăm. (Sparrow came to visit.)</p>
+                        <p>Gáy nói: (Sparrow said:)</p>
+                        <ul><li>Bữa nay trời đẹp, ngài nên đi cùng tôi thăm ruộng lúa. (- Today is beautiful, you should come with me to see the rice fields.)</li></ul>
+                        <p>Lúc này sắp mùa gặt, ruộng đồng vui, nhiều chim kéo về. (It's almost harvest time, the fields are fun, many birds come.)</p>
+                        <p>Ngài ra đó còn biết thêm nhiều việc đời. (You can learn many things about life there.)</p>
+                        <p>Bói-Cá đã điểm tâm, nên vui vẻ đi cùng Gáy. (Kingfisher had eaten breakfast, so he happily went with Sparrow.)</p>
+                        <p>Ngài thấy ruộng lúa sắp chín vàng thì xúc động lắm. (He was moved when he saw the golden rice almost ready.)</p>
+                        <p>Đồng ruộng mênh mông, Bói-Cá và Gáy sà vào nơi vàng ruộm. (The fields were vast, Kingfisher and Sparrow flew into the golden area.)</p>
+                        <p>Bên đám ruộng trông sung túc, được mùa, Bói-Cá lân la hỏi chuyện. (Near the rich, good harvest rice, Kingfisher tried to chat.)</p>
+                        <p>Lạ thay chẳng mấy ai trả lời. (Strangely, not many answered.)</p>
+                        <p>Anh thì mải gồng chống đỡ gió, anh lại gồng giữ bông, hay bận che chắn bọn chim chóc chỉ chờ vặt hạt chín. (Some were busy holding against wind, some protecting their grains, some blocking birds waiting to steal ripe seeds.)</p>
+                        <p>Anh nào cũng lưng còng, mặt úp. (Everyone had bent backs and heads down.)</p>
+                        <p>Mãi mà vẫn chưa được câu nào ra đầu ra đũa. (They couldn't get any proper conversation.)</p>
+                        <p>Thấy Bói-Cá nản, Gáy bảo: (Seeing Kingfisher discouraged, Sparrow said:)</p>
+                        <ul><li>Ta sang phía bên kia, chỗ ấy lao xao, vui vẻ. (- Let's go to the other side, it's noisy and fun there.)</li></ul>
+                        <p>Các anh bên ấy vươn lên vẫy chào, có dáng hay chuyện. (The ones there stretch up to wave, they look chatty.)</p>
+                        <p>Quả nhiên sang bên ấy bắt chuyện được ngay. (Indeed, they could chat right away on that side.)</p>
+                        <p>Tò mò, Bói-Cá hỏi: (Curious, Kingfisher asked:)</p>
+                        <ul><li>Cùng cánh đồng này sao hai bên tính cách khác nhau? (- Same field, why are the two sides so different?)</li></ul>
+                        <p>Bên kia đăm đăm, bên này hồ hởi. (That side is serious, this side is cheerful.)</p>
+                        <p>Một anh Lúa đang lắc lư theo gió nhanh nhảu: (A Rice plant swaying in the wind quickly said:)</p>
+                        <ul><li>Vâng, hoàn cảnh khác nhau. (- Yes, different situations.)</li></ul>
+                        <p>Chúng em nhẹ gánh, thảnh thơi lắm. (We have light loads, very carefree.)</p>
+                        <p>Các bác bên kia suốt ngày cau có, chăm chăm giữ đám hạt chín. (Those uncles over there frown all day, carefully guarding their ripe grains.)</p>
+                        <p>Phí cơ hội hưởng cái vui mùa hát, tán gẫu những ngày nắng đẹp... (They miss the chance to enjoy harvest songs and chat on sunny days...)</p>
+                        <p>Vừa nói, anh Lúa ưỡn ngực, dang tay như muốn ôm trời đất vào lòng, mắt long lanh không giấu sự kiêu hãnh. (While talking, Rice stretched his chest, spread his arms like hugging the world, eyes shining with pride.)</p>
+                        <p>Đôi tay Lúa đập đập vào thân mình đang đu đưa, khiến cánh lá phát phơ. (Rice's hands patted his swaying body, making leaves flutter.)</p>
+                        <p>Bói-Cá mắt tinh nhận ra, phía bên này, anh nào cũng chỉ toàn hạt lép... (Kingfisher's sharp eyes noticed that on this side, everyone only had empty grains...)</p>
+                    `
+                }
+            ];
+
+            const storyListElement = document.getElementById('story-list');
+            const storyImageElement = document.getElementById('story-image');
+            const storyMainTitleElement = document.getElementById('story-main-title');
+            const storyBodyContentElement = document.getElementById('story-body-content');
+            
+            const toggleVisualBtn = document.getElementById('toggle-visual-btn');
+            const mainContentElement = document.getElementById('main-content');
+
+
+            function renderSidebar() {
+                storyListElement.innerHTML = ''; // Clear existing items
+                storyListData.forEach(story => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = story.sidebarTitle;
+                    listItem.dataset.storyId = story.id;
+                    listItem.addEventListener('click', () => {
+                        renderStory(story.id);
+                    });
+                    storyListElement.appendChild(listItem);
+                });
+            }
+
+            function renderStory(storyId) {
+                const story = storyListData.find(s => s.id === storyId);
+                if (!story) {
+                    console.error("Story not found:", storyId);
+                    if (storyListData.length > 0) {
+                        renderStory(storyListData[0].id);
+                    }
+                    return;
+                }
+
+                storyImageElement.src = story.imageUrl;
+                storyImageElement.alt = story.mainTitle + " illustration";
+                storyMainTitleElement.textContent = story.mainTitle;
+                storyBodyContentElement.innerHTML = story.storyHtmlContent;
+                
+                storyBodyContentElement.scrollTop = 0;
+                document.getElementById('text-pane').scrollTop = 0;
+
+                const sidebarItems = storyListElement.querySelectorAll('li');
+                sidebarItems.forEach(item => {
+                    item.classList.toggle('active', item.dataset.storyId === storyId);
+                });
+            }
+
+            // Toggle visual pane functionality
+            if (toggleVisualBtn && mainContentElement) {
+                toggleVisualBtn.addEventListener('click', () => {
+                    mainContentElement.classList.toggle('visual-hidden');
+                    if (mainContentElement.classList.contains('visual-hidden')) {
+                        toggleVisualBtn.textContent = "Show Image";
+                    } else {
+                        toggleVisualBtn.textContent = "Hide Image";
+                    }
+                });
+            }
+
+            // Initial setup
+            if (storyListData.length > 0) {
+                renderSidebar();
+                renderStory(storyListData[0].id); 
+            } else {
+                storyMainTitleElement.textContent = "No stories available.";
+                storyBodyContentElement.innerHTML = "<p>Please add stories to the application.</p>";
+                 if(toggleVisualBtn) toggleVisualBtn.style.display = 'none'; // Hide button if no stories
+            }
+        });
+    </script>
+</body>
+</html>
