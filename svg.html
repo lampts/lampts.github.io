@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive SVG Comparison</title>
+    <script src="https://unpkg.com/panzoom@9.4.3/dist/panzoom.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --panel-bg: #ffffff;
+            --text-color: #333;
+            --placeholder-bg: #e9ecef;
+            --placeholder-border: #ced4da;
+            --placeholder-text: #6c757d;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --gap: 1rem;
+            --primary-color: #007bff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: var(--bg-color);
+            overflow: hidden;
+        }
+
+        .controls {
+            padding: 0.75rem var(--gap);
+            background-color: var(--panel-bg);
+            border-bottom: 1px solid var(--placeholder-border);
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .controls button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border: 1px solid var(--placeholder-border);
+            border-radius: 5px;
+            background-color: #fff;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .controls button:hover {
+            background-color: #f8f9fa;
+        }
+
+        .controls button.primary {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .controls button.primary:hover {
+            background-color: #0069d9;
+        }
+
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            gap: var(--gap);
+            padding: var(--gap);
+            min-height: 0;
+        }
+
+        .svg-wrapper {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px var(--shadow-color);
+            overflow: hidden;
+        }
+
+        .svg-container {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            cursor: grab;
+            position: relative;
+        }
+        .svg-container:active { cursor: grabbing; }
+
+        .svg-container svg {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        .label {
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--text-color);
+            border-top: 1px solid var(--placeholder-border);
+        }
+
+        .placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background-color: var(--placeholder-bg);
+            border: 2px dashed var(--placeholder-border);
+            border-radius: 4px;
+            color: var(--placeholder-text);
+            font-size: 1rem;
+            text-align: center;
+            padding: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .placeholder.dragover { background-color: #dbe6e4; }
+        .placeholder .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .file-input { display: none; }
+
+        /* --- NEW/UPDATED --- Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none; /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.visible {
+            display: flex;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-content h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+        #svgCodeTextarea {
+            width: 100%;
+            height: 300px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            padding: 0.5rem;
+            border: 1px solid var(--placeholder-border);
+            border-radius: 5px;
+            resize: vertical;
+        }
+        .modal-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .target-panel-selector label {
+            margin-right: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <!-- --- NEW/UPDATED --- Added a new button for pasting code -->
+        <button id="loadFromCodeBtn" class="primary">Paste SVG Code</button>
+        <button id="resetViewBtn">Reset View</button>
+    </div>
+
+    <div class="main-container">
+        <!-- ... (SVG wrappers are unchanged) ... -->
+        <div class="svg-wrapper">
+            <div class="svg-container" id="leftContainer">
+                <div class="placeholder" data-panel="left">
+                    <div class="icon">⭳</div>
+                    <div><strong>Drop SVG file here</strong><br>or click to select<br><br>or use `?left=URL`</div>
+                </div>
+                <input type="file" class="file-input" id="leftFileInput" accept="image/svg+xml">
+            </div>
+            <div class="label">Before</div>
+        </div>
+        <div class="svg-wrapper">
+            <div class="svg-container" id="rightContainer">
+                <div class="placeholder" data-panel="right">
+                    <div class="icon">⭳</div>
+                    <div><strong>Drop SVG file here</strong><br>or click to select<br><br>or use `?right=URL`</div>
+                </div>
+                <input type="file" class="file-input" id="rightFileInput" accept="image/svg+xml">
+            </div>
+            <div class="label">After</div>
+        </div>
+    </div>
+
+    <!-- --- NEW/UPDATED --- Modal HTML Structure -->
+    <div id="codeModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Paste Raw SVG Code</h2>
+            <textarea id="svgCodeTextarea" placeholder="<svg>...</svg>"></textarea>
+            <div class="modal-controls">
+                <div class="target-panel-selector">
+                    <label><input type="radio" name="targetPanel" value="left" checked> Load to 'Before'</label>
+                    <label><input type="radio" name="targetPanel" value="right"> Load to 'After'</label>
+                </div>
+                <div class="modal-actions">
+                    <button id="cancelCodeBtn">Cancel</button>
+                    <button id="submitCodeBtn" class="primary">Load SVG</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- DOM Elements ---
+        const leftContainer = document.getElementById('leftContainer');
+        const rightContainer = document.getElementById('rightContainer');
+        const leftFileInput = document.getElementById('leftFileInput');
+        const rightFileInput = document.getElementById('rightFileInput');
+        const resetViewBtn = document.getElementById('resetViewBtn');
+        
+        // --- NEW/UPDATED --- Modal DOM Elements
+        const codeModal = document.getElementById('codeModal');
+        const loadFromCodeBtn = document.getElementById('loadFromCodeBtn');
+        const cancelCodeBtn = document.getElementById('cancelCodeBtn');
+        const submitCodeBtn = document.getElementById('submitCodeBtn');
+        const svgCodeTextarea = document.getElementById('svgCodeTextarea');
+        
+        // --- State ---
+        let pzLeft, pzRight;
+        let isSyncing = false;
+
+        // --- NEW/UPDATED --- Refactored `loadSvg` to handle raw SVG strings
+        async function loadSvg(source, container) {
+            let svgText;
+            try {
+                if (source instanceof File) {
+                    if (source.type !== 'image/svg+xml') {
+                        throw new Error('File is not a valid SVG.');
+                    }
+                    svgText = await source.text();
+                } else if (typeof source === 'string') {
+                    // Check if the string is a URL or raw SVG code
+                    if (source.trim().startsWith('<svg')) {
+                        // It's raw SVG code
+                        svgText = source;
+                    } else {
+                        // It's a URL, fetch it
+                        const response = await fetch(source);
+                        if (!response.ok) throw new Error(`Network error: ${response.statusText}`);
+                        
+                        const contentType = response.headers.get("content-type");
+                        if (!contentType || !contentType.includes("svg")) {
+                           console.warn("Warning: URL content-type is not SVG. Parsing anyway.");
+                        }
+                        svgText = await response.text();
+                    }
+                } else {
+                    throw new Error('Unsupported source type.');
+                }
+                
+                if (!svgText) {
+                    throw new Error("SVG content is empty.");
+                }
+
+                if (container.id === 'leftContainer' && pzLeft) pzLeft.dispose();
+                if (container.id === 'rightContainer' && pzRight) pzRight.dispose();
+                container.innerHTML = '';
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(svgText, "image/svg+xml");
+                const svgElement = doc.querySelector('svg');
+                
+                // Check for parser errors
+                const parserError = doc.querySelector('parsererror');
+                if (parserError || !svgElement) {
+                    console.error("Parser Error:", parserError ? parserError.textContent : 'No SVG element found');
+                    throw new Error('Invalid SVG code. Check console for details.');
+                }
+                
+                container.appendChild(svgElement);
+                return svgElement;
+
+            } catch (error) {
+                console.error('Error loading SVG:', error);
+                container.innerHTML = `<div class="placeholder">${error.message}<br>Please try again.</div>`;
+                return null;
+            }
+        }
+
+        // --- Pan & Zoom (Unchanged) ---
+        function setupPanzoom() {
+            if (pzLeft) pzLeft.dispose();
+            if (pzRight) pzRight.dispose();
+            
+            const svgLeft = leftContainer.querySelector('svg');
+            const svgRight = rightContainer.querySelector('svg');
+
+            const panzoomOptions = { maxZoom: 10, minZoom: 0.1 };
+
+            if (svgLeft) {
+                pzLeft = panzoom(svgLeft, panzoomOptions);
+                pzLeft.on('transform', () => {
+                    if (isSyncing || !pzRight) return;
+                    isSyncing = true;
+                    pzRight.moveTo(pzLeft.getTransform().x, pzLeft.getTransform().y);
+                    pzRight.zoomTo(pzLeft.getTransform().x, pzLeft.getTransform().y, pzLeft.getTransform().scale);
+                    isSyncing = false;
+                });
+            }
+
+            if (svgRight) {
+                pzRight = panzoom(svgRight, panzoomOptions);
+                pzRight.on('transform', () => {
+                    if (isSyncing || !pzLeft) return;
+                    isSyncing = true;
+                    pzLeft.moveTo(pzRight.getTransform().x, pzRight.getTransform().y);
+                    pzLeft.zoomTo(pzRight.getTransform().x, pzRight.getTransform().y, pzRight.getTransform().scale);
+                    isSyncing = false;
+                });
+            }
+        }
+        
+        function resetView() {
+            if(pzLeft) pzLeft.moveTo(0, 0);
+            if(pzLeft) pzLeft.zoomAbs(0, 0, 1);
+            if(pzRight) pzRight.moveTo(0, 0);
+            if(pzRight) pzRight.zoomAbs(0, 0, 1);
+        }
+
+        // --- Event Handlers (File/DragDrop part is unchanged) ---
+        async function handleFileSelect(file, panelId) {
+            const container = (panelId === 'left') ? leftContainer : rightContainer;
+            const svgElement = await loadSvg(file, container);
+            if(svgElement) {
+                setupPanzoom();
+                resetView();
+            }
+        }
+        
+        // --- NEW/UPDATED --- Modal Event Handlers
+        function openModal() {
+            codeModal.classList.add('visible');
+        }
+        function closeModal() {
+            codeModal.classList.remove('visible');
+            svgCodeTextarea.value = ''; // Clear textarea on close
+        }
+        
+        loadFromCodeBtn.addEventListener('click', openModal);
+        cancelCodeBtn.addEventListener('click', closeModal);
+        codeModal.addEventListener('click', (e) => {
+            // Close if clicking on the overlay, but not the content
+            if (e.target === codeModal) {
+                closeModal();
+            }
+        });
+
+        submitCodeBtn.addEventListener('click', async () => {
+            const svgCode = svgCodeTextarea.value;
+            if (!svgCode.trim()) {
+                alert('Textarea is empty. Please paste your SVG code.');
+                return;
+            }
+
+            const targetPanelValue = document.querySelector('input[name="targetPanel"]:checked').value;
+            const container = (targetPanelValue === 'left') ? leftContainer : rightContainer;
+            
+            const svgElement = await loadSvg(svgCode, container);
+            if (svgElement) {
+                setupPanzoom();
+                resetView();
+                closeModal();
+            } else {
+                alert('Failed to load SVG from code. Please check the code for errors.');
+            }
+        });
+
+        // --- Setup Drag and Drop/File Input (Unchanged) ---
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, e => e.preventDefault(), false);
+        });
+        document.querySelectorAll('.placeholder').forEach(p => {
+            p.addEventListener('dragover', () => p.classList.add('dragover'));
+            p.addEventListener('dragleave', () => p.classList.remove('dragover'));
+            p.addEventListener('drop', e => {
+                p.classList.remove('dragover');
+                if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0], p.dataset.panel);
+            });
+            p.addEventListener('click', () => {
+                if (p.dataset.panel === 'left') leftFileInput.click();
+                else rightFileInput.click();
+            });
+        });
+        leftFileInput.addEventListener('change', e => handleFileSelect(e.target.files[0], 'left'));
+        rightFileInput.addEventListener('change', e => handleFileSelect(e.target.files[0], 'right'));
+        resetViewBtn.addEventListener('click', resetView);
+        
+        // --- Initial Load from URL Parameters (Unchanged) ---
+        async function initialLoad() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('left') || urlParams.has('right')) {
+                await Promise.all([
+                    urlParams.has('left') ? loadSvg(urlParams.get('left'), leftContainer) : Promise.resolve(),
+                    urlParams.has('right') ? loadSvg(urlParams.get('right'), rightContainer) : Promise.resolve()
+                ]);
+                setupPanzoom();
+            }
+        }
+
+        initialLoad();
+    });
+    </script>
+</body>
+</html>
