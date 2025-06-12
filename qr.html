@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code to Go Board Converter</title>
+
+    <!-- 1. STYLESHEET - All CSS is placed inside this style tag -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .app-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #1a1a1a;
+            margin-top: 0;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .input-section {
+            margin: 30px 0;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #text-input {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 60%;
+            transition: border-color 0.3s;
+        }
+
+        #text-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+
+        #generate-btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            color: white;
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #generate-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .output-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .qr-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #qrcode-container {
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            min-height: 256px; /* Match width/height for a placeholder */
+            min-width: 256px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #go-board-container {
+            /* --qr-size will be set by JS */
+            display: grid;
+            grid-template-columns: repeat(var(--qr-size, 21), 1fr); 
+            width: 256px;
+            height: 256px;
+            padding: 10px;
+            background-color: #d1b585; /* A Go board color */
+            border: 2px solid #5a482d;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .go-stone {
+            width: 100%;
+            aspect-ratio: 1 / 1; /* Makes the height equal to the width */
+            border-radius: 50%;
+            box-sizing: border-box;
+            border: 0.5px solid rgba(0,0,0,0.1); /* Subtle border for white stones */
+        }
+
+        .go-stone.black {
+            background-color: #1a1a1a;
+            box-shadow: inset 1px 1px 3px rgba(255,255,255,0.2);
+        }
+
+        .go-stone.white {
+            background-color: #f5f5f5;
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2);
+        }
+    </style>
+
+    <!-- 2. QR CODE LIBRARY - Loaded from a reliable CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>QR Code to Go Board Converter</h1>
+        <p>Inspired by the Veritasium video, this tool converts your text into a QR code and visualizes it as Go stones on a board.</p>
+
+        <div class="input-section">
+            <label for="text-input">Enter text or URL:</label>
+            <input type="text" id="text-input" placeholder="e.g., qr is quick response">
+            <button id="generate-btn">Generate</button>
+        </div>
+
+        <div class="output-container">
+            <div class="qr-wrapper">
+                <h2 id="standard-qr-heading" style="display: none;">Standard QR Code</h2>
+                <div id="qrcode-container"></div>
+            </div>
+            <div class="qr-wrapper">
+                <h2 id="go-board-heading" style="display: none;">Go Board Style</h2>
+                <div id="go-board-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MAIN APPLICATION SCRIPT - All JavaScript is placed here -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get references to our DOM elements
+            const textInput = document.getElementById('text-input');
+            const generateBtn = document.getElementById('generate-btn');
+            const qrcodeContainer = document.getElementById('qrcode-container');
+            const goBoardContainer = document.getElementById('go-board-container');
+            const standardQrHeading = document.getElementById('standard-qr-heading');
+            const goBoardHeading = document.getElementById('go-board-heading');
+
+            function generateCodes() {
+                const text = textInput.value.trim();
+                if (!text) {
+                    alert('Please enter some text or a URL.');
+                    return;
+                }
+
+                // Clear previous outputs
+                qrcodeContainer.innerHTML = '';
+                goBoardContainer.innerHTML = '';
+
+                // --- Generate the standard QR code ---
+                const qrcode = new QRCode(qrcodeContainer, {
+                    text: text,
+                    width: 256,
+                    height: 256,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H // High error correction for robustness
+                });
+
+                // Show the headings now that we're generating output
+                standardQrHeading.style.display = 'block';
+                goBoardHeading.style.display = 'block';
+
+                // --- Build the Go Board ---
+                // We need a short delay to ensure the QRCode object has been fully constructed
+                setTimeout(() => {
+                    // Access the internal 2D array of modules (true=black, false=white)
+                    const matrix = qrcode._oQRCode.modules;
+                    if (!matrix) {
+                        console.error("Could not access QR code matrix. The library might have updated its internal structure.");
+                        return;
+                    }
+
+                    const size = matrix.length;
+
+                    // Set the CSS variable for the grid layout
+                    goBoardContainer.style.setProperty('--qr-size', size);
+
+                    // Loop through the matrix and create a "stone" for each module
+                    for (let row = 0; row < size; row++) {
+                        for (let col = 0; col < size; col++) {
+                            const stone = document.createElement('div');
+                            stone.classList.add('go-stone');
+
+                            // If the module is 'true', it's a dark module (black stone)
+                            if (matrix[row][col]) {
+                                stone.classList.add('black');
+                            } else {
+                                stone.classList.add('white');
+                            }
+
+                            goBoardContainer.appendChild(stone);
+                        }
+                    }
+                }, 100); // 100ms delay is usually sufficient
+            }
+
+            // Add event listeners
+            generateBtn.addEventListener('click', generateCodes);
+
+            // Also allow generation by pressing Enter in the input field
+            textInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    generateCodes();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
