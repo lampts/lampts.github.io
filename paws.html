@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paws & Coffee - Quán Cà Phê Cún Cưng Sài Gòn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'dancing': ['Dancing Script', 'cursive'],
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                        'bounce-gentle': 'bounce 2s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'paw-print': 'pawPrint 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        pawPrint: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-b from-amber-50 to-orange-100 font-inter">
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-md shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="text-3xl animate-wiggle">🐕</div>
+                    <h1 class="text-2xl font-dancing font-bold text-amber-800">Paws & Coffee</h1>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#home" class="text-amber-800 hover:text-amber-600 transition-colors font-medium">Trang Chủ</a>
+                    <a href="#about" class="text-amber-800 hover:text-amber-600 transition-colors font-medium">Về Chúng Tôi</a>
+                    <a href="#dogs" class="text-amber-800 hover:text-amber-600 transition-colors font-medium">Những Chú Cún</a>
+                    <a href="#menu" class="text-amber-800 hover:text-amber-600 transition-colors font-medium">Thực Đơn</a>
+                    <a href="#contact" class="text-amber-800 hover:text-amber-600 transition-colors font-medium">Liên Hệ</a>
+                </div>
+                <button id="menu-toggle" class="md:hidden text-2xl">🍔</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="min-h-screen flex items-center justify-center pt-20 px-6">
+        <div class="text-center max-w-4xl mx-auto">
+            <div class="flex justify-center mb-8">
+                <div class="relative">
+                    <div class="text-8xl animate-float">🐕‍🦺</div>
+                    <div class="absolute -top-4 -right-4 text-4xl animate-bounce-gentle">☕</div>
+                    <div class="absolute -bottom-2 -left-4 text-3xl animate-paw-print">🐾</div>
+                </div>
+            </div>
+            
+            <h1 class="text-6xl md:text-8xl font-dancing font-bold text-amber-900 mb-6">
+                Paws & Coffee
+            </h1>
+            <h2 class="text-2xl md:text-3xl text-amber-700 mb-6 font-medium">
+                Quán Cà Phê Cún Cưng Đầu Tiên Tại Sài Gòn
+            </h2>
+            <p class="text-lg text-amber-600 mb-8 max-w-2xl mx-auto">
+                Nơi những tách cà phê thơm ngon gặp gỡ những chú cún đáng yêu. 
+                Thưởng thức cà phê Việt Nam authentic trong không gian ấm cúng cùng những người bạn bốn chân.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-full shadow-lg transform hover:scale-105 transition-all duration-300">
+                    🐾 Gặp Gỡ Những Chú Cún
+                </button>
+                <button class="px-8 py-4 bg-white/80 hover:bg-white text-amber-800 font-semibold rounded-full shadow-lg border-2 border-amber-300 transform hover:scale-105 transition-all duration-300">
+                    ☕ Xem Thực Đơn
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-dancing font-bold text-amber-900 mb-4">Câu Chuyện Của Chúng Tôi</h2>
+                <div class="text-4xl mb-4">🏠</div>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    Được thành lập tại trung tâm Sài Gòn năm 2024, Paws & Coffee là điểm đến lý tưởng 
+                    cho những ai yêu thích cà phê và động vật. Chúng tôi tạo ra một không gian độc đáo 
+                    nơi bạn có thể thư giãn, kết nối và tạo ra những kỷ niệm đẹp.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center p-6 bg-gradient-to-b from-orange-50 to-amber-50 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="text-6xl mb-4 animate-bounce-gentle">🐕</div>
+                    <h3 class="text-2xl font-semibold text-amber-900 mb-3">15+ Chú Cún Thân Thiện</h3>
+                    <p class="text-gray-600">Từ Golden Retriever đến Corgi, tất cả đều được chăm sóc tốt và rất thích giao lưu</p>
+                </div>
+                
+                <div class="text-center p-6 bg-gradient-to-b from-orange-50 to-amber-50 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="text-6xl mb-4 animate-float">☕</div>
+                    <h3 class="text-2xl font-semibold text-amber-900 mb-3">Cà Phê Sài Gòn Authentic</h3>
+                    <p class="text-gray-600">Cà phê phin truyền thống, cà phê sữa đá và các món uống đặc sản Việt Nam</p>
+                </div>
+                
+                <div class="text-center p-6 bg-gradient-to-b from-orange-50 to-amber-50 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="text-6xl mb-4 animate-paw-print">🏮</div>
+                    <h3 class="text-2xl font-semibold text-amber-900 mb-3">Không Gian Việt Nam</h3>
+                    <p class="text-gray-600">Thiết kế lấy cảm hứng từ kiến trúc Sài Gòn xưa với nét hiện đại</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dogs Gallery -->
+    <section id="dogs" class="py-20 bg-gradient-to-b from-amber-50 to-orange-100">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-dancing font-bold text-amber-900 mb-4">Gặp Gỡ Những Chú Cún</h2>
+                <div class="text-4xl mb-4">🐾</div>
+                <p class="text-lg text-gray-600">Những người bạn bốn chân đáng yêu đang chờ đón bạn</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="h-48 bg-gradient-to-br from-yellow-200 to-orange-300 flex items-center justify-center">
+                        <div class="text-8xl animate-wiggle">🐕‍🦺</div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-semibold text-amber-900">Buddy</h3>
+                        <p class="text-gray-600">Golden Retriever • 3 tuổi</p>
+                        <p class="text-sm text-gray-500 mt-2">Thích chơi bóng và ôm ấp</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="h-48 bg-gradient-to-br from-pink-200 to-rose-300 flex items-center justify-center">
+                        <div class="text-8xl animate-float">🐩</div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-semibold text-amber-900">Luna</h3>
+                        <p class="text-gray-600">Poodle • 2 tuổi</p>
+                        <p class="text-sm text-gray-500 mt-2">Rất thông minh và năng động</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="h-48 bg-gradient-to-br from-blue-200 to-indigo-300 flex items-center justify-center">
+                        <div class="text-8xl animate-bounce-gentle">🐕</div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-semibold text-amber-900">Max</h3>
+                        <p class="text-gray-600">Corgi • 4 tuổi</p>
+                        <p class="text-sm text-gray-500 mt-2">Chân ngắn nhưng rất nhanh nhẹn</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                    <div class="h-48 bg-gradient-to-br from-green-200 to-emerald-300 flex items-center justify-center">
+                        <div class="text-8xl animate-paw-print">🐶</div>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-xl font-semibold text-amber-900">Bella</h3>
+                        <p class="text-gray-600">Shiba Inu • 1 tuổi</p>
+                        <p class="text-sm text-gray-500 mt-2">Còn nhỏ nhưng rất dũng cảm</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Menu Section -->
+    <section id="menu" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-dancing font-bold text-amber-900 mb-4">Thực Đơn</h2>
+                <div class="text-4xl mb-4">🍽️</div>
+                <p class="text-lg text-gray-600">Hương vị Việt Nam và những món ăn yêu thích của cún cưng</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-12">
+                <!-- Coffee Menu -->
+                <div class="bg-gradient-to-b from-amber-50 to-orange-50 rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-3xl font-dancing font-bold text-amber-900 mb-6 text-center">☕ Cà Phê & Đồ Uống</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center border-b border-amber-200 pb-2">
+                            <div>
+                                <h4 class="font-semibold text-amber-900">Cà Phê Phin</h4>
+                                <p class="text-sm text-gray-600">Truyền thống Sài Gòn</p>
+                            </div>
+                            <span class="text-amber-700 font-semibold">35.000₫</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-amber-200 pb-2">
+                            <div>
+                                <h4 class="font-semibold text-amber-900">Cà Phê Sữa Đá</h4>
+                                <p class="text-sm text-gray-600">Đặc sản không thể thiếu</p>
+                            </div>
+                            <span class="text-amber-700 font-semibold">40.000₫</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-amber-200 pb-2">
+                            <div>
+                                <h4 class="font-semibold text-amber-900">Trà Đá</h4>
+                                <p class="text-sm text-gray-600">Miễn phí</p>
+                            </div>
+                            <span class="text-amber-700 font-semibold">0₫</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-amber-200 pb-2">
+                            <div>
+                                <h4 class="font-semibold text-amber-900">Sinh Tố Bơ</h4>
+                                <p class="text-sm text-gray-600">Tươi mát, bổ dưỡng</p>
+                            </div>
+                            <span class="text-amber-700 font-semibold">55.000₫</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Food Menu -->
+                <div class="bg-gradient-to-b from-orange-50 to-red-50 rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-3xl font-dancing font-bold text-amber-900 mb-6 text-center">🥪 Đồ Ăn Nhẹ</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center border-b border-orange-200 pb-2">
+                            <div>
+                                <h4 class="font-semibold text-amber-900">Bánh Mì Thịt Nướng</h4>
+                                <p class="text-sm text-gray-600">Đặc sản Sài Gòn</p>
+                            </div>
+                            <span class="text-amber-700 font-semibold">45.000₫</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-orange-200 pb-2">
+                            <div>
+                                <h4 class="font-semibold text-amber-900">Bánh Croissant</h4>
+                                <p class="text-sm text-gray-600">Tươi mỗi ngày</p>
+                            </div>
+                            <span class="text-amber-700 font-semibold">35.000₫</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-orange-200 pb-2">
+                            <div>
+                                <h4 class="font-semibold text-amber-900">Bánh Bông Lan</h4>
+                                <p class="text-sm text-gray-600">Mềm mịn, thơm ngon</p>
+                            </div>
+                            <span class="text-amber-700 font-semibold">25.000₫</span>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-orange-200 pb-2">
+                            <div>
+                                <h4 class="font-semibold text-amber-900">🐕 Bánh Quy Cho Cún</h4>
+                                <p class="text-sm text-gray-600">Cho những chú cún đáng yêu</p>
+                            </div>
+                            <span class="text-amber-700 font-semibold">15.000₫</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Special Note -->
+            <div class="mt-12 text-center bg-gradient-to-r from-amber-100 to-orange-100 rounded-2xl p-8">
+                <div class="text-4xl mb-4">🎉</div>
+                <h3 class="text-2xl font-semibold text-amber-900 mb-2">Giờ Vàng (2-5 PM)</h3>
+                <p class="text-gray-600">Giảm 20% tất cả đồ uống • Miễn phí bánh quy cho cún khi mua combo</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-20 bg-gradient-to-b from-amber-50 to-orange-100">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-5xl font-dancing font-bold text-amber-900 mb-4">Liên Hệ & Địa Chỉ</h2>
+                <div class="text-4xl mb-4">📍</div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
+                <div class="bg-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-semibold text-amber-900 mb-6">Thông Tin Liên Hệ</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="text-2xl">📍</div>
+                            <div>
+                                <p class="font-semibold text-amber-900">Địa chỉ:</p>
+                                <p class="text-gray-600">123 Đường Nguyễn Huệ, Quận 1, TP.HCM</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="text-2xl">📞</div>
+                            <div>
+                                <p class="font-semibold text-amber-900">Điện thoại:</p>
+                                <p class="text-gray-600">028 3822 5678</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="text-2xl">⏰</div>
+                            <div>
+                                <p class="font-semibold text-amber-900">Giờ mở cửa:</p>
+                                <p class="text-gray-600">7:00 - 22:00 (Hằng ngày)</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="text-2xl">📧</div>
+                            <div>
+                                <p class="font-semibold text-amber-900">Email:</p>
+                                <p class="text-gray-600">hello@pawscoffee.vn</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-2xl p-8 shadow-lg">
+                    <h3 class="text-2xl font-semibold text-amber-900 mb-6">Quy Định Quán</h3>
+                    <div class="space-y-3 text-gray-600">
+                        <div class="flex items-start space-x-3">
+                            <div class="text-xl mt-1">✅</div>
+                            <p>Rửa tay trước khi chơi với cún</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="text-xl mt-1">✅</div>
+                            <p>Không cho cún ăn đồ ăn của người</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="text-xl mt-1">✅</div>
+                            <p>Giữ nhẹ nhàng khi chơi với cún</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="text-xl mt-1">✅</div>
+                            <p>Trẻ em dưới 12 tuổi cần có người lớn đi cùng</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="text-xl mt-1">💰</div>
+                            <p><strong>Phí vào cửa:</strong> 50.000₫/người (bao gồm 1 đồ uống)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Social Media -->
+            <div class="text-center mt-12">
+                <h3 class="text-2xl font-semibold text-amber-900 mb-6">Theo Dõi Chúng Tôi</h3>
+                <div class="flex justify-center space-x-6">
+                    <button class="w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-colors">
+                        <span class="text-xl">📘</span>
+                    </button>
+                    <button class="w-12 h-12 bg-pink-500 hover:bg-pink-600 text-white rounded-full flex items-center justify-center transition-colors">
+                        <span class="text-xl">📷</span>
+                    </button>
+                    <button class="w-12 h-12 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-colors">
+                        <span class="text-xl">🎵</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-amber-900 text-white py-12">
+        <div class="container mx-auto px-6 text-center">
+            <div class="flex justify-center items-center space-x-3 mb-4">
+                <div class="text-3xl animate-wiggle">🐕</div>
+                <h3 class="text-2xl font-dancing font-bold">Paws & Coffee</h3>
+            </div>
+            <p class="text-amber-200 mb-4">Nơi tình yêu dành cho cà phê và cún cưng gặp nhau</p>
+            <p class="text-amber-300 text-sm">© 2024 Paws & Coffee Saigon. Made with ❤️ and lots of ☕</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const nav = document.querySelector('nav div div');
+        
+        // Hero buttons functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const meetDogsBtn = document.querySelector('button:first-of-type');
+            const viewMenuBtn = document.querySelector('button:last-of-type');
+            
+            if (meetDogsBtn) {
+                meetDogsBtn.addEventListener('click', () => {
+                    document.getElementById('dogs').scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+            
+            if (viewMenuBtn) {
+                viewMenuBtn.addEventListener('click', () => {
+                    document.getElementById('menu').scrollIntoView({ behavior: 'smooth' });
+                });
+            }
+        });
+
+        // Add intersection observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in-up');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Add floating paw prints animation
+        function createFloatingPaw() {
+            const paw = document.createElement('div');
+            paw.innerHTML = '🐾';
+            paw.className = 'fixed text-2xl pointer-events-none z-10 opacity-20';
+            paw.style.left = Math.random() * window.innerWidth + 'px';
+            paw.style.top = window.innerHeight + 'px';
+            paw.style.animation = 'float-up 8s linear forwards';
+            
+            document.body.appendChild(paw);
+            
+            setTimeout(() => {
+                paw.remove();
+            }, 8000);
+        }
+
+        // Add CSS for floating paw animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes float-up {
+                to {
+                    transform: translateY(-${window.innerHeight + 100}px) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+            
+            @keyframes fade-in-up {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            .animate-fade-in-up {
+                animation: fade-in-up 0.8s ease-out forwards;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Create floating paws periodically
+        setInterval(createFloatingPaw, 3000);
+
+        // Add hover effects to dog cards
+        document.querySelectorAll('#dogs .bg-white').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const emoji = card.querySelector('div div div');
+                if (emoji) {
+                    emoji.style.transform = 'scale(1.2) rotate(10deg)';
+                }
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                const emoji = card.querySelector('div div div');
+                if (emoji) {
+                    emoji.style.transform = 'scale(1) rotate(0deg)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
