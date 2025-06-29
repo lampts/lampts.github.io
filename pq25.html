@@ -29,7 +29,7 @@
         .fade-in-delay-3 { animation-delay: 1.5s; }
         .fade-in-delay-4 { animation-delay: 2s; }
         .fade-in-delay-5 { animation-delay: 2.5s; }
-        .fade-in-delay-6 { animation-delay: 3.5s; }
+        .fade-in-delay-6 { animation-delay: 3.0s; }
 
 
         @keyframes fadeIn {
@@ -75,6 +75,14 @@
         .project-icon { opacity: 0.3; transition: opacity 0.5s ease, transform 0.5s ease; }
         .project-icon.failed { opacity: 0.1; background-color: #ef4444; }
         .project-icon.success { opacity: 1; background-color: #22c55e; }
+        
+        /* Cake Way Styles */
+        .layer { opacity: 0; transition: opacity 0.8s ease, transform 0.8s ease; }
+        .layer.show { opacity: 1; transform: translateY(0); }
+        .layer-top { transform: translateY(-20px); }
+        .layer-bottom { transform: translateY(20px); }
+        .connector { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw-line 1s ease-out forwards; animation-delay: 2.5s;}
+        @keyframes draw-line { to { stroke-dashoffset: 0; } }
 
     </style>
 </head>
@@ -102,13 +110,36 @@
         </footer>
     </div>
 
+    <div id="essay-mode" class="hidden p-8 md:p-16">
+        <div class="max-w-2xl mx-auto">
+            <button id="toggle-presentation-mode" class="mb-8 px-3 py-1 text-xs text-gray-400 border border-gray-600 rounded-full hover:bg-gray-800 hover:text-white transition">← Quay lại Trình bày</button>
+            <h1 class="text-3xl font-bold mb-2 text-pink-400">The Cake Agentic AI Way</h1>
+            <h2 class="text-xl text-gray-400 mb-12">Ghi chú về việc xây dựng Ngân hàng AI đầu tiên tại Việt Nam.</h2>
+
+            <div class="space-y-6 text-gray-300 leading-relaxed text-lg">
+                <p>Có một nghịch lý đang định hình thế giới công nghệ. Andrew Ng nói rằng AI là nguồn điện mới—một cuộc cách mạng sẽ thay đổi tất cả. Nhưng các đồng nghiệp của ông tại Stanford lại nói ngược lại: điện mới là AI. Điều này có nghĩa là AI đang trở thành một tiện ích cơ bản, có thể đo lường và dự đoán được, giống như cách chúng ta sử dụng điện hàng ngày.</p>
+                <p>Cả hai đều đúng. Chúng ta đang chứng kiến một công nghệ có sức mạnh tính toán tăng 100 lần mỗi năm, trong khi chi phí cho mỗi đơn vị thông minh lại giảm gần 99% sau mỗi hai năm. Nó vừa là thứ quyền năng nhất, vừa là thứ bình dân nhất. Xây dựng tương lai trên một nền tảng đầy mâu thuẫn như vậy là một thách thức lớn.</p>
+                <p>Câu trả lời nằm ở một sự đảo chiều căn bản. Trong 40 năm qua, chúng ta đã học cách nói chuyện với máy tính. Kỷ nguyên đó đã kết thúc. Giờ đây, máy tính đang học cách nói chuyện với chúng ta. Giao diện không còn là thứ chúng ta nhấp vào; nó là một người trợ lý chúng ta trò chuyện cùng. Chúng ta đang chuyển từ "Kinh tế Chú ý", nơi giá trị được đo bằng những cú nhấp chuột, sang "Kinh tế Chủ đích", nơi giá trị được tạo ra bằng cách hiểu và hành động theo ý định của người dùng.</p>
+                <p>Nhưng đây là một sự thật phũ phàng: gần như tất cả mọi người đều đang làm sai. McKinsey báo cáo rằng 9 trên 10 doanh nghiệp ứng dụng AI đều thất bại trong việc tạo ra giá trị thật sự. Họ có công nghệ, nhưng không có kết quả. Lý do rất đơn giản: họ cố gắng áp dụng công nghệ của tương lai vào một quy trình làm việc của quá khứ.</p>
+                <p>Tại Cake, chúng tôi chọn một con đường khác. Chúng tôi tin rằng công nghệ phải vô hình. Mọi thứ phải bắt đầu từ giá trị cốt lõi cho khách hàng: An toàn, Tiện lợi, và Thông minh. Nền tảng cho những giá trị này chính là năng lực Agentic AI của chúng tôi: sự Thông minh trong từng sản phẩm và Khả năng mở rộng để phục vụ hàng triệu người.</p>
+                <p>Chúng tôi không làm những điều phức tạp, chúng tôi làm những điều hữu ích. Chúng tôi biến một tác vụ chuyển tiền 30 giây đầy rủi ro thành một cú chạm 3 giây chính xác. Nó chỉ đơn giản là hoạt động hiệu quả. Và khi một thứ đã hiệu quả, chúng tôi nhân rộng nó lên. Chúng tôi đã tạo ra gần 100 'nhân viên số', giúp giảm 30% tỷ lệ nợ xấu.</p>
+                <p>Tầm nhìn của chúng tôi cho năm 2025 là số lượng trợ lý AI sẽ vượt qua số lượng nhân viên con người. Không phải để thay thế con người, mà là để giải phóng họ khỏi những công việc lặp đi lặp lại, để họ có thể làm những điều chỉ con người mới có thể làm được: sáng tạo và kết nối.</p>
+                <p>Đó là cách chúng tôi xây dựng tương lai. Không phải bằng cách chạy theo công nghệ, mà bằng cách tập trung vào giá trị mà nó mang lại cho con người.</p>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         const slides = [
             // Slide 0: Title Screen
             {
                 title: "Mở đầu",
                 render: () => `
-                    <div class="text-center w-full">
+                    <div class="text-center w-full relative">
+                         <div class="absolute top-0 right-0 p-4">
+                            <button id="toggle-essay-mode" class="px-3 py-1 text-xs text-gray-400 border border-gray-600 rounded-full hover:bg-gray-800 hover:text-white transition">Chế độ đọc</button>
+                        </div>
                         <img src="https://cake.vn/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FCake-logo-01.e915daf7.webp&w=256&q=75" alt="Cake by VPBank Logo" class="w-48 mx-auto mb-8 fade-in" onerror="this.onerror=null;this.src='https://placehold.co/200x80/ed2a7b/ffffff?text=CAKE';">
                         <h1 class="text-4xl md:text-5xl font-black mb-4 fade-in fade-in-delay-1" style="color: #ed2a7b;">The Cake Agentic AI way</h1>
                         <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-2">Thực tế xây dựng Ngân Hàng AI đầu tiên ở Việt Nam</p>
@@ -221,7 +252,7 @@
                     show(document.getElementById('punchline'), 2800);
                 }
             },
-            // Slide 4: The Hard Truth - UPDATED
+            // Slide 4: The Hard Truth
             {
                 title: "Thực Tế Phũ Phàng",
                 render: () => `
@@ -285,27 +316,77 @@
                     }, 2500);
                 }
             },
-            // Slide 5: The Cake Way
+            // Slide 5: The Cake Way - UPDATED
             {
                 title: "Lối Đi Của Cake",
                 render: () => `
                     <div class="text-center w-full">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Lối Đi Của Cake</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Bắt đầu từ giá trị cốt lõi. Không có ngoại lệ.</p>
-                        <div class="flex flex-col md:flex-row justify-center items-center gap-6 fade-in fade-in-delay-2">
-                            ${[
-                                { text: 'An Toàn', emoji: '🛡️' },
-                                { text: 'Tiện Lợi', emoji: '🪄' },
-                                { text: 'Thông Minh', emoji: '🧠' }
-                            ].map((val) => `
-                                <div class="group w-full md:w-1/3 p-8 border border-white/20 rounded-2xl h-56 flex flex-col items-center justify-center text-3xl font-bold hover:bg-white/10 hover:border-white/40 transition duration-300 cursor-pointer" onclick="alert('${val.text}: Nguyên tắc nền tảng cho mọi sản phẩm.')">
-                                    <span class="text-6xl mb-4">${val.emoji}</span>
-                                    <span>${val.text}</span>
+                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Xây dựng giá trị thật trên nền tảng vững chắc.</p>
+                        
+                        <div class="relative w-full max-w-2xl mx-auto flex flex-col items-center gap-2">
+                            <!-- Top Layer: Customer Value -->
+                            <div id="layer-customer" class="layer layer-top w-full">
+                                <h3 class="text-sm uppercase text-pink-400 tracking-widest mb-2">Giá trị cho Khách hàng</h3>
+                                <div class="flex flex-col md:flex-row gap-4">
+                                    <div class="w-full p-6 bg-pink-900/40 border border-pink-500/50 rounded-2xl flex items-center gap-4">
+                                        <span class="text-4xl">🛡️</span>
+                                        <div>
+                                            <h4 class="text-xl font-bold text-left">An Toàn</h4>
+                                            <p class="text-left text-gray-400">Bảo vệ tuyệt đối cho mọi giao dịch.</p>
+                                        </div>
+                                    </div>
+                                    <div class="w-full p-6 bg-pink-900/40 border border-pink-500/50 rounded-2xl flex items-center gap-4">
+                                        <span class="text-4xl">🪄</span>
+                                        <div>
+                                            <h4 class="text-xl font-bold text-left">Tiện Lợi</h4>
+                                            <p class="text-left text-gray-400">Trải nghiệm liền mạch, không trở ngại.</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            `).join('')}
+                            </div>
+
+                            <!-- Connectors -->
+                             <svg class="w-32 h-12 text-gray-600 my-2" id="layer-connectors">
+                                <line x1="25%" y1="0" x2="25%" y2="100%" stroke="currentColor" stroke-width="2" class="connector" />
+                                <line x1="75%" y1="0" x2="75%" y2="100%" stroke="currentColor" stroke-width="2" class="connector" />
+                             </svg>
+
+                            <!-- Bottom Layer: AI Foundation -->
+                            <div id="layer-ai" class="layer layer-bottom w-full">
+                                <h3 class="text-sm uppercase text-sky-400 tracking-widest mb-2">Nền tảng Agentic AI</h3>
+                                <div class="flex flex-col md:flex-row gap-4">
+                                    <div class="w-full p-6 bg-sky-900/40 border border-sky-500/50 rounded-2xl flex items-center gap-4">
+                                        <span class="text-4xl">🧠</span>
+                                        <div>
+                                            <h4 class="text-xl font-bold text-left">Thông Minh</h4>
+                                            <p class="text-left text-gray-400">Tự động hóa và cá nhân hóa.</p>
+                                        </div>
+                                    </div>
+                                    <div class="w-full p-6 bg-sky-900/40 border border-sky-500/50 rounded-2xl flex items-center gap-4">
+                                        <span class="text-4xl">🚀</span>
+                                        <div>
+                                            <h4 class="text-xl font-bold text-left">Mở Rộng</h4>
+                                            <p class="text-left text-gray-400">Phục vụ hàng triệu người dùng.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                         <p class="text-lg italic text-center mt-12 text-gray-500 opacity-0 fade-in fade-in-delay-6">
+                            "Đừng mong chờ kết quả mới nếu bạn cứ lặp đi lặp lại cách làm cũ."
+                        </p>
                     </div>
-                `
+                `,
+                onLoad: () => {
+                    setTimeout(() => {
+                        document.getElementById('layer-ai').classList.add('show');
+                    }, 1500);
+                    setTimeout(() => {
+                        document.getElementById('layer-customer').classList.add('show');
+                    }, 2000);
+                }
             },
             // Slide 6: The Magic Trick
             {
@@ -525,11 +606,16 @@
         const slideCounter = document.getElementById('slide-counter');
         const progressBar = document.getElementById('progress-bar');
         const progressLineActive = document.getElementById('progress-line-active');
+        const appContainer = document.getElementById('app-container');
+        const essayMode = document.getElementById('essay-mode');
+        const togglePresentationBtn = document.getElementById('toggle-presentation-mode');
 
         function setupProgressBar() {
+            progressBar.innerHTML = ''; // Clear previous
             const progressLine = document.createElement('div');
             progressLine.className = 'progress-line';
             progressBar.appendChild(progressLine);
+            progressLineActive.style.width = '0px'; // Reset line
             
             slides.forEach((slide, index) => {
                 const step = document.createElement('div');
@@ -542,6 +628,7 @@
 
         function updateProgressBar() {
             const steps = progressBar.querySelectorAll('.progress-step');
+            if (steps.length === 0) return;
             steps.forEach((step, index) => {
                 step.classList.remove('active', 'completed');
                 if (index < currentSlide) {
@@ -576,6 +663,17 @@
             setTimeout(() => {
                 slideEl.classList.remove('slide-hidden');
             }, 50);
+
+            // Special handler for slide 0 toggle button
+             if (index === 0) {
+                const toggleEssayBtn = document.getElementById('toggle-essay-mode');
+                if (toggleEssayBtn) {
+                    toggleEssayBtn.onclick = () => {
+                        appContainer.classList.add('hidden');
+                        essayMode.classList.remove('hidden');
+                    };
+                }
+            }
 
             // Run onLoad function if it exists
             if (slideData.onLoad) {
@@ -618,6 +716,11 @@
             goToSlide(currentSlide - 1);
         });
         
+        togglePresentationBtn.addEventListener('click', () => {
+            essayMode.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+        });
+
         window.addEventListener('resize', updateProgressBar);
 
         // Initial load
