@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        // Set theme on initial load
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -27,7 +35,7 @@
         .fade-in-delay-1 { animation-delay: 0.5s; }
         .fade-in-delay-2 { animation-delay: 1s; }
         .fade-in-delay-3 { animation-delay: 1.5s; }
-        .fade-in-delay-4 { animation-delay: 2s; }
+        .fade-in-delay-4 { animation-delay: 2.0s; }
         .fade-in-delay-5 { animation-delay: 2.5s; }
         .fade-in-delay-6 { animation-delay: 3.0s; }
 
@@ -58,11 +66,15 @@
             transform: translateY(-50%);
             z-index: -1;
         }
+        .dark .progress-line { background-color: #374151; }
+
 
         /* Yin-Yang & Cycle Styles */
         .cycle-element { opacity: 0; transition: opacity 0.8s ease; }
         .yin-yang-group { transform-origin: center; animation: spin 20s linear infinite; }
-        .yin-yang-label { font-size: 14px; font-weight: bold; fill: #fff; text-anchor: middle; }
+        .yin-yang-label { font-size: 14px; font-weight: bold; text-anchor: middle; }
+        .dark .yin-yang-label { fill: #fff; }
+        .light .yin-yang-label { fill: #000; }
         
         @keyframes spin {
             from { transform: rotate(0deg); }
@@ -84,9 +96,21 @@
         .connector { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw-line 1s ease-out forwards; animation-delay: 2.5s;}
         @keyframes draw-line { to { stroke-dashoffset: 0; } }
 
+        /* Tokenizer Styles */
+        .token {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        /* Light/Dark mode specific overrides */
+        .dark body { background-color: #000; color: #fff; }
+        .light body { background-color: #f9fafb; color: #111827; }
+        
+        .dark .toggle-btn-light, .light .toggle-btn-dark { display: none; }
     </style>
 </head>
-<body class="bg-black text-white overflow-x-hidden">
+<body class="">
 
     <div id="app-container" class="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 transition-opacity duration-500">
         
@@ -99,32 +123,38 @@
                 <div id="progress-line-active" class="progress-line bg-orange-500 transition-all duration-500"></div>
             </div>
             <div class="flex justify-between items-center">
-                <button id="prev-btn" class="px-6 py-2 rounded-full text-white bg-white/10 hover:bg-white/20 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button id="prev-btn" class="px-6 py-2 rounded-full text-white bg-white/10 hover:bg-white/20 dark:text-gray-900 dark:bg-black/10 dark:hover:bg-black/20 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                     Trước
                 </button>
-                <div id="slide-counter" class="text-sm text-gray-400"></div>
-                <button id="next-btn" class="px-6 py-2 rounded-full text-black bg-white hover:bg-gray-200 transition duration-300">
+                <div id="slide-counter" class="text-sm text-gray-400 dark:text-gray-500"></div>
+                <button id="next-btn" class="px-6 py-2 rounded-full text-black bg-white hover:bg-gray-200 dark:text-white dark:bg-black dark:hover:bg-gray-800 transition duration-300">
                     Tiếp
                 </button>
             </div>
         </footer>
     </div>
 
-    <div id="essay-mode" class="hidden p-8 md:p-16">
+    <div id="essay-mode" class="hidden p-8 md:p-16 dark:bg-gray-900 bg-white">
         <div class="max-w-2xl mx-auto">
-            <button id="toggle-presentation-mode" class="mb-8 px-3 py-1 text-xs text-gray-400 border border-gray-600 rounded-full hover:bg-gray-800 hover:text-white transition">← Quay lại Trình bày</button>
-            <h1 class="text-3xl font-bold mb-2 text-pink-400">The Cake Agentic AI Way</h1>
-            <h2 class="text-xl text-gray-400 mb-12">Ghi chú về việc xây dựng Ngân hàng AI đầu tiên tại Việt Nam.</h2>
+            <div class="flex justify-between items-center mb-8">
+                <button id="toggle-presentation-mode" class="px-3 py-1 text-xs text-gray-400 border border-gray-600 dark:border-gray-700 rounded-full hover:bg-gray-800 hover:text-white dark:hover:bg-gray-700 transition">← Quay lại Trình bày</button>
+                <button id="theme-toggle-essay" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <svg class="w-5 h-5 toggle-btn-light text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <svg class="w-5 h-5 toggle-btn-dark text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </button>
+            </div>
+            <h1 class="text-3xl font-bold mb-2 text-pink-600 dark:text-pink-400">The Cake Agentic AI Way</h1>
+            <h2 class="text-xl text-gray-500 dark:text-gray-400 mb-12">Ghi chú về việc xây dựng Ngân hàng AI đầu tiên tại Việt Nam.</h2>
 
-            <div class="space-y-6 text-gray-300 leading-relaxed text-lg">
-                <p>Có một nghịch lý đang định hình thế giới công nghệ. Andrew Ng nói rằng AI là nguồn điện mới—một cuộc cách mạng sẽ thay đổi tất cả. Nhưng các đồng nghiệp của ông tại Stanford lại nói ngược lại: điện mới là AI. Điều này có nghĩa là AI đang trở thành một tiện ích cơ bản, có thể đo lường và dự đoán được, giống như cách chúng ta sử dụng điện hàng ngày.</p>
-                <p>Cả hai đều đúng. Chúng ta đang chứng kiến một công nghệ có sức mạnh tính toán tăng 100 lần mỗi năm, trong khi chi phí cho mỗi đơn vị thông minh lại giảm gần 99% sau mỗi hai năm. Nó vừa là thứ quyền năng nhất, vừa là thứ bình dân nhất. Xây dựng tương lai trên một nền tảng đầy mâu thuẫn như vậy là một thách thức lớn.</p>
-                <p>Câu trả lời nằm ở một sự đảo chiều căn bản. Trong 40 năm qua, chúng ta đã học cách nói chuyện với máy tính. Kỷ nguyên đó đã kết thúc. Giờ đây, máy tính đang học cách nói chuyện với chúng ta. Giao diện không còn là thứ chúng ta nhấp vào; nó là một người trợ lý chúng ta trò chuyện cùng. Chúng ta đang chuyển từ "Kinh tế Chú ý", nơi giá trị được đo bằng những cú nhấp chuột, sang "Kinh tế Chủ đích", nơi giá trị được tạo ra bằng cách hiểu và hành động theo ý định của người dùng.</p>
-                <p>Nhưng đây là một sự thật phũ phàng: gần như tất cả mọi người đều đang làm sai. McKinsey báo cáo rằng 9 trên 10 doanh nghiệp ứng dụng AI đều thất bại trong việc tạo ra giá trị thật sự. Họ có công nghệ, nhưng không có kết quả. Lý do rất đơn giản: họ cố gắng áp dụng công nghệ của tương lai vào một quy trình làm việc của quá khứ.</p>
-                <p>Tại Cake, chúng tôi chọn một con đường khác. Chúng tôi tin rằng công nghệ phải vô hình. Mọi thứ phải bắt đầu từ giá trị cốt lõi cho khách hàng: An toàn, Tiện lợi, và Thông minh. Nền tảng cho những giá trị này chính là năng lực Agentic AI của chúng tôi: sự Thông minh trong từng sản phẩm và Khả năng mở rộng để phục vụ hàng triệu người.</p>
+            <div class="space-y-6 text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
+                <p>Có một nghịch lý đang định hình thế giới công nghệ. Andrew Ng nói rằng AI là nguồn điện mới—một cuộc cách mạng. Nhưng các đồng nghiệp của ông tại Stanford lại nói ngược lại: điện mới là AI. Nó đang trở thành một tiện ích cơ bản, có thể đo lường và dự đoán được.</p>
+                <p>Cả hai đều đúng. Chúng ta đang chứng kiến một công nghệ có sức mạnh tính toán tăng 100 lần mỗi năm, trong khi chi phí cho mỗi đơn vị thông minh lại giảm gần 99% sau mỗi hai năm. Nó vừa là thứ quyền năng nhất, vừa là thứ bình dân nhất. Đơn vị đo lường cho "tiện ích" mới này chính là "token" - mỗi từ, mỗi ý niệm đều được quy đổi thành một chi phí cụ thể.</p>
+                <p>Câu trả lời cho nghịch lý này nằm ở một sự đảo chiều căn bản. Kỷ nguyên chúng ta học cách nói chuyện với máy tính đã kết thúc. Giờ đây, máy tính đang học cách nói chuyện với chúng ta. Giao diện không còn là thứ chúng ta nhấp vào; nó là một người trợ lý ta trò chuyện cùng. Chúng ta đang chuyển từ "Kinh tế Chú ý" sang "Kinh tế Chủ đích". Giá trị được tạo ra bằng cách hiểu và hành động theo ý định của người dùng, không phải bằng cách giành giật sự chú ý của họ.</p>
+                <p>Nhưng đây là một sự thật phũ phàng. Có hai câu chuyện đang diễn ra song song. Một bên, 70% các công ty Fortune 500 đang hào hứng trang bị Copilot cho nhân viên. Một bên khác, McKinsey báo cáo rằng 9 trên 10 doanh nghiệp ứng dụng AI đều thất bại trong việc tạo ra giá trị thật sự. Họ có công nghệ, nhưng không có kết quả. Lý do rất đơn giản: họ cố gắng áp dụng công nghệ của tương lai vào một quy trình làm việc của quá khứ.</p>
+                <p>Tại Cake, chúng tôi chọn một con đường khác. Chúng tôi tin rằng không thể có kết quả mới với cách làm cũ. Chúng tôi xây dựng giá trị trên một nền tảng hai tầng. Nền tảng bên dưới là năng lực Agentic AI cốt lõi: sự Thông Minh trong từng sản phẩm và Khả năng Mở Rộng để phục vụ hàng triệu người. Tầng trên, được xây dựng dựa trên nền tảng đó, là giá trị trực tiếp cho khách hàng: An toàn và Tiện lợi.</p>
                 <p>Chúng tôi không làm những điều phức tạp, chúng tôi làm những điều hữu ích. Chúng tôi biến một tác vụ chuyển tiền 30 giây đầy rủi ro thành một cú chạm 3 giây chính xác. Nó chỉ đơn giản là hoạt động hiệu quả. Và khi một thứ đã hiệu quả, chúng tôi nhân rộng nó lên. Chúng tôi đã tạo ra gần 100 'nhân viên số', giúp giảm 30% tỷ lệ nợ xấu.</p>
-                <p>Tầm nhìn của chúng tôi cho năm 2025 là số lượng trợ lý AI sẽ vượt qua số lượng nhân viên con người. Không phải để thay thế con người, mà là để giải phóng họ khỏi những công việc lặp đi lặp lại, để họ có thể làm những điều chỉ con người mới có thể làm được: sáng tạo và kết nối.</p>
-                <p>Đó là cách chúng tôi xây dựng tương lai. Không phải bằng cách chạy theo công nghệ, mà bằng cách tập trung vào giá trị mà nó mang lại cho con người.</p>
+                <p>Tầm nhìn của chúng tôi cho năm 2025 là số lượng trợ lý AI sẽ vượt qua số lượng nhân viên con người. Không phải để thay thế, mà là để giải phóng họ khỏi những công việc lặp đi lặp lại, để họ có thể làm những điều chỉ con người mới có thể làm được: sáng tạo và kết nối.</p>
+                <p>Đó là cách chúng tôi xây dựng tương lai. Không phải bằng cách chạy theo công nghệ, mà bằng cách kiến tạo giá trị mà nó mang lại cho con người. Khi số lượng Intelligent Assistants vượt qua số lượng nhân viên chúng tôi đang có, và vận hành một cách hiệu quả và xuyên suốt, chúng tôi có thể tự hào gọi mình là ngân hàng thuần AI đầu tiên—nhưng không phải là cuối cùng—của kỷ nguyên mới này.</p>
             </div>
         </div>
     </div>
@@ -137,15 +167,57 @@
                 title: "Mở đầu",
                 render: () => `
                     <div class="text-center w-full relative">
-                         <div class="absolute top-0 right-0 p-4">
-                            <button id="toggle-essay-mode" class="px-3 py-1 text-xs text-gray-400 border border-gray-600 rounded-full hover:bg-gray-800 hover:text-white transition">Chế độ đọc</button>
+                         <div class="absolute top-0 right-0 p-4 flex gap-2">
+                            <button id="theme-toggle-main" class="p-2 rounded-full hover:bg-white/20 dark:hover:bg-black/20">
+                                <svg class="w-5 h-5 toggle-btn-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                                <svg class="w-5 h-5 toggle-btn-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            </button>
+                            <button id="toggle-essay-mode" class="px-3 py-1 text-xs text-gray-400 dark:text-gray-500 border border-gray-600 dark:border-gray-700 rounded-full hover:bg-white/20 dark:hover:bg-black/20 transition">Chế độ đọc</button>
                         </div>
                         <img src="https://cake.vn/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FCake-logo-01.e915daf7.webp&w=256&q=75" alt="Cake by VPBank Logo" class="w-48 mx-auto mb-8 fade-in" onerror="this.onerror=null;this.src='https://placehold.co/200x80/ed2a7b/ffffff?text=CAKE';">
-                        <h1 class="text-4xl md:text-5xl font-black mb-4 fade-in fade-in-delay-1" style="color: #ed2a7b;">The Cake Agentic AI way</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-2">Thực tế xây dựng Ngân Hàng AI đầu tiên ở Việt Nam</p>
-                        <p class="text-sm text-gray-500 fade-in fade-in-delay-3">Nhấn "Tiếp" để bắt đầu</p>
+                        
+                        <div id="title-tokenizer" class="flex justify-center items-center flex-wrap gap-1 mb-4 h-16">
+                            <!-- Tokens will be injected here -->
+                        </div>
+
+                        <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-8 fade-in fade-in-delay-4">xây dựng ngân hàng AI đầu tiên tại Việt Nam</p>
+                        
+                        <div class="max-w-xl mx-auto border-l-2 border-orange-500 pl-4 my-8 fade-in fade-in-delay-5">
+                           <p class="text-left text-sm md:text-base text-gray-600 dark:text-gray-400 italic">
+                               "Khi số lượng Intelligent Assistants vượt qua số lượng nhân viên chúng tôi đang có, và vận hành một cách hiệu quả và xuyên suốt, chúng tôi có thể tự hào gọi mình là ngân hàng thuần AI đầu tiên—nhưng không phải là cuối cùng—của kỷ nguyên mới này."
+                           </p>
+                        </div>
+
+                        <p class="text-sm text-gray-500 fade-in fade-in-delay-6">Nhấn "Tiếp" để bắt đầu</p>
                     </div>
-                `
+                `,
+                 onLoad: () => {
+                    // Title Tokenizer Animation
+                    const tokenizerEl = document.getElementById('title-tokenizer');
+                    const tokens = [
+                        { text: 'The', color: 'bg-sky-500/30' },
+                        { text: 'Cake', color: 'bg-yellow-500/30' },
+                        { text: 'Agentic', color: 'bg-indigo-500/30' },
+                        { text: 'AI', color: 'bg-green-500/30' },
+                        { text: 'way', color: 'bg-cyan-500/30' }
+                    ];
+
+                    tokenizerEl.innerHTML = ''; // Clear existing tokens
+                    tokens.forEach((token, i) => {
+                        const tokenEl = document.createElement('span');
+                        tokenEl.textContent = token.text;
+                        tokenEl.className = `token text-4xl md:text-5xl font-black px-2 rounded-lg ${token.color}`;
+                        if(token.text === 'Cake') {
+                            tokenEl.style.color = '#ed2a7b';
+                        }
+                        tokenizerEl.appendChild(tokenEl);
+                        
+                        setTimeout(() => {
+                            tokenEl.style.opacity = '1';
+                            tokenEl.style.transform = 'scale(1)';
+                        }, 1000 + i * 200);
+                    });
+                }
             },
             // Slide 1: The Paradox
             {
@@ -153,40 +225,38 @@
                 render: () => `
                     <div class="text-center w-full">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Nghịch lý AI</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Một công nghệ. Hai góc nhìn đối lập.</p>
+                        <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-12 fade-in fade-in-delay-1">Một công nghệ. Hai góc nhìn đối lập.</p>
                         <div class="flex flex-col md:flex-row justify-center items-start gap-8 md:gap-16">
-                            
                             <div class="text-center p-6 rounded-2xl w-64 flex flex-col justify-start items-center fade-in fade-in-delay-2">
-                                <svg class="w-20 h-20 mb-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <svg class="w-20 h-20 mb-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                 <h3 class="text-2xl font-bold mb-4">Cuộc Cách Mạng</h3>
                                 <div class="h-24">
-                                    <p class="text-xl italic text-orange-400 fade-in fade-in-delay-3">"AI là điện năng mới."</p>
+                                    <p class="text-xl italic text-orange-500 fade-in fade-in-delay-3">"AI là điện năng mới."</p>
                                     <p class="text-gray-500 mt-2 fade-in fade-in-delay-4">- Andrew Ng</p>
                                 </div>
                             </div>
-                            
                             <div class="text-center p-6 rounded-2xl w-64 flex flex-col justify-start items-center fade-in fade-in-delay-2">
-                                <svg class="w-20 h-20 mb-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                                <svg class="w-20 h-20 mb-4 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
                                 <h3 class="text-2xl font-bold mb-4">Tiện Ích</h3>
                                 <div class="h-24">
-                                    <p class="text-xl italic text-sky-400 fade-in fade-in-delay-3">"Điện năng mới là AI."</p>
+                                    <p class="text-xl italic text-sky-500 fade-in fade-in-delay-3">"Điện năng mới là AI."</p>
                                     <p class="text-gray-500 mt-2 fade-in fade-in-delay-4">- Stanford Colleagues</p>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 `
             },
+            // Other slides remain the same...
             // Slide 2: The Scale
             {
                 title: "Quy Mô",
                 render: () => `
                     <div class="text-center w-full">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Quy Mô Quyền Năng</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-16 fade-in fade-in-delay-1">Một sự cân bằng giữa sức mạnh và chi phí.</p>
+                        <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-16 fade-in fade-in-delay-1">Một sự cân bằng giữa sức mạnh và chi phí.</p>
                         <div class="w-full max-w-2xl mx-auto fade-in fade-in-delay-2">
-                             <div class="flex justify-between items-end mb-2 text-gray-300">
+                             <div class="flex justify-between items-end mb-2 text-gray-600 dark:text-gray-300">
                                 <div class="text-left">
                                     <div class="text-2xl md:text-4xl font-bold text-red-500">100x</div>
                                     <div class="text-sm">Nhu cầu tính toán</div>
@@ -200,7 +270,7 @@
                                <div class="w-8 h-8 rounded-full bg-white shadow-lg ring-2 ring-black"></div>
                             </div>
                         </div>
-                        <p class="mt-8 text-lg text-white fade-in fade-in-delay-3">Công nghệ vừa mạnh mẽ vô hạn, vừa rẻ đến không ngờ.</p>
+                        <p class="mt-8 text-lg text-gray-800 dark:text-white fade-in fade-in-delay-3">Công nghệ vừa mạnh mẽ vô hạn, vừa rẻ đến không ngờ.</p>
                     </div>
                 `
             },
@@ -210,12 +280,12 @@
                 render: () => `
                     <div class="text-center w-full">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Sự Đảo Chiều</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-8 fade-in fade-in-delay-1">Từ Kinh tế Chú ý sang Kinh tế Chủ đích.</p>
+                        <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-8 fade-in fade-in-delay-1">Từ Kinh tế Chú ý sang Kinh tế Chủ đích.</p>
                         
                         <div id="reversal-cycle" class="relative w-full h-80 flex justify-center items-center">
                             <!-- Partners -->
                              <div id="cycle-ai-partner" class="cycle-element flex-col items-center absolute top-1/2 -translate-y-1/2 left-8 md:left-24">
-                                <svg class="w-20 h-20 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <svg class="w-20 h-20 text-sky-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                                 <span class="mt-2 font-bold text-lg">AI</span>
                             </div>
                             <div id="cycle-human-partner" class="cycle-element flex-col items-center absolute top-1/2 -translate-y-1/2 right-8 md:right-24">
@@ -258,34 +328,34 @@
                 render: () => `
                     <div class="text-center w-full">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Thực Tế Phũ Phàng</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Câu chuyện về hai số phận của AI trong doanh nghiệp.</p>
+                        <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-12 fade-in fade-in-delay-1">Câu chuyện về hai số phận của AI trong doanh nghiệp.</p>
                         
                         <div class="flex flex-col md:flex-row gap-8 justify-center items-start">
                             <!-- Tale 1: The Hype -->
-                            <div id="tale-hype" class="tale-panel w-full md:w-5/12 p-6 border border-sky-500/30 bg-sky-900/20 rounded-2xl">
-                                <h2 class="text-2xl font-bold text-sky-400 mb-4">Làn Sóng Hào Hứng</h2>
-                                <p class="text-gray-300 mb-6 h-12">70% Fortune 500 trang bị Copilot & Trợ lý AI để tăng năng suất.</p>
+                            <div id="tale-hype" class="tale-panel w-full md:w-5/12 p-6 border border-sky-500/30 bg-sky-500/10 dark:bg-sky-900/20 rounded-2xl">
+                                <h2 class="text-2xl font-bold text-sky-600 dark:text-sky-400 mb-4">Làn Sóng Hào Hứng</h2>
+                                <p class="text-gray-600 dark:text-gray-300 mb-6 h-12">70% Fortune 500 trang bị Copilot & Trợ lý AI để tăng năng suất.</p>
                                 <div class="h-40 flex justify-around items-end gap-2">
-                                    <div class="w-1/4 h-full bg-sky-800 rounded-t-lg bar-chart-bar" style="height: 60%;"></div>
-                                    <div class="w-1/4 h-full bg-sky-700 rounded-t-lg bar-chart-bar" style="height: 80%;"></div>
-                                    <div class="w-1/4 h-full bg-sky-600 rounded-t-lg bar-chart-bar" style="height: 70%;"></div>
-                                    <div class="w-1/4 h-full bg-sky-500 rounded-t-lg bar-chart-bar" style="height: 90%;"></div>
+                                    <div class="w-1/4 h-full bg-sky-300 dark:bg-sky-800 rounded-t-lg bar-chart-bar" style="height: 60%;"></div>
+                                    <div class="w-1/4 h-full bg-sky-400 dark:bg-sky-700 rounded-t-lg bar-chart-bar" style="height: 80%;"></div>
+                                    <div class="w-1/4 h-full bg-sky-500 dark:bg-sky-600 rounded-t-lg bar-chart-bar" style="height: 70%;"></div>
+                                    <div class="w-1/4 h-full bg-sky-600 dark:bg-sky-500 rounded-t-lg bar-chart-bar" style="height: 90%;"></div>
                                 </div>
                             </div>
 
                             <!-- Tale 2: The Trap -->
-                            <div id="tale-trap" class="tale-panel w-full md:w-5/12 p-6 border border-red-500/30 bg-red-900/20 rounded-2xl">
-                                <h2 class="text-2xl font-bold text-red-400 mb-4">Cái Bẫy Thử Nghiệm</h2>
-                                <p class="text-gray-300 mb-6 h-12">9 trên 10 doanh nghiệp không thể biến thử nghiệm thành lợi nhuận.</p>
+                            <div id="tale-trap" class="tale-panel w-full md:w-5/12 p-6 border border-red-500/30 bg-red-500/10 dark:bg-red-900/20 rounded-2xl">
+                                <h2 class="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">Cái Bẫy Thử Nghiệm</h2>
+                                <p class="text-gray-600 dark:text-gray-300 mb-6 h-12">9 trên 10 doanh nghiệp không thể biến thử nghiệm thành lợi nhuận.</p>
                                 <div class="h-40 grid grid-cols-5 grid-rows-2 gap-3">
                                     ${Array(10).fill(0).map((_, i) => `
-                                        <div class="project-icon rounded-md bg-gray-700" style="transition-delay: ${i * 50}ms"></div>
+                                        <div class="project-icon rounded-md bg-gray-300 dark:bg-gray-700" style="transition-delay: ${i * 50}ms"></div>
                                     `).join('')}
                                 </div>
                             </div>
                         </div>
 
-                        <p id="paradox-reason" class="text-xl text-center mt-12 text-orange-400 font-semibold opacity-0">
+                        <p id="paradox-reason" class="text-xl text-center mt-12 text-orange-600 dark:text-orange-400 font-semibold opacity-0">
                             Vấn đề? Áp dụng công nghệ của tương lai vào quy trình của quá khứ.
                         </p>
                     </div>
@@ -316,58 +386,58 @@
                     }, 2500);
                 }
             },
-            // Slide 5: The Cake Way - UPDATED
+            // Slide 5: The Cake Way
             {
                 title: "Lối Đi Của Cake",
                 render: () => `
                     <div class="text-center w-full">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Lối Đi Của Cake</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Xây dựng giá trị thật trên nền tảng vững chắc.</p>
+                        <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-12 fade-in fade-in-delay-1">Xây dựng giá trị thật trên nền tảng vững chắc.</p>
                         
                         <div class="relative w-full max-w-2xl mx-auto flex flex-col items-center gap-2">
                             <!-- Top Layer: Customer Value -->
                             <div id="layer-customer" class="layer layer-top w-full">
-                                <h3 class="text-sm uppercase text-pink-400 tracking-widest mb-2">Giá trị cho Khách hàng</h3>
+                                <h3 class="text-sm uppercase text-pink-600 dark:text-pink-400 tracking-widest mb-2">Giá trị cho Khách hàng</h3>
                                 <div class="flex flex-col md:flex-row gap-4">
-                                    <div class="w-full p-6 bg-pink-900/40 border border-pink-500/50 rounded-2xl flex items-center gap-4">
+                                    <div class="w-full p-6 bg-pink-500/10 dark:bg-pink-900/40 border border-pink-500/20 dark:border-pink-500/50 rounded-2xl flex items-center gap-4">
                                         <span class="text-4xl">🛡️</span>
                                         <div>
                                             <h4 class="text-xl font-bold text-left">An Toàn</h4>
-                                            <p class="text-left text-gray-400">Bảo vệ tuyệt đối cho mọi giao dịch.</p>
+                                            <p class="text-left text-gray-600 dark:text-gray-400">Bảo vệ tuyệt đối cho mọi giao dịch.</p>
                                         </div>
                                     </div>
-                                    <div class="w-full p-6 bg-pink-900/40 border border-pink-500/50 rounded-2xl flex items-center gap-4">
+                                    <div class="w-full p-6 bg-pink-500/10 dark:bg-pink-900/40 border border-pink-500/20 dark:border-pink-500/50 rounded-2xl flex items-center gap-4">
                                         <span class="text-4xl">🪄</span>
                                         <div>
                                             <h4 class="text-xl font-bold text-left">Tiện Lợi</h4>
-                                            <p class="text-left text-gray-400">Trải nghiệm liền mạch, không trở ngại.</p>
+                                            <p class="text-left text-gray-600 dark:text-gray-400">Trải nghiệm liền mạch, không trở ngại.</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Connectors -->
-                             <svg class="w-32 h-12 text-gray-600 my-2" id="layer-connectors">
+                             <svg class="w-32 h-12 text-gray-400 dark:text-gray-600 my-2" id="layer-connectors">
                                 <line x1="25%" y1="0" x2="25%" y2="100%" stroke="currentColor" stroke-width="2" class="connector" />
                                 <line x1="75%" y1="0" x2="75%" y2="100%" stroke="currentColor" stroke-width="2" class="connector" />
                              </svg>
 
                             <!-- Bottom Layer: AI Foundation -->
                             <div id="layer-ai" class="layer layer-bottom w-full">
-                                <h3 class="text-sm uppercase text-sky-400 tracking-widest mb-2">Nền tảng Agentic AI</h3>
+                                <h3 class="text-sm uppercase text-sky-600 dark:text-sky-400 tracking-widest mb-2">Nền tảng Agentic AI</h3>
                                 <div class="flex flex-col md:flex-row gap-4">
-                                    <div class="w-full p-6 bg-sky-900/40 border border-sky-500/50 rounded-2xl flex items-center gap-4">
+                                    <div class="w-full p-6 bg-sky-500/10 dark:bg-sky-900/40 border border-sky-500/20 dark:border-sky-500/50 rounded-2xl flex items-center gap-4">
                                         <span class="text-4xl">🧠</span>
                                         <div>
                                             <h4 class="text-xl font-bold text-left">Thông Minh</h4>
-                                            <p class="text-left text-gray-400">Tự động hóa và cá nhân hóa.</p>
+                                            <p class="text-left text-gray-600 dark:text-gray-400">Tự động hóa và cá nhân hóa.</p>
                                         </div>
                                     </div>
-                                    <div class="w-full p-6 bg-sky-900/40 border border-sky-500/50 rounded-2xl flex items-center gap-4">
+                                    <div class="w-full p-6 bg-sky-500/10 dark:bg-sky-900/40 border border-sky-500/20 dark:border-sky-500/50 rounded-2xl flex items-center gap-4">
                                         <span class="text-4xl">🚀</span>
                                         <div>
                                             <h4 class="text-xl font-bold text-left">Mở Rộng</h4>
-                                            <p class="text-left text-gray-400">Phục vụ hàng triệu người dùng.</p>
+                                            <p class="text-left text-gray-600 dark:text-gray-400">Phục vụ hàng triệu người dùng.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -394,19 +464,19 @@
                 render: () => `
                     <div class="text-center w-full relative">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Từ 30s xuống 3s</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-8 fade-in fade-in-delay-1">Công nghệ tốt nhất là công nghệ vô hình.</p>
-                        <div class="max-w-md mx-auto p-6 bg-white/5 rounded-2xl border border-white/10 fade-in fade-in-delay-2 relative">
-                             <div id="input-container" class="bg-gray-800 p-4 rounded-lg text-left text-gray-400 mb-4 h-24 overflow-hidden relative transition-all duration-700 ease-in-out">
+                        <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-8 fade-in fade-in-delay-1">Công nghệ tốt nhất là công nghệ vô hình.</p>
+                        <div class="max-w-md mx-auto p-6 bg-white/50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10 fade-in fade-in-delay-2 relative">
+                             <div id="input-container" class="bg-gray-200 dark:bg-gray-800 p-4 rounded-lg text-left text-gray-500 dark:text-gray-400 mb-4 h-24 overflow-hidden relative transition-all duration-700 ease-in-out">
                                 <span class="absolute top-4 left-4 text-sm md:text-base">C A K E 0904165673 NGUYEN VAN A 2 lít Chuyen tien an trua</span>
                              </div>
                              <div id="output-container" class="space-y-2 mb-4">
-                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Ngân hàng:</span><span id="output-bank" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
-                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Số tài khoản:</span><span id="output-account" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
-                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Người nhận:</span><span id="output-name" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
-                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Số tiền:</span><span id="output-amount" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
-                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Nội dung:</span><span id="output-note" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
+                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Ngân hàng:</span><span id="output-bank" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
+                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Số tài khoản:</span><span id="output-account" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
+                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Người nhận:</span><span id="output-name" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
+                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Số tiền:</span><span id="output-amount" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
+                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Nội dung:</span><span id="output-note" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
                              </div>
-                             <button id="magic-btn" class="w-full py-3 bg-orange-500 text-black rounded-full font-bold text-lg hover:bg-orange-400 transition">Thực Hiện Phép Màu</button>
+                             <button id="magic-btn" class="w-full py-3 bg-orange-500 text-white rounded-full font-bold text-lg hover:bg-orange-600 transition">Thực Hiện Phép Màu</button>
                              <canvas id="confetti-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"></canvas>
                         </div>
                     </div>
@@ -517,7 +587,7 @@
 
                         setTimeout(() => {
                             btn.textContent = 'Hoàn Tất!';
-                            btn.classList.remove('bg-orange-500', 'hover:bg-orange-400');
+                            btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
                             btn.classList.add('bg-green-500');
                             if(animationFrameId) cancelAnimationFrame(animationFrameId);
                             confettiParticles = [];
@@ -533,15 +603,15 @@
                 render: () => `
                     <div class="text-center w-full">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Nhân Rộng Trí Tuệ</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-16 fade-in fade-in-delay-1">Khi hiệu quả, chúng tôi nhân rộng nó lên.</p>
+                        <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-16 fade-in fade-in-delay-1">Khi hiệu quả, chúng tôi nhân rộng nó lên.</p>
                         <div class="flex flex-col md:flex-row justify-around items-center gap-12 fade-in fade-in-delay-2">
                             <div class="text-center">
                                 <div id="employee-counter" class="text-7xl font-black text-orange-500">0</div>
-                                <div class="text-xl text-gray-400 mt-2">Nhân Viên Số</div>
+                                <div class="text-xl text-gray-500 dark:text-gray-400 mt-2">Nhân Viên Số</div>
                             </div>
                             <div class="text-center">
                                 <div id="debt-counter" class="text-7xl font-black text-green-500">0%</div>
-                                <div class="text-xl text-gray-400 mt-2">Giảm Nợ Xấu</div>
+                                <div class="text-xl text-gray-500 dark:text-gray-400 mt-2">Giảm Nợ Xấu</div>
                             </div>
                         </div>
                     </div>
@@ -570,23 +640,23 @@
                 render: () => `
                     <div class="text-center w-full">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Tầm Nhìn 2025</h1>
-                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Giải phóng con người để làm những điều phi thường.</p>
+                        <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-12 fade-in fade-in-delay-1">Giải phóng con người để làm những điều phi thường.</p>
                         <div class="w-full max-w-lg mx-auto h-64 relative fade-in fade-in-delay-2">
                             <!-- Chart Grid -->
-                            <div class="absolute inset-0 grid grid-rows-4 border-l border-b border-white/10">
-                                ${Array(4).fill(0).map(() => `<div class="border-t border-white/10"></div>`).join('')}
+                            <div class="absolute inset-0 grid grid-rows-4 border-l border-b border-gray-200 dark:border-white/10">
+                                ${Array(4).fill(0).map(() => `<div class="border-t border-gray-200 dark:border-white/10"></div>`).join('')}
                             </div>
                             <!-- Human Line -->
                             <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                                 <path id="human-line" d="M 0 80 Q 50 60, 100 50" stroke="#38bdf8" stroke-width="2" fill="none" class="transition-all duration-1000" style="stroke-dasharray: 200; stroke-dashoffset: 200;"/>
-                                <text x="5" y="78" font-size="5" fill="#38bdf8">Con người</text>
+                                <text x="5" y="78" font-size="5" class="dark:fill-sky-400 fill-sky-600">Con người</text>
                             </svg>
                             <!-- AI Line -->
                              <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                                 <path id="ai-line" d="M 0 95 Q 50 60, 100 10" stroke="#f97316" stroke-width="2" fill="none" class="transition-all duration-1000" style="stroke-dasharray: 200; stroke-dashoffset: 200;"/>
-                                <text x="60" y="8" font-size="5" fill="#f97316">Trợ lý AI</text>
+                                <text x="60" y="8" font-size="5" class="fill-orange-500">Trợ lý AI</text>
                             </svg>
-                            <div class="absolute bottom-[-20px] left-1/2 -translate-x-1/2 text-lg font-bold text-white">2025</div>
+                            <div class="absolute bottom-[-20px] left-1/2 -translate-x-1/2 text-lg font-bold">2025</div>
                         </div>
                     </div>
                 `,
@@ -610,6 +680,18 @@
         const essayMode = document.getElementById('essay-mode');
         const togglePresentationBtn = document.getElementById('toggle-presentation-mode');
 
+        function toggleTheme() {
+            if (localStorage.theme === 'dark') {
+                localStorage.theme = 'light';
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            } else {
+                localStorage.theme = 'dark';
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            }
+        }
+
         function setupProgressBar() {
             progressBar.innerHTML = ''; // Clear previous
             const progressLine = document.createElement('div');
@@ -620,7 +702,7 @@
             slides.forEach((slide, index) => {
                 const step = document.createElement('div');
                 step.className = 'progress-step z-10 cursor-pointer';
-                step.innerHTML = `<div class="w-4 h-4 rounded-full bg-gray-600 transition-all duration-300"></div>`;
+                step.innerHTML = `<div class="w-4 h-4 rounded-full bg-gray-300 dark:bg-gray-600 transition-all duration-300"></div>`;
                 step.onclick = () => goToSlide(index);
                 progressBar.appendChild(step);
             });
@@ -664,16 +746,16 @@
                 slideEl.classList.remove('slide-hidden');
             }, 50);
 
-            // Special handler for slide 0 toggle button
-             if (index === 0) {
-                const toggleEssayBtn = document.getElementById('toggle-essay-mode');
-                if (toggleEssayBtn) {
-                    toggleEssayBtn.onclick = () => {
-                        appContainer.classList.add('hidden');
-                        essayMode.classList.remove('hidden');
-                    };
-                }
+            // Add event listeners for new buttons
+            const toggleEssayBtn = document.getElementById('toggle-essay-mode');
+            if (toggleEssayBtn) {
+                toggleEssayBtn.onclick = () => {
+                    appContainer.classList.add('hidden');
+                    essayMode.classList.remove('hidden');
+                };
             }
+            const themeToggleMain = document.getElementById('theme-toggle-main');
+            if(themeToggleMain) themeToggleMain.onclick = toggleTheme;
 
             // Run onLoad function if it exists
             if (slideData.onLoad) {
@@ -716,10 +798,25 @@
             goToSlide(currentSlide - 1);
         });
         
-        togglePresentationBtn.addEventListener('click', () => {
+        // Add keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            // Do not navigate if in essay mode
+            if (!essayMode.classList.contains('hidden')) {
+                return;
+            }
+
+            if (e.key === 'ArrowRight') {
+                nextBtn.click();
+            } else if (e.key === 'ArrowLeft') {
+                prevBtn.click();
+            }
+        });
+
+        document.getElementById('toggle-presentation-mode').addEventListener('click', () => {
             essayMode.classList.add('hidden');
             appContainer.classList.remove('hidden');
         });
+        document.getElementById('theme-toggle-essay').addEventListener('click', toggleTheme);
 
         window.addEventListener('resize', updateProgressBar);
 
