@@ -39,23 +39,11 @@
         .fade-in-delay-5 { animation-delay: 2.5s; }
         .fade-in-delay-6 { animation-delay: 3.0s; }
 
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .door {
-            transition: transform 0.5s ease, box-shadow 0.5s ease;
-        }
-        .door:hover {
-            transform: perspective(1000px) rotateY(-15deg) scale(1.05);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .door.open:hover {
-             transform: perspective(1000px) rotateY(0deg) scale(1.05);
-        }
-
+        
         .progress-step.active div:first-child { background-color: #f97316; transform: scale(1.25); }
         .progress-step.completed div:first-child { background-color: #ec4899; }
         .progress-line {
@@ -67,7 +55,6 @@
             z-index: -1;
         }
         .dark .progress-line { background-color: #374151; }
-
 
         /* Yin-Yang & Cycle Styles */
         .cycle-element { opacity: 0; transition: opacity 0.8s ease; }
@@ -108,11 +95,46 @@
         .light body { background-color: #f9fafb; color: #111827; }
         
         .dark .toggle-btn-light, .light .toggle-btn-dark { display: none; }
+
+        /* Auth Screen Styles */
+        #auth-overlay {
+            transition: opacity 0.5s ease-out, backdrop-filter 0.5s ease-out;
+        }
+        #auth-form.shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Typing cursor */
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            from, to { opacity: 1; }
+            50% { opacity: 0; }
+        }
     </style>
 </head>
 <body class="">
+    <!-- Auth Screen -->
+    <div id="auth-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+        <form id="auth-form" class="w-full max-w-sm p-8 bg-gray-100 dark:bg-gray-900 rounded-2xl shadow-2xl text-center">
+            <img src="https://cake.vn/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FCake-logo-01.e915daf7.webp&w=256&q=75" alt="Cake by VPBank Logo" class="w-32 mx-auto mb-6" onerror="this.onerror=null;this.src='https://placehold.co/200x80/ed2a7b/ffffff?text=CAKE';">
+            <h2 class="text-xl font-bold mb-2 text-gray-800 dark:text-white">Truy cập Keynote</h2>
+            <p class="text-sm text-gray-500 mb-6">Vui lòng nhập mật khẩu bí mật để tiếp tục.</p>
+            <input type="password" id="secret-key-input" class="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg text-center text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-pink-500 transition" placeholder="••••••">
+            <p id="error-message" class="text-red-500 text-sm mt-2 h-5"></p>
+            <button type="submit" class="w-full mt-4 px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-lg transition-transform transform hover:scale-105">Xác nhận</button>
+        </form>
+    </div>
 
-    <div id="app-container" class="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 transition-opacity duration-500">
+    <div id="app-container" class="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 transition-opacity duration-500 opacity-0 pointer-events-none">
         
         <main id="keynote-content" class="w-full max-w-5xl flex-grow flex items-center justify-center">
             <!-- Slides will be injected here -->
@@ -147,14 +169,14 @@
             <h2 class="text-xl text-gray-500 dark:text-gray-400 mb-12">Ghi chú về việc xây dựng Ngân hàng AI đầu tiên tại Việt Nam.</h2>
 
             <div class="space-y-6 text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
-                <p>Có một nghịch lý đang định hình thế giới công nghệ. Andrew Ng nói rằng AI là nguồn điện mới—một cuộc cách mạng. Nhưng các đồng nghiệp của ông tại Stanford lại nói ngược lại: điện mới là AI. Nó đang trở thành một tiện ích cơ bản, có thể đo lường và dự đoán được.</p>
-                <p>Cả hai đều đúng. Chúng ta đang chứng kiến một công nghệ có sức mạnh tính toán tăng 100 lần mỗi năm, trong khi chi phí cho mỗi đơn vị thông minh lại giảm gần 99% sau mỗi hai năm. Nó vừa là thứ quyền năng nhất, vừa là thứ bình dân nhất. Đơn vị đo lường cho "tiện ích" mới này chính là "token" - mỗi từ, mỗi ý niệm đều được quy đổi thành một chi phí cụ thể.</p>
+                 <p>Có một nghịch lý đang định hình thế giới công nghệ. Andrew Ng nói rằng AI là nguồn điện mới—một cuộc cách mạng. Nhưng các đồng nghiệp của ông tại Stanford lại nói ngược lại: điện mới là AI. Nó đang trở thành một tiện ích cơ bản, có thể đo lường và dự đoán được.</p>
+                <p>Cả hai đều đúng. Chúng ta đang chứng kiến một công nghệ có sức mạnh tính toán tăng 100 lần mỗi năm, trong khi chi phí cho mỗi đơn vị thông minh lại giảm gần 99% sau mỗi hai năm. Nó vừa là thứ quyền năng nhất, vừa là thứ bình dân nhất. Đơn vị đo lường cho "tiện ích" mới này chính là "token" - mỗi từ ngữ, khung hình, âm vị đều được quy đổi thành một chi phí cụ thể.</p>
                 <p>Câu trả lời cho nghịch lý này nằm ở một sự đảo chiều căn bản. Kỷ nguyên chúng ta học cách nói chuyện với máy tính đã kết thúc. Giờ đây, máy tính đang học cách nói chuyện với chúng ta. Giao diện không còn là thứ chúng ta nhấp vào; nó là một người trợ lý ta trò chuyện cùng. Chúng ta đang chuyển từ "Kinh tế Chú ý" sang "Kinh tế Chủ đích". Giá trị được tạo ra bằng cách hiểu và hành động theo ý định của người dùng, không phải bằng cách giành giật sự chú ý của họ.</p>
                 <p>Nhưng đây là một sự thật phũ phàng. Có hai câu chuyện đang diễn ra song song. Một bên, 70% các công ty Fortune 500 đang hào hứng trang bị Copilot cho nhân viên. Một bên khác, McKinsey báo cáo rằng 9 trên 10 doanh nghiệp ứng dụng AI đều thất bại trong việc tạo ra giá trị thật sự. Họ có công nghệ, nhưng không có kết quả. Lý do rất đơn giản: họ cố gắng áp dụng công nghệ của tương lai vào một quy trình làm việc của quá khứ.</p>
                 <p>Tại Cake, chúng tôi chọn một con đường khác. Chúng tôi tin rằng không thể có kết quả mới với cách làm cũ. Chúng tôi xây dựng giá trị trên một nền tảng hai tầng. Nền tảng bên dưới là năng lực Agentic AI cốt lõi: sự Thông Minh trong từng sản phẩm và Khả năng Mở Rộng để phục vụ hàng triệu người. Tầng trên, được xây dựng dựa trên nền tảng đó, là giá trị trực tiếp cho khách hàng: An toàn và Tiện lợi.</p>
                 <p>Chúng tôi không làm những điều phức tạp, chúng tôi làm những điều hữu ích. Chúng tôi biến một tác vụ chuyển tiền 30 giây đầy rủi ro thành một cú chạm 3 giây chính xác. Nó chỉ đơn giản là hoạt động hiệu quả. Và khi một thứ đã hiệu quả, chúng tôi nhân rộng nó lên. Chúng tôi đã tạo ra gần 100 'nhân viên số', giúp giảm 30% tỷ lệ nợ xấu.</p>
                 <p>Tầm nhìn của chúng tôi cho năm 2025 là số lượng trợ lý AI sẽ vượt qua số lượng nhân viên con người. Không phải để thay thế, mà là để giải phóng họ khỏi những công việc lặp đi lặp lại, để họ có thể làm những điều chỉ con người mới có thể làm được: sáng tạo và kết nối.</p>
-                <p>Đó là cách chúng tôi xây dựng tương lai. Không phải bằng cách chạy theo công nghệ, mà bằng cách kiến tạo giá trị mà nó mang lại cho con người. Khi số lượng Intelligent Assistants vượt qua số lượng nhân viên chúng tôi đang có, và vận hành một cách hiệu quả và xuyên suốt, chúng tôi có thể tự hào gọi mình là ngân hàng thuần AI đầu tiên—nhưng không phải là cuối cùng—của kỷ nguyên mới này.</p>
+                <p>Đó là cách chúng tôi xây dựng tương lai. Không phải bằng cách chạy theo công nghệ, mà bằng cách kiến tạo giá trị mà nó mang lại cho con người. Khi số lượng Intelligent Assistant vượt qua số lượng nhân viên chúng tôi đang có, được vận hành an toàn, hiệu quả và xuyên suốt, chúng tôi có thể tự hào gọi Cake by VPB là ngân hàng thuần AI đầu tiên của Việt Nam và khu vực.</p>
             </div>
         </div>
     </div>
@@ -162,7 +184,7 @@
 
     <script>
         const slides = [
-            // Slide 0: Title Screen
+             // Slide 0: Title Screen
             {
                 title: "Mở đầu",
                 render: () => `
@@ -184,7 +206,7 @@
                         
                         <div class="max-w-xl mx-auto border-l-2 border-orange-500 pl-4 my-8 fade-in fade-in-delay-5">
                            <p class="text-left text-sm md:text-base text-gray-600 dark:text-gray-400 italic">
-                               "Khi số lượng Intelligent Assistants vượt qua số lượng nhân viên chúng tôi đang có, và vận hành một cách hiệu quả và xuyên suốt, chúng tôi có thể tự hào gọi mình là ngân hàng thuần AI đầu tiên—nhưng không phải là cuối cùng—của kỷ nguyên mới này."
+                               "Khi số lượng Intelligent Assistant vượt qua số lượng nhân viên chúng tôi đang có, được vận hành an toàn, hiệu quả và xuyên suốt, chúng tôi có thể tự hào gọi Cake by VPB là ngân hàng thuần AI đầu tiên của Việt Nam và khu vực."
                            </p>
                         </div>
 
@@ -215,7 +237,7 @@
                         setTimeout(() => {
                             tokenEl.style.opacity = '1';
                             tokenEl.style.transform = 'scale(1)';
-                        }, 1000 + i * 200);
+                        }, 1000 + i * 200); // Start animation after initial fade-ins
                     });
                 }
             },
@@ -247,7 +269,7 @@
                     </div>
                 `
             },
-            // Other slides remain the same...
+            // Other slides...
             // Slide 2: The Scale
             {
                 title: "Quy Mô",
@@ -386,7 +408,7 @@
                     }, 2500);
                 }
             },
-            // Slide 5: The Cake Way
+            // Slide 5: The Cake Way - UPDATED
             {
                 title: "Lối Đi Của Cake",
                 render: () => `
@@ -443,10 +465,6 @@
                                 </div>
                             </div>
                         </div>
-
-                         <p class="text-lg italic text-center mt-12 text-gray-500 opacity-0 fade-in fade-in-delay-6">
-                            "Đừng mong chờ kết quả mới nếu bạn cứ lặp đi lặp lại cách làm cũ."
-                        </p>
                     </div>
                 `,
                 onLoad: () => {
@@ -458,143 +476,211 @@
                     }, 2000);
                 }
             },
-            // Slide 6: The Magic Trick
+            // Slide 6: The Magic Trick - UPDATED
             {
                 title: "Phép Màu Thực Tế",
                 render: () => `
-                    <div class="text-center w-full relative">
+                    <div class="text-center w-full">
                         <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Từ 30s xuống 3s</h1>
                         <p class="text-lg md:text-xl text-gray-500 dark:text-gray-400 mb-8 fade-in fade-in-delay-1">Công nghệ tốt nhất là công nghệ vô hình.</p>
-                        <div class="max-w-md mx-auto p-6 bg-white/50 dark:bg-white/5 rounded-2xl border border-gray-200 dark:border-white/10 fade-in fade-in-delay-2 relative">
-                             <div id="input-container" class="bg-gray-200 dark:bg-gray-800 p-4 rounded-lg text-left text-gray-500 dark:text-gray-400 mb-4 h-24 overflow-hidden relative transition-all duration-700 ease-in-out">
-                                <span class="absolute top-4 left-4 text-sm md:text-base">C A K E 0904165673 NGUYEN VAN A 2 lít Chuyen tien an trua</span>
-                             </div>
-                             <div id="output-container" class="space-y-2 mb-4">
-                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Ngân hàng:</span><span id="output-bank" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
-                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Số tài khoản:</span><span id="output-account" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
-                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Người nhận:</span><span id="output-name" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
-                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Số tiền:</span><span id="output-amount" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
-                                <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-500 dark:text-gray-400 w-28">Nội dung:</span><span id="output-note" class="font-semibold text-gray-900 dark:text-white opacity-0 transition-opacity duration-300"></span></div>
-                             </div>
-                             <button id="magic-btn" class="w-full py-3 bg-orange-500 text-white rounded-full font-bold text-lg hover:bg-orange-600 transition">Thực Hiện Phép Màu</button>
-                             <canvas id="confetti-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"></canvas>
+                        <div class="flex flex-col md:flex-row gap-8 w-full max-w-4xl mx-auto">
+                            <!-- Left Side: Traditional -->
+                            <div class="w-full md:w-1/2 p-6 bg-white/50 dark:bg-white/5 rounded-2xl border border-gray-300 dark:border-gray-700 fade-in fade-in-delay-2">
+                                <h3 class="font-bold text-xl mb-4 text-center">Quy trình truyền thống <span class="text-red-500">(~30s)</span></h3>
+                                <div class="space-y-2">
+                                    <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Ngân hàng:</span><span id="trad-bank" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                    <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Số tài khoản:</span><span id="trad-account" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                    <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Người nhận:</span><span id="trad-name" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                    <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Số tiền:</span><span id="trad-amount" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                    <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Nội dung:</span><span id="trad-note" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                </div>
+                            </div>
+                            <!-- Right Side: Cake AI Way -->
+                            <div class="w-full md:w-1/2 p-6 bg-white/50 dark:bg-white/5 rounded-2xl border-2 border-pink-500/50 dark:border-pink-500 shadow-lg dark:shadow-pink-500/10 fade-in fade-in-delay-3 relative">
+                                <h3 class="font-bold text-xl mb-4 text-center">Lối đi của Cake <span class="text-green-500">(~3s)</span></h3>
+                                <div id="input-container-ai" class="bg-gray-200 dark:bg-gray-800 p-4 rounded-lg text-left text-gray-500 dark:text-gray-400 mb-4 h-24 overflow-hidden relative transition-all duration-700 ease-in-out">
+                                    <span class="absolute top-4 left-4 text-sm md:text-base">C A K E 0904165673 NGUYEN VAN A 2 lít Chuyen tien an trua</span>
+                                </div>
+                                <div id="output-container-ai" class="space-y-2">
+                                     <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Ngân hàng:</span><span id="ai-bank" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                    <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Số tài khoản:</span><span id="ai-account" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                    <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Người nhận:</span><span id="ai-name" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                    <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Số tiền:</span><span id="ai-amount" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                    <div class="flex items-center bg-gray-100 dark:bg-gray-900/50 p-3 rounded-lg h-12"><span class="text-gray-500 dark:text-gray-400 w-28">Nội dung:</span><span id="ai-note" class="font-semibold text-gray-900 dark:text-white"></span></div>
+                                </div>
+                                <canvas id="confetti-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"></canvas>
+                            </div>
+                        </div>
+                        <div class="mt-8">
+                             <button id="replay-btn" class="w-48 py-3 bg-orange-500 text-white rounded-full font-bold text-lg hover:bg-orange-600 transition disabled:opacity-50">Chạy lại So sánh</button>
                         </div>
                     </div>
                 `,
                 onLoad: () => {
-                    const btn = document.getElementById('magic-btn');
-                    const inputContainer = document.getElementById('input-container');
+                    const replayBtn = document.getElementById('replay-btn');
+                    let animationRunning = false;
+                    let timeouts = [];
 
-                    const data = {
-                        bank: 'CAKE by VPBank',
-                        account: '0904165673',
-                        name: 'NGUYEN VAN A',
-                        amount: '200,000 VND',
-                        note: 'Chuyen tien an trua'
-                    };
+                    function typeWriter(element, text, speed) {
+                        return new Promise(resolve => {
+                            let i = 0;
+                            element.textContent = '';
+                            element.classList.add('typing-cursor');
+                            
+                            function type() {
+                                if (i < text.length) {
+                                    element.textContent += text.charAt(i);
+                                    i++;
+                                    timeouts.push(setTimeout(type, speed));
+                                } else {
+                                    element.classList.remove('typing-cursor');
+                                    resolve();
+                                }
+                            }
+                            type();
+                        });
+                    }
 
-                    const outputEls = {
-                        bank: document.getElementById('output-bank'),
-                        account: document.getElementById('output-account'),
-                        name: document.getElementById('output-name'),
-                        amount: document.getElementById('output-amount'),
-                        note: document.getElementById('output-note')
-                    };
+                    async function runTradDemo() {
+                        const data = {
+                            bank: 'CAKE by VPBank',
+                            account: '0904165673',
+                            name: 'NGUYEN VAN A',
+                            amount: '200,000',
+                            note: 'Chuyen tien an trua'
+                        };
+                        await typeWriter(document.getElementById('trad-bank'), data.bank, 50);
+                        await typeWriter(document.getElementById('trad-account'), data.account, 50);
+                        await typeWriter(document.getElementById('trad-name'), data.name, 50);
+                        await typeWriter(document.getElementById('trad-amount'), data.amount, 50);
+                        await typeWriter(document.getElementById('trad-note'), data.note, 50);
+                    }
+
+                    function runAIDemo() {
+                        const inputContainer = document.getElementById('input-container-ai');
+                        const data = {
+                            bank: 'CAKE by VPBank',
+                            account: '0904165673',
+                            name: 'NGUYEN VAN A',
+                            amount: '200,000 VND',
+                            note: 'Chuyen tien an trua'
+                        };
+                        const outputEls = {
+                            bank: document.getElementById('ai-bank'),
+                            account: document.getElementById('ai-account'),
+                            name: document.getElementById('ai-name'),
+                            amount: document.getElementById('ai-amount'),
+                            note: document.getElementById('ai-note')
+                        };
+                        
+                        timeouts.push(setTimeout(() => {
+                            inputContainer.style.transition = 'all 0.5s ease';
+                            inputContainer.classList.add('opacity-40', 'blur-sm');
+
+                            let delay = 300;
+                            for (const key in data) {
+                                timeouts.push(setTimeout(() => {
+                                    outputEls[key].textContent = data[key];
+                                }, delay));
+                                delay += 100;
+                            }
+                            timeouts.push(setTimeout(launchConfetti, delay + 200));
+                        }, 500));
+                    }
                     
                     const canvas = document.getElementById('confetti-canvas');
                     const ctx = canvas.getContext('2d');
                     let confettiParticles = [];
                     
-                    const resizeCanvas = () => {
-                        const parent = canvas.parentElement;
-                        canvas.width = parent.clientWidth;
-                        canvas.height = parent.clientHeight;
-                    };
-                    resizeCanvas();
-                    window.addEventListener('resize', resizeCanvas);
-
-
-                    const colors = ["#ed2a7b", "#f97316", "#ffffff", "#fde047"];
-
                     function launchConfetti() {
-                        const count = 100;
+                        const count = 150;
+                        const colors = ["#ed2a7b", "#f97316", "#ffffff", "#fde047"];
                         for (let i = 0; i < count; i++) {
                             confettiParticles.push({
                                 color: colors[Math.floor(Math.random() * colors.length)],
-                                x: canvas.width / 2,
-                                y: canvas.height * 0.8,
+                                x: canvas.width / 2, y: canvas.height / 2,
                                 size: Math.random() * 5 + 2,
-                                speed: Math.random() * 2 + 1,
-                                angle: Math.random() * Math.PI * 2,
-                                velocity: {
-                                    x: Math.cos(Math.random() * Math.PI * 2) * (Math.random() * 10),
-                                    y: - (Math.random() * 20 + 5)
-                                },
-                                life: 1.0,
-                                gravity: 0.2,
-                                fade: 0.01
+                                velocity: { x: (Math.random() - 0.5) * 15, y: Math.random() * -20 - 5},
+                                life: 1.0, gravity: 0.2, fade: 0.02
                             });
                         }
+                        animateConfetti();
                     }
-
-                    let animationFrameId;
+                    
                     function animateConfetti() {
                          ctx.clearRect(0, 0, canvas.width, canvas.height);
-                         confettiParticles.forEach((p, index) => {
-                             if (p.life <= 0) {
-                                 confettiParticles.splice(index, 1);
-                             } else {
+                         let stillAlive = false;
+                         confettiParticles.forEach((p) => {
+                             if (p.life > 0) {
+                                 stillAlive = true;
                                  p.velocity.y += p.gravity;
                                  p.x += p.velocity.x;
                                  p.y += p.velocity.y;
                                  p.life -= p.fade;
-
-                                 ctx.globalAlpha = p.life;
+                                 ctx.globalAlpha = p.life > 0 ? p.life : 0;
                                  ctx.fillStyle = p.color;
                                  ctx.beginPath();
                                  ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2, false);
                                  ctx.fill();
                              }
                          });
-
-                         if (confettiParticles.length > 0) {
-                            animationFrameId = requestAnimationFrame(animateConfetti);
-                         } else {
-                            ctx.clearRect(0, 0, canvas.width, canvas.height);
-                         }
+                         if (stillAlive) requestAnimationFrame(animateConfetti);
+                         else ctx.clearRect(0, 0, canvas.width, canvas.height);
                     }
-                    
-                    btn.onclick = () => {
-                        if (btn.disabled) return;
-                        btn.disabled = true;
-                        btn.textContent = 'Đang xử lý...';
 
-                        inputContainer.style.height = '0px';
-                        inputContainer.style.paddingTop = '0px';
-                        inputContainer.style.paddingBottom = '0px';
-                        inputContainer.style.marginBottom = '0px';
-                        inputContainer.style.opacity = '0';
-                        inputContainer.style.border = 'none';
-
-                        let delay = 300;
-                        for (const key in data) {
-                            setTimeout(() => {
-                                outputEls[key].textContent = data[key];
-                                outputEls[key].style.opacity = '1';
-                            }, delay);
-                            delay += 200;
+                    function resetDemo() {
+                        timeouts.forEach(clearTimeout);
+                        timeouts = [];
+                        ['trad-bank', 'trad-account', 'trad-name', 'trad-amount', 'trad-note', 'ai-bank', 'ai-account', 'ai-name', 'ai-amount', 'ai-note'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                el.textContent = '';
+                                el.classList.remove('typing-cursor');
+                            }
+                        });
+                        const inputContainerAI = document.getElementById('input-container-ai');
+                        if(inputContainerAI) {
+                           inputContainerAI.style.transition = 'none';
+                           inputContainerAI.classList.remove('opacity-40', 'blur-sm');
                         }
+                         const canvas = document.getElementById('confetti-canvas');
+                         if(canvas){
+                             const ctx = canvas.getContext('2d');
+                             ctx.clearRect(0, 0, canvas.width, canvas.height);
+                         }
+                         confettiParticles = [];
+                    }
 
-                        setTimeout(() => {
-                            btn.textContent = 'Hoàn Tất!';
-                            btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
-                            btn.classList.add('bg-green-500');
-                            if(animationFrameId) cancelAnimationFrame(animationFrameId);
-                            confettiParticles = [];
-                            launchConfetti();
-                            animateConfetti();
-                        }, delay + 200);
+                    function runAllDemos() {
+                        if (animationRunning) return;
+                        animationRunning = true;
+                        replayBtn.disabled = true;
+
+                        resetDemo();
+                        
+                        const tradPromise = runTradDemo();
+                        runAIDemo();
+
+                        Promise.all([tradPromise]).then(() => {
+                             timeouts.push(setTimeout(() => {
+                                animationRunning = false;
+                                replayBtn.disabled = false;
+                            }, 2000));
+                        });
+                    }
+
+                    replayBtn.onclick = runAllDemos;
+                    
+                    const resizeCanvas = () => {
+                        if(!canvas) return;
+                        const parent = canvas.parentElement;
+                        canvas.width = parent.clientWidth;
+                        canvas.height = parent.clientHeight;
                     };
+                    resizeCanvas();
+                    window.addEventListener('resize', resizeCanvas);
+                    
+                    timeouts.push(setTimeout(runAllDemos, 2000));
                 }
             },
              // Slide 7: Scaling Intelligence
@@ -679,6 +765,81 @@
         const appContainer = document.getElementById('app-container');
         const essayMode = document.getElementById('essay-mode');
         const togglePresentationBtn = document.getElementById('toggle-presentation-mode');
+        const authOverlay = document.getElementById('auth-overlay');
+        const authForm = document.getElementById('auth-form');
+        const secretKeyInput = document.getElementById('secret-key-input');
+        const errorMessage = document.getElementById('error-message');
+        
+        // --- AUTH LOGIC ---
+        function checkPassword(input) {
+            return input.toLowerCase() === "cakeai";
+        }
+
+        function unlockPresentation() {
+            sessionStorage.setItem('isAuthenticated', 'true');
+            authOverlay.style.opacity = '0';
+            authOverlay.style.backdropFilter = 'blur(0px)';
+            setTimeout(() => {
+                authOverlay.classList.add('hidden');
+                appContainer.style.opacity = '1';
+                appContainer.style.pointerEvents = 'auto';
+                initializePresentation();
+            }, 500);
+        }
+        
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (checkPassword(secretKeyInput.value)) {
+                unlockPresentation();
+            } else {
+                errorMessage.textContent = 'Mật khẩu không đúng. Vui lòng thử lại.';
+                authForm.classList.add('shake');
+                secretKeyInput.value = '';
+                setTimeout(() => {
+                    authForm.classList.remove('shake')
+                    errorMessage.textContent = '';
+                }, 1000);
+            }
+        });
+
+        if (sessionStorage.getItem('isAuthenticated') === 'true') {
+            unlockPresentation();
+        } else {
+             secretKeyInput.focus();
+        }
+        
+        // --- PRESENTATION LOGIC ---
+        function initializePresentation() {
+            setupProgressBar();
+            renderSlide(currentSlide);
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentSlide < slides.length - 1) {
+                    goToSlide(currentSlide + 1);
+                } else {
+                    alert('Cảm ơn bạn đã theo dõi!');
+                    goToSlide(0);
+                }
+            });
+
+            prevBtn.addEventListener('click', () => {
+                goToSlide(currentSlide - 1);
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if (!essayMode.classList.contains('hidden') || !authOverlay.classList.contains('hidden')) {
+                    return;
+                }
+                if (e.key === 'ArrowRight') nextBtn.click();
+                else if (e.key === 'ArrowLeft') prevBtn.click();
+            });
+
+            togglePresentationBtn.addEventListener('click', () => {
+                essayMode.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+            });
+            document.getElementById('theme-toggle-essay').addEventListener('click', toggleTheme);
+        }
 
         function toggleTheme() {
             if (localStorage.theme === 'dark') {
@@ -727,26 +888,22 @@
         }
 
         function renderSlide(index) {
-            // Remove old slide
             const oldSlideEl = keynoteContent.querySelector('.slide');
             if (oldSlideEl) {
                 oldSlideEl.classList.add('slide-hidden');
                 setTimeout(() => oldSlideEl.remove(), 700);
             }
 
-            // Create and append new slide
             const slideData = slides[index];
             const slideEl = document.createElement('div');
             slideEl.className = 'slide w-full h-full flex items-center justify-center slide-hidden';
             slideEl.innerHTML = slideData.render();
             keynoteContent.appendChild(slideEl);
             
-            // Trigger animation
             setTimeout(() => {
                 slideEl.classList.remove('slide-hidden');
             }, 50);
-
-            // Add event listeners for new buttons
+            
             const toggleEssayBtn = document.getElementById('toggle-essay-mode');
             if (toggleEssayBtn) {
                 toggleEssayBtn.onclick = () => {
@@ -757,12 +914,10 @@
             const themeToggleMain = document.getElementById('theme-toggle-main');
             if(themeToggleMain) themeToggleMain.onclick = toggleTheme;
 
-            // Run onLoad function if it exists
             if (slideData.onLoad) {
                 slideData.onLoad();
             }
 
-            // Update UI
             updateUI();
         }
         
@@ -783,46 +938,8 @@
                 renderSlide(currentSlide);
             }
         }
-
-        nextBtn.addEventListener('click', () => {
-            if (currentSlide < slides.length - 1) {
-                goToSlide(currentSlide + 1);
-            } else {
-                // Optional: Restart or close
-                alert('Cảm ơn bạn đã theo dõi!');
-                goToSlide(0);
-            }
-        });
-
-        prevBtn.addEventListener('click', () => {
-            goToSlide(currentSlide - 1);
-        });
         
-        // Add keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            // Do not navigate if in essay mode
-            if (!essayMode.classList.contains('hidden')) {
-                return;
-            }
-
-            if (e.key === 'ArrowRight') {
-                nextBtn.click();
-            } else if (e.key === 'ArrowLeft') {
-                prevBtn.click();
-            }
-        });
-
-        document.getElementById('toggle-presentation-mode').addEventListener('click', () => {
-            essayMode.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-        });
-        document.getElementById('theme-toggle-essay').addEventListener('click', toggleTheme);
-
         window.addEventListener('resize', updateProgressBar);
-
-        // Initial load
-        setupProgressBar();
-        renderSlide(currentSlide);
     </script>
 
 </body>
