@@ -1,374 +1,628 @@
 <!DOCTYPE html>
-<html lang="vi" class="scroll-smooth">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keynote Tương Tác: Lối Đi Thực Tế Cho AI</title>
+    <title>Keynote Tương Tác: Cake AI Way</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Chosen Palette: Calm Harmony Neutrals -->
-    <!-- Application Structure Plan: Ứng dụng được cấu trúc theo dạng kể chuyện tuần tự (scrollytelling) với 4 phần chính, mô phỏng theo dòng chảy của bài phát biểu gốc: 1. Giới thiệu Nghịch lý AI để tạo sự tò mò. 2. Trình bày Xu hướng đảo chiều và Vấn đề (90% thất bại) để tạo kịch tính. 3. Đưa ra Giải pháp qua case study của Cake với các số liệu tương tác. 4. Chốt lại bằng Tầm nhìn tương lai. Cấu trúc này dẫn dắt người dùng đi từ vấn đề, qua phân tích, đến giải pháp và tầm nhìn một cách logic, giúp tối ưu hóa khả năng thấu hiểu và ghi nhớ thông điệp chính. -->
-    <!-- Visualization & Content Choices: 1. Nghịch lý AI -> Mục tiêu: Thông báo -> Thẻ thông tin so sánh (HTML/CSS) -> Tương tác: Hover -> Nhấn mạnh sự đối lập. 2. Tỷ lệ thất bại 90% -> Mục tiêu: So sánh -> Biểu đồ Donut (Chart.js) -> Tương tác: Hoạt ảnh khi cuộn -> Gây ấn tượng thị giác mạnh về con số. 3. Case study Cake -> Mục tiêu: Minh họa, So sánh -> Biểu đồ cột (Chart.js) cho nhân sự và nợ xấu -> Tương tác: Hoạt ảnh, số liệu nổi bật -> Trực quan hóa kết quả kinh doanh cụ thể. 4. Tầm nhìn 2025 -> Mục tiêu: Dự báo -> Biểu đồ cột (Chart.js) -> Tương tác: Hoạt ảnh -> Thể hiện sự tăng trưởng và tham vọng. Các lựa chọn này đều nhằm mục đích biến dữ liệu tĩnh thành các câu chuyện trực quan, dễ hiểu. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #F8F7F4;
-            color: #3D405B;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px;
-            max-height: 400px;
+        .slide {
+            transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
         }
-        @media (min-width: 768px) {
-            .chart-container {
-                height: 350px;
-            }
-        }
-        .fade-in {
+        .slide-hidden {
             opacity: 0;
             transform: translateY(20px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            pointer-events: none;
+            position: absolute;
         }
-        .fade-in.visible {
-            opacity: 1;
-            transform: translateY(0);
+        .fade-in { animation: fadeIn 1s ease-in-out forwards; }
+        .fade-in-delay-1 { animation-delay: 0.5s; }
+        .fade-in-delay-2 { animation-delay: 1s; }
+        .fade-in-delay-3 { animation-delay: 1.5s; }
+        .fade-in-delay-4 { animation-delay: 2s; }
+        .fade-in-delay-5 { animation-delay: 2.5s; }
+        .fade-in-delay-6 { animation-delay: 3.5s; }
+
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+
+        .door {
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+        .door:hover {
+            transform: perspective(1000px) rotateY(-15deg) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .door.open:hover {
+             transform: perspective(1000px) rotateY(0deg) scale(1.05);
+        }
+
+        .progress-step.active div:first-child { background-color: #f97316; transform: scale(1.25); }
+        .progress-step.completed div:first-child { background-color: #ec4899; }
+        .progress-line {
+            height: 2px;
+            background-color: #e5e7eb;
+            position: absolute;
+            top: 50%; left: 0;
+            transform: translateY(-50%);
+            z-index: -1;
+        }
+
+        /* Yin-Yang & Cycle Styles */
+        .cycle-element { opacity: 0; transition: opacity 0.8s ease; }
+        .yin-yang-group { transform-origin: center; animation: spin 20s linear infinite; }
+        .yin-yang-label { font-size: 14px; font-weight: bold; fill: #fff; text-anchor: middle; }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Two Tales Styles */
+        .tale-panel { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .bar-chart-bar { transform: scaleY(0); transform-origin: bottom; transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); }
+        .project-icon { opacity: 0.3; transition: opacity 0.5s ease, transform 0.5s ease; }
+        .project-icon.failed { opacity: 0.1; background-color: #ef4444; }
+        .project-icon.success { opacity: 1; background-color: #22c55e; }
+
     </style>
 </head>
-<body class="antialiased">
+<body class="bg-black text-white overflow-x-hidden">
 
-    <header class="bg-[#3D405B] text-white sticky top-0 z-50 shadow-md">
-        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="text-xl font-bold">Lối Đi Thực Tế Cho AI</div>
-                <div class="hidden md:flex space-x-8">
-                    <a href="#paradox" class="hover:text-[#81B29A] transition-colors">Nghịch Lý</a>
-                    <a href="#reversal" class="hover:text-[#81B29A] transition-colors">Đảo Chiều</a>
-                    <a href="#solution" class="hover:text-[#81B29A] transition-colors">Giải Pháp</a>
-                    <a href="#vision" class="hover:text-[#81B29A] transition-colors">Tầm Nhìn</a>
-                </div>
-            </div>
-        </nav>
-    </header>
-
-    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-
-        <!-- Section 1: The Paradox -->
-        <section id="paradox" class="text-center min-h-screen flex flex-col justify-center">
-            <div class="max-w-4xl mx-auto">
-                <h1 class="text-4xl md:text-6xl font-bold mb-4 fade-in">AI là gì?</h1>
-                <p class="text-lg md:text-xl text-gray-600 mb-12 fade-in" style="transition-delay: 100ms;">
-                    Một câu hỏi với câu trả lời đầy mâu thuẫn. AI vừa là một cuộc cách mạng vĩ đại, vừa là một tiện ích bình dân. Nó là tất cả mọi thứ... và cũng không là gì cả.
-                </p>
-                <div class="grid md:grid-cols-2 gap-8 text-left">
-                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl hover:scale-105 transition-all duration-300 fade-in" style="transition-delay: 200ms;">
-                        <h3 class="text-3xl font-bold text-[#E07A5F] mb-4">Siêu Đắt</h3>
-                        <p class="text-gray-700 mb-2">Nhu cầu tính toán được dự báo tăng 100 lần.</p>
-                        <p class="text-gray-700">Chi phí huấn luyện các mô hình lớn tốn đến hàng triệu đô la.</p>
-                        <p class="text-sm text-gray-500 mt-4 italic">"Ngày càng 'hại điện'"</p>
-                    </div>
-                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 hover:shadow-2xl hover:scale-105 transition-all duration-300 fade-in" style="transition-delay: 300ms;">
-                        <h3 class="text-3xl font-bold text-[#81B29A] mb-4">Siêu Rẻ</h3>
-                        <p class="text-gray-700">Giá thành của AI đang rẻ đến mức vô lý, trở thành tiện ích cho mọi người.</p>
-                        <p class="text-gray-700 mt-2">Ví dụ: Tóm tắt một quyển sách 500 trang hiện <span class="font-bold">còn rẻ hơn một ly trà đá.</span></p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 2: The Reversal & The Harsh Reality -->
-        <section id="reversal" class="py-20 min-h-screen flex flex-col justify-center">
-            <div class="text-center max-w-4xl mx-auto">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4 fade-in">Sự Đảo Chiều Lớn Nhất</h2>
-                <p class="text-lg md:text-xl text-gray-600 mb-12 fade-in" style="transition-delay: 100ms;">
-                    Lần đầu tiên trong lịch sử, công nghệ tìm đến chúng ta. Chúng ta đang chứng kiến cái chết của Giao diện Người dùng (UI) và sự trỗi dậy của Trợ lý Thông minh (IA). Nhưng con đường này không hề bằng phẳng.
-                </p>
-            </div>
-            <div class="grid lg:grid-cols-2 gap-16 items-center max-w-6xl mx-auto">
-                <div class="text-center lg:text-left fade-in" style="transition-delay: 200ms;">
-                    <h3 class="text-3xl font-bold mb-6">Thực Tế Phũ Phàng</h3>
-                    <p class="text-xl text-gray-700 leading-relaxed mb-4">
-                        Báo cáo của <span class="font-bold text-[#3D405B]">McKinsey</span> chỉ ra một sự thật đáng báo động:
-                    </p>
-                    <p class="text-6xl font-bold text-[#E07A5F] my-6">9/10</p>
-                    <p class="text-xl text-gray-700 leading-relaxed">
-                        doanh nghiệp ứng dụng AI... <span class="font-bold">thất bại</span> trong việc tạo ra giá trị thực sự.
-                    </p>
-                    <p class="text-md text-gray-500 mt-6 italic">
-                        Lý do? Họ cố gắng nhét một công nghệ của tương lai vào một quy trình của quá khứ.
-                    </p>
-                </div>
-                <div class="fade-in" style="transition-delay: 300ms;">
-                    <div class="chart-container">
-                        <canvas id="failureRateChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 3: The Cake Solution -->
-        <section id="solution" class="py-20 bg-white rounded-2xl shadow-inner">
-            <div class="text-center max-w-4xl mx-auto">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4 fade-in">The Cake AI Way: Thực Tế & Hữu Ích</h2>
-                <p class="text-lg md:text-xl text-gray-600 mb-12 fade-in" style="transition-delay: 100ms;">
-                    Tại Cake, chúng tôi chọn một con đường khác. Không bắt đầu bằng AI, mà bắt đầu bằng giá trị cốt lõi. Chúng tôi không làm điều phức tạp, chúng tôi chỉ làm điều thực sự hữu ích.
-                </p>
-            </div>
-
-            <div class="max-w-7xl mx-auto mt-16">
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-center">
-                    <div class="p-6 border border-gray-200 rounded-lg fade-in" style="transition-delay: 200ms;">
-                        <div class="text-4xl mb-4">🛡️</div>
-                        <h4 class="text-2xl font-bold mb-2">An Toàn</h4>
-                        <p>Biến tác vụ chuyển tiền 30 giây đầy rủi ro thành một cú chạm <strong>3 giây</strong> an toàn bằng tính năng cắt-dán thông minh.</p>
-                    </div>
-                    <div class="p-6 border border-gray-200 rounded-lg fade-in" style="transition-delay: 300ms;">
-                        <div class="text-4xl mb-4">🚀</div>
-                        <h4 class="text-2xl font-bold mb-2">Tiện Lợi</h4>
-                        <p>Gần <strong>100 'nhân viên số'</strong>—trên tổng số 300 nhân sự—thực hiện hàng chục ngàn cuộc gọi mỗi ngày.</p>
-                    </div>
-                    <div class="p-6 border border-gray-200 rounded-lg fade-in" style="transition-delay: 400ms;">
-                        <div class="text-4xl mb-4">💡</div>
-                        <h4 class="text-2xl font-bold mb-2">Thông Minh</h4>
-                        <p>Khi công nghệ hoạt động hiệu quả, chúng tôi nhân rộng nó lên để tạo ra tác động lớn hơn.</p>
-                    </div>
-                </div>
-                
-                <div class="mt-20 grid lg:grid-cols-5 gap-12 items-center">
-                     <div class="lg:col-span-2 text-center lg:text-left fade-in" style="transition-delay: 200ms;">
-                        <h3 class="text-3xl font-bold mb-4">Kết Quả Thực Tế</h3>
-                        <p class="text-xl text-gray-600">Những cải tiến tưởng chừng nhỏ bé đã mang lại một kết quả kinh doanh vượt trội.</p>
-                        <div class="my-6">
-                            <span class="block text-lg text-gray-500">Tỷ lệ nợ xấu trong kỳ đầu</span>
-                            <span class="block text-8xl font-bold text-[#81B29A] tracking-tighter">-30%</span>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-3 fade-in" style="transition-delay: 300ms;">
-                         <div class="chart-container">
-                            <canvas id="debtReductionChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+    <div id="app-container" class="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-8 transition-opacity duration-500">
         
-        <!-- Section 4: The Vision -->
-        <section id="vision" class="py-20 min-h-screen flex flex-col justify-center">
-            <div class="text-center max-w-4xl mx-auto">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4 fade-in">Tầm Nhìn 2025</h2>
-                <p class="text-lg md:text-xl text-gray-600 mb-12 fade-in" style="transition-delay: 100ms;">
-                    Tham vọng của chúng tôi là vào năm 2025, đội quân trợ lý AI sẽ đông hơn cả nhân sự con người tại Cake. Bởi vì khi công nghệ thực sự phục vụ con người, không có giới hạn nào cho sự phát triển.
-                </p>
-            </div>
-            <div class="max-w-4xl mx-auto w-full fade-in" style="transition-delay: 200ms;">
-                <div class="chart-container">
-                    <canvas id="vision2025Chart"></canvas>
-                </div>
-            </div>
-             <div class="text-center max-w-4xl mx-auto mt-16 fade-in" style="transition-delay: 300ms;">
-                <p class="text-lg md:text-xl text-gray-700">
-                    Và để biến những ý tưởng này thành hành động cụ thể, tôi xin trân trọng giới thiệu các chuyên gia sẽ chia sẻ những ứng dụng thực tiễn cho VNPost.
-                </p>
-            </div>
-        </section>
+        <main id="keynote-content" class="w-full max-w-5xl flex-grow flex items-center justify-center">
+            <!-- Slides will be injected here -->
+        </main>
 
-    </main>
-
-    <footer class="bg-[#3D405B] text-white">
-        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm">
-            <p>&copy; 2025 | @lampt</p>
-        </div>
-    </footer>
+        <footer class="w-full max-w-5xl mt-8">
+            <div id="progress-bar" class="relative w-full flex justify-between items-center mb-4">
+                <div id="progress-line-active" class="progress-line bg-orange-500 transition-all duration-500"></div>
+            </div>
+            <div class="flex justify-between items-center">
+                <button id="prev-btn" class="px-6 py-2 rounded-full text-white bg-white/10 hover:bg-white/20 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Trước
+                </button>
+                <div id="slide-counter" class="text-sm text-gray-400"></div>
+                <button id="next-btn" class="px-6 py-2 rounded-full text-black bg-white hover:bg-gray-200 transition duration-300">
+                    Tiếp
+                </button>
+            </div>
+        </footer>
+    </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        const slides = [
+            // Slide 0: Title Screen
+            {
+                title: "Mở đầu",
+                render: () => `
+                    <div class="text-center w-full">
+                        <img src="https://cake.vn/_next/image?url=%2F_next%2Fstatic%2Fmedia%2FCake-logo-01.e915daf7.webp&w=256&q=75" alt="Cake by VPBank Logo" class="w-48 mx-auto mb-8 fade-in" onerror="this.onerror=null;this.src='https://placehold.co/200x80/ed2a7b/ffffff?text=CAKE';">
+                        <h1 class="text-4xl md:text-5xl font-black mb-4 fade-in fade-in-delay-1" style="color: #ed2a7b;">The Cake Agentic AI way</h1>
+                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-2">Thực tế xây dựng Ngân Hàng AI đầu tiên ở Việt Nam</p>
+                        <p class="text-sm text-gray-500 fade-in fade-in-delay-3">Nhấn "Tiếp" để bắt đầu</p>
+                    </div>
+                `
+            },
+            // Slide 1: The Paradox
+            {
+                title: "Nghịch lý AI",
+                render: () => `
+                    <div class="text-center w-full">
+                        <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Nghịch lý AI</h1>
+                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Một công nghệ. Hai góc nhìn đối lập.</p>
+                        <div class="flex flex-col md:flex-row justify-center items-start gap-8 md:gap-16">
+                            
+                            <div class="text-center p-6 rounded-2xl w-64 flex flex-col justify-start items-center fade-in fade-in-delay-2">
+                                <svg class="w-20 h-20 mb-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <h3 class="text-2xl font-bold mb-4">Cuộc Cách Mạng</h3>
+                                <div class="h-24">
+                                    <p class="text-xl italic text-orange-400 fade-in fade-in-delay-3">"AI là điện năng mới."</p>
+                                    <p class="text-gray-500 mt-2 fade-in fade-in-delay-4">- Andrew Ng</p>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center p-6 rounded-2xl w-64 flex flex-col justify-start items-center fade-in fade-in-delay-2">
+                                <svg class="w-20 h-20 mb-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                                <h3 class="text-2xl font-bold mb-4">Tiện Ích</h3>
+                                <div class="h-24">
+                                    <p class="text-xl italic text-sky-400 fade-in fade-in-delay-3">"Điện năng mới là AI."</p>
+                                    <p class="text-gray-500 mt-2 fade-in fade-in-delay-4">- Stanford Colleagues</p>
+                                </div>
+                            </div>
 
-            // Fade-in animation on scroll
-            const faders = document.querySelectorAll('.fade-in');
-            const appearOptions = {
-                threshold: 0.2,
-                rootMargin: "0px 0px -50px 0px"
-            };
-            const appearOnScroll = new IntersectionObserver(function(entries, appearOnScroll) {
-                entries.forEach(entry => {
-                    if (!entry.isIntersecting) {
-                        return;
-                    } else {
-                        entry.target.classList.add('visible');
-                        appearOnScroll.unobserve(entry.target);
-                    }
-                });
-            }, appearOptions);
+                        </div>
+                    </div>
+                `
+            },
+            // Slide 2: The Scale
+            {
+                title: "Quy Mô",
+                render: () => `
+                    <div class="text-center w-full">
+                        <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Quy Mô Quyền Năng</h1>
+                        <p class="text-lg md:text-xl text-gray-400 mb-16 fade-in fade-in-delay-1">Một sự cân bằng giữa sức mạnh và chi phí.</p>
+                        <div class="w-full max-w-2xl mx-auto fade-in fade-in-delay-2">
+                             <div class="flex justify-between items-end mb-2 text-gray-300">
+                                <div class="text-left">
+                                    <div class="text-2xl md:text-4xl font-bold text-red-500">100x</div>
+                                    <div class="text-sm">Nhu cầu tính toán</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl md:text-4xl font-bold text-green-500">~99%</div>
+                                    <div class="text-sm">Giảm giá mỗi 2 năm</div>
+                                </div>
+                            </div>
+                            <div class="w-full h-4 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full flex items-center">
+                               <div class="w-8 h-8 rounded-full bg-white shadow-lg ring-2 ring-black"></div>
+                            </div>
+                        </div>
+                        <p class="mt-8 text-lg text-white fade-in fade-in-delay-3">Công nghệ vừa mạnh mẽ vô hạn, vừa rẻ đến không ngờ.</p>
+                    </div>
+                `
+            },
+            // Slide 3: The Reversal
+            {
+                title: "Sự Đảo Chiều",
+                render: () => `
+                    <div class="text-center w-full">
+                        <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Sự Đảo Chiều</h1>
+                        <p class="text-lg md:text-xl text-gray-400 mb-8 fade-in fade-in-delay-1">Từ Kinh tế Chú ý sang Kinh tế Chủ đích.</p>
+                        
+                        <div id="reversal-cycle" class="relative w-full h-80 flex justify-center items-center">
+                            <!-- Partners -->
+                             <div id="cycle-ai-partner" class="cycle-element flex-col items-center absolute top-1/2 -translate-y-1/2 left-8 md:left-24">
+                                <svg class="w-20 h-20 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                <span class="mt-2 font-bold text-lg">AI</span>
+                            </div>
+                            <div id="cycle-human-partner" class="cycle-element flex-col items-center absolute top-1/2 -translate-y-1/2 right-8 md:right-24">
+                                <svg class="w-20 h-20 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                <span class="mt-2 font-bold text-lg">Người Dùng</span>
+                            </div>
+                            
+                            <!-- Yin Yang SVG -->
+                            <svg id="yin-yang" class="w-48 h-48 cycle-element" viewBox="0 0 200 200">
+                                <g class="yin-yang-group">
+                                    <path d="M100,0 A100,100 0 0,0 100,200 Z" fill="#ec4899" />
+                                    <path d="M100,0 A100,100 0 0,1 100,200 Z" fill="#38bdf8" />
+                                    <path d="M100,0 A50,50 0 0,1 100,100" fill="#38bdf8" />
+                                    <path d="M100,100 A50,50 0 0,0 100,200" fill="#ec4899" />
+                                    <circle cx="100" cy="50" r="15" fill="#ec4899" />
+                                    <circle cx="100" cy="150" r="15" fill="#38bdf8" />
+                                </g>
+                                <text x="100" y="55" class="yin-yang-label opacity-0" id="label-attention">Sự Chú ý</text>
+                                <text x="100" y="155" class="yin-yang-label opacity-0" id="label-intention">Chủ đích</text>
+                            </svg>
+                        </div>
 
-            faders.forEach(fader => {
-                appearOnScroll.observe(fader);
-            });
+                        <p class="text-xl text-orange-500 font-bold mt-8 cycle-element" id="punchline">Trợ lý Thông minh (IA) là giao diện mới, hành động theo chủ đích của bạn.</p>
+                    </div>
+                `,
+                onLoad: () => {
+                    const show = (el, delay) => setTimeout(() => el.style.opacity = '1', delay);
+                    
+                    show(document.getElementById('cycle-ai-partner'), 500);
+                    show(document.getElementById('cycle-human-partner'), 500);
+                    show(document.getElementById('yin-yang'), 1000);
+                    show(document.getElementById('label-attention'), 2000);
+                    show(document.getElementById('label-intention'), 2000);
+                    show(document.getElementById('punchline'), 2800);
+                }
+            },
+            // Slide 4: The Hard Truth - UPDATED
+            {
+                title: "Thực Tế Phũ Phàng",
+                render: () => `
+                    <div class="text-center w-full">
+                        <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Thực Tế Phũ Phàng</h1>
+                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Câu chuyện về hai số phận của AI trong doanh nghiệp.</p>
+                        
+                        <div class="flex flex-col md:flex-row gap-8 justify-center items-start">
+                            <!-- Tale 1: The Hype -->
+                            <div id="tale-hype" class="tale-panel w-full md:w-5/12 p-6 border border-sky-500/30 bg-sky-900/20 rounded-2xl">
+                                <h2 class="text-2xl font-bold text-sky-400 mb-4">Làn Sóng Hào Hứng</h2>
+                                <p class="text-gray-300 mb-6 h-12">70% Fortune 500 trang bị Copilot & Trợ lý AI để tăng năng suất.</p>
+                                <div class="h-40 flex justify-around items-end gap-2">
+                                    <div class="w-1/4 h-full bg-sky-800 rounded-t-lg bar-chart-bar" style="height: 60%;"></div>
+                                    <div class="w-1/4 h-full bg-sky-700 rounded-t-lg bar-chart-bar" style="height: 80%;"></div>
+                                    <div class="w-1/4 h-full bg-sky-600 rounded-t-lg bar-chart-bar" style="height: 70%;"></div>
+                                    <div class="w-1/4 h-full bg-sky-500 rounded-t-lg bar-chart-bar" style="height: 90%;"></div>
+                                </div>
+                            </div>
 
-            // Chart Initialization
-            const initChart = (chartId, createChart) => {
-                const canvas = document.getElementById(chartId);
-                if (!canvas) return;
+                            <!-- Tale 2: The Trap -->
+                            <div id="tale-trap" class="tale-panel w-full md:w-5/12 p-6 border border-red-500/30 bg-red-900/20 rounded-2xl">
+                                <h2 class="text-2xl font-bold text-red-400 mb-4">Cái Bẫy Thử Nghiệm</h2>
+                                <p class="text-gray-300 mb-6 h-12">9 trên 10 doanh nghiệp không thể biến thử nghiệm thành lợi nhuận.</p>
+                                <div class="h-40 grid grid-cols-5 grid-rows-2 gap-3">
+                                    ${Array(10).fill(0).map((_, i) => `
+                                        <div class="project-icon rounded-md bg-gray-700" style="transition-delay: ${i * 50}ms"></div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
 
-                const observer = new IntersectionObserver((entries) => {
-                    if (entries[0].isIntersecting) {
-                        createChart();
-                        observer.disconnect();
-                    }
-                }, { threshold: 0.5 });
-                
-                observer.observe(canvas);
-            };
+                        <p id="paradox-reason" class="text-xl text-center mt-12 text-orange-400 font-semibold opacity-0">
+                            Vấn đề? Áp dụng công nghệ của tương lai vào quy trình của quá khứ.
+                        </p>
+                    </div>
+                `,
+                onLoad: () => {
+                    const showPanel = (el, delay) => setTimeout(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, delay);
 
-            // Chart 1: Failure Rate
-            const createFailureRateChart = () => {
-                new Chart(document.getElementById('failureRateChart').getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Thất bại', 'Thành công'],
-                        datasets: [{
-                            data: [90, 10],
-                            backgroundColor: ['#E07A5F', '#81B29A'],
-                            borderColor: ['#F8F7F4'],
-                            borderWidth: 4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '70%',
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: { size: 14, family: 'Inter' },
-                                    color: '#3D405B'
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${context.raw}%`;
-                                    }
-                                }
-                            }
+                    showPanel(document.getElementById('tale-hype'), 500);
+                    showPanel(document.getElementById('tale-trap'), 700);
+                    
+                    setTimeout(() => {
+                        document.querySelectorAll('#tale-hype .bar-chart-bar').forEach(bar => {
+                            bar.style.transform = 'scaleY(1)';
+                        });
+                    }, 1000);
+
+                    setTimeout(() => {
+                        document.querySelectorAll('#tale-trap .project-icon').forEach((icon, i) => {
+                            icon.classList.add(i === 6 ? 'success' : 'failed');
+                        });
+                    }, 1200);
+
+                    setTimeout(() => {
+                        document.getElementById('paradox-reason').style.opacity = '1';
+                    }, 2500);
+                }
+            },
+            // Slide 5: The Cake Way
+            {
+                title: "Lối Đi Của Cake",
+                render: () => `
+                    <div class="text-center w-full">
+                        <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Lối Đi Của Cake</h1>
+                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Bắt đầu từ giá trị cốt lõi. Không có ngoại lệ.</p>
+                        <div class="flex flex-col md:flex-row justify-center items-center gap-6 fade-in fade-in-delay-2">
+                            ${[
+                                { text: 'An Toàn', emoji: '🛡️' },
+                                { text: 'Tiện Lợi', emoji: '🪄' },
+                                { text: 'Thông Minh', emoji: '🧠' }
+                            ].map((val) => `
+                                <div class="group w-full md:w-1/3 p-8 border border-white/20 rounded-2xl h-56 flex flex-col items-center justify-center text-3xl font-bold hover:bg-white/10 hover:border-white/40 transition duration-300 cursor-pointer" onclick="alert('${val.text}: Nguyên tắc nền tảng cho mọi sản phẩm.')">
+                                    <span class="text-6xl mb-4">${val.emoji}</span>
+                                    <span>${val.text}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `
+            },
+            // Slide 6: The Magic Trick
+            {
+                title: "Phép Màu Thực Tế",
+                render: () => `
+                    <div class="text-center w-full relative">
+                        <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Từ 30s xuống 3s</h1>
+                        <p class="text-lg md:text-xl text-gray-400 mb-8 fade-in fade-in-delay-1">Công nghệ tốt nhất là công nghệ vô hình.</p>
+                        <div class="max-w-md mx-auto p-6 bg-white/5 rounded-2xl border border-white/10 fade-in fade-in-delay-2 relative">
+                             <div id="input-container" class="bg-gray-800 p-4 rounded-lg text-left text-gray-400 mb-4 h-24 overflow-hidden relative transition-all duration-700 ease-in-out">
+                                <span class="absolute top-4 left-4 text-sm md:text-base">C A K E 0904165673 NGUYEN VAN A 2 lít Chuyen tien an trua</span>
+                             </div>
+                             <div id="output-container" class="space-y-2 mb-4">
+                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Ngân hàng:</span><span id="output-bank" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
+                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Số tài khoản:</span><span id="output-account" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
+                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Người nhận:</span><span id="output-name" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
+                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Số tiền:</span><span id="output-amount" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
+                                <div class="flex items-center bg-gray-900/50 p-3 rounded-lg"><span class="text-gray-400 w-28">Nội dung:</span><span id="output-note" class="font-semibold text-white opacity-0 transition-opacity duration-300"></span></div>
+                             </div>
+                             <button id="magic-btn" class="w-full py-3 bg-orange-500 text-black rounded-full font-bold text-lg hover:bg-orange-400 transition">Thực Hiện Phép Màu</button>
+                             <canvas id="confetti-canvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-20"></canvas>
+                        </div>
+                    </div>
+                `,
+                onLoad: () => {
+                    const btn = document.getElementById('magic-btn');
+                    const inputContainer = document.getElementById('input-container');
+
+                    const data = {
+                        bank: 'CAKE by VPBank',
+                        account: '0904165673',
+                        name: 'NGUYEN VAN A',
+                        amount: '200,000 VND',
+                        note: 'Chuyen tien an trua'
+                    };
+
+                    const outputEls = {
+                        bank: document.getElementById('output-bank'),
+                        account: document.getElementById('output-account'),
+                        name: document.getElementById('output-name'),
+                        amount: document.getElementById('output-amount'),
+                        note: document.getElementById('output-note')
+                    };
+                    
+                    const canvas = document.getElementById('confetti-canvas');
+                    const ctx = canvas.getContext('2d');
+                    let confettiParticles = [];
+                    
+                    const resizeCanvas = () => {
+                        const parent = canvas.parentElement;
+                        canvas.width = parent.clientWidth;
+                        canvas.height = parent.clientHeight;
+                    };
+                    resizeCanvas();
+                    window.addEventListener('resize', resizeCanvas);
+
+
+                    const colors = ["#ed2a7b", "#f97316", "#ffffff", "#fde047"];
+
+                    function launchConfetti() {
+                        const count = 100;
+                        for (let i = 0; i < count; i++) {
+                            confettiParticles.push({
+                                color: colors[Math.floor(Math.random() * colors.length)],
+                                x: canvas.width / 2,
+                                y: canvas.height * 0.8,
+                                size: Math.random() * 5 + 2,
+                                speed: Math.random() * 2 + 1,
+                                angle: Math.random() * Math.PI * 2,
+                                velocity: {
+                                    x: Math.cos(Math.random() * Math.PI * 2) * (Math.random() * 10),
+                                    y: - (Math.random() * 20 + 5)
+                                },
+                                life: 1.0,
+                                gravity: 0.2,
+                                fade: 0.01
+                            });
                         }
                     }
-                });
-            };
-            initChart('failureRateChart', createFailureRateChart);
 
-            // Chart 2: Debt Reduction
-            const createDebtReductionChart = () => {
-                new Chart(document.getElementById('debtReductionChart').getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: ['Trước khi áp dụng AI', 'Sau khi áp dụng AI'],
-                        datasets: [{
-                            label: 'Tỷ lệ nợ xấu (so với kỳ trước)',
-                            data: [100, 70],
-                            backgroundColor: ['#F2C4CE', '#81B29A'],
-                            borderRadius: 6,
-                            barPercentage: 0.6
-                        }]
-                    },
-                    options: {
-                         responsive: true,
-                         maintainAspectRatio: false,
-                         indexAxis: 'y',
-                         scales: {
-                            x: {
-                                beginAtZero: true,
-                                grid: { display: false },
-                                ticks: {
-                                    callback: (value) => value + '%',
-                                    font: { size: 12, family: 'Inter' },
-                                    color: '#3D405B'
-                                }
-                            },
-                            y: {
-                                grid: { display: false },
-                                ticks: {
-                                    font: { size: 14, family: 'Inter' },
-                                    color: '#3D405B'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: (context) => `Tỷ lệ: ${context.raw}%`
-                                }
-                            }
-                        }
-                    }
-                });
-            };
-            initChart('debtReductionChart', createDebtReductionChart);
+                    let animationFrameId;
+                    function animateConfetti() {
+                         ctx.clearRect(0, 0, canvas.width, canvas.height);
+                         confettiParticles.forEach((p, index) => {
+                             if (p.life <= 0) {
+                                 confettiParticles.splice(index, 1);
+                             } else {
+                                 p.velocity.y += p.gravity;
+                                 p.x += p.velocity.x;
+                                 p.y += p.velocity.y;
+                                 p.life -= p.fade;
 
-            // Chart 3: Vision 2025
-            const createVision2025Chart = () => {
-                 new Chart(document.getElementById('vision2025Chart').getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: ['Nhân sự con người', 'Trợ lý AI'],
-                        datasets: [{
-                            label: 'Số lượng nhân sự (ước tính)',
-                            data: [300, 1000],
-                            backgroundColor: ['#3D405B', '#81B29A'],
-                             borderRadius: 6,
-                            barPercentage: 0.5
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'Số lượng (ước tính)',
-                                    font: { size: 14, family: 'Inter' },
-                                    color: '#3D405B'
-                                }
-                            },
-                            x: {
-                                ticks: {
-                                    font: { size: 14, family: 'Inter' },
-                                    color: '#3D405B'
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false }
-                        }
+                                 ctx.globalAlpha = p.life;
+                                 ctx.fillStyle = p.color;
+                                 ctx.beginPath();
+                                 ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2, false);
+                                 ctx.fill();
+                             }
+                         });
+
+                         if (confettiParticles.length > 0) {
+                            animationFrameId = requestAnimationFrame(animateConfetti);
+                         } else {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                         }
                     }
-                });
-            };
-            initChart('vision2025Chart', createVision2025Chart);
+                    
+                    btn.onclick = () => {
+                        if (btn.disabled) return;
+                        btn.disabled = true;
+                        btn.textContent = 'Đang xử lý...';
+
+                        inputContainer.style.height = '0px';
+                        inputContainer.style.paddingTop = '0px';
+                        inputContainer.style.paddingBottom = '0px';
+                        inputContainer.style.marginBottom = '0px';
+                        inputContainer.style.opacity = '0';
+                        inputContainer.style.border = 'none';
+
+                        let delay = 300;
+                        for (const key in data) {
+                            setTimeout(() => {
+                                outputEls[key].textContent = data[key];
+                                outputEls[key].style.opacity = '1';
+                            }, delay);
+                            delay += 200;
+                        }
+
+                        setTimeout(() => {
+                            btn.textContent = 'Hoàn Tất!';
+                            btn.classList.remove('bg-orange-500', 'hover:bg-orange-400');
+                            btn.classList.add('bg-green-500');
+                            if(animationFrameId) cancelAnimationFrame(animationFrameId);
+                            confettiParticles = [];
+                            launchConfetti();
+                            animateConfetti();
+                        }, delay + 200);
+                    };
+                }
+            },
+             // Slide 7: Scaling Intelligence
+            {
+                title: "Nhân Rộng Trí Tuệ",
+                render: () => `
+                    <div class="text-center w-full">
+                        <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Nhân Rộng Trí Tuệ</h1>
+                        <p class="text-lg md:text-xl text-gray-400 mb-16 fade-in fade-in-delay-1">Khi hiệu quả, chúng tôi nhân rộng nó lên.</p>
+                        <div class="flex flex-col md:flex-row justify-around items-center gap-12 fade-in fade-in-delay-2">
+                            <div class="text-center">
+                                <div id="employee-counter" class="text-7xl font-black text-orange-500">0</div>
+                                <div class="text-xl text-gray-400 mt-2">Nhân Viên Số</div>
+                            </div>
+                            <div class="text-center">
+                                <div id="debt-counter" class="text-7xl font-black text-green-500">0%</div>
+                                <div class="text-xl text-gray-400 mt-2">Giảm Nợ Xấu</div>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                onLoad: () => {
+                    const animateCount = (el, end, duration, suffix = '') => {
+                        let start = 0;
+                        const range = end - start;
+                        const increment = end > start ? 1 : -1;
+                        const stepTime = Math.abs(Math.floor(duration / range));
+                        const timer = setInterval(() => {
+                            start += increment;
+                            el.textContent = start + suffix;
+                            if (start === end) {
+                                clearInterval(timer);
+                            }
+                        }, stepTime);
+                    };
+                    animateCount(document.getElementById('employee-counter'), 100, 2000);
+                    animateCount(document.getElementById('debt-counter'), 30, 2500, '%');
+                }
+            },
+            // Slide 8: The Vision
+            {
+                title: "Tầm Nhìn 2025",
+                render: () => `
+                    <div class="text-center w-full">
+                        <h1 class="text-4xl md:text-6xl font-black mb-4 fade-in">Tầm Nhìn 2025</h1>
+                        <p class="text-lg md:text-xl text-gray-400 mb-12 fade-in fade-in-delay-1">Giải phóng con người để làm những điều phi thường.</p>
+                        <div class="w-full max-w-lg mx-auto h-64 relative fade-in fade-in-delay-2">
+                            <!-- Chart Grid -->
+                            <div class="absolute inset-0 grid grid-rows-4 border-l border-b border-white/10">
+                                ${Array(4).fill(0).map(() => `<div class="border-t border-white/10"></div>`).join('')}
+                            </div>
+                            <!-- Human Line -->
+                            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <path id="human-line" d="M 0 80 Q 50 60, 100 50" stroke="#38bdf8" stroke-width="2" fill="none" class="transition-all duration-1000" style="stroke-dasharray: 200; stroke-dashoffset: 200;"/>
+                                <text x="5" y="78" font-size="5" fill="#38bdf8">Con người</text>
+                            </svg>
+                            <!-- AI Line -->
+                             <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                <path id="ai-line" d="M 0 95 Q 50 60, 100 10" stroke="#f97316" stroke-width="2" fill="none" class="transition-all duration-1000" style="stroke-dasharray: 200; stroke-dashoffset: 200;"/>
+                                <text x="60" y="8" font-size="5" fill="#f97316">Trợ lý AI</text>
+                            </svg>
+                            <div class="absolute bottom-[-20px] left-1/2 -translate-x-1/2 text-lg font-bold text-white">2025</div>
+                        </div>
+                    </div>
+                `,
+                 onLoad: () => {
+                    setTimeout(() => {
+                        document.getElementById('human-line').style.strokeDashoffset = 0;
+                        document.getElementById('ai-line').style.strokeDashoffset = 0;
+                    }, 500)
+                }
+            }
+        ];
+
+        let currentSlide = 0;
+        const keynoteContent = document.getElementById('keynote-content');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const slideCounter = document.getElementById('slide-counter');
+        const progressBar = document.getElementById('progress-bar');
+        const progressLineActive = document.getElementById('progress-line-active');
+
+        function setupProgressBar() {
+            const progressLine = document.createElement('div');
+            progressLine.className = 'progress-line';
+            progressBar.appendChild(progressLine);
             
-            // Smooth scrolling for nav links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    document.querySelector(this.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                });
+            slides.forEach((slide, index) => {
+                const step = document.createElement('div');
+                step.className = 'progress-step z-10 cursor-pointer';
+                step.innerHTML = `<div class="w-4 h-4 rounded-full bg-gray-600 transition-all duration-300"></div>`;
+                step.onclick = () => goToSlide(index);
+                progressBar.appendChild(step);
             });
+        }
+
+        function updateProgressBar() {
+            const steps = progressBar.querySelectorAll('.progress-step');
+            steps.forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index < currentSlide) {
+                    step.classList.add('completed');
+                } else if (index === currentSlide) {
+                    step.classList.add('active');
+                }
+            });
+
+            const totalWidth = progressBar.offsetWidth;
+            const stepWidth = slides.length > 1 ? totalWidth / (slides.length - 1) : 0;
+            const newWidth = currentSlide * stepWidth;
+            progressLineActive.style.width = `${newWidth}px`;
+        }
+
+        function renderSlide(index) {
+            // Remove old slide
+            const oldSlideEl = keynoteContent.querySelector('.slide');
+            if (oldSlideEl) {
+                oldSlideEl.classList.add('slide-hidden');
+                setTimeout(() => oldSlideEl.remove(), 700);
+            }
+
+            // Create and append new slide
+            const slideData = slides[index];
+            const slideEl = document.createElement('div');
+            slideEl.className = 'slide w-full h-full flex items-center justify-center slide-hidden';
+            slideEl.innerHTML = slideData.render();
+            keynoteContent.appendChild(slideEl);
+            
+            // Trigger animation
+            setTimeout(() => {
+                slideEl.classList.remove('slide-hidden');
+            }, 50);
+
+            // Run onLoad function if it exists
+            if (slideData.onLoad) {
+                slideData.onLoad();
+            }
+
+            // Update UI
+            updateUI();
+        }
+        
+        function updateUI() {
+            prevBtn.disabled = currentSlide === 0;
+            if (currentSlide === slides.length - 1) {
+                nextBtn.textContent = 'Kết Thúc';
+            } else {
+                nextBtn.textContent = 'Tiếp';
+            }
+            slideCounter.textContent = `${currentSlide + 1} / ${slides.length}`;
+            updateProgressBar();
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < slides.length) {
+                currentSlide = index;
+                renderSlide(currentSlide);
+            }
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                goToSlide(currentSlide + 1);
+            } else {
+                // Optional: Restart or close
+                alert('Cảm ơn bạn đã theo dõi!');
+                goToSlide(0);
+            }
         });
+
+        prevBtn.addEventListener('click', () => {
+            goToSlide(currentSlide - 1);
+        });
+        
+        window.addEventListener('resize', updateProgressBar);
+
+        // Initial load
+        setupProgressBar();
+        renderSlide(currentSlide);
     </script>
 
 </body>
