@@ -655,3 +655,31 @@ The theme is available as open source under the terms of the [MIT License](https
 
 Originally, **al-folio** was based on the [\*folio theme](https://github.com/bogoli/-folio) (published by [Lia Bogoev](https://liabogoev.com) and under the MIT license).
 Since then, it got a full re-write of the styles and many additional cool features.
+
+## HTML Files
+
+- [pq25.html](pq25.html) - *July 03, 2025*
+- [paws.html](paws.html) - *June 26, 2025*
+- [story.html](story.html) - *June 15, 2025*
+- [qr.html](qr.html) - *June 12, 2025*
+- [aodaibench.html](aodaibench.html) - *June 07, 2025*
+- [svg.html](svg.html) - *June 07, 2025*
+- [mp3.html](mp3.html) - *May 25, 2025*
+- [loss.html](loss.html) - *May 24, 2025*
+- [card.html](card.html) - *May 23, 2025*
+- [solar.html](solar.html) - *May 23, 2025*
+- [cakeinfo.html](cakeinfo.html) - *May 23, 2025*
+- [cake25.html](cake25.html) - *May 23, 2025*
+- [reservoir.html](reservoir.html) - *May 22, 2025*
+- [wave.html](wave.html) - *May 22, 2025*
+- [annotate.html](annotate.html) - *May 16, 2025*
+- [prompt.html](prompt.html) - *May 08, 2025*
+- [lamp.html](lamp.html) - *May 05, 2025*
+- [lecun.html](lecun.html) - *May 04, 2025*
+- [inkflow.html](inkflow.html) - *May 03, 2025*
+- [ipython.html](ipython.html) - *May 01, 2025*
+- [tboa.html](tboa.html) - *April 27, 2025*
+- [tvm_calculator.html](tvm_calculator.html) - *April 27, 2025*
+- [gemini_galton.html](gemini_galton.html) - *April 25, 2025*
+- [news.html](news.html) - *June 19, 2023*
+
