@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Photo Analysis Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .api-setup h3 {
+            color: #dc2626;
+            margin-bottom: 10px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="text"], input[type="password"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: #1d4ed8;
+        }
+        
+        .btn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #64748b;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #475569;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .framework-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .framework-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        .framework-icon {
+            width: 20px;
+            height: 20px;
+            color: #2563eb;
+        }
+        
+        .framework-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .framework-weight {
+            font-size: 12px;
+            color: #64748b;
+            margin-left: auto;
+        }
+        
+        .photo-grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .photo-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .photo-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .photo-left {
+            padding: 20px;
+        }
+        
+        .photo-img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .overall-score {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .score-excellent { color: #059669; }
+        .score-good { color: #0891b2; }
+        .score-average { color: #d97706; }
+        .score-poor { color: #dc2626; }
+        
+        .photo-right {
+            padding: 20px;
+        }
+        
+        .analysis-item {
+            border-left: 4px solid #60a5fa;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .analysis-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        
+        .analysis-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .analysis-score {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .analysis-text {
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 5px;
+        }
+        
+        .analysis-fix {
+            font-size: 12px;
+            color: #2563eb;
+            font-weight: 500;
+        }
+        
+        .overall-summary {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .overall-summary p {
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+        
+        .error-card {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .error-title {
+            color: #dc2626;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .error-text {
+            color: #991b1b;
+            font-size: 14px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #2563eb;
+            transition: width 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .photo-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 News Photo Analysis Tool</h1>
+            <p>Professional photo critique using journalism standards</p>
+        </div>
+
+        <div class="card api-setup" id="apiSetup">
+            <h3>⚙️ API Configuration</h3>
+            <p>Configure your Claude API access. Token stored in session only.</p>
+            <div class="input-group">
+                <input type="password" id="apiToken" placeholder="sk-ant-api03-..." />
+                <button class="btn" onclick="app.saveApiToken()">Save Token</button>
+            </div>
+            <div style="margin-top: 15px; padding: 15px; background: #fef3c7; border-radius: 8px; font-size: 14px;">
+                <strong>⚠️ CORS Setup Required:</strong><br>
+                <strong>Option 1 (Recommended):</strong> Start proxy server: <code>python cors_proxy.py</code><br>
+                <strong>Option 2:</strong> Use Chrome with CORS disabled: <code>--disable-web-security --user-data-dir="/tmp/chrome_dev"</code><br>
+                <strong>Option 3:</strong> Install CORS browser extension
+            </div>
+        </div>
+
+        <div class="card framework" id="framework" style="display: none;">
+            <h3>📋 Analysis Framework</h3>
+            <div class="framework-grid" id="frameworkGrid"></div>
+        </div>
+
+        <div class="card" id="urlInput" style="display: none;">
+            <h3>🔗 Article URL</h3>
+            <div class="input-group">
+                <input type="text" id="newsUrl" placeholder="https://news-website.com/article" />
+                <button class="btn" onclick="app.analyzePhotos()" id="analyzeBtn">Analyze Photos</button>
+                <button class="btn btn-secondary" onclick="app.useDemo()">Demo</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p id="loadingText">Initializing analysis...</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <div id="errorContainer"></div>
+        <div class="photo-grid" id="photoGrid"></div>
+    </div>
+
+    <script>
+        // Application state and configuration
+        const app = {
+            apiToken: '',
+            isAnalyzing: false,
+            rateLimiter: {
+                requests: [],
+                maxRequests: 10,
+                timeWindow: 60000 // 1 minute
+            },
+            
+            // Photography analysis framework
+            framework: [
+                { id: 'composition', label: 'Composition & Rule of Thirds', weight: 0.25, icon: '🎯' },
+                { id: 'lighting', label: 'Lighting & Direction', weight: 0.25, icon: '💡' },
+                { id: 'horizon', label: 'Horizon & Alignment', weight: 0.15, icon: '📏' },
+                { id: 'cropping', label: 'Cropping & Framing', weight: 0.15, icon: '✂️' },
+                { id: 'context', label: 'Context & Storytelling', weight: 0.15, icon: '📖' },
+                { id: 'technical', label: 'Technical Execution', weight: 0.05, icon: '⚡' }
+            ],
+
+            // Initialize application
+            init() {
+                this.checkSavedToken();
+                this.renderFramework();
+                this.setupEventListeners();
+            },
+
+            // Event listeners
+            setupEventListeners() {
+                document.getElementById('newsUrl').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.analyzePhotos();
+                });
+                
+                document.getElementById('apiToken').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.saveApiToken();
+                });
+            },
+
+            // Token management
+            checkSavedToken() {
+                const saved = sessionStorage.getItem('claude_api_token');
+                if (saved) {
+                    this.apiToken = saved;
+                    this.showMainInterface();
+                }
+            },
+
+            saveApiToken() {
+                const token = document.getElementById('apiToken').value.trim();
+                if (!token) {
+                    this.showError('Please enter your Claude API token');
+                    return;
+                }
+                
+                this.apiToken = token;
+                sessionStorage.setItem('claude_api_token', token);
+                this.showMainInterface();
+            },
+
+            showMainInterface() {
+                document.getElementById('apiSetup').style.display = 'none';
+                document.getElementById('framework').style.display = 'block';
+                document.getElementById('urlInput').style.display = 'block';
+            },
+
+            // Framework rendering
+            renderFramework() {
+                const grid = document.getElementById('frameworkGrid');
+                grid.innerHTML = this.framework.map(item => `
+                    <div class="framework-item">
+                        <span class="framework-icon">${item.icon}</span>
+                        <span class="framework-text">${item.label}</span>
+                        <span class="framework-weight">${Math.round(item.weight * 100)}%</span>
+                    </div>
+                `).join('');
+            },
+
+            // Rate limiting
+            canMakeRequest() {
+                const now = Date.now();
+                this.rateLimiter.requests = this.rateLimiter.requests.filter(
+                    time => now - time < this.rateLimiter.timeWindow
+                );
+                
+                if (this.rateLimiter.requests.length >= this.rateLimiter.maxRequests) {
+                    return false;
+                }
+                
+                this.rateLimiter.requests.push(now);
+                return true;
+            },
+
+            // API communication with fallback strategies
+            async callClaude(messages, maxTokens = 1500) {
+                if (!this.canMakeRequest()) {
+                    throw new Error('Rate limit exceeded. Please wait before making more requests.');
+                }
+
+                const requestBody = {
+                    model: 'claude-sonnet-4-20250514',
+                    max_tokens: maxTokens,
+                    messages: messages
+                };
+
+                // Strategy 1: Try proxy server first
+                try {
+                    const proxyResponse = await fetch('http://localhost:3001/claude', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': this.apiToken
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (proxyResponse.ok) {
+                        const data = await proxyResponse.json();
+                        return data.content[0].text;
+                    }
+                } catch (proxyError) {
+                    console.log('Proxy server not available, trying direct connection...');
+                }
+
+                // Strategy 2: Try direct connection (requires CORS disabled browser)
+                try {
+                    const directResponse = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': this.apiToken,
+                            'anthropic-version': '2023-06-01'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (!directResponse.ok) {
+                        const errorData = await directResponse.json().catch(() => ({}));
+                        throw new Error(`API Error ${directResponse.status}: ${errorData.error?.message || 'Unknown error'}`);
+                    }
+
+                    const data = await directResponse.json();
+                    return data.content[0].text;
+
+                } catch (directError) {
+                    if (directError.message.includes('CORS') || directError.message.includes('Failed to fetch')) {
+                        throw new Error(`CORS Error: Please either:
+1. Start proxy server: python cors_proxy.py
+2. Use Chrome with --disable-web-security flag
+3. Install a CORS browser extension
+4. Deploy to a proper web server with CORS headers
+
+Original error: ${directError.message}`);
+                    }
+                    throw directError;
+                }
+            },
+
+            // Image extraction with better error handling
+            async extractImages(url) {
+                try {
+                    const response = await this.callClaude([{
+                        role: 'user',
+                        content: `Extract image URLs from this news article: ${url}
+
+Return only a JSON array of direct image URLs (max 6):
+["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+
+Focus on:
+- Main article images (not ads/thumbnails)
+- High-resolution sources
+- Properly formatted URLs
+
+If URL is inaccessible, return empty array: []`
+                    }]);
+
+                    const jsonMatch = response.match(/\[[\s\S]*?\]/);
+                    if (jsonMatch) {
+                        const urls = JSON.parse(jsonMatch[0]);
+                        return Array.isArray(urls) ? urls.slice(0, 6) : [];
+                    }
+                    return [];
+                } catch (error) {
+                    console.error('Image extraction error:', error);
+                    throw new Error(`Failed to extract images: ${error.message}`);
+                }
+            },
+
+            // Enhanced image analysis
+            async analyzeImage(imageUrl) {
+                try {
+                    const response = await this.callClaude([{
+                        role: 'user',
+                        content: `Analyze this news photograph using professional journalism standards.
+
+Framework for scoring (1-10 scale):
+- Composition (25%): Rule of thirds, balance, subject placement
+- Lighting (25%): Direction, quality, mood enhancement  
+- Horizon (15%): Alignment, level framing
+- Cropping (15%): Boundaries, cuts, aspect ratio
+- Context (15%): Story elements, narrative clarity
+- Technical (5%): Focus, exposure, technical execution
+
+Score critically but constructively. Be specific about improvements.
+
+Return ONLY this JSON structure:
+{
+  "composition": {"score": X, "analysis": "brief assessment", "fix": "specific improvement"},
+  "lighting": {"score": X, "analysis": "brief assessment", "fix": "specific improvement"},
+  "horizon": {"score": X, "analysis": "brief assessment", "fix": "specific improvement"},
+  "cropping": {"score": X, "analysis": "brief assessment", "fix": "specific improvement"},
+  "context": {"score": X, "analysis": "brief assessment", "fix": "specific improvement"},
+  "technical": {"score": X, "analysis": "brief assessment", "fix": "specific improvement"},
+  "overall": {"strength": "main strength", "weakness": "key weakness", "score": Y.Y}
+}
+
+Image URL: ${imageUrl}`
+                    }], 2000);
+
+                    const jsonMatch = response.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const analysis = JSON.parse(jsonMatch[0]);
+                        
+                        // Validate analysis structure
+                        if (this.validateAnalysis(analysis)) {
+                            return analysis;
+                        }
+                    }
+                    throw new Error('Invalid analysis format received');
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    throw new Error(`Analysis failed: ${error.message}`);
+                }
+            },
+
+            // Validation helper
+            validateAnalysis(analysis) {
+                const requiredFields = ['composition', 'lighting', 'horizon', 'cropping', 'context', 'technical'];
+                return requiredFields.every(field => 
+                    analysis[field] && 
+                    typeof analysis[field].score === 'number' &&
+                    analysis[field].score >= 1 && 
+                    analysis[field].score <= 10
+                );
+            },
+
+            // UI helpers
+            updateProgress(percent, text) {
+                document.getElementById('progressFill').style.width = `${percent}%`;
+                document.getElementById('loadingText').textContent = text;
+            },
+
+            showLoading(show = true) {
+                document.getElementById('loading').style.display = show ? 'block' : 'none';
+                document.getElementById('analyzeBtn').disabled = show;
+                this.isAnalyzing = show;
+            },
+
+            showError(message, details = '') {
+                const container = document.getElementById('errorContainer');
+                container.innerHTML = `
+                    <div class="error-card">
+                        <div class="error-title">Error</div>
+                        <div class="error-text">${message}</div>
+                        ${details ? `<div class="error-text" style="margin-top: 5px; font-size: 12px;">${details}</div>` : ''}
+                    </div>
+                `;
+                setTimeout(() => container.innerHTML = '', 10000);
+            },
+
+            clearErrors() {
+                document.getElementById('errorContainer').innerHTML = '';
+            },
+
+            // Score classification
+            getScoreClass(score) {
+                if (score >= 8.5) return 'score-excellent';
+                if (score >= 7) return 'score-good';
+                if (score >= 5.5) return 'score-average';
+                return 'score-poor';
+            },
+
+            // Calculate weighted overall score
+            calculateOverallScore(analysis) {
+                return this.framework.reduce((total, criterion) => {
+                    const score = analysis[criterion.id]?.score || 0;
+                    return total + (score * criterion.weight);
+                }, 0).toFixed(1);
+            },
+
+            // Render photo card
+            renderPhotoCard(imageUrl, analysis, index) {
+                const overallScore = this.calculateOverallScore(analysis);
+                
+                return `
+                    <div class="photo-card">
+                        <div class="photo-content">
+                            <div class="photo-left">
+                                <img src="${imageUrl}" alt="Photo ${index + 1}" class="photo-img" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                                <div style="display:none; padding: 20px; text-align: center; color: #64748b;">
+                                    Image failed to load
+                                </div>
+                                <div class="overall-score ${this.getScoreClass(overallScore)}">
+                                    ${overallScore}/10
+                                </div>
+                            </div>
+                            <div class="photo-right">
+                                ${this.framework.map(criterion => {
+                                    const data = analysis[criterion.id];
+                                    if (!data) return '';
+                                    return `
+                                        <div class="analysis-item">
+                                            <div class="analysis-header">
+                                                <span class="analysis-title">${criterion.label}</span>
+                                                <span class="analysis-score ${this.getScoreClass(data.score)}">${data.score}/10</span>
+                                            </div>
+                                            <div class="analysis-text">${data.analysis}</div>
+                                            <div class="analysis-fix">Improvement: ${data.fix}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                                
+                                ${analysis.overall ? `
+                                    <div class="overall-summary">
+                                        <p><strong>Key Strength:</strong> ${analysis.overall.strength}</p>
+                                        <p><strong>Primary Weakness:</strong> ${analysis.overall.weakness}</p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            // Demo functionality
+            useDemo() {
+                document.getElementById('newsUrl').value = 'https://www.bbc.com/news/world';
+                this.analyzePhotos();
+            },
+
+            // Main analysis workflow
+            async analyzePhotos() {
+                const url = document.getElementById('newsUrl').value.trim();
+                if (!url) {
+                    this.showError('Please enter a news article URL');
+                    return;
+                }
+
+                if (!this.apiToken) {
+                    this.showError('Please configure your API token first');
+                    return;
+                }
+
+                if (this.isAnalyzing) {
+                    return;
+                }
+
+                this.clearErrors();
+                this.showLoading(true);
+                document.getElementById('photoGrid').innerHTML = '';
+
+                try {
+                    // Step 1: Extract images
+                    this.updateProgress(20, 'Extracting images from article...');
+                    const imageUrls = await this.extractImages(url);
+                    
+                    if (imageUrls.length === 0) {
+                        throw new Error('No images found in the article. Please check the URL or try a different article.');
+                    }
+
+                    this.updateProgress(40, `Found ${imageUrls.length} images. Starting analysis...`);
+
+                    // Step 2: Analyze each image
+                    const progressStep = 50 / imageUrls.length;
+                    
+                    for (let i = 0; i < imageUrls.length; i++) {
+                        try {
+                            this.updateProgress(40 + (i * progressStep), `Analyzing photo ${i + 1}/${imageUrls.length}...`);
+                            
+                            const analysis = await this.analyzeImage(imageUrls[i]);
+                            const cardHtml = this.renderPhotoCard(imageUrls[i], analysis, i);
+                            document.getElementById('photoGrid').innerHTML += cardHtml;
+                            
+                            // Rate limiting delay
+                            if (i < imageUrls.length - 1) {
+                                await new Promise(resolve => setTimeout(resolve, 1500));
+                            }
+                        } catch (error) {
+                            console.error(`Error analyzing image ${i + 1}:`, error);
+                            // Continue with next image instead of failing completely
+                        }
+                    }
+
+                    this.updateProgress(100, 'Analysis complete!');
+                    
+                } catch (error) {
+                    console.error('Analysis workflow error:', error);
+                    this.showError('Analysis failed', error.message);
+                } finally {
+                    setTimeout(() => this.showLoading(false), 1000);
+                }
+            }
+        };
+
+        // Initialize application when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
