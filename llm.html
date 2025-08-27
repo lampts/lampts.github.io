@@ -1,0 +1,589 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Multi-LLM Comparison</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      /* Minimal custom CSS */
+      .blink {
+        animation: blink 1s steps(1) infinite;
+      }
+      @keyframes blink {
+        50% { opacity: 0; }
+      }
+      .scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
+      .scrollbar-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 6px; }
+    </style>
+  </head>
+  <body class="bg-slate-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useEffect, useMemo, useRef, useState } = React;
+
+      // Providers configuration
+      const PROVIDERS = {
+        openai: {
+          key: 'openai',
+          label: 'OpenAI',
+          color: 'bg-green-600',
+          defaultModel: 'gpt-4o',
+          doc: 'https://platform.openai.com/docs/',
+        },
+        anthropic: {
+          key: 'anthropic',
+          label: 'Anthropic',
+          color: 'bg-orange-600',
+          defaultModel: 'claude-3-5-sonnet-20240620',
+          doc: 'https://docs.anthropic.com/',
+        },
+        google: {
+          key: 'google',
+          label: 'Google (Gemini)',
+          color: 'bg-blue-600',
+          defaultModel: 'gemini-1.5-flash-latest',
+          doc: 'https://ai.google.dev/',
+        },
+        deepseek: {
+          key: 'deepseek',
+          label: 'DeepSeek',
+          color: 'bg-purple-600',
+          defaultModel: 'deepseek-chat',
+          doc: 'https://api-docs.deepseek.com/',
+        },
+      };
+      
+      const defaultModels = Object.fromEntries(
+        Object.entries(PROVIDERS).map(([k, v]) => [k, v.defaultModel])
+      );
+      
+      // Helper to get initial state from localStorage
+      const getInitialState = (key, defaultValue) => {
+        try {
+          const item = localStorage.getItem(key);
+          return item ? JSON.parse(item) : defaultValue;
+        } catch (error) {
+          console.error(`Error reading from localStorage key “${key}”:`, error);
+          return defaultValue;
+        }
+      };
+
+      // --- Components ---
+
+      const Header = ({ exportJSON, setShowSettings }) => (
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-white">Multi‑LLM Comparison</h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportJSON}
+              className="px-3 py-1.5 rounded bg-slate-700 text-slate-200 hover:bg-slate-600 text-sm"
+              title="Export results as JSON"
+            >
+              Export
+            </button>
+            <button
+              onClick={() => setShowSettings(true)}
+              className="px-3 py-1.5 rounded bg-slate-700 text-slate-200 hover:bg-slate-600 text-sm"
+              title="API & Model Settings"
+            >
+              Settings
+            </button>
+          </div>
+        </div>
+      );
+
+      const SettingsModal = ({ showSettings, setShowSettings, apiKeys, setApiKeys, modelNames, setModelNames, selected, setSelected, temperature, setTemperature, maxTokens, setMaxTokens, systemPrompt, setSystemPrompt }) => {
+        if (!showSettings) return null;
+
+        const handleKeyChange = (pkey, value) => setApiKeys(prev => ({ ...prev, [pkey]: value }));
+        const handleModelChange = (pkey, value) => setModelNames(prev => ({ ...prev, [pkey]: value }));
+        const handleSelectedChange = (pkey) => setSelected(prev => ({ ...prev, [pkey]: !prev[pkey] }));
+
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50" onClick={() => setShowSettings(false)}>
+            <div className="bg-slate-800 text-white rounded-lg shadow-xl p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto scrollbar-thin" onClick={e => e.stopPropagation()}>
+              <h2 className="text-2xl font-bold mb-6">Settings</h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                {Object.values(PROVIDERS).map((p) => (
+                  <div key={p.key} className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2.5 h-2.5 rounded-full ${p.color}`}></span>
+                      <span className="text-slate-200 font-medium">{p.label}</span>
+                       <a
+                        href={p.doc}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-slate-400 hover:text-slate-200"
+                      >
+                        docs ↗
+                      </a>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-400">API Key</label>
+                      <input type="password" className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 text-white placeholder-slate-400" placeholder={`Enter ${p.label} API key`} value={apiKeys[p.key] || ''} onChange={(e) => handleKeyChange(p.key, e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs text-slate-400">Model</label>
+                      <input type="text" className="w-full px-3 py-2 rounded bg-slate-700 border border-slate-600 text-white placeholder-slate-400" placeholder={p.defaultModel} value={modelNames[p.key] || ''} onChange={(e) => handleModelChange(p.key, e.target.value)} />
+                    </div>
+                     <div className="flex items-center gap-2">
+                      <input id={`toggle-${p.key}`} type="checkbox" className="h-4 w-4" checked={!!selected[p.key]} onChange={() => handleSelectedChange(p.key)} disabled={!apiKeys[p.key]?.trim()} />
+                      <label htmlFor={`toggle-${p.key}`} className={`text-sm ${ apiKeys[p.key]?.trim() ? 'text-slate-200' : 'text-slate-500' }`}>
+                        Enabled
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="grid md:grid-cols-3 gap-4 mt-6">
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-400">Temperature: {temperature}</label>
+                  <input type="range" min="0" max="2" step="0.1" value={temperature} onChange={e => setTemperature(parseFloat(e.target.value))} className="w-full" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs text-slate-400">Max Tokens: {maxTokens}</label>
+                  <input type="range" min="256" max="4096" step="256" value={maxTokens} onChange={e => setMaxTokens(parseInt(e.target.value))} className="w-full" />
+                </div>
+              </div>
+              <div className="space-y-2 mt-6">
+                <label className="text-xs text-slate-400">System Prompt</label>
+                <textarea value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)} rows="3" className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+              </div>
+              <div className="mt-8 text-right">
+                <button onClick={() => setShowSettings(false)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition-colors">Done</button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+      
+      const Controls = ({ selected, setSelected, apiKeys, prompt, setPrompt, handleSend, isStreaming, stopAll, clearAll, promptInputRef, hasAnyKey, activeProviders }) => (
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {Object.values(PROVIDERS).map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setSelected((prev) => ({ ...prev, [p.key]: !prev[p.key] }))}
+                disabled={!apiKeys[p.key]?.trim()}
+                className={[
+                  'px-3 py-1 rounded-full text-sm font-medium transition-colors',
+                  selected[p.key] && apiKeys[p.key]?.trim()
+                    ? `${p.color} text-white`
+                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600',
+                  !apiKeys[p.key]?.trim() ? 'opacity-50 cursor-not-allowed' : '',
+                ].join(' ')}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-3">
+            <textarea
+              ref={promptInputRef}
+              rows={3}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Enter your prompt..."
+              className="flex-1 px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
+            />
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleSend}
+                disabled={!prompt.trim() || activeProviders.length === 0 || isStreaming}
+                className="px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                title={!hasAnyKey ? 'Add at least one API key in Settings' : ''}
+              >
+                Send ▶
+              </button>
+              {isStreaming ? (
+                <button
+                  onClick={stopAll}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm"
+                >
+                  Stop ■
+                </button>
+              ) : (
+                <button
+                  onClick={clearAll}
+                  className="px-4 py-2 bg-slate-700 text-slate-200 rounded-lg hover:bg-slate-600 font-medium text-sm"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+
+      const Panel = ({ pkey, responses, modelNames, stopOne, copyOne, clearOne }) => {
+        const p = PROVIDERS[pkey];
+        const r = responses[pkey];
+        const formatSec = (s) => (s ? `${s.toFixed(1)}s` : '0.0s');
+
+        return (
+          <div className="bg-slate-800 rounded-lg overflow-hidden flex flex-col h-96">
+            <div className={`${p.color} p-3 text-white font-medium flex items-center justify-between`}>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+                {p.label}
+                <span className="text-white/80 text-xs">({r.model || modelNames[pkey]})</span>
+              </div>
+              {r.streaming && <span className="text-xs">streaming…</span>}
+            </div>
+            <div className="flex-1 p-4 overflow-y-auto whitespace-pre-wrap text-sm text-white leading-relaxed scrollbar-thin">
+              {r.error ? (
+                <div className="text-red-400">Error: {r.error}</div>
+              ) : (
+                <>
+                  {r.content || <span className="text-slate-400">No output yet.</span>}
+                  {r.streaming && <span className="ml-1 blink">▊</span>}
+                </>
+              )}
+            </div>
+            <div className="p-3 bg-slate-700 border-t border-slate-600">
+              <div className="flex items-center justify-between text-xs text-slate-300">
+                <div className="flex gap-3">
+                  <span>ttft {formatSec(r.ttft)}</span>
+                  <span>elapsed {formatSec(r.elapsed)}</span>
+                  <span>{r.chunks} chunks</span>
+                  <span>{r.chars} chars</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {r.streaming ? (
+                    <button
+                      onClick={() => stopOne(pkey)}
+                      className="px-2 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                      title="Stop this stream"
+                    >
+                      Stop
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => copyOne(pkey)}
+                        disabled={!r.content}
+                        className="px-2 py-1 rounded bg-slate-600 text-slate-100 hover:bg-slate-500 disabled:opacity-50"
+                        title="Copy result"
+                      >
+                        Copy
+                      </button>
+                      <button
+                        onClick={() => clearOne(pkey)}
+                        className="px-2 py-1 rounded bg-slate-600 text-slate-100 hover:bg-slate-500"
+                        title="Clear result"
+                      >
+                        Clear
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- Main App Component ---
+      function App() {
+        const [apiKeys, setApiKeys] = useState(() => getInitialState('apiKeys', { openai: '', google: '', anthropic: '', deepseek: '' }));
+        const [modelNames, setModelNames] = useState(() => getInitialState('modelNames', defaultModels));
+        const [selected, setSelected] = useState(() => getInitialState('selected', { openai: true, google: true, anthropic: true, deepseek: true }));
+        const [prompt, setPrompt] = useState('Tell me a joke about the moon.');
+        const [responses, setResponses] = useState(
+          Object.fromEntries(
+            Object.keys(PROVIDERS).map((k) => [
+              k,
+              { content: '', streaming: false, ttft: 0, elapsed: 0, chunks: 0, chars: 0, error: null, model: defaultModels[k] },
+            ])
+          )
+        );
+        const [showSettings, setShowSettings] = useState(false);
+        const [temperature, setTemperature] = useState(() => getInitialState('temperature', 0.7));
+        const [maxTokens, setMaxTokens] = useState(() => getInitialState('maxTokens', 1024));
+        const [systemPrompt, setSystemPrompt] = useState(() => getInitialState('systemPrompt', ''));
+
+        const controllersRef = useRef({});
+        const promptInputRef = useRef(null);
+
+        // Save state to localStorage
+        useEffect(() => { localStorage.setItem('apiKeys', JSON.stringify(apiKeys)); }, [apiKeys]);
+        useEffect(() => { localStorage.setItem('modelNames', JSON.stringify(modelNames)); }, [modelNames]);
+        useEffect(() => { localStorage.setItem('selected', JSON.stringify(selected)); }, [selected]);
+        useEffect(() => { localStorage.setItem('temperature', JSON.stringify(temperature)); }, [temperature]);
+        useEffect(() => { localStorage.setItem('maxTokens', JSON.stringify(maxTokens)); }, [maxTokens]);
+        useEffect(() => { localStorage.setItem('systemPrompt', JSON.stringify(systemPrompt)); }, [systemPrompt]);
+
+        const activeProviders = useMemo(() => Object.keys(PROVIDERS).filter(pkey => selected[pkey] && apiKeys[pkey]), [selected, apiKeys]);
+        const isStreaming = useMemo(() => Object.values(responses).some(r => r.streaming), [responses]);
+        const hasAnyKey = useMemo(() => Object.values(apiKeys).some((v) => v?.trim()), [apiKeys]);
+        
+        const updateResponse = (key, patch) => setResponses((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+
+        const handleSend = async () => {
+          if (!prompt.trim() || isStreaming) return;
+
+          const currentControllers = {};
+          activeProviders.forEach(pkey => {
+            currentControllers[pkey] = new AbortController();
+            // Reset state for this provider
+            updateResponse(pkey, { content: '', streaming: true, ttft: 0, elapsed: 0, chunks: 0, chars: 0, error: null, model: modelNames[pkey] });
+          });
+          controllersRef.current = currentControllers;
+
+          const now = () => performance.now();
+
+          const promises = activeProviders.map(async (pkey) => {
+            const apiKey = apiKeys[pkey];
+            const model = modelNames[pkey] || PROVIDERS[pkey].defaultModel;
+            const controller = controllersRef.current[pkey];
+            const start = now();
+            let firstChunk = true;
+
+            try {
+              let response;
+              // --- OpenAI & Deepseek ---
+              if (pkey === 'openai' || pkey === 'deepseek') {
+                const apiUrl = pkey === 'openai' ? "https://api.openai.com/v1/chat/completions" : "https://api.deepseek.com/chat/completions";
+                response = await fetch(apiUrl, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+                  body: JSON.stringify({
+                    model: model,
+                    messages: [{ role: "system", content: systemPrompt }, { role: "user", content: prompt }],
+                    temperature, max_tokens: maxTokens, stream: true,
+                  }),
+                  signal: controller.signal,
+                });
+                if (!response.ok) throw new Error(await response.text());
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  const chunk = decoder.decode(value);
+                  const lines = chunk.split("\n");
+                  const parsedLines = lines
+                    .map((line) => line.replace(/^data: /, "").trim())
+                    .filter((line) => line !== "" && line !== "[DONE]")
+                    .map((line) => JSON.parse(line));
+
+                  for (const parsedLine of parsedLines) {
+                    const { choices } = parsedLine;
+                    if (!choices || choices.length === 0) continue;
+                    const { delta } = choices[0];
+                    const { content } = delta;
+                    if (content) {
+                       if (firstChunk) {
+                        updateResponse(pkey, { ttft: (now() - start) / 1000 });
+                        firstChunk = false;
+                      }
+                      setResponses(prev => ({...prev, [pkey]: {
+                        ...prev[pkey],
+                        content: (prev[pkey].content || '') + content,
+                        chunks: prev[pkey].chunks + 1,
+                        chars: (prev[pkey].content || '').length + content.length,
+                        elapsed: (now() - start) / 1000,
+                      }}));
+                    }
+                  }
+                }
+              // --- Google ---
+              } else if (pkey === 'google') {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
+                response = await fetch(url, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                    generationConfig: { temperature, maxOutputTokens: maxTokens },
+                  }),
+                   signal: controller.signal,
+                });
+                if (!response.ok) throw new Error(await response.text());
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split("\n");
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = JSON.parse(line.substring(5));
+                            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (text) {
+                                if (firstChunk) {
+                                    updateResponse(pkey, { ttft: (now() - start) / 1000 });
+                                    firstChunk = false;
+                                }
+                                setResponses(prev => ({...prev, [pkey]: {
+                                    ...prev[pkey],
+                                    content: (prev[pkey].content || '') + text,
+                                    chunks: prev[pkey].chunks + 1,
+                                    chars: (prev[pkey].content || '').length + text.length,
+                                    elapsed: (now() - start) / 1000,
+                                }}));
+                            }
+                        }
+                    }
+                }
+              // --- Anthropic ---
+              } else if (pkey === 'anthropic') {
+                  response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: {
+                      "x-api-key": apiKey,
+                      "anthropic-version": "2023-06-01",
+                      "content-type": "application/json",
+                      "anthropic-dangerous-direct-browser-access": "true",
+                    },
+                    body: JSON.stringify({
+                      model: model,
+                      system: systemPrompt,
+                      messages: [{ role: "user", content: prompt }],
+                      max_tokens: maxTokens,
+                      temperature: temperature,
+                      stream: true,
+                    }),
+                    signal: controller.signal,
+                  });
+
+                  if (!response.ok) throw new Error(await response.text());
+
+                  const reader = response.body.getReader();
+                  const decoder = new TextDecoder();
+                  let buffer = '';
+
+                  while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.substring(6);
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.type === 'message_start') {
+                                    updateResponse(pkey, { model: parsed.message.model });
+                                } else if (parsed.type === 'content_block_delta' && parsed.delta.type === 'text_delta') {
+                                    if (firstChunk) {
+                                        updateResponse(pkey, { ttft: (now() - start) / 1000 });
+                                        firstChunk = false;
+                                    }
+                                    const textChunk = parsed.delta.text;
+                                    setResponses(prev => ({...prev, [pkey]: {
+                                        ...prev[pkey],
+                                        content: (prev[pkey].content || '') + textChunk,
+                                        chunks: prev[pkey].chunks + 1,
+                                        chars: (prev[pkey].content || '').length + textChunk.length,
+                                        elapsed: (now() - start) / 1000,
+                                    }}));
+                                }
+                            } catch (e) { console.error("Error parsing Anthropic stream chunk:", data, e); }
+                        }
+                    }
+                  }
+              }
+            } catch (error) {
+              if (error.name !== 'AbortError') {
+                console.error(`Error with ${pkey}:`, error);
+                updateResponse(pkey, { error: error.message });
+              }
+            } finally {
+                updateResponse(pkey, { streaming: false, elapsed: (now() - start) / 1000 });
+            }
+          });
+
+          await Promise.allSettled(promises);
+        };
+
+        const stopOne = (pkey) => {
+          controllersRef.current[pkey]?.abort();
+          updateResponse(pkey, { streaming: false });
+        };
+
+        const stopAll = () => {
+          Object.keys(controllersRef.current).forEach(pkey => stopOne(pkey));
+        };
+        
+        const clearOne = (pkey) => {
+            updateResponse(pkey, { content: '', streaming: false, ttft: 0, elapsed: 0, chunks: 0, chars: 0, error: null, model: modelNames[pkey] });
+        }
+
+        const clearAll = () => {
+            Object.keys(PROVIDERS).forEach(k => clearOne(k));
+            setPrompt('');
+            promptInputRef.current?.focus();
+        };
+        
+        const copyOne = (pkey) => {
+            if(responses[pkey]?.content) {
+                navigator.clipboard.writeText(responses[pkey].content);
+            }
+        }
+        
+        const exportJSON = () => {
+          const data = { prompt, systemPrompt, temperature, maxTokens, models: modelNames, results: {}, timestamp: new Date().toISOString() };
+          Object.keys(PROVIDERS).forEach(k => {
+            const r = responses[k];
+            data.results[k] = { content: r.content, error: r.error, ttft: r.ttft, elapsed: r.elapsed, chunks: r.chunks, chars: r.chars };
+          });
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'multi-llm-results.json';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        };
+
+        return (
+          <div className="min-h-screen p-4">
+            <div className="max-w-7xl mx-auto">
+              <Header exportJSON={exportJSON} setShowSettings={setShowSettings} />
+              <Controls 
+                selected={selected} setSelected={setSelected} apiKeys={apiKeys} 
+                prompt={prompt} setPrompt={setPrompt} handleSend={handleSend} 
+                isStreaming={isStreaming} stopAll={stopAll} clearAll={clearAll} 
+                promptInputRef={promptInputRef} hasAnyKey={hasAnyKey} activeProviders={activeProviders}
+              />
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                {Object.keys(PROVIDERS).map((k) => (
+                  selected[k] && apiKeys[k]?.trim() ? 
+                  <Panel 
+                    key={k} pkey={k} responses={responses} modelNames={modelNames} 
+                    stopOne={stopOne} copyOne={copyOne} clearOne={clearOne} 
+                  /> : null
+                ))}
+              </div>
+            </div>
+            <SettingsModal 
+              showSettings={showSettings} setShowSettings={setShowSettings} 
+              apiKeys={apiKeys} setApiKeys={setApiKeys} 
+              modelNames={modelNames} setModelNames={setModelNames}
+              selected={selected} setSelected={setSelected}
+              temperature={temperature} setTemperature={setTemperature}
+              maxTokens={maxTokens} setMaxTokens={setMaxTokens}
+              systemPrompt={systemPrompt} setSystemPrompt={setSystemPrompt}
+            />
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+  </body>
+</html>
+
