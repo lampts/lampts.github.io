@@ -31,21 +31,21 @@
           key: 'openai',
           label: 'OpenAI',
           color: 'bg-green-600',
-          defaultModel: 'gpt-4o',
+          defaultModel: 'gpt-4.1-mini',
           doc: 'https://platform.openai.com/docs/',
         },
         anthropic: {
           key: 'anthropic',
           label: 'Anthropic',
           color: 'bg-orange-600',
-          defaultModel: 'claude-3-5-sonnet-20240620',
+          defaultModel: 'claude-sonnet-4-20250514',
           doc: 'https://docs.anthropic.com/',
         },
         google: {
           key: 'google',
           label: 'Google (Gemini)',
           color: 'bg-blue-600',
-          defaultModel: 'gemini-1.5-flash-latest',
+          defaultModel: 'gemini-2.0-flash',
           doc: 'https://ai.google.dev/',
         },
         deepseek: {
@@ -55,6 +55,20 @@
           defaultModel: 'deepseek-chat',
           doc: 'https://api-docs.deepseek.com/',
         },
+        kimi: {
+          key: 'kimi',
+          label: 'Kimi (Moonshot)',
+          color: 'bg-indigo-500',
+          defaultModel: 'kimi-k2-0711-preview',
+          doc: 'https://platform.moonshot.ai/docs',
+        },
+        xai: {
+          key: 'xai',
+          label: 'xAI (Grok)',
+          color: 'bg-slate-400',
+          defaultModel: 'grok-4',
+          doc: 'https://docs.x.ai/',
+        }
       };
       
       const defaultModels = Object.fromEntries(
@@ -289,9 +303,9 @@
 
       // --- Main App Component ---
       function App() {
-        const [apiKeys, setApiKeys] = useState(() => getInitialState('apiKeys', { openai: '', google: '', anthropic: '', deepseek: '' }));
+        const [apiKeys, setApiKeys] = useState(() => getInitialState('apiKeys', { openai: '', google: '', anthropic: '', deepseek: '', kimi: '', xai: '' }));
         const [modelNames, setModelNames] = useState(() => getInitialState('modelNames', defaultModels));
-        const [selected, setSelected] = useState(() => getInitialState('selected', { openai: true, google: true, anthropic: true, deepseek: true }));
+        const [selected, setSelected] = useState(() => getInitialState('selected', { openai: true, google: true, anthropic: true, deepseek: true, kimi: true, xai: true }));
         const [prompt, setPrompt] = useState('Tell me a joke about the moon.');
         const [responses, setResponses] = useState(
           Object.fromEntries(
@@ -345,15 +359,36 @@
 
             try {
               let response;
-              // --- OpenAI & Deepseek ---
-              if (pkey === 'openai' || pkey === 'deepseek') {
-                const apiUrl = pkey === 'openai' ? "https://api.openai.com/v1/chat/completions" : "https://api.deepseek.com/chat/completions";
+              // --- OpenAI, Deepseek, Kimi, xAI ---
+              if (pkey === 'openai' || pkey === 'deepseek' || pkey === 'kimi' || pkey === 'xai') {
+                let apiUrl;
+                switch(pkey) {
+                  case 'openai':
+                    apiUrl = "https://api.openai.com/v1/chat/completions";
+                    break;
+                  case 'deepseek':
+                    apiUrl = "https://api.deepseek.com/chat/completions";
+                    break;
+                  case 'kimi':
+                    apiUrl = "https://api.moonshot.ai/v1/chat/completions";
+                    break;
+                  case 'xai':
+                    apiUrl = "https://api.x.ai/v1/chat/completions";
+                    break;
+                }
+
+                const messages = [];
+                if (systemPrompt && systemPrompt.trim()) {
+                    messages.push({ role: "system", content: systemPrompt });
+                }
+                messages.push({ role: "user", content: prompt });
+
                 response = await fetch(apiUrl, {
                   method: "POST",
                   headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
                   body: JSON.stringify({
                     model: model,
-                    messages: [{ role: "system", content: systemPrompt }, { role: "user", content: prompt }],
+                    messages: messages,
                     temperature, max_tokens: maxTokens, stream: true,
                   }),
                   signal: controller.signal,
@@ -362,15 +397,26 @@
                 
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
+                let buffer = '';
                 while (true) {
                   const { done, value } = await reader.read();
                   if (done) break;
-                  const chunk = decoder.decode(value);
-                  const lines = chunk.split("\n");
+                  buffer += decoder.decode(value, { stream: true });
+                  const lines = buffer.split("\n");
+                  buffer = lines.pop(); // Keep the last, possibly incomplete line
+
                   const parsedLines = lines
                     .map((line) => line.replace(/^data: /, "").trim())
                     .filter((line) => line !== "" && line !== "[DONE]")
-                    .map((line) => JSON.parse(line));
+                    .map((line) => {
+                        try {
+                            return JSON.parse(line);
+                        } catch(e) {
+                            console.error(`Could not parse JSON line for ${pkey}:`, line);
+                            return null;
+                        }
+                    })
+                    .filter(Boolean);
 
                   for (const parsedLine of parsedLines) {
                     const { choices } = parsedLine;
@@ -395,14 +441,19 @@
               // --- Google ---
               } else if (pkey === 'google') {
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
+                
+                const googleBody = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature, maxOutputTokens: maxTokens },
+                };
+                if (systemPrompt && systemPrompt.trim()) {
+                    googleBody.systemInstruction = { parts: [{ text: systemPrompt }] };
+                }
+
                 response = await fetch(url, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: { temperature, maxOutputTokens: maxTokens },
-                  }),
+                  body: JSON.stringify(googleBody),
                    signal: controller.signal,
                 });
                 if (!response.ok) throw new Error(await response.text());
@@ -436,6 +487,17 @@
                 }
               // --- Anthropic ---
               } else if (pkey === 'anthropic') {
+                  const anthropicBody = {
+                      model: model,
+                      messages: [{ role: "user", content: prompt }],
+                      max_tokens: maxTokens,
+                      temperature: temperature,
+                      stream: true,
+                  };
+                  if (systemPrompt && systemPrompt.trim()) {
+                      anthropicBody.system = systemPrompt;
+                  }
+
                   response = await fetch("https://api.anthropic.com/v1/messages", {
                     method: "POST",
                     headers: {
@@ -444,14 +506,7 @@
                       "content-type": "application/json",
                       "anthropic-dangerous-direct-browser-access": "true",
                     },
-                    body: JSON.stringify({
-                      model: model,
-                      system: systemPrompt,
-                      messages: [{ role: "user", content: prompt }],
-                      max_tokens: maxTokens,
-                      temperature: temperature,
-                      stream: true,
-                    }),
+                    body: JSON.stringify(anthropicBody),
                     signal: controller.signal,
                   });
 
@@ -559,7 +614,7 @@
                 isStreaming={isStreaming} stopAll={stopAll} clearAll={clearAll} 
                 promptInputRef={promptInputRef} hasAnyKey={hasAnyKey} activeProviders={activeProviders}
               />
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Object.keys(PROVIDERS).map((k) => (
                   selected[k] && apiKeys[k]?.trim() ? 
                   <Panel 
@@ -586,4 +641,3 @@
     </script>
   </body>
 </html>
-
