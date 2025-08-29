@@ -672,16 +672,16 @@ Since then, it got a full re-write of the styles and many additional cool featur
 - [paws.html](paws.html) - *August 29, 2025*
 - [news.html](news.html) - *August 29, 2025*
 - [loss.html](loss.html) - *August 29, 2025*
-- [llm.html](llm.html) - *August 29, 2025*
 - [mp3.html](mp3.html) - *August 29, 2025*
+- [llm.html](llm.html) - *August 29, 2025*
 - [lecun.html](lecun.html) - *August 29, 2025*
 - [lamp.html](lamp.html) - *August 29, 2025*
 - [inkflow.html](inkflow.html) - *August 29, 2025*
 - [ipython.html](ipython.html) - *August 29, 2025*
 - [gemini_galton.html](gemini_galton.html) - *August 29, 2025*
+- [card.html](card.html) - *August 29, 2025*
 - [cakeinfo.html](cakeinfo.html) - *August 29, 2025*
 - [cake25.html](cake25.html) - *August 29, 2025*
-- [card.html](card.html) - *August 29, 2025*
 - [aodaibench.html](aodaibench.html) - *August 29, 2025*
 - [annotate.html](annotate.html) - *August 29, 2025*
 
