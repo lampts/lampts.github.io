@@ -658,30 +658,30 @@ Since then, it got a full re-write of the styles and many additional cool featur
 
 ## HTML Files
 
-- [tvm_calculator.html](tvm_calculator.html) - *August 29, 2025*
-- [wave.html](wave.html) - *August 29, 2025*
-- [svg.html](svg.html) - *August 29, 2025*
-- [story.html](story.html) - *August 29, 2025*
-- [tboa.html](tboa.html) - *August 29, 2025*
-- [solar.html](solar.html) - *August 29, 2025*
-- [reservoir.html](reservoir.html) - *August 29, 2025*
-- [pq25.html](pq25.html) - *August 29, 2025*
-- [qr.html](qr.html) - *August 29, 2025*
-- [photo.html](photo.html) - *August 29, 2025*
-- [prompt.html](prompt.html) - *August 29, 2025*
-- [paws.html](paws.html) - *August 29, 2025*
-- [news.html](news.html) - *August 29, 2025*
-- [loss.html](loss.html) - *August 29, 2025*
-- [mp3.html](mp3.html) - *August 29, 2025*
-- [llm.html](llm.html) - *August 29, 2025*
-- [lecun.html](lecun.html) - *August 29, 2025*
-- [lamp.html](lamp.html) - *August 29, 2025*
-- [inkflow.html](inkflow.html) - *August 29, 2025*
-- [ipython.html](ipython.html) - *August 29, 2025*
-- [gemini_galton.html](gemini_galton.html) - *August 29, 2025*
-- [card.html](card.html) - *August 29, 2025*
-- [cakeinfo.html](cakeinfo.html) - *August 29, 2025*
-- [cake25.html](cake25.html) - *August 29, 2025*
-- [aodaibench.html](aodaibench.html) - *August 29, 2025*
-- [annotate.html](annotate.html) - *August 29, 2025*
+- [tvm_calculator.html](tvm_calculator.html) - *September 13, 2025*
+- [wave.html](wave.html) - *September 13, 2025*
+- [tboa.html](tboa.html) - *September 13, 2025*
+- [svg.html](svg.html) - *September 13, 2025*
+- [story.html](story.html) - *September 13, 2025*
+- [solar.html](solar.html) - *September 13, 2025*
+- [reservoir.html](reservoir.html) - *September 13, 2025*
+- [pq25.html](pq25.html) - *September 13, 2025*
+- [qr.html](qr.html) - *September 13, 2025*
+- [prompt.html](prompt.html) - *September 13, 2025*
+- [photo.html](photo.html) - *September 13, 2025*
+- [paws.html](paws.html) - *September 13, 2025*
+- [news.html](news.html) - *September 13, 2025*
+- [mp3.html](mp3.html) - *September 13, 2025*
+- [loss.html](loss.html) - *September 13, 2025*
+- [llm.html](llm.html) - *September 13, 2025*
+- [lecun.html](lecun.html) - *September 13, 2025*
+- [lamp.html](lamp.html) - *September 13, 2025*
+- [inkflow.html](inkflow.html) - *September 13, 2025*
+- [ipython.html](ipython.html) - *September 13, 2025*
+- [gemini_galton.html](gemini_galton.html) - *September 13, 2025*
+- [cakeinfo.html](cakeinfo.html) - *September 13, 2025*
+- [cake25.html](cake25.html) - *September 13, 2025*
+- [card.html](card.html) - *September 13, 2025*
+- [aodaibench.html](aodaibench.html) - *September 13, 2025*
+- [annotate.html](annotate.html) - *September 13, 2025*
 
