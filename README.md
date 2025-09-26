@@ -658,8 +658,8 @@ Since then, it got a full re-write of the styles and many additional cool featur
 
 ## HTML Files
 
-- [tvm_calculator.html](tvm_calculator.html) - *September 26, 2025*
 - [wave.html](wave.html) - *September 26, 2025*
+- [tvm_calculator.html](tvm_calculator.html) - *September 26, 2025*
 - [tboa.html](tboa.html) - *September 26, 2025*
 - [svg.html](svg.html) - *September 26, 2025*
 - [story.html](story.html) - *September 26, 2025*
@@ -680,8 +680,8 @@ Since then, it got a full re-write of the styles and many additional cool featur
 - [ipython.html](ipython.html) - *September 26, 2025*
 - [jina.html](jina.html) - *September 26, 2025*
 - [gemini_galton.html](gemini_galton.html) - *September 26, 2025*
-- [cakeinfo.html](cakeinfo.html) - *September 26, 2025*
 - [card.html](card.html) - *September 26, 2025*
+- [cakeinfo.html](cakeinfo.html) - *September 26, 2025*
 - [cake25.html](cake25.html) - *September 26, 2025*
 - [aodaibench.html](aodaibench.html) - *September 26, 2025*
 - [annotate.html](annotate.html) - *September 26, 2025*
