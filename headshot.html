@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HeadshotPro AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "@google/genai": "https://esm.run/@google/genai"
+        }
+    }
+    </script>
     <script>
         tailwind.config = {
             theme: {
@@ -78,20 +85,20 @@
             <div class="flex items-center justify-center gap-4">
                 <!-- Step 1 -->
                 <div class="flex flex-col items-center">
-                    <div id="step-1" class="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center font-semibold mb-2">
-                        ✓
+                    <div id="step-1" class="w-12 h-12 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-semibold mb-2">
+                        1
                     </div>
                     <span class="text-sm font-medium text-gray-700">Upload</span>
                 </div>
-                <div class="w-24 h-1 bg-purple-600"></div>
+                <div id="progress-line-1" class="w-24 h-1 bg-gray-300"></div>
                 <!-- Step 2 -->
                 <div class="flex flex-col items-center">
-                    <div id="step-2" class="w-12 h-12 rounded-full bg-purple-600 text-white flex items-center justify-center font-semibold mb-2">
-                        ✓
+                    <div id="step-2" class="w-12 h-12 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-semibold mb-2">
+                        2
                     </div>
                     <span class="text-sm font-medium text-gray-700">Style</span>
                 </div>
-                <div class="w-24 h-1 bg-gray-300"></div>
+                <div id="progress-line-2" class="w-24 h-1 bg-gray-300"></div>
                 <!-- Step 3 -->
                 <div class="flex flex-col items-center">
                     <div id="step-3" class="w-12 h-12 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-semibold mb-2">
@@ -125,9 +132,9 @@
                         </div>
 
                         <!-- Preview -->
-                        <div id="preview-container" class="mt-6 hidden">
-                            <div class="relative inline-block mx-auto">
-                                <img id="preview-image" class="max-w-lg max-h-96 rounded-2xl shadow-lg mx-auto">
+                        <div id="preview-container" class="mt-6 hidden text-center">
+                            <div class="relative inline-block">
+                                <img id="preview-image" class="max-w-lg max-h-96 rounded-2xl shadow-lg">
                                 <button
                                     id="remove-image-btn"
                                     class="absolute top-3 right-3 bg-red-500 text-white rounded-full p-2 hover:bg-red-600 transition-colors shadow-lg"
@@ -282,7 +289,9 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { GoogleGenAI } from "@google/genai";
+
         // State
         let state = {
             apiKey: null,
@@ -293,15 +302,14 @@
             showComparison: true
         };
 
-        // Style names mapping
-        const styleNames = {
-            'corporate-classic': 'Corporate Classic',
-            'creative-professional': 'Creative Professional',
-            'executive-portrait': 'Executive Portrait'
-        };
+        // Style prompts
+        const stylePrompts = {
+            'corporate-classic': `Transform this photo into a polished profile shot maintaining the exact facial features and identity. Subject framed chest-up with headroom, eyes looking directly at camera while body angles slightly away. White t-shirt with black leather jacket, open smile. Neutral studio background. High-angle perspective with soft, diffused lighting creating gentle catchlights. 85mm lens aesthetic with shallow depth of field - sharp focus on eyes, soft bokeh background. Natural skin texture with visible hair detail. Bright, airy feel. Make subject look great and accurate to their original appearance.`,
 
-        // API Configuration
-        const API_URL = 'http://localhost:3000/api';
+            'creative-professional': `Transform this photo into a close-up portrait with shallow depth of field creating soft bokeh background. Warm, natural lighting highlighting subject's features. Casual attire and genuine, engaging smile. Subject fills more of the frame. Background hints at creative workspace or outdoor setting with beautiful blur. Preserve natural skin texture and authentic features. Modern, approachable creative professional aesthetic. Make subject look great and accurate to their original appearance.`,
+
+            'executive-portrait': `Transform this photo into a dramatic black and white portrait in editorial style. Preserve subject's authentic features and character. Apply these specifications: monochromatic treatment with rich grayscale tones, deep charcoal or black background with subtle gradation, dramatic side lighting creating strong shadows and highlights on face (Rembrandt or split lighting), preserve all natural skin texture and detail - no smoothing, sharp focus capturing fine details in eyes and facial features, relaxed and contemplative expression - not smiling, casual professional attire (dark textured jacket, no tie), hand gesture near chest or face for dynamic composition, high contrast with deep blacks and bright highlights, cinematic film grain for texture. Maintain editorial photography aesthetic - artistic but professional. Make subject look great and accurate to their original appearance.`
+        };
 
         // DOM Elements
         const toggleSetupBtn = document.getElementById('toggle-setup-btn');
@@ -337,6 +345,8 @@
         const step1 = document.getElementById('step-1');
         const step2 = document.getElementById('step-2');
         const step3 = document.getElementById('step-3');
+        const progressLine1 = document.getElementById('progress-line-1');
+        const progressLine2 = document.getElementById('progress-line-2');
 
         // Initialize
         function init() {
@@ -374,22 +384,38 @@
                 step.classList.remove('bg-purple-600', 'text-white');
                 step.classList.add('bg-gray-300', 'text-gray-600');
             });
+            [progressLine1, progressLine2].forEach(line => {
+                line.classList.remove('bg-purple-600');
+                line.classList.add('bg-gray-300');
+            });
 
             // Update based on state
             if (state.uploadedFile) {
                 step1.classList.remove('bg-gray-300', 'text-gray-600');
                 step1.classList.add('bg-purple-600', 'text-white');
                 step1.textContent = '✓';
+                progressLine1.classList.remove('bg-gray-300');
+                progressLine1.classList.add('bg-purple-600');
+            } else {
+                step1.textContent = '1';
             }
+
             if (state.selectedStyle) {
                 step2.classList.remove('bg-gray-300', 'text-gray-600');
                 step2.classList.add('bg-purple-600', 'text-white');
                 step2.textContent = '✓';
+                progressLine2.classList.remove('bg-gray-300');
+                progressLine2.classList.add('bg-purple-600');
+            } else {
+                step2.textContent = '2';
             }
+
             if (state.generatedImage) {
                 step3.classList.remove('bg-gray-300', 'text-gray-600');
                 step3.classList.add('bg-purple-600', 'text-white');
                 step3.textContent = '✓';
+            } else {
+                step3.textContent = '3';
             }
         }
 
@@ -500,6 +526,19 @@
             });
         });
 
+        // Convert file to base64
+        async function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
         // Generate Headshot
         generateBtn.addEventListener('click', async () => {
             if (!state.apiKey) {
@@ -517,27 +556,52 @@
             generateBtn.disabled = true;
 
             try {
-                const formData = new FormData();
-                formData.append('image', state.uploadedFile);
-                formData.append('style', state.selectedStyle);
+                const ai = new GoogleGenAI({ apiKey: state.apiKey });
 
-                const response = await fetch(`${API_URL}/generate-headshot`, {
-                    method: 'POST',
-                    body: formData
+                // Convert image to base64
+                const base64Image = await fileToBase64(state.uploadedFile);
+
+                // Build prompt array with text and image
+                const prompt = [
+                    { text: stylePrompts[state.selectedStyle] },
+                    {
+                        inlineData: {
+                            mimeType: state.uploadedFile.type,
+                            data: base64Image
+                        }
+                    }
+                ];
+
+                // Generate content with image-to-image model
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.5-flash-image",
+                    contents: prompt
                 });
 
-                const data = await response.json();
+                // Extract generated image from response
+                let generatedImageBase64 = null;
+                let aiText = null;
 
-                if (data.success) {
-                    state.generatedImage = data.image;
+                for (const part of response.candidates[0].content.parts) {
+                    if (part.text) {
+                        aiText = part.text;
+                        console.log('AI Text:', part.text);
+                    } else if (part.inlineData && part.inlineData.data) {
+                        generatedImageBase64 = part.inlineData.data;
+                        console.log('Image generated successfully');
+                    }
+                }
+
+                if (generatedImageBase64) {
+                    state.generatedImage = `data:image/jpeg;base64,${generatedImageBase64}`;
                     updateProgressSteps();
                     showComparison();
                 } else {
-                    showError(errorSection, 'Failed to generate headshot');
+                    throw new Error('No image generated. The model may not support image generation. Please check your API key and model access.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showError(errorSection, 'Failed to generate headshot. Please try again.');
+                showError(errorSection, `Failed to generate headshot: ${error.message}`);
             } finally {
                 loadingSection.classList.add('hidden');
                 generateBtn.disabled = false;
