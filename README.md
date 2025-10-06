@@ -676,9 +676,9 @@ Since then, it got a full re-write of the styles and many additional cool featur
 - [loss.html](loss.html) - *October 06, 2025*
 - [lecun.html](lecun.html) - *October 06, 2025*
 - [lamp.html](lamp.html) - *October 06, 2025*
-- [jina.html](jina.html) - *October 06, 2025*
 - [inkflow.html](inkflow.html) - *October 06, 2025*
 - [ipython.html](ipython.html) - *October 06, 2025*
+- [jina.html](jina.html) - *October 06, 2025*
 - [headshot.html](headshot.html) - *October 06, 2025*
 - [gemini_galton.html](gemini_galton.html) - *October 06, 2025*
 - [cakeinfo.html](cakeinfo.html) - *October 06, 2025*
