@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PictureMe - AI Photo Transformation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #000000; 
+        }
+        .font-caveat { 
+            font-family: 'Caveat', cursive; 
+        }
+        @keyframes fade-in-down {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down { 
+            animation: fade-in-down 0.5s ease-out forwards; 
+        }
+        .styled-scrollbar::-webkit-scrollbar { width: 8px; }
+        .styled-scrollbar::-webkit-scrollbar-track { background: #334155; border-radius: 10px; }
+        .styled-scrollbar::-webkit-scrollbar-thumb { background: #64748B; border-radius: 10px; }
+        .styled-scrollbar::-webkit-scrollbar-thumb:hover { background: #FBBF24; }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-custom {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes scale-in {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-scale-in {
+            animation: scale-in 0.3s ease-out forwards;
+        }
+        
+        .hidden { display: none; }
+        .block { display: block; }
+    </style>
+</head>
+<body class="bg-black text-gray-200 min-h-screen">
+    
+    <!-- Error Notification -->
+    <div id="errorNotification" class="hidden fixed top-5 left-1/2 z-50 w-full max-w-md p-4 bg-gray-900 border border-gray-700 text-gray-300 rounded-lg shadow-2xl flex items-center justify-between animate-fade-in-down" style="transform: translateX(-50%)">
+        <span id="errorMessage"></span>
+        <button onclick="dismissError()" class="p-1 rounded-full hover:bg-gray-800 transition-colors ml-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-900 rounded-2xl p-6 border border-gray-700 shadow-2xl w-full max-w-2xl text-center relative animate-scale-in">
+            <h3 class="text-2xl font-semibold mb-4 text-white">Camera</h3>
+            <div class="aspect-square bg-black rounded-lg overflow-hidden relative mb-4 flex items-center justify-center">
+                <div id="cameraError" class="hidden p-4 text-red-400"></div>
+                <img id="capturedImage" class="hidden w-full h-full object-cover" />
+                <video id="cameraVideo" autoplay playsinline class="w-full h-full object-cover transform -scale-x-100"></video>
+            </div>
+            <div class="flex justify-center gap-4" id="cameraControls">
+                <button id="captureButton" class="w-20 h-20 rounded-full bg-white border-4 border-gray-600 focus:outline-none focus:ring-4 focus:ring-yellow-400 transition-all hover:border-yellow-400"></button>
+            </div>
+            <div class="hidden justify-center gap-4" id="capturedControls">
+                <button onclick="retakePhoto()" class="px-6 py-2 rounded-md font-semibold tracking-wider uppercase transition-all duration-300 bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">Retake</button>
+                <button onclick="confirmPhoto()" class="px-6 py-2 rounded-md font-semibold tracking-wider uppercase transition-all duration-300 bg-yellow-400 text-black hover:bg-yellow-300">Use Photo</button>
+            </div>
+            <button onclick="closeCameraModal()" class="absolute top-4 right-4 p-2 rounded-full bg-gray-800/70 text-white hover:bg-gray-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+            <canvas id="cameraCanvas" class="hidden"></canvas>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="flex flex-col items-center p-4 pb-20">
+        <div class="w-full max-w-6xl mx-auto">
+            
+            <!-- Header -->
+            <header class="text-center my-12">
+                <h1 class="text-6xl md:text-7xl font-caveat text-white tracking-tight">
+                    Picture<span class="text-yellow-400">Me</span>
+                </h1>
+                <p class="mt-4 text-lg text-gray-500">Transform your photos with the power of Gemini AI.</p>
+            </header>
+
+            <!-- API Key Section -->
+            <div class="max-w-2xl mx-auto mb-8">
+                <button
+                    id="toggle-setup-btn"
+                    class="w-full text-left px-4 py-3 bg-gray-900 rounded-lg shadow hover:shadow-md transition-shadow flex items-center justify-between border border-gray-800"
+                >
+                    <span class="text-sm font-medium text-gray-300">⚙️ API Setup</span>
+                    <svg id="setup-chevron" class="w-5 h-5 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="api-key-section" class="hidden mt-2 bg-gray-900 rounded-lg shadow p-6 border border-gray-800">
+                    <div class="flex gap-4">
+                        <input
+                            type="password"
+                            id="api-key-input"
+                            placeholder="Enter your Google AI API Key"
+                            class="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white"
+                        />
+                        <button
+                            id="save-api-key-btn"
+                            class="bg-yellow-400 text-black px-6 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition-colors"
+                        >
+                            Save Key
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-400 mt-2">
+                        Get your API key from <a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank" class="text-yellow-400 hover:underline">Google AI Studio</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <main>
+                <div class="bg-gray-900/50 backdrop-blur-sm p-8 rounded-2xl shadow-2xl border border-gray-800 mb-16">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+
+                        <!-- Photo Upload Section -->
+                        <div>
+                            <h2 class="text-2xl font-semibold mb-6 text-white">1. Your Photo</h2>
+                            <div id="uploadArea" class="w-full aspect-square border-4 border-dashed border-gray-700 rounded-xl flex items-center justify-center cursor-pointer hover:border-yellow-400 transition-colors bg-gray-800 overflow-hidden shadow-inner">
+                                <div id="uploadPrompt" class="flex flex-col items-center justify-center p-6 text-center text-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" /></svg>
+                                    <p class="mt-4 text-lg text-gray-300">Click to upload a file</p>
+                                    <p class="mt-4 text-sm">or</p>
+                                    <button onclick="openCameraModal(event)" class="mt-2 px-6 py-2 rounded-md font-semibold tracking-wider uppercase transition-all duration-300 bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
+                                        <div class="flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.776 48.776 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
+                                            <span>Use Camera</span>
+                                        </div>
+                                    </button>
+                                </div>
+                                <div id="uploadingIndicator" class="hidden flex flex-col items-center">
+                                    <div class="animate-spin-custom rounded-full h-10 w-10 border-t-2 border-b-2 border-yellow-400"></div>
+                                    <p class="text-gray-400 mt-4">Uploading...</p>
+                                </div>
+                                <img id="uploadedImage" class="hidden w-full h-full object-cover" />
+                            </div>
+                            <div id="uploadButtons" class="hidden flex flex-col sm:flex-row gap-4 mt-4 w-full">
+                                <button onclick="changeFile()" class="flex-1 px-6 py-2 rounded-md font-semibold tracking-wider uppercase transition-all duration-300 bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">Change File</button>
+                                <button onclick="openCameraModal(event)" class="flex-1 px-6 py-2 rounded-md font-semibold tracking-wider uppercase transition-all duration-300 bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.776 48.776 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" /></svg>
+                                        <span>Use Camera</span>
+                                    </div>
+                                </button>
+                            </div>
+                            <input type="file" id="fileInput" accept="image/png, image/jpeg" class="hidden" />
+                        </div>
+
+                        <!-- Template Selection Section -->
+                        <div>
+                            <h2 class="text-2xl font-semibold mb-6 text-white">2. Choose a Theme</h2>
+                            <div id="templateGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8"></div>
+                            
+                            <!-- Custom Prompt Section -->
+                            <div class="mt-8">
+                                <button
+                                    id="toggle-custom-prompt-btn"
+                                    class="w-full text-left px-6 py-4 bg-gray-800 rounded-xl shadow hover:shadow-md transition-all flex items-center justify-between border-2 border-gray-700 hover:border-yellow-400"
+                                >
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-2xl">✨</span>
+                                        <div>
+                                            <h3 class="text-lg font-semibold text-white">Create Your Own Style</h3>
+                                            <p class="text-sm text-gray-400">Write a custom prompt for unique results</p>
+                                        </div>
+                                    </div>
+                                    <svg id="custom-prompt-chevron" class="w-5 h-5 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+
+                                <div id="custom-prompt-section" class="hidden mt-4 bg-gray-800 rounded-xl shadow p-6 border-2 border-yellow-400">
+                                    <label for="custom-prompt-textarea" class="block text-sm font-medium text-gray-300 mb-2">
+                                        Describe your desired transformation style
+                                    </label>
+                                    <textarea
+                                        id="custom-prompt-textarea"
+                                        rows="4"
+                                        placeholder="Example: Transform this photo into a vintage 1920s portrait with sepia tones, soft focus, and period-appropriate clothing and hairstyle..."
+                                        class="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white resize-vertical"
+                                    ></textarea>
+                                    <div class="mt-4 flex items-center justify-between">
+                                        <p class="text-xs text-gray-400">
+                                            💡 Be specific about style, era, mood, clothing, and background
+                                        </p>
+                                        <button
+                                            id="clear-custom-prompt-btn"
+                                            class="text-sm text-gray-400 hover:text-white font-medium"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Template Options Container -->
+                            <div id="templateOptions"></div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <div class="mt-12 text-center">
+                        <button id="generateButton" onclick="handleGenerate()" class="text-lg px-12 py-4 px-6 py-2 rounded-md font-semibold tracking-wider uppercase transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-yellow-400 text-black hover:bg-yellow-300">
+                            <div class="flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" /></svg>
+                                <span id="generateButtonText">Generate Photos</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Setting Up Indicator -->
+                <div id="settingUpIndicator" class="hidden text-center my-20 flex flex-col items-center p-10 bg-gray-900/70 rounded-2xl">
+                    <div class="animate-spin-custom rounded-full h-16 w-16 border-t-4 border-b-4 border-pink-500 mb-6"></div>
+                    <p class="text-2xl text-pink-400 font-semibold tracking-wider italic">Teasing our hair and firing up the lasers...</p>
+                    <p class="text-gray-400 mt-2">Generating a totally tubular '80s photoshoot style!</p>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" class="hidden mt-16">
+                    <h2 class="text-3xl font-bold text-white mb-8 text-center">Your Generated Photos</h2>
+
+                    <!-- Progress Bar -->
+                    <div id="progressBarContainer" class="hidden w-full max-w-4xl mx-auto mb-8 text-center">
+                        <div class="bg-gray-800 rounded-full h-3 overflow-hidden shadow-md">
+                            <div id="progressBar" class="bg-yellow-400 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <p class="text-gray-400 mt-4 text-sm">Please keep this window open while your photos are being generated.</p>
+                    </div>
+
+                    <!-- Generated Images Grid -->
+                    <div id="imagesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 mt-8"></div>
+                    
+                    <p class="text-center text-xs text-gray-600 mt-8">Made with Gemini</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div id="actionButtons" class="hidden text-center mt-16 mb-12 flex justify-center gap-6">
+                    <button onclick="startOver()" class="px-6 py-2 rounded-md font-semibold tracking-wider uppercase transition-all duration-300 bg-transparent border border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white">Start Over</button>
+                    <div class="relative">
+                        <button id="albumDownloadButton" onclick="toggleAlbumMenu()" class="px-6 py-2 rounded-md font-semibold tracking-wider uppercase transition-all duration-300 bg-yellow-400 text-black hover:bg-yellow-300">
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                                <span>Download Album</span>
+                            </div>
+                        </button>
+                        <div id="albumMenu" class="hidden absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-20 bg-black/80 backdrop-blur-lg rounded-xl text-white text-sm flex flex-col items-start p-1 shadow-2xl w-48 border border-gray-700 animate-scale-in">
+                            <button onclick="downloadAlbum('1:1')" class="w-full text-left px-4 py-2 hover:bg-yellow-400/20 rounded-lg transition-colors">Square (1:1)</button>
+                            <button onclick="downloadAlbum('9:16')" class="w-full text-left px-4 py-2 hover:bg-yellow-400/20 rounded-lg transition-colors">Portrait (9:16)</button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // ==================== STATE MANAGEMENT ====================
+        const state = {
+            apiKey: null,
+            uploadedImage: null,
+            generatedImages: [],
+            isLoading: false,
+            isSettingUp: false,
+            isDownloadingAlbum: false,
+            template: null,
+            customPrompt: null,
+            currentAlbumStyle: '',
+            headshotExpression: 'Friendly Smile',
+            headshotPose: 'Forward',
+            hairColors: [],
+            selectedHairStyles: [],
+            customHairStyle: '',
+            isCustomHairActive: false,
+            lookbookStyle: '',
+            customLookbookStyle: '',
+            cameraStream: null,
+            capturedImageData: null
+        };
+
+        // ==================== TEMPLATES DEFINITION ====================
+        const templates = {
+            decades: {
+                name: 'Time Traveler',
+                description: 'See yourself through the decades.',
+                isPolaroid: true,
+                prompts: [
+                    { id: '1950s', base: 'A 1950s style portrait.' },
+                    { id: '1960s', base: 'A 1960s style portrait.' },
+                    { id: '1970s', base: 'A 1970s style portrait.' },
+                    { id: '1980s', base: 'An 1980s style portrait.' },
+                    { id: '1990s', base: 'A 1990s style portrait.' },
+                    { id: '2000s', base: 'A 2000s style portrait.' },
+                ]
+            },
+            styleLookbook: {
+                name: "Style Lookbook",
+                description: "Your personal fashion photoshoot.",
+                isPolaroid: false,
+                styles: [
+                    'Classic / Casual', 'Streetwear', 'Vintage', 'Goth', 'Preppy', 'Minimalist', 
+                    'Athleisure', 'Old Money / Quiet Luxury', 'Bohemian (Boho)', 'Business Casual', 
+                    '90s Grunge', 'Cocktail / Formal'
+                ],
+                prompts: [
+                    { id: 'Look 1', base: 'a full-body shot, standing' },
+                    { id: 'Look 2', base: 'a half-body shot, smiling' },
+                    { id: 'Look 3', base: 'a candid walking shot' },
+                    { id: 'Look 4', base: 'a shot showing off outfit details' },
+                    { id: 'Look 5', base: 'a seated pose' },
+                    { id: 'Look 6', base: 'a close-up shot focusing on accessories' },
+                ]
+            },
+            eightiesMall: {
+                name: "'80s Mall Shoot",
+                description: "Totally tubular 1980s portraits.",
+                isPolaroid: false,
+                prompts: [
+                    { id: 'Smiling', base: 'a friendly, smiling pose' },
+                    { id: 'Thoughtful', base: 'a thoughtful, looking away from the camera pose' },
+                    { id: 'Fun', base: 'a fun, laughing pose' },
+                    { id: 'Serious', base: 'a serious, dramatic pose' },
+                    { id: 'Hand on Chin', base: 'posing with their hand on their chin' },
+                    { id: 'Over the Shoulder', base: 'looking back over their shoulder' },
+                ]
+            },
+            figurines: {
+                name: 'Miniature Me',
+                description: 'Your own collectible figurines.',
+                isPolaroid: false,
+                prompts: [
+                    { id: 'Bobblehead', base: 'A realistic bobblehead figure of the person with an oversized head, displayed on a polished wooden desk next to a computer keyboard.' },
+                    { id: 'Porcelain Figurine', base: 'A delicate souvenir porcelain figurine of the person, painted with glossy colors, sitting on a lace doily on a vintage dresser.' },
+                    { id: 'Retro Action Figure', base: 'A retro 1980s-style action figure of the person, complete with articulated joints and slightly worn paint, posed in a dynamic stance on a rocky diorama base.' },
+                    { id: 'Vinyl Figure', base: 'A stylized collectible vinyl art toy of the person with minimalist features, standing on a shelf filled with other similar toys.' },
+                    { id: 'Plushy Figure', base: 'A soft, cute plushy figure of the person with detailed fabric texture and stitching, sitting on a neatly made bed.' },
+                    { id: 'Wooden Folk Art', base: 'A hand-carved wooden folk art figure of the person, painted with rustic, charming details, standing on a simple wooden block on a craft fair table.' },
+                ]
+            },
+            hairStyler: {
+                name: 'Hair Styler',
+                description: 'Try on new hairstyles and colors.',
+                isPolaroid: false,
+                prompts: [
+                    { id: 'Short', base: 'a short hairstyle' },
+                    { id: 'Medium', base: 'a medium-length hairstyle' },
+                    { id: 'Long', base: 'a long hairstyle' },
+                    { id: 'Straight', base: 'straight hair' },
+                    { id: 'Wavy', base: 'wavy hair' },
+                    { id: 'Curly', base: 'curly hair' },
+                ]
+            },
+            impossibleSelfies: {
+                name: 'Impossible Pics',
+                description: 'Photos that defy reality.',
+                isPolaroid: false,
+                prompts: [
+                    { id: 'With Lincoln', base: 'The person posing with Abraham Lincoln, who is also making a peace sign and sticking his tongue out. Keep the original location.' },
+                    { id: 'Alien & Bubbles', base: 'The person posing next to a realistic alien holding two bubble guns, blowing thousands of bubbles. Keep the person\'s pose and the original location.' },
+                    { id: 'Room of Puppies', base: 'The person posing in a room filled with a hundred different puppies.' },
+                    { id: 'Singing Puppets', base: 'The person posing in a room full of large, whimsical, brightly colored felt puppets that are singing.' },
+                    { id: 'Giant Chicken Tender', base: 'The person posing with their arm around a 4-foot-tall chicken tender. Keep the person\'s facial expression exactly the same.' },
+                    { id: 'Yeti Photobomb', base: 'Add a realistic yeti standing next to the person on the left side of the photo, matching the lighting. Keep the person\'s pose and face exactly the same.' },
+                ]
+            },
+            headshots: {
+                name: "Pro Headshots",
+                description: "Professional profile pictures.",
+                isPolaroid: false,
+                prompts: [
+                    { id: 'Business Suit', base: 'wearing a dark business suit with a crisp white shirt' },
+                    { id: 'Smart Casual', base: 'wearing a smart-casual knit sweater over a collared shirt' },
+                    { id: 'Creative Pro', base: 'wearing a dark turtleneck' },
+                    { id: 'Corporate Look', base: 'wearing a light blue button-down shirt' },
+                    { id: 'Bright & Modern', base: 'wearing a colorful blazer' },
+                    { id: 'Relaxed', base: 'wearing a simple, high-quality t-shirt under a casual jacket' },
+                ]
+            },
+        };
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function toBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function fetchWithRetry(url, options, retries = 5, backoff = 1000) {
+            return new Promise((resolve, reject) => {
+                const attempt = async (retryCount, delay) => {
+                    try {
+                        const response = await fetch(url, options);
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({}));
+                            console.error('API Error:', errorData);
+                            if (response.status === 429 && retryCount > 0) {
+                                console.log(`Rate limited. Retrying in ${delay / 1000}s...`);
+                                setTimeout(() => attempt(retryCount - 1, delay * 2), delay);
+                            } else if (response.status === 401) {
+                                reject(new Error(`API request failed with status 401: Unauthorized. Please ensure your API key is valid.`));
+                            } else {
+                                reject(new Error(`API request failed with status ${response.status}: ${errorData.error?.message || 'Unknown error'}`));
+                            }
+                        } else {
+                            resolve(response.json());
+                        }
+                    } catch (error) {
+                        if (retryCount > 0) {
+                            console.log(`Request failed. Retrying in ${delay / 1000}s...`, error);
+                            setTimeout(() => attempt(retryCount - 1, delay * 2), delay);
+                        } else {
+                            reject(error);
+                        }
+                    }
+                };
+                attempt(retries, backoff);
+            });
+        }
+
+        function cropImage(imageUrl, aspectRatio) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.src = imageUrl;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    let sourceX, sourceY, sourceWidth, sourceHeight;
+                    const originalWidth = img.width;
+                    const originalHeight = img.height;
+                    const originalAspectRatio = originalWidth / originalHeight;
+
+                    const [targetW, targetH] = aspectRatio.split(':').map(Number);
+                    const targetAspectRatio = targetW / targetH;
+                    const isSquareCrop = aspectRatio === '1:1';
+
+                    if (originalAspectRatio > targetAspectRatio) {
+                        // Image is wider than target - crop sides, keep full height
+                        sourceHeight = originalHeight;
+                        sourceWidth = originalHeight * targetAspectRatio;
+                        sourceX = (originalWidth - sourceWidth) / 2;
+                        sourceY = 0;
+                    } else {
+                        // Image is taller than target - crop top/bottom, keep full width
+                        sourceWidth = originalWidth;
+                        sourceHeight = originalWidth / targetAspectRatio;
+                        
+                        // For 1:1 crops, align from top to preserve head and upper body
+                        // For other ratios, center vertically
+                        if (isSquareCrop) {
+                            sourceY = 0; // Top alignment
+                        } else {
+                            sourceY = (originalHeight - sourceHeight) / 2; // Center alignment
+                        }
+                        sourceX = 0;
+                    }
+
+                    canvas.width = sourceWidth;
+                    canvas.height = sourceHeight;
+
+                    ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, sourceWidth, sourceHeight);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = (err) => reject(err);
+            });
+        }
+
+        async function generateDynamicPrompt(themeDescription) {
+            console.log("Generating dynamic prompt (using fallback) for:", themeDescription);
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            return "A retro 80s studio background with laser beams, neon geometric shapes, fog, and dramatic backlighting.";
+        }
+
+        async function generateImageWithRetry(payload, totalAttempts = 3) {
+            let lastError;
+            for (let attempt = 1; attempt <= totalAttempts; attempt++) {
+                try {
+                    const apiKey = state.apiKey || "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key=${apiKey}`;
+                    
+                    const result = await fetchWithRetry(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const base64Data = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
+
+                    if (base64Data) {
+                        return `data:image/png;base64,${base64Data}`;
+                    }
+
+                    lastError = new Error("API returned no image data.");
+                    console.warn(`Attempt ${attempt}/${totalAttempts}: ${lastError.message}`);
+
+                } catch (error) {
+                    lastError = error;
+                    console.error(`Attempt ${attempt}/${totalAttempts} failed:`, error);
+                }
+
+                if (attempt < totalAttempts) {
+                    const delay = 2500 * Math.pow(2, attempt - 1);
+                    console.log(`Waiting ${delay / 1000}s before next attempt...`);
+                    await new Promise(res => setTimeout(res, delay));
+                }
+            }
+
+            throw new Error(`Image generation failed after ${totalAttempts} attempts. Last error: ${lastError?.message || 'Unknown error'}`);
+        }
+
+        function createSingleFramedImage(imageUrl, cropRatio, labelText = null) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const croppedImgUrl = await cropImage(imageUrl, cropRatio);
+                    const img = new Image();
+                    img.crossOrigin = "anonymous";
+                    img.src = croppedImgUrl;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        const hasLabel = !!labelText;
+                        const sidePadding = img.width * 0.04;
+                        const topPadding = img.width * 0.04;
+                        let bottomPadding = img.width * 0.18;
+
+                        if(hasLabel) {
+                            bottomPadding = img.width * 0.24;
+                        }
+                        
+                        canvas.width = img.width + sidePadding * 2;
+                        canvas.height = img.height + topPadding + bottomPadding;
+
+                        ctx.fillStyle = '#111827';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        ctx.drawImage(img, sidePadding, topPadding);
+
+                        if (hasLabel) {
+                            const labelFontSize = Math.max(24, Math.floor(img.width * 0.08));
+                            ctx.font = `700 ${labelFontSize}px Caveat, cursive`;
+                            ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(labelText, canvas.width / 2, img.height + topPadding + (bottomPadding - img.width * 0.1) / 2);
+                        }
+
+                        const fontSize = Math.max(12, Math.floor(img.width * 0.05));
+                        ctx.font = `600 ${fontSize}px Inter, sans-serif`;
+                        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText("Made with Gemini", canvas.width / 2, canvas.height - (img.width * 0.11));
+
+                        const nanoFontSize = Math.max(8, Math.floor(img.width * 0.035));
+                        ctx.font = `600 ${nanoFontSize}px Inter, sans-serif`;
+                        ctx.fillText("Edit your images with Nano Banana at gemini.google", canvas.width / 2, canvas.height - (img.width * 0.05));
+
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    img.onerror = reject;
+                } catch(err) {
+                    reject(err);
+                }
+            });
+        }
+
+        function getModelInstruction(template, prompt, options) {
+            const {
+                headshotExpression, headshotPose,
+                currentAlbumStyle,
+                hairColors,
+                customPrompt,
+            } = options;
+
+            // If custom prompt is provided, use it directly
+            if (customPrompt) {
+                return `${customPrompt}. IMPORTANT: Maintain the exact facial features, likeness, and perceived gender of the person in the provided reference photo. Do not alter the person's core facial structure.`;
+            }
+
+            switch (template) {
+                case 'decades':
+                    return `The highest priority is to maintain the exact facial features, likeness, perceived gender, framing, and composition of the person in the provided reference photo. Keeping the original photo's composition, change the person's hair, clothing, and accessories, as well as the photo's background, to match the style of the ${prompt.id}. Do not alter the person's core facial structure.`;
+                case 'impossibleSelfies':
+                    return `The highest priority is to maintain the exact facial features, likeness, and perceived gender of the person in the provided reference photo. Keeping the original photo's composition as much as possible, place the person into the following scene, changing their clothing, hair, and the background to match: ${prompt.base}. Do not alter the person's core facial structure.`;
+                case 'hairStyler': {
+                    let instruction = `The highest priority is to maintain the exact facial features, likeness, and perceived gender of the person in the provided reference photo. Keeping the original photo's composition, style the person's hair to be a perfect example of ${prompt.base}. If the person's hair already has this style, enhance and perfect it. Do not alter the person's core facial structure, clothing, or the background.`;
+
+                    if (['Short', 'Medium', 'Long'].includes(prompt.id)) {
+                        instruction += " Maintain the person's original hair texture (e.g., straight, wavy, curly).";
+                    }
+
+                    if (hairColors && hairColors.length > 0) {
+                        if (hairColors.length === 1) {
+                            instruction += ` The hair color should be ${hairColors[0]}.`;
+                        } else if (hairColors.length === 2) {
+                            instruction += ` The hair should be a mix of two colors: ${hairColors[0]} and ${hairColors[1]}.`;
+                        }
+                    }
+                    return instruction;
+                }
+                case 'headshots': {
+                    const poseInstruction = headshotPose === 'Forward' ? 'facing forward towards the camera' : 'posed at a slight angle to the camera';
+                    return `The highest priority is to maintain the exact facial features, likeness, and perceived gender of the person in the provided reference photo. Transform the image into a professional headshot. The person should be ${poseInstruction} with a "${headshotExpression}" expression. They should be ${prompt.base}. Please maintain the original hairstyle from the photo. The background should be a clean, neutral, out-of-focus studio background (like light gray, beige, or white). Do not alter the person's core facial structure. The final image should be a well-lit, high-quality professional portrait.`;
+                }
+                case 'eightiesMall':
+                    return `The highest priority is to maintain the exact facial features, likeness, and perceived gender of the person in the provided reference photo. Transform the image into a photo from a single 1980s mall photoshoot. The overall style for the entire photoshoot is: "${currentAlbumStyle}". For this specific photo, the person should be in ${prompt.base}. The person's hair and clothing should be 80s style and be consistent across all photos in this set. The background and lighting must also match the overall style for every photo.`;
+                case 'styleLookbook': {
+                    const finalStyle = options.lookbookStyle === 'Other' ? options.customLookbookStyle : options.lookbookStyle;
+                    return `The highest priority is to maintain the exact facial features, likeness, and perceived gender of the person in the provided reference photo. Transform the image into a high-fashion lookbook photo. The overall fashion style for the entire lookbook is "${finalStyle}". For this specific photo, create a unique, stylish outfit that fits the overall style, and place the person in ${prompt.base} in a suitable, fashionable setting. The person's hair and makeup should also complement the style. Each photo in the lookbook should feature a different outfit. Do not alter the person's core facial structure.`;
+                }
+                case 'figurines':
+                    return `The highest priority is to maintain the exact facial features and likeness of the person in the provided reference photo. Transform the person into a miniature figurine based on the following description, placing it in a realistic environment: ${prompt.base}. The final image should look like a real photograph of a physical object. Do not alter the person's core facial structure.`;
+                default:
+                    return `Create an image based on the reference photo and this prompt: ${prompt.base}`;
+            }
+        }
+
+        async function triggerDownload(href, fileName) {
+            try {
+                const response = await fetch(href);
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(link);
+            } catch (error) {
+                console.error("Could not download the image:", error);
+                showError("Sorry, the download failed. Please try again.");
+            }
+        }
+
+        // ==================== UI FUNCTIONS ====================
+        function showError(message) {
+            const errorNotification = document.getElementById('errorNotification');
+            const errorMessage = document.getElementById('errorMessage');
+            errorMessage.textContent = message;
+            errorNotification.classList.remove('hidden');
+        }
+
+        function dismissError() {
+            document.getElementById('errorNotification').classList.add('hidden');
+        }
+
+        function updateUploadUI() {
+            const uploadArea = document.getElementById('uploadArea');
+            const uploadPrompt = document.getElementById('uploadPrompt');
+            const uploadingIndicator = document.getElementById('uploadingIndicator');
+            const uploadedImage = document.getElementById('uploadedImage');
+            const uploadButtons = document.getElementById('uploadButtons');
+
+            if (state.uploadedImage) {
+                uploadPrompt.classList.add('hidden');
+                uploadingIndicator.classList.add('hidden');
+                uploadedImage.src = state.uploadedImage;
+                uploadedImage.classList.remove('hidden');
+                uploadButtons.classList.remove('hidden');
+                uploadArea.style.cursor = 'default';
+            } else {
+                uploadPrompt.classList.remove('hidden');
+                uploadingIndicator.classList.add('hidden');
+                uploadedImage.classList.add('hidden');
+                uploadButtons.classList.add('hidden');
+                uploadArea.style.cursor = 'pointer';
+            }
+        }
+
+        function updateGenerateButton() {
+            const button = document.getElementById('generateButton');
+            const buttonText = document.getElementById('generateButtonText');
+            
+            const disabled = !state.uploadedImage || (!state.template && !state.customPrompt) || state.isLoading || state.isSettingUp;
+            button.disabled = disabled;
+
+            if (state.isLoading) {
+                const progress = getProgress();
+                buttonText.innerHTML = `<div class="animate-spin-custom rounded-full h-5 w-5 border-t-2 border-b-2 border-black inline-block mr-2"></div>Generating... (${Math.round(progress)}%)`;
+            } else if (state.isSettingUp) {
+                buttonText.innerHTML = `<div class="animate-spin-custom rounded-full h-5 w-5 border-t-2 border-b-2 border-black inline-block mr-2"></div>Setting the stage...`;
+            } else {
+                buttonText.textContent = 'Generate Photos';
+            }
+        }
+
+        function getProgress() {
+            if (state.generatedImages.length === 0) return 0;
+            const completed = state.generatedImages.filter(img => img.status !== 'pending').length;
+            return (completed / state.generatedImages.length) * 100;
+        }
+
+        function updateProgressBar() {
+            const progressBar = document.getElementById('progressBar');
+            const progress = getProgress();
+            progressBar.style.width = `${progress}%`;
+        }
+
+        function renderTemplates() {
+            const grid = document.getElementById('templateGrid');
+            grid.innerHTML = '';
+            
+            Object.entries(templates).forEach(([key, data]) => {
+                const card = document.createElement('div');
+                const isSelected = state.template === key;
+                card.className = `cursor-pointer p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                    isSelected ? 'border-yellow-400 bg-yellow-900/20 ring-1 ring-yellow-400' : 'border-gray-700 bg-gray-900 hover:border-gray-600'
+                }`;
+                card.innerHTML = `
+                    <h3 class="text-lg font-semibold text-white mb-2">${data.name}</h3>
+                    <p class="text-sm text-gray-400">${data.description}</p>
+                `;
+                card.onclick = () => selectTemplate(key);
+                grid.appendChild(card);
+            });
+        }
+
+        function renderTemplateOptions() {
+            const container = document.getElementById('templateOptions');
+            container.innerHTML = '';
+
+            if (state.template === 'hairStyler') {
+                container.innerHTML = `
+                    <div class="p-6 border border-gray-700 rounded-xl space-y-6 bg-gray-800/50">
+                        <div class="flex justify-between items-center">
+                            <h3 class='text-xl font-semibold text-white'>Customize Hairstyle</h3>
+                            <span class="text-sm font-bold ${getTotalSelectedStyles() >= 6 ? 'text-yellow-400' : 'text-gray-500'}">${getTotalSelectedStyles()} / 6</span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-3">Style (select up to 6)</label>
+                            <div class="flex flex-wrap gap-3" id="hairStyleOptions"></div>
+                        </div>
+                        <div id="customHairStyleInput" class="hidden">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Your Custom Style</label>
+                            <input type="text" id="customHairStyleText" placeholder="e.g., A vibrant pink mohawk" 
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white" 
+                                value="${state.customHairStyle}" 
+                                oninput="state.customHairStyle = this.value" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-3">Hair Color</label>
+                            <div class="flex items-center gap-4 flex-wrap" id="hairColorOptions"></div>
+                            ${state.hairColors.length > 0 ? '<button onclick="clearHairColors()" class="text-xs text-gray-500 hover:text-white transition-colors mt-3">Clear all colors</button>' : ''}
+                        </div>
+                    </div>
+                `;
+                renderHairStyleOptions();
+                renderHairColorOptions();
+                if (state.isCustomHairActive) {
+                    document.getElementById('customHairStyleInput').classList.remove('hidden');
+                }
+            } else if (state.template === 'headshots') {
+                container.innerHTML = `
+                    <div class="p-6 border border-gray-700 rounded-xl space-y-6 bg-gray-800/50">
+                        <h3 class='text-xl font-semibold text-white'>Customize Headshot</h3>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-3">Facial Expression</label>
+                            <div class="flex flex-wrap gap-3">
+                                ${['Friendly Smile', 'Confident Look', 'Thoughtful Gaze'].map(exp => `
+                                    <button onclick="selectHeadshotExpression('${exp}')" class="cursor-pointer px-3 py-1.5 text-sm rounded-full transition-colors font-semibold ${state.headshotExpression === exp ? 'bg-yellow-400 text-black' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}">
+                                        ${exp}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-400 mb-3">Pose</label>
+                            <div class="flex flex-wrap gap-3">
+                                ${[{value: 'Forward', label: 'Facing Forward'}, {value: 'Angle', label: 'Slight Angle'}].map(pose => `
+                                    <button onclick="selectHeadshotPose('${pose.value}')" class="cursor-pointer px-3 py-1.5 text-sm rounded-full transition-colors font-semibold ${state.headshotPose === pose.value ? 'bg-yellow-400 text-black' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}">
+                                        ${pose.label}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (state.template === 'styleLookbook') {
+                const styles = templates.styleLookbook.styles;
+                container.innerHTML = `
+                    <div class="p-6 border border-gray-700 rounded-xl space-y-6 bg-gray-800/50">
+                        <h3 class='text-xl font-semibold text-white'>Choose a Fashion Style</h3>
+                        <div>
+                            <div class="flex flex-wrap gap-3">
+                                ${styles.map(style => `
+                                    <label class="cursor-pointer px-3 py-1.5 text-sm rounded-full transition-colors font-semibold ${state.lookbookStyle === style ? 'bg-yellow-400 text-black' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}">
+                                        <input type="radio" name="style" value="${style}" ${state.lookbookStyle === style ? 'checked' : ''} onchange="selectLookbookStyle(this.value)" class="hidden" />
+                                        ${style}
+                                    </label>
+                                `).join('')}
+                                <label class="cursor-pointer px-3 py-1.5 text-sm rounded-full transition-colors font-semibold ${state.lookbookStyle === 'Other' ? 'bg-yellow-400 text-black' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}">
+                                    <input type="radio" name="style" value="Other" ${state.lookbookStyle === 'Other' ? 'checked' : ''} onchange="selectLookbookStyle(this.value)" class="hidden" />
+                                    Other...
+                                </label>
+                            </div>
+                        </div>
+                        <div id="customLookbookStyleInput" class="${state.lookbookStyle === 'Other' ? '' : 'hidden'}">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">Your Custom Style</label>
+                            <input type="text" placeholder="e.g., Cyberpunk, Avant-garde" 
+                                class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-white" 
+                                value="${state.customLookbookStyle}" 
+                                oninput="state.customLookbookStyle = this.value" />
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderHairStyleOptions() {
+            const container = document.getElementById('hairStyleOptions');
+            if (!container) return;
+
+            const hairPrompts = templates.hairStyler.prompts;
+            container.innerHTML = hairPrompts.map(prompt => `
+                <button onclick="toggleHairStyle('${prompt.id}')" 
+                    class="cursor-pointer px-3 py-1.5 text-sm rounded-full transition-colors font-semibold ${
+                        state.selectedHairStyles.includes(prompt.id) ? 'bg-yellow-400 text-black' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                    }">
+                    ${prompt.id}
+                </button>
+            `).join('') + `
+                <button onclick="toggleCustomHair()" 
+                    class="cursor-pointer px-3 py-1.5 text-sm rounded-full transition-colors font-semibold ${
+                        state.isCustomHairActive ? 'bg-yellow-400 text-black' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                    }">
+                    Other...
+                </button>
+            `;
+        }
+
+        function renderHairColorOptions() {
+            const container = document.getElementById('hairColorOptions');
+            if (!container) return;
+
+            container.innerHTML = state.hairColors.map((color, index) => `
+                <div class="flex items-center gap-2 p-2 bg-gray-700/50 rounded-lg border border-gray-600">
+                    <div class="relative w-10 h-10 rounded-md overflow-hidden" style="background-color: ${color}">
+                        <input type="color" value="${color}" onchange="updateHairColor(${index}, this.value)" 
+                            class="absolute inset-0 w-full h-full cursor-pointer opacity-0" />
+                    </div>
+                    <span class="font-mono text-sm text-gray-300 uppercase">${color}</span>
+                    <button onclick="removeHairColor(${index})" class="p-1 rounded-full text-gray-500 hover:bg-gray-600 hover:text-red-400 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            `).join('') + (state.hairColors.length < 2 ? `
+                <button onclick="addHairColor()" class="flex items-center justify-center gap-2 h-[68px] px-4 rounded-lg border-2 border-dashed border-gray-600 hover:border-yellow-400 text-gray-400 hover:text-yellow-400 transition-colors bg-gray-700/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    <span>${state.hairColors.length === 0 ? 'Add Color' : 'Add Highlight'}</span>
+                </button>
+            ` : '');
+        }
+
+        function renderGeneratedImages() {
+            const grid = document.getElementById('imagesGrid');
+            const activeTemplate = templates[state.template] || {};
+            const isPolaroid = activeTemplate.isPolaroid;
+            const showLabel = !['headshots', 'eightiesMall', 'styleLookbook', 'figurines'].includes(state.template);
+
+            grid.innerHTML = state.generatedImages.map((img, index) => {
+                if (img.status === 'success') {
+                    return renderPhotoDisplay(img, index, isPolaroid, showLabel);
+                } else if (img.status === 'failed') {
+                    return renderErrorCard(img, index, isPolaroid, showLabel);
+                } else {
+                    return renderLoadingCard(img, isPolaroid, showLabel);
+                }
+            }).join('');
+        }
+
+        function renderPhotoDisplay(img, index, isPolaroid, showLabel) {
+            const rotations = ['rotate-1', '-rotate-1', 'rotate-0.5', '-rotate-1.5'];
+            const rotation = isPolaroid ? rotations[index % rotations.length] : 'rotate-0';
+            
+            const containerClass = isPolaroid
+                ? `relative group bg-gray-100 p-3 pb-12 shadow-xl transform transition-all duration-300 hover:shadow-2xl hover:scale-105 ${rotation}`
+                : 'relative group pb-4 bg-gray-900 rounded-xl shadow-lg transition-all duration-300 hover:shadow-2xl hover:scale-105';
+            
+            const imageContainerClass = isPolaroid ? 'aspect-square bg-gray-200' : 'rounded-t-xl overflow-hidden';
+            const textClass = isPolaroid
+                ? 'text-center mt-4 font-caveat text-3xl text-gray-900 absolute bottom-3 left-0 right-0'
+                : 'text-center mt-3 text-lg font-semibold text-gray-300 px-3';
+
+            return `
+                <div class="${containerClass}">
+                    <div class="${imageContainerClass}">
+                        <img src="${img.imageUrl}" alt="${img.id}" class="w-full ${isPolaroid ? 'h-full object-cover' : 'h-auto'}" />
+                    </div>
+                    ${showLabel ? `<p class="${textClass}">${img.id}</p>` : ''}
+                    <div class="absolute top-3 right-3 z-10">
+                        <button onclick="toggleImageMenu(${index})" class="p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors backdrop-blur-sm shadow-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z" /></svg>
+                        </button>
+                        <div id="imageMenu${index}" class="hidden absolute right-0 top-12 mt-2 w-48 origin-top-right bg-black/80 backdrop-blur-md rounded-lg shadow-2xl ring-1 ring-white/10 text-white text-sm flex flex-col p-1">
+                            <span class="w-full text-left px-3 pt-2 pb-1 text-xs text-gray-500 uppercase tracking-wider">Actions</span>
+                            <button onclick="regenerateImage(${index})" class="w-full text-left px-3 py-2 hover:bg-yellow-400/20 rounded-md transition-colors">Regenerate</button>
+                            <div class="my-1 h-px bg-white/10"></div>
+                            <span class="w-full text-left px-3 pt-1 pb-1 text-xs text-gray-500 uppercase tracking-wider">Download</span>
+                            <button onclick="downloadImage('${img.imageUrl}', '${img.id}', '1:1')" class="w-full text-left px-3 py-2 hover:bg-yellow-400/20 rounded-md transition-colors">Square (1:1)</button>
+                            <button onclick="downloadImage('${img.imageUrl}', '${img.id}', '9:16')" class="w-full text-left px-3 py-2 hover:bg-yellow-400/20 rounded-md transition-colors">Portrait (9:16)</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderErrorCard(img, index, isPolaroid, showLabel) {
+            const containerClass = isPolaroid
+                ? 'relative group bg-gray-100 p-3 pb-12 shadow-md'
+                : 'pb-4 bg-gray-900 rounded-xl shadow-md';
+            const errorContainerClass = isPolaroid
+                ? 'aspect-square bg-gray-200 border-2 border-dashed border-red-500/50'
+                : 'rounded-t-xl bg-gray-800 border-2 border-dashed border-red-500/50 aspect-[3/4]';
+            const textClass = isPolaroid
+                ? 'text-center mt-4 font-caveat text-3xl text-gray-900 absolute bottom-3 left-0 right-0'
+                : 'text-center mt-3 text-lg font-semibold text-gray-300 px-3';
+
+            return `
+                <div class="relative transition-all duration-500 ease-in-out group ${containerClass}">
+                    <div class="flex flex-col items-center justify-center text-center p-4 ${errorContainerClass}">
+                        <p class="text-red-400 font-medium mb-4">Generation failed</p>
+                        <button onclick="regenerateImage(${index})" class="px-6 py-2 rounded-md font-semibold tracking-wider uppercase transition-all duration-300 bg-yellow-400 text-black hover:bg-yellow-300">Retry</button>
+                    </div>
+                    ${showLabel ? `<p class="${textClass}">${img.id}</p>` : ''}
+                </div>
+            `;
+        }
+
+        function renderLoadingCard(img, isPolaroid, showLabel) {
+            const containerClass = isPolaroid
+                ? 'relative bg-gray-100 p-3 pb-12 shadow-md'
+                : 'pb-4 bg-gray-900 rounded-xl shadow-md';
+            const loaderClass = isPolaroid ? 'aspect-square' : 'aspect-[3/4] rounded-t-xl';
+
+            return `
+                <div class="${containerClass}">
+                    <div class="animate-pulse bg-gray-800 ${loaderClass}"></div>
+                    ${isPolaroid && showLabel ? `
+                        <div class="absolute bottom-3 left-0 right-0 flex justify-center">
+                            <div class="animate-pulse h-6 w-3/4 rounded-md bg-gray-300"></div>
+                        </div>
+                    ` : ''}
+                    ${!isPolaroid && showLabel ? `
+                        <div class="mt-3 flex justify-center">
+                            <div class="animate-pulse h-5 w-1/2 rounded-md bg-gray-800"></div>
+                        </div>
+                    ` : ''}
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="animate-spin-custom rounded-full h-10 w-10 border-t-2 border-b-2 border-yellow-400"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==================== EVENT HANDLERS ====================
+        function selectTemplate(templateId) {
+            state.template = templateId;
+            state.headshotExpression = 'Friendly Smile';
+            state.headshotPose = 'Forward';
+            state.lookbookStyle = '';
+            state.customLookbookStyle = '';
+            state.hairColors = [];
+            state.selectedHairStyles = [];
+            state.customHairStyle = '';
+            state.isCustomHairActive = false;
+            
+            // Clear custom prompt when selecting a template
+            state.customPrompt = null;
+            document.getElementById('custom-prompt-textarea').value = '';
+            
+            renderTemplates();
+            renderTemplateOptions();
+            updateGenerateButton();
+        }
+
+        function selectHeadshotExpression(expression) {
+            state.headshotExpression = expression;
+            renderTemplateOptions();
+        }
+
+        function selectHeadshotPose(pose) {
+            state.headshotPose = pose;
+            renderTemplateOptions();
+        }
+
+        function getTotalSelectedStyles() {
+            return state.selectedHairStyles.length + (state.isCustomHairActive ? 1 : 0);
+        }
+
+        function toggleHairStyle(styleId) {
+            const totalSelected = getTotalSelectedStyles();
+            const isSelected = state.selectedHairStyles.includes(styleId);
+
+            if (isSelected) {
+                state.selectedHairStyles = state.selectedHairStyles.filter(s => s !== styleId);
+            } else if (totalSelected < 6) {
+                state.selectedHairStyles.push(styleId);
+            } else {
+                showError("You can select a maximum of 6 styles.");
+                return;
+            }
+
+            renderHairStyleOptions();
+        }
+
+        function toggleCustomHair() {
+            const totalSelected = getTotalSelectedStyles();
+            
+            if (state.isCustomHairActive) {
+                state.isCustomHairActive = false;
+                state.customHairStyle = '';
+                document.getElementById('customHairStyleInput')?.classList.add('hidden');
+            } else if (totalSelected < 6) {
+                state.isCustomHairActive = true;
+                document.getElementById('customHairStyleInput')?.classList.remove('hidden');
+            } else {
+                showError("You can select a maximum of 6 styles.");
+                return;
+            }
+
+            renderHairStyleOptions();
+        }
+
+        function addHairColor() {
+            if (state.hairColors.length < 2) {
+                state.hairColors.push('#4a2c20');
+                renderHairColorOptions();
+            }
+        }
+
+        function updateHairColor(index, color) {
+            state.hairColors[index] = color;
+            renderHairColorOptions();
+        }
+
+        function removeHairColor(index) {
+            state.hairColors.splice(index, 1);
+            renderHairColorOptions();
+        }
+
+        function clearHairColors() {
+            state.hairColors = [];
+            renderTemplateOptions();
+        }
+
+        function selectLookbookStyle(style) {
+            state.lookbookStyle = style;
+            if (style !== 'Other') {
+                state.customLookbookStyle = '';
+            }
+            renderTemplateOptions();
+        }
+
+        async function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            document.getElementById('uploadingIndicator').classList.remove('hidden');
+            document.getElementById('uploadPrompt').classList.add('hidden');
+
+            try {
+                state.uploadedImage = await toBase64(file);
+                state.generatedImages = [];
+                updateUploadUI();
+                updateGenerateButton();
+            } catch (err) {
+                console.error("Error during image upload:", err);
+                showError("That image couldn't be processed. Please try another file.");
+            } finally {
+                document.getElementById('uploadingIndicator').classList.add('hidden');
+                if (!state.uploadedImage) {
+                    document.getElementById('uploadPrompt').classList.remove('hidden');
+                }
+            }
+        }
+
+        function changeFile() {
+            document.getElementById('fileInput').click();
+        }
+
+        async function handleGenerate() {
+            if (!state.apiKey) {
+                showError('Please save your API key first');
+                return;
+            }
+
+            if (!state.uploadedImage) {
+                showError("Please upload a photo to get started!");
+                return;
+            }
+
+            if (!state.template && !state.customPrompt) {
+                showError("Please select a theme or enter a custom prompt!");
+                return;
+            }
+
+            // Validate template-specific requirements only if not using custom prompt
+            if (!state.customPrompt) {
+                if (state.template === 'styleLookbook' && (state.lookbookStyle === '' || (state.lookbookStyle === 'Other' && state.customLookbookStyle.trim() === ''))) {
+                    showError("Please choose or enter a fashion style for your lookbook!");
+                    return;
+                }
+
+                if (state.template === 'hairStyler' && state.selectedHairStyles.length === 0 && (!state.isCustomHairActive || state.customHairStyle.trim() === '')) {
+                    showError("Please select at least one hairstyle to generate!");
+                    return;
+                }
+
+                if (state.template === 'hairStyler' && state.isCustomHairActive && state.customHairStyle.trim() === '') {
+                    showError("Please enter your custom hairstyle or deselect 'Other...'");
+                    return;
+                }
+            }
+
+            state.isLoading = true;
+            state.generatedImages = [];
+            dismissError();
+
+            document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('progressBarContainer').classList.remove('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+
+            setTimeout(() => {
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+
+            const imageWithoutPrefix = state.uploadedImage.split(',')[1];
+
+            // For custom prompts, generate a single image
+            if (state.customPrompt) {
+                state.generatedImages = [{
+                    id: 'Custom Style',
+                    status: 'pending',
+                    imageUrl: null
+                }];
+
+                renderGeneratedImages();
+                updateProgressBar();
+
+                try {
+                    const modelInstruction = getModelInstruction(null, null, {
+                        customPrompt: state.customPrompt,
+                    });
+                    
+                    const payload = {
+                        contents: [{
+                            parts: [
+                                { text: modelInstruction },
+                                { inlineData: { mimeType: "image/png", data: imageWithoutPrefix } }
+                            ]
+                        }],
+                    };
+
+                    const imageUrl = await generateImageWithRetry(payload);
+
+                    state.generatedImages[0] = { ...state.generatedImages[0], status: 'success', imageUrl };
+
+                } catch (err) {
+                    console.error(`Failed to generate custom image:`, err);
+                    state.generatedImages[0] = { ...state.generatedImages[0], status: 'failed' };
+                }
+
+                renderGeneratedImages();
+                updateProgressBar();
+                updateGenerateButton();
+                
+                state.isLoading = false;
+                document.getElementById('progressBarContainer').classList.add('hidden');
+                document.getElementById('actionButtons').classList.remove('hidden');
+                updateGenerateButton();
+                return;
+            }
+
+            // Continue with template-based generation
+            const activeTemplate = templates[state.template];
+
+            let dynamicStyleForAlbum = '';
+            if (state.template === 'eightiesMall') {
+                state.isSettingUp = true;
+                document.getElementById('settingUpIndicator').classList.remove('hidden');
+                updateGenerateButton();
+
+                try {
+                    dynamicStyleForAlbum = await generateDynamicPrompt("A specific, creative, and detailed style for an 80s mall portrait studio photoshoot.");
+                    state.currentAlbumStyle = dynamicStyleForAlbum;
+                } catch(e) {
+                    showError("We couldn't generate a photoshoot style. Please try again.");
+                    state.isLoading = false;
+                    state.isSettingUp = false;
+                    document.getElementById('settingUpIndicator').classList.add('hidden');
+                    updateGenerateButton();
+                    return;
+                }
+
+                state.isSettingUp = false;
+                document.getElementById('settingUpIndicator').classList.add('hidden');
+                updateGenerateButton();
+            } else {
+                state.currentAlbumStyle = '';
+            }
+
+            let promptsForGeneration;
+            if (state.template === 'hairStyler') {
+                const selectedPrompts = activeTemplate.prompts.filter(p => state.selectedHairStyles.includes(p.id));
+                if (state.isCustomHairActive && state.customHairStyle.trim() !== '') {
+                    selectedPrompts.push({ id: state.customHairStyle, base: state.customHairStyle });
+                }
+                promptsForGeneration = selectedPrompts;
+            } else {
+                promptsForGeneration = activeTemplate.prompts;
+            }
+
+            if (!promptsForGeneration || promptsForGeneration.length === 0) {
+                showError("There was an issue preparing the creative ideas. Please try again.");
+                state.isLoading = false;
+                updateGenerateButton();
+                return;
+            }
+
+            state.generatedImages = promptsForGeneration.map(p => ({
+                id: p.id,
+                status: 'pending',
+                imageUrl: null
+            }));
+
+            renderGeneratedImages();
+            updateProgressBar();
+
+            for (let i = 0; i < promptsForGeneration.length; i++) {
+                const p = promptsForGeneration[i];
+                try {
+                    const modelInstruction = getModelInstruction(state.template, p, {
+                        headshotExpression: state.headshotExpression,
+                        headshotPose: state.headshotPose,
+                        currentAlbumStyle: dynamicStyleForAlbum,
+                        lookbookStyle: state.lookbookStyle,
+                        customLookbookStyle: state.customLookbookStyle,
+                        hairColors: state.hairColors,
+                        customPrompt: null,
+                    });
+                    
+                    const payload = {
+                        contents: [{
+                            parts: [
+                                { text: modelInstruction },
+                                { inlineData: { mimeType: "image/png", data: imageWithoutPrefix } }
+                            ]
+                        }],
+                    };
+
+                    const imageUrl = await generateImageWithRetry(payload);
+
+                    state.generatedImages[i] = { ...state.generatedImages[i], status: 'success', imageUrl };
+
+                } catch (err) {
+                    console.error(`Failed to generate image for ${p.id}:`, err);
+                    state.generatedImages[i] = { ...state.generatedImages[i], status: 'failed' };
+                }
+
+                renderGeneratedImages();
+                updateProgressBar();
+                updateGenerateButton();
+            }
+
+            state.isLoading = false;
+            document.getElementById('progressBarContainer').classList.add('hidden');
+            document.getElementById('actionButtons').classList.remove('hidden');
+            updateGenerateButton();
+        }
+
+        async function regenerateImage(index) {
+            const imageToRegenerate = state.generatedImages[index];
+            if (!imageToRegenerate) return;
+
+            state.generatedImages[index] = { ...imageToRegenerate, status: 'pending' };
+            renderGeneratedImages();
+            dismissError();
+
+            const activeTemplate = templates[state.template];
+            let promptsForGeneration;
+            
+            if (state.template === 'hairStyler') {
+                const selectedPrompts = activeTemplate.prompts.filter(p => state.selectedHairStyles.includes(p.id));
+                if (state.isCustomHairActive && state.customHairStyle.trim() !== '') {
+                    selectedPrompts.push({ id: state.customHairStyle, base: state.customHairStyle });
+                }
+                promptsForGeneration = selectedPrompts;
+            } else {
+                promptsForGeneration = activeTemplate.prompts;
+            }
+
+            const prompt = promptsForGeneration[index];
+            if (!prompt) {
+                showError("Could not find the prompt to regenerate.");
+                state.generatedImages[index] = { ...imageToRegenerate, status: 'failed' };
+                renderGeneratedImages();
+                return;
+            }
+
+            try {
+                if (state.template === 'eightiesMall' && !state.currentAlbumStyle) {
+                    throw new Error("Cannot regenerate without an album style. Please start over.");
+                }
+                if (state.template === 'styleLookbook' && (state.lookbookStyle === '' || (state.lookbookStyle === 'Other' && state.customLookbookStyle.trim() === ''))) {
+                    throw new Error("Please choose or enter a fashion style for your lookbook!");
+                }
+                if (state.template === 'hairStyler' && (state.selectedHairStyles.length === 0 && (!state.isCustomHairActive || state.customHairStyle.trim() === ''))) {
+                    throw new Error("Please select at least one hairstyle to generate!");
+                }
+
+                const imageWithoutPrefix = state.uploadedImage.split(',')[1];
+                const modelInstruction = getModelInstruction(state.template, prompt, {
+                    headshotExpression: state.headshotExpression,
+                    headshotPose: state.headshotPose,
+                    currentAlbumStyle: state.currentAlbumStyle,
+                    lookbookStyle: state.lookbookStyle,
+                    customLookbookStyle: state.customLookbookStyle,
+                    hairColors: state.hairColors,
+                });
+                
+                const payload = {
+                    contents: [{
+                        parts: [
+                            { text: modelInstruction },
+                            { inlineData: { mimeType: "image/png", data: imageWithoutPrefix } }
+                        ]
+                    }],
+                };
+
+                const imageUrl = await generateImageWithRetry(payload);
+
+                state.generatedImages[index] = { ...imageToRegenerate, status: 'success', imageUrl };
+
+            } catch (err) {
+                console.error(`Regeneration failed for ${prompt.id}:`, err);
+                showError(`Oops! Regeneration for "${prompt.id}" failed. Please try again.`);
+                state.generatedImages[index] = { ...imageToRegenerate, status: 'failed' };
+            }
+
+            renderGeneratedImages();
+        }
+
+        async function downloadImage(imageUrl, era, ratio) {
+            const fileName = `picture-me-${era.toLowerCase().replace(/\s+/g, '-')}-${ratio.replace(':', 'x')}.png`;
+            try {
+                const shouldAddLabel = !['headshots', 'eightiesMall', 'styleLookbook', 'figurines'].includes(state.template);
+                const framedImageUrl = await createSingleFramedImage(imageUrl, ratio, shouldAddLabel ? era : null);
+                await triggerDownload(framedImageUrl, fileName);
+            } catch (err) {
+                console.error(`Failed to create framed image for download:`, err);
+                showError(`Could not prepare that image for download. Please try again.`);
+            }
+        }
+
+        async function downloadAlbum(ratio) {
+            if (state.isDownloadingAlbum) return;
+            state.isDownloadingAlbum = true;
+            dismissError();
+
+            const albumButton = document.getElementById('albumDownloadButton');
+            albumButton.disabled = true;
+            albumButton.innerHTML = `
+                <div class="flex items-center justify-center gap-2">
+                    <div class="animate-spin-custom rounded-full h-4 w-4 border-t-2 border-b-2 border-black"></div>
+                    <span>Preparing...</span>
+                </div>
+            `;
+            toggleAlbumMenu();
+
+            try {
+                const successfulImages = state.generatedImages.filter(img => img.status === 'success');
+                if (successfulImages.length === 0) {
+                    showError("There are no successful images to include in an album.");
+                    state.isDownloadingAlbum = false;
+                    albumButton.disabled = false;
+                    albumButton.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                            <span>Download Album</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let albumTitle = "My PictureMe Album";
+                switch (state.template) {
+                    case 'decades': albumTitle = "Picture Me Through the Decades"; break;
+                    case 'styleLookbook': albumTitle = "Picture Me in my Style Lookbook"; break;
+                    case 'headshots': albumTitle = "Picture Me: Professional Headshots"; break;
+                    case 'eightiesMall': albumTitle = "Picture Me at the '80s Mall"; break;
+                    case 'impossibleSelfies': albumTitle = "Picture Me in Impossible Selfies"; break;
+                    case 'hairStyler': albumTitle = "Picture Me with New Hairstyles"; break;
+                    case 'figurines': albumTitle = "My Miniature Me Collection"; break;
+                }
+
+                const shouldAddLabel = !['headshots', 'eightiesMall', 'styleLookbook', 'figurines'].includes(state.template);
+
+                const croppedImageUrls = await Promise.all(
+                    successfulImages.map(img => cropImage(img.imageUrl, ratio))
+                );
+
+                const imagesToStitch = await Promise.all(
+                    croppedImageUrls.map((url, index) => new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = "anonymous";
+                        img.src = url;
+                        img.onload = () => {
+                            if (shouldAddLabel) {
+                                const canvas = document.createElement('canvas');
+                                const ctx = canvas.getContext('2d');
+                                const bottomPadding = img.width * 0.14;
+                                canvas.width = img.width;
+                                canvas.height = img.height + bottomPadding;
+                                
+                                ctx.drawImage(img, 0, 0);
+
+                                const labelFontSize = Math.max(24, Math.floor(img.width * 0.08));
+                                ctx.font = `700 ${labelFontSize}px Caveat, cursive`;
+                                ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(successfulImages[index].id, canvas.width / 2, img.height + bottomPadding / 2);
+
+                                const finalImage = new Image();
+                                finalImage.crossOrigin = "anonymous";
+                                finalImage.src = canvas.toDataURL('image/png');
+                                finalImage.onload = () => resolve(finalImage);
+                                finalImage.onerror = reject;
+                            } else {
+                                resolve(img);
+                            }
+                        };
+                        img.onerror = reject;
+                    }))
+                );
+
+                if (imagesToStitch.length === 0) throw new Error("No images to create an album.");
+                
+                const stitchCanvas = document.createElement('canvas');
+                const stitchCtx = stitchCanvas.getContext('2d');
+
+                const cols = imagesToStitch.length > 4 ? 3 : 2;
+                const rows = Math.ceil(imagesToStitch.length / cols);
+                const imageWidth = imagesToStitch[0].width;
+                const imageHeight = imagesToStitch[0].height;
+                const padding = Math.floor(imageWidth * 0.05);
+
+                stitchCanvas.width = (cols * imageWidth) + ((cols + 1) * padding);
+                stitchCanvas.height = (rows * imageHeight) + ((rows + 1) * padding);
+                
+                stitchCtx.fillStyle = '#FFFFFF';
+                stitchCtx.fillRect(0, 0, stitchCanvas.width, stitchCanvas.height);
+
+                imagesToStitch.forEach((img, index) => {
+                    const row = Math.floor(index / cols);
+                    const col = index % cols;
+                    stitchCtx.drawImage(img, padding + col * (imageWidth + padding), padding + row * (imageHeight + padding), imageWidth, imageHeight);
+                });
+                
+                const finalCanvas = document.createElement('canvas');
+                const finalCtx = finalCanvas.getContext('2d');
+                
+                const outerPadding = stitchCanvas.width * 0.05;
+                const titleFontSize = Math.max(48, Math.floor(stitchCanvas.width * 0.07));
+                const footerFontSize = Math.max(24, Math.floor(stitchCanvas.width * 0.025));
+                const titleSpacing = titleFontSize * 1.5;
+                const footerSpacing = footerFontSize * 4.0;
+
+                finalCanvas.width = stitchCanvas.width + outerPadding * 2;
+                finalCanvas.height = stitchCanvas.height + outerPadding * 2 + titleSpacing + footerSpacing;
+
+                finalCtx.fillStyle = '#111827';
+                finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+                finalCtx.font = `700 ${titleFontSize}px Caveat, cursive`;
+                finalCtx.fillStyle = "rgba(255, 255, 255, 0.9)";
+                finalCtx.textAlign = 'center';
+                finalCtx.textBaseline = 'middle';
+                finalCtx.fillText(albumTitle, finalCanvas.width / 2, outerPadding + titleSpacing / 2);
+
+                finalCtx.drawImage(stitchCanvas, outerPadding, outerPadding + titleSpacing);
+
+                finalCtx.font = `600 ${footerFontSize}px Inter, sans-serif`;
+                finalCtx.fillStyle = "rgba(255, 255, 255, 0.5)";
+                finalCtx.textAlign = 'center';
+                finalCtx.textBaseline = 'middle';
+                finalCtx.fillText("Made with Gemini", finalCanvas.width / 2, finalCanvas.height - footerSpacing * 0.66);
+
+                const nanoFooterFontSize = Math.max(18, Math.floor(stitchCanvas.width * 0.022));
+                finalCtx.font = `600 ${nanoFooterFontSize}px Inter, sans-serif`;
+                finalCtx.fillText("Edit your images with Nano Banana at gemini.google", finalCanvas.width / 2, finalCanvas.height - footerSpacing * 0.33);
+
+                await triggerDownload(finalCanvas.toDataURL('image/png'), `picture-me-album-${ratio.replace(':', 'x')}.png`);
+            } catch (err) {
+                console.error("Failed to create or download album:", err);
+                showError("Sorry, the album download failed. Please try again.");
+            } finally {
+                state.isDownloadingAlbum = false;
+                albumButton.disabled = false;
+                albumButton.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                        <span>Download Album</span>
+                    </div>
+                `;
+            }
+        }
+
+        function toggleImageMenu(index) {
+            const menu = document.getElementById(`imageMenu${index}`);
+            const allMenus = document.querySelectorAll('[id^="imageMenu"]');
+            allMenus.forEach(m => {
+                if (m.id !== `imageMenu${index}`) m.classList.add('hidden');
+            });
+            menu.classList.toggle('hidden');
+        }
+
+        function toggleAlbumMenu() {
+            document.getElementById('albumMenu').classList.toggle('hidden');
+        }
+
+        function startOver() {
+            state.generatedImages = [];
+            state.uploadedImage = null;
+            state.template = null;
+            state.customPrompt = null;
+            state.headshotExpression = 'Friendly Smile';
+            state.headshotPose = 'Forward';
+            state.lookbookStyle = '';
+            state.customLookbookStyle = '';
+            state.hairColors = [];
+            state.selectedHairStyles = [];
+            state.customHairStyle = '';
+            state.isCustomHairActive = false;
+            
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('actionButtons').classList.add('hidden');
+            document.getElementById('custom-prompt-textarea').value = '';
+            
+            updateUploadUI();
+            renderTemplates();
+            renderTemplateOptions();
+            updateGenerateButton();
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ==================== CAMERA FUNCTIONS ====================
+        function openCameraModal(event) {
+            if (event) event.stopPropagation();
+            document.getElementById('cameraModal').classList.remove('hidden');
+            startCamera();
+        }
+
+        function closeCameraModal() {
+            document.getElementById('cameraModal').classList.add('hidden');
+            stopCamera();
+            state.capturedImageData = null;
+            document.getElementById('capturedImage').classList.add('hidden');
+            document.getElementById('cameraVideo').classList.remove('hidden');
+            document.getElementById('cameraControls').classList.remove('hidden');
+            document.getElementById('capturedControls').classList.add('hidden');
+        }
+
+        async function startCamera() {
+            const video = document.getElementById('cameraVideo');
+            const errorDiv = document.getElementById('cameraError');
+            errorDiv.classList.add('hidden');
+
+            stopCamera();
+
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1024 }, height: { ideal: 1024 }, facingMode: 'user' }
+                });
+                video.srcObject = stream;
+                state.cameraStream = stream;
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                errorDiv.textContent = "Camera access denied. Please allow camera access in your browser settings.";
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        function stopCamera() {
+            if (state.cameraStream) {
+                state.cameraStream.getTracks().forEach(track => track.stop());
+                state.cameraStream = null;
+            }
+            const video = document.getElementById('cameraVideo');
+            if (video) video.srcObject = null;
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('cameraCanvas');
+            const capturedImage = document.getElementById('capturedImage');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.scale(-1, 1);
+            context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+            
+            state.capturedImageData = canvas.toDataURL('image/png');
+            capturedImage.src = state.capturedImageData;
+            
+            video.classList.add('hidden');
+            capturedImage.classList.remove('hidden');
+            document.getElementById('cameraControls').classList.add('hidden');
+            document.getElementById('capturedControls').classList.remove('hidden');
+        }
+
+        function retakePhoto() {
+            state.capturedImageData = null;
+            document.getElementById('capturedImage').classList.add('hidden');
+            document.getElementById('cameraVideo').classList.remove('hidden');
+            document.getElementById('cameraControls').classList.remove('hidden');
+            document.getElementById('capturedControls').classList.add('hidden');
+        }
+
+        function confirmPhoto() {
+            if (state.capturedImageData) {
+                state.uploadedImage = state.capturedImageData;
+                state.generatedImages = [];
+                closeCameraModal();
+                updateUploadUI();
+                updateGenerateButton();
+            }
+        }
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize API key from localStorage
+            const savedApiKey = localStorage.getItem('GOOGLE_AI_API_KEY');
+            if (savedApiKey) {
+                state.apiKey = savedApiKey;
+                document.getElementById('api-key-input').value = '••••••••••••';
+            }
+
+            // Setup API key section toggle
+            document.getElementById('toggle-setup-btn').addEventListener('click', () => {
+                const apiKeySection = document.getElementById('api-key-section');
+                const setupChevron = document.getElementById('setup-chevron');
+                apiKeySection.classList.toggle('hidden');
+                setupChevron.classList.toggle('rotate-180');
+            });
+
+            // Save API key
+            document.getElementById('save-api-key-btn').addEventListener('click', () => {
+                const apiKeyInput = document.getElementById('api-key-input');
+                const apiKey = apiKeyInput.value.trim();
+                if (!apiKey || apiKey === '••••••••••••') {
+                    showError('Please enter a valid API key');
+                    return;
+                }
+                localStorage.setItem('GOOGLE_AI_API_KEY', apiKey);
+                state.apiKey = apiKey;
+                apiKeyInput.value = '••••••••••••';
+                showError('API key saved successfully!');
+            });
+
+            // Setup custom prompt section toggle
+            document.getElementById('toggle-custom-prompt-btn').addEventListener('click', () => {
+                const customPromptSection = document.getElementById('custom-prompt-section');
+                const customPromptChevron = document.getElementById('custom-prompt-chevron');
+                customPromptSection.classList.toggle('hidden');
+                customPromptChevron.classList.toggle('rotate-180');
+            });
+
+            // Handle custom prompt input
+            document.getElementById('custom-prompt-textarea').addEventListener('input', (e) => {
+                const value = e.target.value.trim();
+                state.customPrompt = value ? value : null;
+
+                // If custom prompt is entered, deselect template
+                if (state.customPrompt) {
+                    state.template = null;
+                    renderTemplates();
+                    renderTemplateOptions();
+                }
+                
+                updateGenerateButton();
+            });
+
+            // Clear custom prompt
+            document.getElementById('clear-custom-prompt-btn').addEventListener('click', () => {
+                document.getElementById('custom-prompt-textarea').value = '';
+                state.customPrompt = null;
+                updateGenerateButton();
+            });
+
+            renderTemplates();
+            updateUploadUI();
+            updateGenerateButton();
+
+            document.getElementById('uploadArea').addEventListener('click', (e) => {
+                if (!state.uploadedImage) {
+                    document.getElementById('fileInput').click();
+                }
+            });
+
+            document.getElementById('fileInput').addEventListener('change', handleImageUpload);
+            document.getElementById('captureButton').addEventListener('click', capturePhoto);
+
+            // Close menus when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('[id^="imageMenu"]') && !e.target.closest('button[onclick^="toggleImageMenu"]')) {
+                    document.querySelectorAll('[id^="imageMenu"]').forEach(menu => menu.classList.add('hidden'));
+                }
+                if (!e.target.closest('#albumMenu') && !e.target.closest('#albumDownloadButton')) {
+                    document.getElementById('albumMenu')?.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
