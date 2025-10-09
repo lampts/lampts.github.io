@@ -10,423 +10,343 @@
         
         body {
             font-family: 'Lora', Georgia, serif;
+            background-color: #F5F1E8;
         }
         
         .circle-hover {
-            transition: all 0.2s ease;
+            transition: opacity 0.3s ease;
         }
         
         .circle-hover:hover {
             opacity: 1 !important;
-            transform: scale(1.05);
+            cursor: pointer;
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+
+        .main-container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 1rem;
         }
-        
-        .animate-spin {
-            animation: spin 1s linear infinite;
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
-<body class="bg-[#F5F1E8] min-h-screen p-4">
-    <div class="max-w-7xl mx-auto">
+<body class="min-h-screen">
+    <div class="main-container">
         <!-- Header -->
-        <div class="mb-6 text-center">
-            <h1 class="text-3xl font-bold text-[#2C1810] mb-1">CLASSICAL MUSIC LINE</h1>
-            <p class="text-sm text-[#8B7355]">1678—1893 • Circle size = Popularity / Age (views per year)</p>
-        </div>
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-[#2C1810] mb-2">CLASSICAL MUSIC LINE</h1>
+            <p class="text-md text-[#8B7355]">1678—1893 • Circle size reflects popularity adjusted for age</p>
+        </header>
 
-        <!-- Metro Map -->
-        <div class="relative bg-[#F5F1E8] mb-6" style="height: 500px;">
+        <!-- Metro Map Visualization -->
+        <div class="relative w-full mb-6" style="height: 500px;">
             <svg id="metro-map" width="100%" height="100%" viewBox="0 0 1050 450"></svg>
         </div>
 
-        <!-- Hover Info -->
-        <div id="hover-info" class="text-center mb-4 p-3 bg-[#E8DCC8] rounded hidden">
-            <p class="text-sm text-[#2C1810]">
+        <!-- Hover Information Box -->
+        <div id="hover-info" class="text-center mb-4 p-3 bg-[#E8DCC8] rounded-lg shadow-sm hidden">
+            <p class="text-md text-[#2C1810]">
                 <span id="hover-composer" class="font-bold"></span> — <span id="hover-piece"></span>
             </p>
+            <p class="text-sm text-[#8B7355] italic mt-1" id="hover-form"></p>
         </div>
 
-        <!-- Composer Quote -->
-        <div id="quote-section" class="mb-6 p-6 bg-[#E8DCC8] rounded hidden">
+        <!-- Composer Quote Section -->
+        <div id="quote-section" class="mb-6 p-6 bg-[#E8DCC8] rounded-lg shadow hidden">
             <div class="text-center">
-                <p id="quote-text" class="text-lg italic text-[#2C1810] mb-2"></p>
-                <p id="quote-author" class="text-sm text-[#8B7355]"></p>
+                <p id="quote-text" class="text-xl italic text-[#2C1810] mb-3"></p>
+                <p id="quote-author" class="text-sm font-semibold text-[#8B7355]"></p>
             </div>
         </div>
 
-        <!-- Player Section -->
-        <div id="player-section" class="bg-[#2C1810] text-[#F5F1E8] rounded p-6 hidden">
-            <div class="flex items-baseline justify-between mb-4">
+        <!-- Music Player Section -->
+        <div id="player-section" class="bg-[#2C1810] text-[#F5F1E8] rounded-lg p-6 shadow-lg hidden">
+            <div class="flex items-center justify-between mb-4">
                 <div>
-                    <h3 id="player-composer" class="text-lg font-bold"></h3>
-                    <p id="player-piece" class="text-[#D2691E] text-sm"></p>
+                    <h3 id="player-composer" class="text-2xl font-bold"></h3>
+                    <p id="player-piece" class="text-[#D2691E] text-md"></p>
+                    <p id="player-form" class="text-[#8B7355] text-sm italic mt-1"></p>
                 </div>
-                <button id="close-player" class="text-xs text-[#8B7355] hover:text-[#D2691E]">
+                <button id="close-player" class="text-sm text-[#8B7355] hover:text-[#D2691E] transition-colors">
                     Close ✕
                 </button>
             </div>
             
             <!-- Video Player -->
             <div id="video-container">
-                <div class="embed-responsive embed-responsive-16by9 relative" style="padding-bottom: 56.25%; height: 0;">
-                    <iframe id="video-iframe" class="embed-responsive-item absolute top-0 left-0 w-full h-full" frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen></iframe>
+                <div class="video-wrapper">
+                    <iframe id="video-iframe" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
-                <a id="youtube-link" target="_blank" rel="noopener noreferrer" 
-                    class="inline-block text-[#D2691E] hover:text-[#8B4513] text-xs mt-3">
+                <a id="youtube-link" target="_blank" rel="noopener noreferrer" class="inline-block text-[#D2691E] hover:text-[#FFA500] text-sm mt-3 transition-colors">
                     Open in YouTube ↗
                 </a>
             </div>
         </div>
 
         <!-- Legend -->
-        <div class="mt-6 text-center">
-            <div class="inline-flex items-center gap-4 text-xs text-[#8B7355]">
+        <footer class="mt-8 text-center">
+            <div class="inline-flex flex-wrap items-center justify-center gap-4 text-xs text-[#8B7355] max-w-3xl mx-auto">
                 <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 rounded-full bg-[#C19A6B]"></div>
-                    <span>Oldest Work</span>
+                    <div class="w-4 h-4 rounded-full bg-[#DC143C]"></div>
+                    <span>Concerto</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-full bg-[#D2691E]"></div>
-                    <span>Middle Work</span>
+                    <div class="w-4 h-4 rounded-full bg-[#4169E1]"></div>
+                    <span>Symphony</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-[#8B4513]"></div>
-                    <span>Newest Work</span>
+                    <div class="w-4 h-4 rounded-full bg-[#DAA520]"></div>
+                    <span>Sacred Choral</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-[#8B4789]"></div>
+                    <span>Solo Keyboard</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-[#DB7093]"></div>
+                    <span>Character Piece</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-[#708090]"></div>
+                    <span>Vocal</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-[#2E8B57]"></div>
+                    <span>Ballet/Theatrical</span>
                 </div>
             </div>
-            <p class="text-xs text-[#8B7355] mt-2">Click any circle to play • Bigger = More popular per year of existence</p>
-        </div>
+            <p class="text-sm text-[#8B7355] mt-3">Click any circle to play • Larger circles are more popular</p>
+        </footer>
     </div>
 
     <script>
-        // Data with verified YouTube video IDs
-        const COMPOSERS = [
-            {
-                id: 'vivaldi',
-                name: 'VIVALDI',
-                year: '1678-1741',
-                position: { x: 120, y: 220 },
-                masterpieces: [
-                    { title: 'Four Seasons', year: 1725, popularity: 95, videoId: 'GRxofEmo3HA' },
-                    { title: 'Gloria RV 589', year: 1715, popularity: 75, videoId: '2eWjQOdYzMQ' },
-                    { title: 'L\'estro Armonico', year: 1711, popularity: 65, videoId: 'GWZTyiMXulQ' }
-                ]
-            },
-            {
-                id: 'bach',
-                name: 'BACH',
-                year: '1685-1750',
-                position: { x: 280, y: 220 },
-                masterpieces: [
-                    { title: 'Toccata & Fugue', year: 1707, popularity: 92, videoId: 'ho9rZjlsyYY' },
-                    { title: 'Well-Tempered Clavier', year: 1722, popularity: 88, videoId: 'pVadl4ocX0M' },
-                    { title: 'Brandenburg Concerto 3', year: 1721, popularity: 80, videoId: 'QLj_gMBqHX8' }
-                ]
-            },
-            {
-                id: 'mozart',
-                name: 'MOZART',
-                year: '1756-1791',
-                position: { x: 440, y: 170 },
-                masterpieces: [
-                    { title: 'Requiem', year: 1791, popularity: 96, videoId: 'sPlhKP0nZII' },
-                    { title: 'Symphony No. 40', year: 1788, popularity: 90, videoId: 'JTc1mDieQI8' },
-                    { title: 'Piano Concerto 21', year: 1785, popularity: 85, videoId: 'df-eLzao63I' }
-                ]
-            },
-            {
-                id: 'beethoven',
-                name: 'BEETHOVEN',
-                year: '1770-1827',
-                position: { x: 600, y: 170 },
-                masterpieces: [
-                    { title: 'Symphony No. 9', year: 1824, popularity: 98, videoId: 'ChygZLpJDNE' },
-                    { title: 'Symphony No. 5', year: 1808, popularity: 97, videoId: '_4IRMYuE1hI' },
-                    { title: 'Moonlight Sonata', year: 1801, popularity: 94, videoId: '4Tr0otuiQuU' }
-                ]
-            },
-            {
-                id: 'schubert',
-                name: 'SCHUBERT',
-                year: '1797-1828',
-                position: { x: 440, y: 300 },
-                masterpieces: [
-                    { title: 'Ave Maria', year: 1825, popularity: 93, videoId: '2bosouX_d8Y' },
-                    { title: 'Unfinished Symphony', year: 1822, popularity: 87, videoId: '3tisvEpblig' },
-                    { title: 'Winterreise', year: 1827, popularity: 78, videoId: 'tnuvs2w7ges' }
-                ]
-            },
-            {
-                id: 'chopin',
-                name: 'CHOPIN',
-                year: '1810-1849',
-                position: { x: 760, y: 220 },
-                masterpieces: [
-                    { title: 'Nocturne Op. 9 No. 2', year: 1832, popularity: 96, videoId: '9E6b3swbnWg' },
-                    { title: 'Ballade No. 1', year: 1835, popularity: 89, videoId: 'BSFNl4roGlI' },
-                    { title: 'Etude Op. 10 No. 3', year: 1832, popularity: 86, videoId: 'bzBH9Nm1BP8' }
-                ]
-            },
-            {
-                id: 'tchaikovsky',
-                name: 'TCHAIKOVSKY',
-                year: '1840-1893',
-                position: { x: 920, y: 220 },
-                masterpieces: [
-                    { title: 'Nutcracker', year: 1892, popularity: 97, videoId: 'M8J8urC_8Jw' },
-                    { title: '1812 Overture', year: 1880, popularity: 95, videoId: 'VbxgYlcNxE8' },
-                    { title: 'Swan Lake', year: 1876, popularity: 94, videoId: '9rJoB7y6Ncs' }
-                ]
-            }
-        ];
+        document.addEventListener('DOMContentLoaded', () => {
+            const COMPOSERS = [
+                { id: 'vivaldi', name: 'VIVALDI', year: '1678-1741', position: { x: 120, y: 220 }, masterpieces: [
+                    { title: 'Four Seasons', year: 1725, popularity: 95, videoId: 'GRxofEmo3HA', form: 'concerto' }, 
+                    { title: 'Gloria RV 589', year: 1715, popularity: 75, videoId: '2eWjQOdYzMQ', form: 'sacred' }, 
+                    { title: 'L\'estro Armonico', year: 1711, popularity: 65, videoId: 'GWZTyiMXulQ', form: 'concerto' }
+                ]},
+                { id: 'bach', name: 'BACH', year: '1685-1750', position: { x: 280, y: 220 }, masterpieces: [
+                    { title: 'Toccata & Fugue', year: 1707, popularity: 92, videoId: 'ho9rZjlsyYY', form: 'keyboard' }, 
+                    { title: 'Well-Tempered Clavier', year: 1722, popularity: 88, videoId: 'pVadl4ocX0M', form: 'keyboard' }, 
+                    { title: 'Brandenburg Concerto 3', year: 1721, popularity: 80, videoId: 'QLj_gMBqHX8', form: 'concerto' }
+                ]},
+                { id: 'mozart', name: 'MOZART', year: '1756-1791', position: { x: 440, y: 170 }, masterpieces: [
+                    { title: 'Requiem', year: 1791, popularity: 96, videoId: 'sPlhKP0nZII', form: 'sacred' }, 
+                    { title: 'Symphony No. 40', year: 1788, popularity: 90, videoId: 'JTc1mDieQI8', form: 'symphony' }, 
+                    { title: 'Piano Concerto 21', year: 1785, popularity: 85, videoId: 'df-eLzao63I', form: 'concerto' }
+                ]},
+                { id: 'beethoven', name: 'BEETHOVEN', year: '1770-1827', position: { x: 600, y: 170 }, masterpieces: [
+                    { title: 'Symphony No. 9', year: 1824, popularity: 98, videoId: 'ChygZLpJDNE', form: 'symphony' }, 
+                    { title: 'Symphony No. 5', year: 1808, popularity: 97, videoId: '_4IRMYuE1hI', form: 'symphony' }, 
+                    { title: 'Moonlight Sonata', year: 1801, popularity: 94, videoId: '4Tr0otuiQuU', form: 'keyboard' }
+                ]},
+                { id: 'schubert', name: 'SCHUBERT', year: '1797-1828', position: { x: 440, y: 300 }, masterpieces: [
+                    { title: 'Ave Maria', year: 1825, popularity: 93, videoId: '2bosouX_d8Y', form: 'sacred' }, 
+                    { title: 'Unfinished Symphony', year: 1822, popularity: 87, videoId: '3tisvEpblig', form: 'symphony' }, 
+                    { title: 'Winterreise', year: 1827, popularity: 78, videoId: 'tnuvs2w7ges', form: 'vocal' }
+                ]},
+                { id: 'chopin', name: 'CHOPIN', year: '1810-1849', position: { x: 760, y: 220 }, masterpieces: [
+                    { title: 'Nocturne Op. 9 No. 2', year: 1832, popularity: 96, videoId: '9E6b3swbnWg', form: 'character' }, 
+                    { title: 'Ballade No. 1', year: 1835, popularity: 89, videoId: 'BSFNl4roGlI', form: 'character' }, 
+                    { title: 'Etude Op. 10 No. 3', year: 1832, popularity: 86, videoId: 'bzBH9Nm1BP8', form: 'character' }
+                ]},
+                { id: 'tchaikovsky', name: 'TCHAIKOVSKY', year: '1840-1893', position: { x: 920, y: 220 }, masterpieces: [
+                    { title: 'Nutcracker', year: 1892, popularity: 97, videoId: 'M8J8urC_8Jw', form: 'ballet' }, 
+                    { title: '1812 Overture', year: 1880, popularity: 95, videoId: 'VbxgYlcNxE8', form: 'ballet' }, 
+                    { title: 'Swan Lake', year: 1876, popularity: 94, videoId: '9rJoB7y6Ncs', form: 'ballet' }
+                ]}
+            ];
 
-        const CONNECTIONS = [
-            ['vivaldi', 'bach'],
-            ['bach', 'mozart'],
-            ['mozart', 'beethoven'],
-            ['mozart', 'schubert'],
-            ['beethoven', 'chopin'],
-            ['chopin', 'tchaikovsky']
-        ];
-
-        const COLORS = {
-            line: '#8B4513',
-            oldest: '#C19A6B',
-            middle: '#D2691E',
-            newest: '#8B4513'
-        };
-
-        // Composer quotes
-        const COMPOSER_QUOTES = {
-            'VIVALDI': 'There are no words. There is only music there.',
-            'BACH': 'The aim and final end of all music should be none other than the glory of God and the refreshment of the soul.',
-            'MOZART': 'Neither a lofty degree of intelligence nor imagination nor both together go to the making of genius. Love, love, love, that is the soul of genius.',
-            'BEETHOVEN': 'Music is a higher revelation than all wisdom and philosophy.',
-            'SCHUBERT': 'Every night when I go to bed, I hope that I may never wake again, and every morning renews my grief.',
-            'CHOPIN': 'Simplicity is the final achievement. After one has played a vast quantity of notes, it is simplicity that emerges as the crowning reward of art.',
-            'TCHAIKOVSKY': 'Truly there would be reason to go mad were it not for music.'
-        };
-
-        // State
-        let selectedPiece = null;
-        let hoveredPiece = null;
-
-        // Helper functions
-        function getCirclePosition(baseX, baseY, index) {
-            const spacing = 22;
-            const offsetX = (index - 1) * spacing;
-            return { x: baseX + offsetX, y: baseY };
-        }
-
-        function getCircleRadius(piece) {
-            const currentYear = 2025;
-            const yearsSinceCreation = currentYear - piece.year;
+            const CONNECTIONS = [['vivaldi', 'bach'], ['bach', 'mozart'], ['mozart', 'beethoven'], ['mozart', 'schubert'], ['beethoven', 'chopin'], ['chopin', 'tchaikovsky']];
             
-            // Avoid division by zero for pieces created this year
-            const ageNormalizedScore = yearsSinceCreation > 0 
-                ? piece.popularity / yearsSinceCreation 
-                : piece.popularity;
-            
-            // Scale the normalized score to reasonable circle sizes
-            // Newer popular pieces get bigger circles (higher score)
-            // Older pieces get smaller circles (lower score due to age division)
-            const baseSize = 25;
-            const scaleFactor = 40; // Adjusted for visible size differences
-            const radius = baseSize + (ageNormalizedScore * scaleFactor);
-            
-            // Clamp to reasonable min/max sizes
-            return Math.max(20, Math.min(55, radius));
-        }
+            const FORM_COLORS = {
+                'concerto': '#DC143C',      // Crimson - One hero against the orchestra
+                'symphony': '#4169E1',      // Royal Blue - The entire village speaks as one
+                'sacred': '#DAA520',        // Goldenrod - Humans singing upward
+                'keyboard': '#8B4789',      // Purple - One person alone thinking
+                'character': '#DB7093',     // Pale Violet Red - Polaroid snapshots of feelings
+                'vocal': '#708090',         // Slate Gray - Poetry walks through winter
+                'ballet': '#2E8B57'         // Sea Green - Music that makes your body move
+            };
 
-        function getCircleColor(index) {
-            return [COLORS.oldest, COLORS.middle, COLORS.newest][index];
-        }
+            const FORM_TAGLINES = {
+                'concerto': 'One hero against the orchestra—watch them duel, dance, and finally shake hands.',
+                'symphony': 'The entire village speaks as one voice, building a cathedral from sound.',
+                'sacred': 'Humans singing upward, trying to touch something they can\'t see.',
+                'keyboard': 'One person alone in a room, thinking out loud through their fingers.',
+                'character': 'Polaroid snapshots of feelings—each one captures a single moment, then stops.',
+                'vocal': 'Poetry walks through winter, carrying its suitcase of sadness.',
+                'ballet': 'Music that makes your body want to move before your brain decides.'
+            };
 
-        // Create SVG elements
-        function createSVGElement(tag, attrs = {}) {
-            const elem = document.createElementNS('http://www.w3.org/2000/svg', tag);
-            Object.entries(attrs).forEach(([key, value]) => {
-                elem.setAttribute(key, value);
-            });
-            return elem;
-        }
+            const COMPOSER_QUOTES = { 
+                'VIVALDI': 'There are no words. There is only music there.', 
+                'BACH': 'The aim and final end of all music should be none other than the glory of God and the refreshment of the soul.', 
+                'MOZART': 'Neither a lofty degree of intelligence nor imagination nor both together go to the making of genius. Love, love, love, that is the soul of genius.', 
+                'BEETHOVEN': 'Music is a higher revelation than all wisdom and philosophy.', 
+                'SCHUBERT': 'Every night when I go to bed, I hope that I may never wake again, and every morning renews my grief.', 
+                'CHOPIN': 'Simplicity is the final achievement. After one has played a vast quantity of notes, it is simplicity that emerges as the crowning reward of art.', 
+                'TCHAIKOVSKY': 'Truly there would be reason to go mad were it not for music.' 
+            };
 
-        // Render metro map
-        function renderMetroMap() {
+            let selectedPiece = null;
+            let hoveredPiece = null;
+
             const svg = document.getElementById('metro-map');
-            svg.innerHTML = '';
+            const hoverInfo = document.getElementById('hover-info');
+            const playerSection = document.getElementById('player-section');
+            const quoteSection = document.getElementById('quote-section');
+            const videoIframe = document.getElementById('video-iframe');
 
-            // Draw connections
-            CONNECTIONS.forEach(([from, to]) => {
-                const fromStation = COMPOSERS.find(c => c.id === from);
-                const toStation = COMPOSERS.find(c => c.id === to);
-                
-                const line = createSVGElement('line', {
-                    x1: fromStation.position.x,
-                    y1: fromStation.position.y,
-                    x2: toStation.position.x,
-                    y2: toStation.position.y,
-                    stroke: COLORS.line,
-                    'stroke-width': 3,
-                    opacity: 0.4
+            function getCircleRadius(piece) {
+                const age = new Date().getFullYear() - piece.year;
+                const score = age > 0 ? piece.popularity / age : piece.popularity;
+                const radius = 15 + (score * 40);
+                return Math.max(12, Math.min(30, radius));
+            }
+
+            function createSVGElement(tag, attrs = {}) {
+                const elem = document.createElementNS('http://www.w3.org/2000/svg', tag);
+                for (const [key, value] of Object.entries(attrs)) {
+                    elem.setAttribute(key, value);
+                }
+                return elem;
+            }
+
+            function renderMetroMap() {
+                svg.innerHTML = '';
+
+                // Draw connection lines
+                CONNECTIONS.forEach(([from, to]) => {
+                    const fromStation = COMPOSERS.find(c => c.id === from);
+                    const toStation = COMPOSERS.find(c => c.id === to);
+                    const line = createSVGElement('line', { x1: fromStation.position.x, y1: fromStation.position.y, x2: toStation.position.x, y2: toStation.position.y, stroke: '#8B4513', 'stroke-width': 4, opacity: 0.5 });
+                    svg.appendChild(line);
                 });
-                svg.appendChild(line);
+
+                // Draw stations and masterpiece circles
+                COMPOSERS.forEach(composer => {
+                    const group = createSVGElement('g');
+
+                    // Composer Name
+                    const nameText = createSVGElement('text', { x: composer.position.x, y: composer.position.y - 65, 'text-anchor': 'middle', fill: '#2C1810', class: 'text-sm font-bold' });
+                    nameText.textContent = composer.name;
+                    group.appendChild(nameText);
+                    
+                    // Composer Year
+                    const yearText = createSVGElement('text', { x: composer.position.x, y: composer.position.y - 52, 'text-anchor': 'middle', fill: '#8B7355', style: 'font-size: 10px' });
+                    yearText.textContent = composer.year;
+                    group.appendChild(yearText);
+
+                    // Masterpiece circles arranged in an arc
+                    const sortedPieces = [...composer.masterpieces].sort((a, b) => a.year - b.year);
+                    sortedPieces.forEach((piece, idx) => {
+                        const hSpacing = 30;
+                        const vOffset = 18;
+                        const x = composer.position.x + (idx - 1) * hSpacing;
+                        const y = composer.position.y - (Math.abs(idx - 1) * vOffset);
+                        const pos = { x, y };
+                        
+                        const radius = getCircleRadius(piece);
+                        const color = FORM_COLORS[piece.form];
+
+                        const circle = createSVGElement('circle', { cx: pos.x, cy: pos.y, r: radius, fill: color, opacity: 0.85, class: 'circle-hover' });
+                        const label = createSVGElement('text', { x: pos.x, y: pos.y + 4, 'text-anchor': 'middle', fill: '#fff', style: 'font-size: 10px; font-weight: bold; pointer-events: none;' });
+                        label.textContent = piece.year;
+                        
+                        group.appendChild(circle);
+                        group.appendChild(label);
+
+                        circle.addEventListener('mouseenter', () => {
+                            group.appendChild(circle);
+                            group.appendChild(label);
+                            hoveredPiece = { composer: composer.name, piece: piece.title, form: piece.form };
+                            updateHoverInfo();
+                        });
+
+                        circle.addEventListener('mouseleave', () => {
+                            hoveredPiece = null;
+                            updateHoverInfo();
+                        });
+
+                        circle.addEventListener('click', () => playVideo(composer.name, piece, piece.videoId));
+                    });
+
+                    svg.appendChild(group);
+                });
+            }
+
+            function updateHoverInfo() {
+                if (hoveredPiece && !selectedPiece) {
+                    document.getElementById('hover-composer').textContent = hoveredPiece.composer;
+                    document.getElementById('hover-piece').textContent = hoveredPiece.piece;
+                    document.getElementById('hover-form').textContent = FORM_TAGLINES[hoveredPiece.form];
+                    hoverInfo.classList.remove('hidden');
+                } else {
+                    hoverInfo.classList.add('hidden');
+                }
+            }
+
+            function playVideo(composer, piece, videoId) {
+                selectedPiece = { composer, piece };
+                updateHoverInfo();
+                
+                // Show quote
+                const quote = COMPOSER_QUOTES[composer];
+                if (quote) {
+                    document.getElementById('quote-text').textContent = `"${quote}"`;
+                    document.getElementById('quote-author').textContent = `— ${composer}`;
+                    quoteSection.classList.remove('hidden');
+                }
+
+                // Show player
+                document.getElementById('player-composer').textContent = composer;
+                document.getElementById('player-piece').textContent = piece.title;
+                document.getElementById('player-form').textContent = FORM_TAGLINES[piece.form];
+                videoIframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+                document.getElementById('youtube-link').href = `https://www.youtube.com/watch?v=${videoId}`;
+                playerSection.classList.remove('hidden');
+                
+                playerSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            document.getElementById('close-player').addEventListener('click', () => {
+                selectedPiece = null;
+                playerSection.classList.add('hidden');
+                quoteSection.classList.add('hidden');
+                videoIframe.src = '';
+                updateHoverInfo();
             });
 
-            // Draw stations
-            COMPOSERS.forEach(composer => {
-                const group = createSVGElement('g');
-                
-                // Station name
-                const nameText = createSVGElement('text', {
-                    x: composer.position.x,
-                    y: composer.position.y - 65,
-                    'text-anchor': 'middle',
-                    fill: '#2C1810',
-                    class: 'text-xs font-bold'
-                });
-                nameText.textContent = composer.name;
-                group.appendChild(nameText);
-
-                // Year
-                const yearText = createSVGElement('text', {
-                    x: composer.position.x,
-                    y: composer.position.y - 52,
-                    'text-anchor': 'middle',
-                    fill: '#8B7355',
-                    style: 'font-size: 10px'
-                });
-                yearText.textContent = composer.year;
-                group.appendChild(yearText);
-
-                // Masterpiece circles
-                const sortedPieces = [...composer.masterpieces].sort((a, b) => a.year - b.year);
-                sortedPieces.forEach((piece, idx) => {
-                    const pos = getCirclePosition(composer.position.x, composer.position.y, idx);
-                    const radius = getCircleRadius(piece);
-                    const color = getCircleColor(idx);
-
-                    const circle = createSVGElement('circle', {
-                        cx: pos.x,
-                        cy: pos.y,
-                        r: radius,
-                        fill: color,
-                        opacity: 0.85,
-                        class: 'circle-hover',
-                        style: 'cursor: pointer;'
-                    });
-
-                    // Events
-                    circle.addEventListener('mouseenter', () => {
-                        hoveredPiece = { composer: composer.name, piece: piece.title };
-                        updateHoverInfo();
-                    });
-
-                    circle.addEventListener('mouseleave', () => {
-                        hoveredPiece = null;
-                        updateHoverInfo();
-                    });
-
-                    circle.addEventListener('click', () => {
-                        playVideo(composer.name, piece.title, piece.videoId);
-                    });
-
-                    group.appendChild(circle);
-
-                    // Year label
-                    const label = createSVGElement('text', {
-                        x: pos.x,
-                        y: pos.y + 4,
-                        'text-anchor': 'middle',
-                        fill: 'white',
-                        style: 'font-size: 11px; font-weight: bold; pointer-events: none;'
-                    });
-                    label.textContent = piece.year;
-                    group.appendChild(label);
-                });
-
-                svg.appendChild(group);
-            });
-        }
-
-        // Update hover info
-        function updateHoverInfo() {
-            const hoverDiv = document.getElementById('hover-info');
-            if (hoveredPiece && !selectedPiece) {
-                document.getElementById('hover-composer').textContent = hoveredPiece.composer;
-                document.getElementById('hover-piece').textContent = hoveredPiece.piece;
-                hoverDiv.classList.remove('hidden');
-            } else {
-                hoverDiv.classList.add('hidden');
+            function playRandomMasterpiece() {
+                const allMasterpieces = COMPOSERS.flatMap(composer => 
+                    composer.masterpieces.map(piece => ({ composer: composer.name, piece, videoId: piece.videoId }))
+                );
+                const random = allMasterpieces[Math.floor(Math.random() * allMasterpieces.length)];
+                playVideo(random.composer, random.piece, random.videoId);
             }
-        }
 
-        // Play video
-        function playVideo(composer, piece, videoId) {
-            selectedPiece = { composer, piece };
-            
-            // Show quote section
-            const quote = COMPOSER_QUOTES[composer];
-            if (quote) {
-                document.getElementById('quote-text').textContent = `"${quote}"`;
-                document.getElementById('quote-author').textContent = `— ${composer}`;
-                document.getElementById('quote-section').classList.remove('hidden');
-            }
-            
-            // Show player section
-            document.getElementById('player-section').classList.remove('hidden');
-            document.getElementById('player-composer').textContent = composer;
-            document.getElementById('player-piece').textContent = piece;
-            
-            // Embed video
-            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-            const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
-            
-            document.getElementById('video-iframe').src = embedUrl;
-            document.getElementById('youtube-link').href = watchUrl;
-        }
-
-        // Close player
-        document.getElementById('close-player').addEventListener('click', () => {
-            selectedPiece = null;
-            document.getElementById('player-section').classList.add('hidden');
-            document.getElementById('quote-section').classList.add('hidden');
-            document.getElementById('video-iframe').src = '';
+            renderMetroMap();
+            playRandomMasterpiece();
         });
-
-        // Play random masterpiece
-        function playRandomMasterpiece() {
-            // Flatten all masterpieces with composer info
-            const allMasterpieces = [];
-            COMPOSERS.forEach(composer => {
-                composer.masterpieces.forEach(piece => {
-                    allMasterpieces.push({
-                        composer: composer.name,
-                        title: piece.title,
-                        videoId: piece.videoId
-                    });
-                });
-            });
-            
-            // Pick random
-            const randomIndex = Math.floor(Math.random() * allMasterpieces.length);
-            const random = allMasterpieces[randomIndex];
-            
-            // Play it
-            playVideo(random.composer, random.title, random.videoId);
-        }
-
-        // Initialize
-        renderMetroMap();
-        
-        // Auto-play random masterpiece on load
-        playRandomMasterpiece();
     </script>
 </body>
 </html>
+
