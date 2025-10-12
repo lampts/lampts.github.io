@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Concepts: Signing & Verification</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* Use the Inter font family for the main text and Roboto Mono for code/numbers */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .font-mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        /* Simple transition for a smoother UI experience */
+        .transition-all {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-200 p-4 sm:p-6 md:p-8">
+
+    <main class="max-w-6xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-5xl font-bold text-white">Cryptographic Signatures Explained</h1>
+            <p class="text-slate-400 mt-2 text-lg">An interactive playground to understand how signing and verifying messages works.</p>
+        </header>
+
+        <!-- Main interactive grid -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            <!-- 1. System Parameters -->
+            <section class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 flex flex-col">
+                <h2 class="text-xl font-semibold mb-4 text-cyan-400 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    System Parameters
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="modulus" class="block text-sm font-medium text-slate-400 mb-1">Modulus (n)</label>
+                        <input type="number" id="modulus" value="179" class="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none">
+                    </div>
+                    <div>
+                        <label for="base" class="block text-sm font-medium text-slate-400 mb-1">Base (g)</label>
+                        <input type="number" id="base" value="59" class="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none">
+                    </div>
+                </div>
+                <p class="text-xs text-slate-500 mt-4 pt-4 border-t border-slate-700">These are public values everyone agrees to use.</p>
+            </section>
+
+            <!-- 2. Your Identity (Keys) -->
+            <section class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 flex flex-col">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-400 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M14 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M2 12s2-4 6-4 6 4 6 4"></path></svg>
+                    Your Identity
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="secretKey" class="block text-sm font-medium text-slate-400 mb-1">Secret Key (s) <span class="text-red-400">(Private)</span></label>
+                        <input type="number" id="secretKey" value="7" class="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div class="bg-slate-900 rounded-md p-3">
+                        <div class="text-sm text-slate-400">Public Key (pk) <span class="text-green-400">(Public)</span></div>
+                        <div class="text-sm text-slate-500 mb-1">(g × s) mod n</div>
+                        <output for="base secretKey modulus" id="publicKey" class="text-2xl font-mono text-white">24</output>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Message Signing -->
+            <section class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 flex flex-col">
+                <h2 class="text-xl font-semibold mb-4 text-violet-400 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M2 12s2-4 6-4 6 4 6 4"></path><path d="M14 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line></svg>
+                    Sign Message
+                </h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-slate-400 mb-1">Message (m)</label>
+                        <input type="number" id="message" value="101" class="w-full bg-slate-900 border border-slate-600 rounded-md px-3 py-2 text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none">
+                    </div>
+                    <div class="bg-slate-900 rounded-md p-3">
+                        <div class="text-sm text-slate-400">Digital Signature (sig)</div>
+                        <div class="text-sm text-slate-500 mb-1">(m × s) mod n</div>
+                        <output for="message secretKey modulus" id="signature" class="text-2xl font-mono text-white">123</output>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Verification -->
+            <section class="bg-slate-800/50 rounded-xl p-6 border border-slate-700 flex flex-col">
+                <h2 class="text-xl font-semibold mb-4 text-amber-400 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Verify Signature
+                </h2>
+                <div class="space-y-2 flex-grow flex flex-col justify-center">
+                    <div class="bg-slate-900 rounded-md p-3 text-center">
+                        <div class="text-sm text-slate-500">(pk × m) mod n</div>
+                        <div class="text-2xl font-mono" id="leftSide">71</div>
+                    </div>
+                    <div class="text-center text-xl font-bold text-slate-500">=?</div>
+                    <div class="bg-slate-900 rounded-md p-3 text-center">
+                        <div class="text-sm text-slate-500">(sig × g) mod n</div>
+                        <div class="text-2xl font-mono" id="rightSide">71</div>
+                    </div>
+                    <div id="validationResult" class="p-3 mt-2 rounded-md text-center font-semibold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        ✓ Valid Signature
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Explanation Section -->
+        <section class="mt-8 bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+            <h2 class="text-2xl font-bold mb-4 text-white">How It Works: The Math Behind the Magic</h2>
+            <div class="space-y-3 text-slate-300 text-base" id="mathBreakdown">
+                <!-- Content generated by JavaScript -->
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-700 flex flex-col md:flex-row items-center gap-4">
+                 <button id="tutorialBtn" class="w-full md:w-auto bg-slate-700 hover:bg-slate-600 text-white font-medium py-2 px-4 rounded-md transition-all">
+                    Load Tutorial Example
+                </button>
+                <p class="text-sm text-slate-400">
+                    <strong>Try it!</strong> Change any of the values above. Notice how changing the secret key or message invalidates the signature, but changing them back makes it valid again.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- DOM Element References ---
+            // Get all needed elements from the DOM once to avoid repeated lookups.
+            const elements = {
+                modulus: document.getElementById('modulus'),
+                base: document.getElementById('base'),
+                secretKey: document.getElementById('secretKey'),
+                message: document.getElementById('message'),
+                publicKey: document.getElementById('publicKey'),
+                signature: document.getElementById('signature'),
+                leftSide: document.getElementById('leftSide'),
+                rightSide: document.getElementById('rightSide'),
+                validationResult: document.getElementById('validationResult'),
+                mathBreakdown: document.getElementById('mathBreakdown'),
+                tutorialBtn: document.getElementById('tutorialBtn'),
+            };
+
+            // --- State Management ---
+            // A single object to hold the application's state. This is the "single source of truth".
+            const state = {
+                n: 0, g: 0, s: 0, m: 0, // Inputs
+                pk: 0, sig: 0,           // Calculated values
+                left: 0, right: 0,       // Verification values
+                isValid: false
+            };
+
+            // --- Core Logic Functions ---
+
+            /**
+             * A safe modulo function that handles negative numbers correctly.
+             * In JavaScript, '%' is the remainder operator, not a true modulo.
+             * @param {number} a - The dividend.
+             * @param {number} b - The divisor (modulus).
+             * @returns {number} The result of a mod b.
+             */
+            const mod = (a, b) => ((a % b) + b) % b;
+
+            /**
+             * Reads all values from the input fields and updates the state object.
+             */
+            const readInputsAndUpdateState = () => {
+                state.n = parseInt(elements.modulus.value) || 0;
+                state.g = parseInt(elements.base.value) || 0;
+                state.s = parseInt(elements.secretKey.value) || 0;
+                state.m = parseInt(elements.message.value) || 0;
+            };
+            
+            /**
+             * Performs all cryptographic calculations based on the current state.
+             */
+            const calculateValues = () => {
+                if (state.n === 0) return; // Avoid division by zero
+                
+                // 1. Generate Public Key
+                state.pk = mod(state.g * state.s, state.n);
+                
+                // 2. Sign Message
+                state.sig = mod(state.m * state.s, state.n);
+
+                // 3. Perform Verification Check
+                state.left = mod(state.pk * state.m, state.n);
+                state.right = mod(state.sig * state.g, state.n);
+                state.isValid = state.left === state.right;
+            };
+
+            /**
+             * Renders the current state to the DOM, updating all outputs and validation UI.
+             */
+            const renderStateToUI = () => {
+                elements.publicKey.textContent = state.pk;
+                elements.signature.textContent = state.sig;
+                elements.leftSide.textContent = state.left;
+                elements.rightSide.textContent = state.right;
+
+                // Update validation result display
+                const validationEl = elements.validationResult;
+                if (state.isValid) {
+                    validationEl.className = 'p-3 mt-2 rounded-md text-center font-semibold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                    validationEl.textContent = '✓ Valid Signature';
+                } else {
+                    validationEl.className = 'p-3 mt-2 rounded-md text-center font-semibold transition-all bg-red-500/20 text-red-400 border border-red-500/30';
+                    validationEl.textContent = '✗ Invalid Signature';
+                }
+
+                // Update the detailed math breakdown
+                elements.mathBreakdown.innerHTML = `
+                    <p><strong class="text-cyan-400">Setup:</strong> Everyone agrees on a modulus <code class="font-mono text-white">n=${state.n}</code> and a base <code class="font-mono text-white">g=${state.g}</code>.</p>
+                    <p><strong class="text-emerald-400">Key Generation:</strong> You choose a secret key <code class="font-mono text-white">s=${state.s}</code>. Your public key is calculated as <code class="font-mono text-white">(${state.g} × ${state.s}) mod ${state.n} = ${state.pk}</code>.</p>
+                    <p><strong class="text-violet-400">Signing:</strong> For a message <code class="font-mono text-white">m=${state.m}</code>, the signature is <code class="font-mono text-white">(${state.m} × ${state.s}) mod ${state.n} = ${state.sig}</code>.</p>
+                    <p><strong class="text-amber-400">Verification:</strong> Anyone can check if <code class="font-mono text-white">(${state.pk} × ${state.m}) mod ${state.n}</code> equals <code class="font-mono text-white">(${state.sig} × ${state.g}) mod ${state.n}</code>.</p>
+                    <p class="pt-2 border-t border-slate-700/50 mt-3"><strong class="text-slate-300">The Core Principle:</strong> Because of modular arithmetic, both sides of the verification equation simplify to <code class="font-mono text-white">(g × s × m) mod n</code>. This proves the message was signed with the correct secret key without revealing the key itself!</p>
+                `;
+            };
+
+            /**
+             * Main update cycle: Read -> Calculate -> Render.
+             * This function is called whenever any input changes.
+             */
+            const updateApp = () => {
+                readInputsAndUpdateState();
+                calculateValues();
+                renderStateToUI();
+            };
+
+            // --- Event Listeners ---
+
+            // Automatically update the app whenever any input value changes.
+            const inputs = [elements.modulus, elements.base, elements.secretKey, elements.message];
+            inputs.forEach(input => input.addEventListener('input', updateApp));
+
+            // Load the default tutorial values when the button is clicked.
+            elements.tutorialBtn.addEventListener('click', () => {
+                elements.modulus.value = 179;
+                elements.base.value = 59;
+                elements.secretKey.value = 7;
+                elements.message.value = 101;
+                updateApp(); // Trigger a full update after setting values
+            });
+
+            // --- Initialisation ---
+            // Run the app once on page load to initialize with default HTML values.
+            updateApp();
+        });
+    </script>
+</body>
+</html>
+
