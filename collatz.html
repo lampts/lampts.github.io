@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collatz Conjecture (3N+1)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A192F;
+        }
+        canvas {
+            background-color: #0A192F;
+            display: block;
+            touch-action: none;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            background: #334155;
+            height: 4px;
+            border-radius: 9999px;
+        }
+        input[type=range]::-moz-range-track {
+            background: #334155;
+            height: 4px;
+            border-radius: 9999px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -6px;
+            background: #67e8f9;
+            height: 16px;
+            width: 16px;
+            border-radius: 9999px;
+            border: 2px solid #0A192F;
+            box-shadow: 0 0 10px #67e8f9;
+            cursor: pointer;
+        }
+        input[type=range]::-moz-range-thumb {
+            background: #67e8f9;
+            height: 16px;
+            width: 16px;
+            border-radius: 9999px;
+            border: 2px solid #0A192F;
+            box-shadow: 0 0 10px #67e8f9;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="text-slate-200 flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden">
+
+    <div class="w-full max-w-7xl text-center">
+        <h1 class="text-4xl md:text-6xl font-bold text-cyan-300 mb-2">Collatz Conjecture</h1>
+        <p class="text-lg md:text-xl text-slate-400 mb-4">Every positive integer eventually reaches 1.</p>
+        
+        <div class="flex justify-center items-center gap-4 mb-4">
+             <button id="newNumberBtn" class="bg-cyan-500 text-slate-900 font-bold py-3 px-6 rounded-lg hover:bg-cyan-400 transition-colors duration-300 shadow-lg shadow-cyan-500/20">
+                Start New Sequence
+            </button>
+             <button id="settingsBtn" class="p-3 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-300"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+        </div>
+    </div>
+    
+    <div class="w-full max-w-7xl mb-4 text-center">
+        <h2 class="text-2xl font-bold text-cyan-300 mb-2">Digit Breakdown</h2>
+        <div id="tokenDisplay" class="bg-slate-800/50 rounded-lg p-4 border border-slate-700 min-h-[50px] flex justify-center items-center text-slate-400 flex-wrap gap-1">
+            Ready
+        </div>
+    </div>
+
+    <div id="settingsPanel" class="hidden fixed top-0 left-0 w-full h-full bg-black/50 backdrop-blur-sm flex justify-center items-center z-50">
+        <div class="bg-slate-800 p-8 rounded-lg shadow-2xl w-full max-w-md border border-slate-700 relative">
+            <button id="closeSettingsBtn" class="absolute top-4 right-4 text-slate-400 hover:text-white z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h2 class="text-2xl font-bold mb-6 text-white">Settings</h2>
+            <div class="space-y-6">
+                <div>
+                    <label for="startNumRange" class="flex justify-between text-slate-300">
+                        <span>Max Starting Number</span>
+                        <span id="startNumLabel" class="font-bold text-cyan-300">1000</span>
+                    </label>
+                    <input id="startNumRange" type="range" min="10" max="10000" value="1000" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div>
+                    <label for="historyRange" class="flex justify-between text-slate-300">
+                        <span>Trajectory History</span>
+                         <span id="historyLabel" class="font-bold text-cyan-300">100</span>
+                    </label>
+                    <input id="historyRange" type="range" min="1" max="200" value="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <div>
+                    <label for="fadingRange" class="flex justify-between text-slate-300">
+                        <span>Fading Strength</span>
+                         <span id="fadingLabel" class="font-bold text-cyan-300">0.30</span>
+                    </label>
+                    <input id="fadingRange" type="range" min="0.05" max="1.0" step="0.05" value="0.3" class="w-full h-2 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-7xl flex flex-col lg:flex-row gap-6 mt-4">
+        <div class="lg:w-2/3 w-full h-[50vh] lg:h-[65vh] rounded-lg overflow-hidden border border-slate-700">
+            <canvas id="collatzCanvas"></canvas>
+        </div>
+
+        <div class="lg:w-1/3 w-full flex flex-col gap-6">
+            <div class="bg-slate-800/50 rounded-lg p-4 flex flex-wrap items-center justify-center gap-4 border border-slate-700">
+                <div>
+                    <span class="text-slate-400 text-sm">STARTING</span>
+                    <p id="startNumber" class="text-2xl font-bold text-white">-</p>
+                </div>
+                <div>
+                    <span class="text-slate-400 text-sm">CURRENT</span>
+                    <p id="currentNumber" class="text-2xl font-bold text-white">-</p>
+                </div>
+                 <div>
+                    <span class="text-slate-400 text-sm">STEPS</span>
+                    <p id="steps" class="text-2xl font-bold text-white">0</p>
+                </div>
+                <div>
+                    <span class="text-slate-400 text-sm">PEAK</span>
+                    <p id="peak" class="text-2xl font-bold text-white">-</p>
+                </div>
+            </div>
+
+            <div class="w-full text-center flex-1 flex flex-col">
+                <h2 class="text-2xl font-bold text-cyan-300 mb-1">Benford's Law</h2>
+                <p class="text-slate-400 mb-4 text-sm">Leading digit frequency</p>
+                <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700 flex justify-around items-end gap-2 flex-1">
+                    <div id="benfordChart" class="w-full h-full flex justify-around items-end gap-1 md:gap-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('collatzCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const startNumberEl = document.getElementById('startNumber');
+        const currentNumberEl = document.getElementById('currentNumber');
+        const stepsEl = document.getElementById('steps');
+        const peakEl = document.getElementById('peak');
+        const newNumberBtn = document.getElementById('newNumberBtn');
+        const benfordChartEl = document.getElementById('benfordChart');
+        const tokenDisplayEl = document.getElementById('tokenDisplay');
+        
+        const settingsBtn = document.getElementById('settingsBtn');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const startNumRange = document.getElementById('startNumRange');
+        const startNumLabel = document.getElementById('startNumLabel');
+        const historyRange = document.getElementById('historyRange');
+        const historyLabel = document.getElementById('historyLabel');
+        const fadingRange = document.getElementById('fadingRange');
+        const fadingLabel = document.getElementById('fadingLabel');
+
+        let sequence = [];
+        let trajectoryHistory = [];
+        let currentNumber = 0;
+        let animationInterval;
+        let peak = 0;
+        
+        const colorPalette = [
+            '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', 
+            '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', 
+            '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'
+        ];
+
+        let digitCounts = {1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0};
+        let totalDigitsCounted = 0;
+        const BENFORD_EXPECTED = { 1: 30.1, 2: 17.6, 3: 12.5, 4: 9.7, 5: 7.9, 6: 6.7, 7: 5.8, 8: 5.1, 9: 4.6 };
+
+        let maxStartNumber = 1000;
+        let historyLength = 100;
+        let fadingFactor = 0.3;
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            drawChart();
+        }
+
+        function collatz(n) {
+            return n % 2 === 0 ? n / 2 : 3 * n + 1;
+        }
+
+        function drawChart() {
+            const { width, height } = canvas;
+            ctx.clearRect(0, 0, width, height);
+
+            let allPoints = [...sequence];
+            trajectoryHistory.forEach(path => allPoints.push(...path));
+            const globalMaxVal = Math.max(...allPoints);
+
+            const getY = (val) => {
+                if (globalMaxVal === 0) return height * 0.95;
+                return height - ((val / globalMaxVal) * (height * 0.9) + (height * 0.05));
+            };
+
+            trajectoryHistory.forEach((path, historyIndex) => {
+                if (path.length < 2) return;
+                
+                const alpha = ((historyIndex + 1) / historyLength) * fadingFactor;
+                ctx.strokeStyle = `rgba(56, 189, 248, ${alpha})`;
+                ctx.lineWidth = 1;
+
+                const pathXStep = width / (path.length > 1 ? path.length - 1 : 1);
+                ctx.beginPath();
+                ctx.moveTo(0, getY(path[0]));
+                path.forEach((val, index) => {
+                    ctx.lineTo(index * pathXStep, getY(val));
+                });
+                ctx.stroke();
+            });
+
+            if (sequence.length < 2) return;
+            const xStep = width / (sequence.length > 1 ? sequence.length - 1 : 1);
+            
+            ctx.strokeStyle = 'rgba(34, 211, 238, 1)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, getY(sequence[0]));
+            sequence.forEach((val, index) => {
+                ctx.lineTo(index * xStep, getY(val));
+            });
+            ctx.stroke();
+            
+            sequence.forEach((val, index) => {
+                const x = index * xStep;
+                const y = getY(val);
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#22d3ee';
+                ctx.fill();
+
+                if (sequence.length < 30 || index === 0 || index === sequence.length - 1 || (val === peak && index > 0)) {
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.font = '12px Inter';
+                    ctx.textAlign = 'center';
+                    const labelY = y - 10 > 12 ? y - 10 : y + 22;
+                    ctx.fillText(val.toLocaleString(), x, labelY);
+                }
+            });
+        }
+        
+        function updateTokenDisplay(number) {
+            const text = number.toString();
+            const digits = text.split('');
+            
+            const html = digits.map((digit, idx) => {
+                const color = colorPalette[parseInt(digit) % colorPalette.length];
+                return `<span style="background-color: ${color}40; color: ${color}; border: 1px solid ${color}60;" class="inline-block px-3 py-2 rounded-md text-lg font-mono font-bold">${digit}</span>`;
+            }).join('');
+            
+            tokenDisplayEl.innerHTML = html;
+        }
+
+        function updateBenfordChart() {
+            if (totalDigitsCounted === 0) return;
+
+            for (let i = 1; i <= 9; i++) {
+                const bar = document.getElementById(`benford-bar-${i}`);
+                if (!bar) continue;
+
+                const percentage = (digitCounts[i] / totalDigitsCounted) * 100;
+                const barFill = bar.querySelector('.bar-fill');
+                const percentageLabel = bar.querySelector('.percentage-label');
+                
+                barFill.style.height = `${percentage}%`;
+                percentageLabel.textContent = `${percentage.toFixed(1)}%`;
+            }
+        }
+
+        function countDigit(n) {
+            const firstDigit = parseInt(n.toString()[0]);
+            if (firstDigit > 0 && firstDigit <= 9) {
+                digitCounts[firstDigit]++;
+                totalDigitsCounted++;
+            }
+        }
+
+        function step() {
+            if (currentNumber === 1) {
+                clearInterval(animationInterval);
+                if (sequence.length > 1) {
+                    trajectoryHistory.push(sequence);
+                    if (trajectoryHistory.length > historyLength) {
+                        trajectoryHistory.shift();
+                    }
+                }
+                setTimeout(runSequence, 500);
+                return;
+            }
+            currentNumber = collatz(currentNumber);
+            countDigit(currentNumber);
+            sequence.push(currentNumber);
+            peak = Math.max(peak, currentNumber);
+            currentNumberEl.textContent = currentNumber.toLocaleString();
+            stepsEl.textContent = sequence.length - 1;
+            peakEl.textContent = peak.toLocaleString();
+            drawChart();
+            updateBenfordChart();
+            updateTokenDisplay(currentNumber);
+        }
+
+        function runSequence() {
+            clearInterval(animationInterval);
+            currentNumber = Math.floor(Math.random() * maxStartNumber) + 2; 
+            countDigit(currentNumber);
+            sequence = [currentNumber];
+            peak = currentNumber;
+            startNumberEl.textContent = currentNumber.toLocaleString();
+            currentNumberEl.textContent = currentNumber.toLocaleString();
+            stepsEl.textContent = 0;
+            peakEl.textContent = currentNumber.toLocaleString();
+            drawChart();
+            updateTokenDisplay(currentNumber);
+            animationInterval = setInterval(step, 100);
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        newNumberBtn.addEventListener('click', () => {
+             if (sequence.length > 1) {
+                trajectoryHistory.push(sequence);
+                if (trajectoryHistory.length > historyLength) trajectoryHistory.shift();
+            }
+            runSequence();
+        });
+
+        settingsBtn.addEventListener('click', () => settingsPanel.classList.remove('hidden'));
+        closeSettingsBtn.addEventListener('click', () => settingsPanel.classList.add('hidden'));
+        settingsPanel.addEventListener('click', (e) => {
+            if (e.target === settingsPanel) settingsPanel.classList.add('hidden');
+        });
+
+        startNumRange.addEventListener('input', (e) => {
+            maxStartNumber = parseInt(e.target.value);
+            startNumLabel.textContent = maxStartNumber.toLocaleString();
+        });
+        
+        historyRange.addEventListener('input', (e) => {
+            historyLength = parseInt(e.target.value);
+            historyLabel.textContent = historyLength;
+            while (trajectoryHistory.length > historyLength) {
+                trajectoryHistory.shift();
+            }
+            drawChart();
+        });
+        
+        fadingRange.addEventListener('input', (e) => {
+            fadingFactor = parseFloat(e.target.value);
+            fadingLabel.textContent = fadingFactor.toFixed(2);
+            drawChart();
+        });
+        
+        function initBenfordChart() {
+            for (let i = 1; i <= 9; i++) {
+                const barContainer = document.createElement('div');
+                barContainer.id = `benford-bar-${i}`;
+                barContainer.className = 'h-full flex-1 flex flex-col-reverse items-center';
+
+                const barWrapper = document.createElement('div');
+                barWrapper.className = 'w-full h-full relative rounded-t-md overflow-hidden bg-slate-700';
+
+                const expectedLine = document.createElement('div');
+                expectedLine.className = 'absolute w-full border-t-2 border-dashed border-red-400 opacity-70 z-10';
+                expectedLine.style.bottom = `${BENFORD_EXPECTED[i]}%`;
+                
+                const barFill = document.createElement('div');
+                barFill.className = 'bar-fill absolute bottom-0 w-full bg-gradient-to-t from-cyan-500 to-cyan-300 transition-all duration-300 ease-out';
+                barFill.style.height = '0%';
+                
+                barWrapper.appendChild(expectedLine);
+                barWrapper.appendChild(barFill);
+                
+                const percentageLabel = document.createElement('p');
+                percentageLabel.className = 'percentage-label text-xs font-bold text-white mt-1';
+                percentageLabel.textContent = '0.0%';
+                
+                const digitLabel = document.createElement('p');
+                digitLabel.className = 'text-sm font-bold text-slate-400 -mt-1';
+                digitLabel.textContent = i;
+                
+                barContainer.appendChild(barWrapper);
+                barContainer.appendChild(percentageLabel);
+                barContainer.appendChild(digitLabel);
+
+                benfordChartEl.appendChild(barContainer);
+            }
+        }
+        
+        function init() {
+            initBenfordChart();
+            resizeCanvas();
+            runSequence();
+        }
+
+        init();
+    </script>
+</body>
+</html>
+
