@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal vs. Noise</title>
+    <!-- Use a minimal, clean stylesheet for readability -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            background-color: #fdfdfd;
+            color: #222;
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        h1, h2 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        pre {
+            background-color: #2b2b2b;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        }
+        .problem { color: #ff5555; }
+        .fix { color: #50fa7b; }
+        .noise { color: #888; }
+    </style>
+</head>
+<body>
+    <h1>The Evolution of a Bug Fix (Signal vs. Noise)</h1>
+    <p>The problem: loading a JSON file in Python without leaking resources.</p>
+
+    <!-- 
+      SECTION 1: THE BROKEN CODE
+      The "signal" is the one-line bug.
+    -->
+    <h2>1. The Broken Code (4 Lines)</h2>
+    <p>This code leaks a file handle, which will crash the program in a loop.</p>
+    <pre><code>import json
+
+def load_json(path):
+    return json.load(open(path))  <span class="problem"># &lt;-- BUG: File handle is never closed.</span></code></pre>
+
+    <!-- 
+      SECTION 2: THE OVERCOMPLICATED FIX
+      The "signal" is the one-line fix, buried in "noise".
+    -->
+    <h2>2. The "Improved" Fix (40 Lines)</h2>
+    <p>This fixes the bug, but buries the one-line fix under 39 lines of noise (imports, type hints, logging, docstrings, error handling, etc.). The fix is impossible to spot.</p>
+    <pre><code><span class="noise">import json</span>
+<span class="noise">import logging  # Noise</span>
+<span class="noise">from typing import Any, Dict, Optional  # Noise</span>
+
+<span class="noise">logger = logging.getLogger(__name__) # Noise</span>
+
+<span class="noise">try:  # Noise (unrelated import)</span>
+<span class="noise">    from transformers import AutoTokenizer</span>
+<span class="noise">except Exception as e:</span>
+<span class="noise">    logger.warning(f"Could not import: {e}")</span>
+<span class="noise">    AutoTokenizer: Optional[Any] = None</span>
+
+
+<span class="noise">def _load_json(path: str) -> Dict[str, Any]:</span>
+<span class="noise">    """</span>
+<span class="noise">    Safely load a JSON file... (20 lines of docstring noise)</span>
+<span class="noise">    """</span>
+<span class="noise">    import os # Noise</span>
+<span class="noise">    </span>
+<span class="noise">    if not os.path.exists(path):  # Noise (Pythonic to just try/except)</span>
+<span class="noise">        raise FileNotFoundError(f"JSON file not found: {path}")</span>
+<span class="noise">    </span>
+<span class="noise">    try:</span>
+        <span class="fix">with open(path, "r", encoding="utf-8") as f:</span>  <span class="fix"># &lt;-- THE FIX</span>
+            data = json.load(f)
+<span class="noise">    except json.JSONDecodeError as e:  # Noise (over-handling)</span>
+<span class="noise">        raise ValueError(f"Invalid JSON in {path}: {e}") from e</span>
+<span class="noise">    except OSError as e:  # Noise (over-handling)</span>
+<span class="noise">        raise OSError(f"Error reading file {path}: {e}") from e</span>
+<span class="noise">    </span>
+<span class="noise">    if not isinstance(data, dict):  # Noise (validation)</span>
+<span class="noise">        raise ValueError(f"Expected dict in {path}, got {type(data).__name__}")</span>
+<span class="noise">    </span>
+<span class="noise">    return data</span></code></pre>
+
+    <!-- 
+      SECTION 3: THE MINIMAL, CORRECT CODE
+      This is 100% signal. It correctly solves the problem
+      and is easy to read.
+    -->
+    <h2>3. The Minimal Fix (5 Lines)</h2>
+    <p>This is the correct, Pythonic way. It fixes the bug and adds zero noise. The signal is clear.</p>
+    <pre><code>import json
+
+def load_json(path):
+    <span class="fix">with open(path) as f:</span>  <span class="fix"># &lt;-- THE FIX: Guarantees file closes.</span>
+        return json.load(f)</code></pre>
+
+    <hr>
+    <p><strong>The Lesson:</strong> Strive for minimal code that solves the problem. The "overcomplicated" fix is 8x longer but no more correct. It just adds noise, which hides the signal and makes code harder to read and maintain.</p>
+
+</body>
+</html>
+
