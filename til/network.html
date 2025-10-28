@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en" class=""> <!-- 'dark' class will be toggled here -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Network Cascade</title>
+    <!-- 1. Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Load Plotly.js (Updated version) -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+        /* Use a clean, modern font */
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+            /* Smooth theme transitions */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        /* Ensure the plot container is responsive */
+        #chart-container {
+            width: 100%;
+            /* Full height minus padding */
+            height: calc(100vh - 120px); 
+            min-height: 500px;
+        }
+        
+        /* Custom styles for Plotly controls in dark mode */
+        .dark .js-plotly-plot .plotly .slider-wrapper {
+            background-color: #374151 !important; /* dark:bg-gray-700 */
+        }
+        .dark .js-plotly-plot .plotly .slider-tick-label,
+        .dark .js-plotly-plot .plotly .slider-label {
+            fill: #d1d5db !important; /* dark:text-gray-300 */
+        }
+        .dark .js-plotly-plot .plotly .updatemenu-button {
+            background-color: #374151 !important;
+            border-color: #4b5563 !important;
+            color: #d1d5db !important;
+        }
+        .dark .js-plotly-plot .plotly .updatemenu-button:hover {
+            background-color: #4b5563 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+
+    <!-- 
+      Main Container - Simplified to a single header + chart 
+    -->
+    <div class="max-w-full mx-auto px-4 md:px-8 py-4">
+        
+        <!-- 
+          Consolidated Control Header 
+        -->
+        <header class="flex flex-wrap items-center justify-between gap-4 mb-4">
+            
+            <!-- Left Side: Title & Initial Nodes -->
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    Network Cascade
+                </h1>
+                
+                <!-- Initial Nodes Display -->
+                <div class="flex items-center gap-3">
+                    <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400">Initial Nodes:</h3>
+                    <div class="flex flex-wrap gap-2" id="selected-nodes-container">
+                        <span class="text-gray-500 dark:text-gray-400 italic text-sm">None selected</span>
+                    </div>
+                    <!-- This is the new container for the step count -->
+                    <div id="steps-container" class="flex items-center gap-2 ml-4">
+                        <!-- Content will be added by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Controls -->
+            <div class="flex items-center gap-3">
+                <button id="start-btn" class="bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-emerald-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    Start Simulation
+                </button>
+                <button id="reset-btn" class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50">
+                    Reset
+                </button>
+
+                <!-- Dark Mode Toggle -->
+                <button id="theme-toggle" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                    <svg id="theme-icon-light" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-1.636 4.95l1.414.707a1 1 0 01-1.414 1.414l-1.414-.707a1 1 0 011.414-1.414zM4 10a1 1 0 01-1-1V3a1 1 0 112 0v6a1 1 0 01-1 1zm-.464 4.95l-.707.707a1 1 0 001.414 1.414l.707-.707a1 1 0 00-1.414-1.414zM3 11a1 1 0 100-2H2a1 1 0 100 2h1zM6.05 16.364a1 1 0 01-1.414 0l-.707-.707a1 1 0 011.414-1.414l.707.707a1 1 0 010 1.414z"></path></svg>
+                    <svg id="theme-icon-dark" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Plotly Chart Container -->
+        <div id="chart-container" class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-colors duration-300">
+            <!-- Plotly.js will render here -->
+        </div>
+
+    </div>
+
+    <!-- 3. Main JavaScript Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- A. GLOBAL STATE AND CONSTANTS ---
+
+            // DOM Elements
+            const CHART_DIV = document.getElementById('chart-container');
+            const START_BTN = document.getElementById('start-btn');
+            const RESET_BTN = document.getElementById('reset-btn');
+            const SELECTED_NODES_CONTAINER = document.getElementById('selected-nodes-container');
+            const STEPS_CONTAINER = document.getElementById('steps-container'); // <-- ADDED
+            const THEME_TOGGLE = document.getElementById('theme-toggle');
+            const ICON_LIGHT = document.getElementById('theme-icon-light');
+            const ICON_DARK = document.getElementById('theme-icon-dark');
+
+            // Simulation State
+            let initialInfected = {}; // Stores nodes to be infected at t=0
+            let simulationStates = [];  // Stores the state for each timestep
+            let currentState = 'SETUP'; // 'SETUP' | 'SIMULATING'
+            let currentTheme = 'light';
+
+            // Colors
+            const COLOR_SUSCEPTIBLE = '#009fe3';
+            const COLOR_INFECTIOUS = '#feba02';
+            const COLOR_RECOVERED = '#9ca3af'; // Using a mid-gray for better visibility in both modes
+            const COLOR_LINE_LIGHT = '#9ca3af';
+            const COLOR_LINE_DARK = '#6b7280';
+            
+            // Plotly Theme Colors
+            const PLOT_BG_LIGHT = '#ffffff';
+            const PLOT_BG_DARK = '#1f2937'; // dark:bg-gray-800
+            const PLOT_FONT_LIGHT = '#111827'; // dark:text-gray-900
+            const PLOT_FONT_DARK = '#e5e7eb'; // dark:text-gray-200
+
+
+            // --- B. PRE-COMPUTED GRAPH DATA ---
+            // (Ported from your Python/NetworkX script)
+            // ... (Data is unchanged, omitting for brevity) ...
+            const EDGES = [
+                ['a', 'b'], ['a', 'd'], ['a', 'f'], ['b', 'd'], ['b', 'e'], ['b', 'g'],
+                ['c', 'd'], ['c', 'h'], ['d', 'e'], ['d', 'f'], ['d', 'g'], ['e', 'g'],
+                ['f', 'g'], ['f', 'h'], ['g', 'h'], ['h', 'i'], ['h', 'r'], ['i', 'j'],
+                ['i', 'p'], ['i', 'n'], ['j', 'k'], ['j', 'l'], ['j', 'm'], ['j', 'n'],
+                ['j', 'o'], ['j', 'p'], ['k', 'l'], ['k', 'p'], ['l', 'm'], ['n', 'o'],
+                ['m', 'q'], ['q', 's']
+            ];
+            const POSITIONS = {
+                'a': [0.16013343, 0.70951479], 'b': [0.0, 0.54010831], 'd': [0.19248261, 0.49658461],
+                'f': [0.35515086, 0.6713753], 'e': [0.16853683, 0.2873836], 'g': [0.2227976, 0.43503893],
+                'c': [0.32049911, 0.35100984], 'h': [0.46549241, 0.52802042], 'i': [0.65586616, 0.51381333],
+                'r': [0.4539126, 0.34739564], 'j': [0.73087325, 0.62763212], 'p': [0.74233014, 0.39009969],
+                'n': [0.81912444, 0.50503115], 'k': [0.66579342, 0.8166549], 'l': [0.79636254, 0.78168285],
+                'm': [0.887019, 0.69762143], 'o': [0.96340156, 0.56455706], 'q': [1.0, 0.77121281],
+                's': [0.98022399, 0.96526277]
+            };
+            const NODE_STATS = {
+                'a': {'degree': 0.15, 'pagerank': 0.0416, 'closeness': 0.3846, 'betweenness': 0.0881, 'eigenvector': 0.2850},
+                'b': {'degree': 0.20, 'pagerank': 0.0463, 'closeness': 0.4166, 'betweenness': 0.0864, 'eigenvector': 0.3160},
+                'd': {'degree': 0.30, 'pagerank': 0.0717, 'closeness': 0.5263, 'betweenness': 0.3530, 'eigenvector': 0.4607},
+                'f': {'degree': 0.20, 'pagerank': 0.0520, 'closeness': 0.5128, 'betweenness': 0.2115, 'eigenvector': 0.4190},
+                'e': {'degree': 0.15, 'pagerank': 0.0423, 'closeness': 0.4347, 'betweenness': 0.0381, 'eigenvector': 0.3276},
+                'g': {'degree': 0.25, 'pagerank': 0.0634, 'closeness': 0.5263, 'betweenness': 0.3023, 'eigenvector': 0.4571},
+                'c': {'degree': 0.10, 'pagerank': 0.0335, 'closeness': 0.4166, 'betweenness': 0.0536, 'eigenvector': 0.2763},
+                'h': {'degree': 0.20, 'pagerank': 0.0543, 'closeness': 0.5128, 'betweenness': 0.3340, 'eigenvector': 0.3807},
+                'i': {'degree': 0.20, 'pagerank': 0.0464, 'closeness': 0.4878, 'betweenness': 0.2709, 'eigenvector': 0.2678},
+                'r': {'degree': 0.05, 'pagerank': 0.0234, 'closeness': 0.3846, 'betweenness': 0.0, 'eigenvector': 0.1368},
+                'j': {'degree': 0.35, 'pagerank': 0.0805, 'closeness': 0.5405, 'betweenness': 0.4516, 'eigenvector': 0.3752},
+                'p': {'degree': 0.15, 'pagerank': 0.0430, 'closeness': 0.4761, 'betweenness': 0.1709, 'eigenvector': 0.2452},
+                'n': {'degree': 0.15, 'pagerank': 0.0430, 'closeness': 0.4761, 'betweenness': 0.1170, 'eigenvector': 0.2452},
+                'k': {'degree': 0.10, 'pagerank': 0.0337, 'closeness': 0.4651, 'betweenness': 0.0631, 'eigenvector': 0.2059},
+                'l': {'degree': 0.15, 'pagerank': 0.0401, 'closeness': 0.5128, 'betweenness': 0.1878, 'eigenvector': 0.2505},
+                'm': {'degree': 0.10, 'pagerank': 0.0315, 'closeness': 0.4761, 'betweenness': 0.0381, 'eigenvector': 0.1983},
+                'o': {'degree': 0.10, 'pagerank': 0.0346, 'closeness': 0.4651, 'betweenness': 0.0763, 'eigenvector': 0.2206},
+                'q': {'degree': 0.05, 'pagerank': 0.0177, 'closeness': 0.4166, 'betweenness': 0.0, 'eigenvector': 0.1260},
+                's': {'degree': 0.05, 'pagerank': 0.0112, 'closeness': 0.3703, 'betweenness': 0.0, 'eigenvector': 0.0803}
+            };
+            
+            const NODE_IDS = Object.keys(POSITIONS);
+            const TOTAL_NODES = NODE_IDS.length;
+            const ADJ_LIST = {};
+
+            
+            // --- C. SIMULATION LOGIC ---
+            // ... (Unchanged) ...
+            function buildAdjacencyList() {
+                NODE_IDS.forEach(node => { ADJ_LIST[node] = []; });
+                EDGES.forEach(([u, v]) => {
+                    ADJ_LIST[u].push(v);
+                    ADJ_LIST[v].push(u);
+                });
+            }
+            function independentCascade(graph, t, infectionTimes) {
+                const currentInfectious = [];
+                for (const node in infectionTimes) {
+                    if (infectionTimes[node] === t) {
+                        currentInfectious.push(node);
+                    }
+                }
+                for (const node of currentInfectious) {
+                    for (const neighbor of graph[node]) {
+                        if (infectionTimes[neighbor] === undefined) {
+                            if (Math.random() > 0.01) {
+                                infectionTimes[neighbor] = t + 1;
+                            }
+                        }
+                    }
+                }
+                return infectionTimes;
+            }
+            function runSimulation(initialNodes) {
+                let states = [];
+                let infectionTimes = { ...initialNodes };
+                const maxSteps = 50;
+                let fullyCascaded = false; // <-- ADDED
+                console.log(`Starting simulation. Total nodes: ${TOTAL_NODES}`);
+                for (let t = 0; t < maxSteps; t++) {
+                    states.push({ ...infectionTimes });
+                    const numInfected = Object.keys(infectionTimes).length;
+                    if (numInfected === TOTAL_NODES) {
+                        console.log(`--- Early stopping triggered at t=${t} ---`);
+                        fullyCascaded = true; // <-- ADDED
+                        break;
+                    }
+                    infectionTimes = independentCascade(ADJ_LIST, t, infectionTimes);
+                }
+                console.log(`Simulation complete. Stored ${states.length} states.`);
+                return { states, fullyCascaded }; // <-- MODIFIED
+            }
+
+            
+            // --- D. PLOTTING AND INTERACTIVITY ---
+
+            /**
+             * Gets the base Plotly layout object for the current theme.
+             */
+            function getPlotlyLayout() {
+                const isDark = document.documentElement.classList.contains('dark');
+                return {
+                    // title: 'Setup Phase: Click Nodes to Infect', // Title removed for cleaner look
+                    titlefont: { size: 24, color: isDark ? PLOT_FONT_DARK : PLOT_FONT_LIGHT },
+                    showlegend: false,
+                    hovermode: 'closest',
+                    margin: { b: 20, l: 5, r: 5, t: 20 }, // Reduced top margin
+                    xaxis: { showgrid: false, zeroline: false, showticklabels: false },
+                    yaxis: { showgrid: false, zeroline: false, showticklabels: false },
+                    transition: { duration: 150 },
+                    paper_bgcolor: isDark ? PLOT_BG_DARK : PLOT_BG_LIGHT,
+                    plot_bgcolor: isDark ? PLOT_BG_DARK : PLOT_BG_LIGHT,
+                    font: { color: isDark ? PLOT_FONT_DARK : PLOT_FONT_LIGHT }
+                };
+            }
+
+            /**
+             * Generates node colors, sizes, and hovertext for a given timestep.
+             */
+            function getNodeDataForStep(t, infectionTimesAtT) {
+                const nodeColors = [];
+                const hoverTexts = [];
+
+                for (const node of NODE_IDS) {
+                    const stats = NODE_STATS[node];
+                    const infTime = infectionTimesAtT[node];
+                    
+                    let status = "Susceptible";
+                    let color = COLOR_SUSCEPTIBLE;
+
+                    if (infTime === t) {
+                        status = `Infected at t=${t}`;
+                        color = COLOR_INFECTIOUS;
+                    } else if (infTime < t) {
+                        status = `Recovered (Infected at t=${infTime})`;
+                        color = COLOR_RECOVERED;
+                    } else if (currentState === 'SETUP' && infTime === 0) {
+                        status = "Selected (t=0)";
+                        color = COLOR_INFECTIOUS;
+                    }
+                    
+                    nodeColors.push(color);
+                    
+                    hoverTexts.push(
+                        `<b>Node: ${node}</b><br>` +
+                        `Status: ${status}<br>` +
+                        `----------<br>` +
+                        `Degree: ${stats.degree.toFixed(4)}<br>` +
+                        `PageRank: ${stats.pagerank.toFixed(4)}<br>` +
+                        `Closeness: ${stats.closeness.toFixed(4)}<br>` +
+                        `Betweenness: ${stats.betweenness.toFixed(4)}<br>` +
+                        `Eigenvector: ${stats.eigenvector.toFixed(4)}`
+                    );
+                }
+                return { nodeColors, hoverTexts };
+            }
+
+            /**
+             * Draws the initial graph for the 'SETUP' state.
+             */
+            function drawSetupGraph() {
+                // 1. Create Edge Trace (static)
+                const isDark = document.documentElement.classList.contains('dark');
+                const edgeX = [];
+                const edgeY = [];
+                EDGES.forEach(([u, v]) => {
+                    edgeX.push(POSITIONS[u][0], POSITIONS[v][0], null);
+                    edgeY.push(POSITIONS[u][1], POSITIONS[v][1], null);
+                });
+
+                const edgeTrace = {
+                    x: edgeX, y: edgeY,
+                    line: { width: 0.45, color: isDark ? COLOR_LINE_DARK : COLOR_LINE_LIGHT },
+                    hoverinfo: 'none',
+                    mode: 'lines',
+                    name: 'Edge'
+                };
+
+                // 2. Create Node Trace (for t=-1, or 'setup')
+                const { nodeColors, hoverTexts } = getNodeDataForStep(-1, initialInfected);
+                const nodeX = NODE_IDS.map(node => POSITIONS[node][0]);
+                const nodeY = NODE_IDS.map(node => POSITIONS[node][1]);
+                const nodeLabels = NODE_IDS.map(n => n.replace('-', '\n'));
+
+                const nodeTrace = {
+                    x: nodeX, y: nodeY,
+                    mode: 'markers+text',
+                    name: 'Nodes',
+                    text: nodeLabels,
+                    textfont: { size: 10 },
+                    textposition: 'top center',
+                    customdata: NODE_IDS,
+                    marker: {
+                        color: nodeColors,
+                        size: 15,
+                        line: { width: 2, color: isDark ? PLOT_BG_DARK : '#f2f6fa' }
+                    },
+                    hoverinfo: 'text',
+                    hovertext: hoverTexts
+                };
+
+                // 3. Define Layout
+                const layout = getPlotlyLayout();
+
+                // 4. Render Plot and Attach Click Handler
+                Plotly.newPlot(CHART_DIV, [edgeTrace, nodeTrace], layout, { responsive: true, displaylogo: false });
+                CHART_DIV.on('plotly_click', handleNodeClick);
+                
+                // 5. Update UI
+                updateUIState();
+            }
+
+            /**
+             * Handles clicks on the Plotly graph during 'SETUP'.
+             */
+            function handleNodeClick(data) {
+                if (currentState !== 'SETUP' || !data.points) return;
+
+                const nodeName = data.points[0].customdata;
+                if (!nodeName) return;
+
+                if (initialInfected[nodeName] !== undefined) {
+                    delete initialInfected[nodeName];
+                } else {
+                    initialInfected[nodeName] = 0;
+                }
+                
+                updateSetupGraphColors();
+                updateSelectedNodesUI();
+            }
+
+            /**
+             * Efficiently updates only the node colors during 'SETUP'.
+             */
+            function updateSetupGraphColors() {
+                const { nodeColors } = getNodeDataForStep(-1, initialInfected);
+                Plotly.restyle(CHART_DIV, { 'marker.color': [nodeColors] }, [1]);
+            }
+
+            /**
+             * Handles the 'Start Simulation' button click.
+             */
+            function handleStartClick() {
+                // This check is technically redundant due to button state, but good safety.
+                if (Object.keys(initialInfected).length === 0) return;
+
+                currentState = 'SIMULATING';
+                updateUIState();
+                CHART_DIV.removeAllListeners('plotly_click');
+                const simResult = runSimulation(initialInfected); // <-- MODIFIED
+                simulationStates = simResult.states; // <-- MODIFIED
+
+                if (simResult.fullyCascaded) { // <-- ADDED
+                    updateStepsUI(simulationStates.length - 1); // <-- ADDED
+                }
+
+                animateSimulation(simulationStates);
+            }
+
+            /**
+             * Handles the 'Reset' button click.
+             */
+            function handleResetClick() {
+                currentState = 'SETUP';
+                initialInfected = {};
+                simulationStates = [];
+                updateStepsUI(); // <-- ADDED
+                Plotly.purge(CHART_DIV); 
+                drawSetupGraph(); // This re-draws, re-attaches click, and calls updateUIState
+            }
+
+            /**
+             * Builds and plays the Plotly animation.
+             */
+            function animateSimulation(states) {
+                const totalSteps = states.length;
+                if (totalSteps === 0) return;
+
+                const frames = [];
+                for (let t = 0; t < totalSteps; t++) {
+                    const { nodeColors, hoverTexts } = getNodeDataForStep(t, states[t]);
+                    frames.push({
+                        name: t.toString(),
+                        data: [
+                            {}, // Keep edge trace the same
+                            { 'marker.color': nodeColors, 'hovertext': hoverTexts }
+                        ],
+                        // No layout title update for cleaner look
+                    });
+                }
+
+                Plotly.addFrames(CHART_DIV, frames);
+
+                const slider = getSlider(totalSteps);
+                const updatemenus = getUpdateMenus();
+                
+                // Get the base layout and add controls
+                const animationLayout = getPlotlyLayout();
+                animationLayout.sliders = [slider];
+                animationLayout.updatemenus = updatemenus;
+                animationLayout.margin.b = 80; // Add space for controls
+
+                Plotly.update(CHART_DIV, {}, animationLayout);
+
+                // Start the animation
+                Plotly.animate(CHART_DIV, null, {
+                    mode: 'immediate',
+                    frame: { duration: 800, redraw: true },
+                    transition: { duration: 150 },
+                    fromcurrent: true
+                });
+            }
+            
+
+            // --- E. UI HELPER FUNCTIONS ---
+
+            /**
+             * Manages the state of buttons and text based on `currentState`.
+             */
+            function updateUIState() {
+                const hasSelections = Object.keys(initialInfected).length > 0;
+                
+                if (currentState === 'SETUP') {
+                    START_BTN.disabled = !hasSelections; // Enable only if nodes are selected
+                    RESET_BTN.disabled = false;
+                } else {
+                    START_BTN.disabled = true;
+                    RESET_BTN.disabled = false; 
+                }
+                updateSelectedNodesUI();
+            }
+
+            /**
+             * Updates the list of selected nodes in the UI.
+             */
+            function updateSelectedNodesUI() {
+                SELECTED_NODES_CONTAINER.innerHTML = ''; // Clear
+                const selected = Object.keys(initialInfected);
+
+                if (selected.length === 0) {
+                    SELECTED_NODES_CONTAINER.innerHTML = '<span class="text-gray-500 dark:text-gray-400 italic text-sm">None selected</span>';
+                } else {
+                    selected.forEach(node => {
+                        const tag = document.createElement('span');
+                        tag.className = 'bg-yellow-200 text-yellow-800 font-medium px-3 py-1 rounded-full text-sm';
+                        tag.textContent = node;
+                        SELECTED_NODES_CONTAINER.appendChild(tag);
+                    });
+                }
+                
+                // Also update start button state
+                if (currentState === 'SETUP') {
+                    START_BTN.disabled = selected.length === 0;
+                }
+            }
+
+            /**
+             * ADD THIS NEW FUNCTION
+             * Updates the "Steps to Cascade" UI element.
+             */
+            function updateStepsUI(steps = null) {
+                if (steps !== null) {
+                    STEPS_CONTAINER.innerHTML = `
+                        <h3 class="text-sm font-semibold text-gray-600 dark:text-gray-400">Steps:</h3>
+                        <span class="font-bold text-gray-900 dark:text-white text-sm">${steps}</span>
+                    `;
+                } else {
+                    STEPS_CONTAINER.innerHTML = ''; // Clear it
+                }
+            }
+
+
+            // --- F. THEME / DARK MODE LOGIC ---
+
+            /**
+             * Applies the theme (dark/light) to the page and Plotly graph.
+             */
+            function applyTheme(theme, isInitial = false) {
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    ICON_LIGHT.classList.remove('hidden');
+                    ICON_DARK.classList.add('hidden');
+                    currentTheme = 'dark';
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    ICON_LIGHT.classList.add('hidden');
+                    ICON_DARK.classList.remove('hidden');
+                    currentTheme = 'light';
+                }
+                
+                // Don't re-plot on initial load, drawSetupGraph will handle it
+                if (!isInitial) {
+                    updatePlotTheme();
+                }
+            }
+            
+            /**
+             * Updates the *existing* Plotly plot with new theme colors.
+             */
+            function updatePlotTheme() {
+                const isDark = currentTheme === 'dark';
+                const newLayout = getPlotlyLayout();
+                
+                // If simulating, we must also re-add the controls layout
+                if (currentState === 'SIMULATING') {
+                    newLayout.sliders = [getSlider(simulationStates.length)];
+                    newLayout.updatemenus = getUpdateMenus();
+                    newLayout.margin.b = 80;
+                }
+                
+                // Relayout the figure
+                Plotly.relayout(CHART_DIV, newLayout);
+                
+                // Restyle trace 0 (edges)
+                Plotly.restyle(CHART_DIV, { 
+                    'line.color': isDark ? COLOR_LINE_DARK : COLOR_LINE_LIGHT
+                }, [0]);
+                
+                // Restyle trace 1 (nodes)
+                Plotly.restyle(CHART_DIV, { 
+                    'marker.line.color': isDark ? PLOT_BG_DARK : '#f2f6fa'
+                }, [1]);
+            }
+
+            /**
+             * Handles the theme toggle button click.
+             */
+            THEME_TOGGLE.addEventListener('click', () => {
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+
+            /**
+             * Initializes the theme on page load.
+             */
+            function initTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                
+                if (savedTheme) {
+                    applyTheme(savedTheme, true);
+                } else if (prefersDark) {
+                    applyTheme('dark', true);
+                } else {
+                    applyTheme('light', true);
+                }
+            }
+
+
+            // --- G. PLOTLY ANIMATION CONTROL HELPERS ---
+            // (Ported directly from your Python script's logic)
+            // ... (Unchanged) ...
+            function getSlider(totalSteps) {
+                const steps = [];
+                for (let t = 0; t < totalSteps; t++) {
+                    steps.push({
+                        label: t.toString(),
+                        method: 'animate',
+                        args: [ [t.toString()], {
+                            mode: 'immediate',
+                            frame: { duration: 500, redraw: true },
+                            transition: { duration: 100 }
+                        }]
+                    });
+                }
+                return {
+                    active: 0,
+                    currentvalue: { prefix: 'Time Step (t) = ' },
+                    pad: { t: 50 },
+                    steps: steps
+                };
+            }
+            function getUpdateMenus() {
+                return [
+                    {
+                        type: 'buttons',
+                        direction: 'left',
+                        x: 0.1, y: -0.1,
+                        showactive: true,
+                        buttons: [
+                            {
+                                label: 'Play',
+                                method: 'animate',
+                                args: [ null, {
+                                    mode: 'immediate',
+                                    frame: { duration: 800, redraw: true },
+                                    transition: { duration: 150 },
+                                    fromcurrent: true
+                                }]
+                            },
+                            {
+                                label: 'Pause',
+                                method: 'animate',
+                                args: [ [null], {
+                                    mode: 'immediate',
+                                    frame: { duration: 0, redraw: false },
+                                    transition: { duration: 0 }
+                                }]
+                            }
+                        ]
+                    }
+                ];
+            }
+
+
+            // --- H. INITIALIZATION ---
+            
+            initTheme();
+            buildAdjacencyList();
+            drawSetupGraph();
+            START_BTN.addEventListener('click', handleStartClick);
+            RESET_BTN.addEventListener('click', handleResetClick);
+
+        });
+    </script>
+
+</body>
+</html>
+
+
