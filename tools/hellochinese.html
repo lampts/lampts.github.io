@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Learner - HSK 1-2 Mastery</title>
+    <style>
+        :root {
+            --color-bg: #111827;
+            --color-card: #1f2937;
+            --color-card-hover: #374151;
+            --color-text: #f3f4f6;
+            --color-text-dim: #9ca3af;
+            --color-green: #10b981;
+            --color-red: #ef4444;
+            --color-blue: #3b82f6;
+            --color-purple: #8b5cf6;
+            --color-amber: #f59e0b;
+            --color-orange: #f97316;
+            --color-green-dark: #047857;
+            --color-red-dark: #b91c1c;
+            --color-green-feedback: #065f46;
+            --color-red-feedback: #991b1b;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Smooth scrolling for all elements */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            display: grid;
+            place-items: center;
+        }
+        
+        /* Custom Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--color-card);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-card-hover);
+            border-radius: 10px;
+            transition: background 0.2s;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563; /* gray-600 */
+        }
+        
+        /* Firefox Scrollbar */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-card-hover) var(--color-card);
+        }
+        
+        /* Momentum scrolling for iOS/mobile */
+        #roadmap-screen,
+        #options-area {
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        #app-wrapper {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            place-items: center;
+            padding: 1rem;
+        }
+        
+        button {
+            font-family: inherit;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: inherit;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 420px;
+            height: 100%;
+            max-height: 900px;
+            background-color: var(--color-bg);
+            border-radius: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        @media (min-width: 768px) {
+            #app-container {
+                max-width: 480px;
+            }
+        }
+        
+        @media (max-width: 375px) {
+            #app-container {
+                border-radius: 0;
+                max-height: 100%;
+            }
+            #app-wrapper {
+                padding: 0;
+            }
+        }
+
+        .app-screen {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+        
+        .app-screen.active {
+            display: flex;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        
+        .icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            stroke-width: 2;
+            stroke: currentColor;
+            fill: none;
+        }
+        .icon-lg {
+            width: 2rem;
+            height: 2rem;
+        }
+        .icon-xl {
+            width: 4rem;
+            height: 4rem;
+            stroke-width: 1.5;
+        }
+
+        .loader {
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid var(--color-text-dim);
+            border-top-color: var(--color-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Roadmap Screen */
+        #roadmap-screen {
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 1.5rem;
+            padding-right: 1rem; /* Space for scrollbar */
+            scroll-behavior: smooth;
+        }
+        
+        /* Add padding when scrollbar is visible */
+        #roadmap-screen::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #roadmap-screen::-webkit-scrollbar-track {
+            background: transparent;
+            margin: 0.5rem 0;
+        }
+        
+        #roadmap-screen::-webkit-scrollbar-thumb {
+            background: var(--color-card-hover);
+            border-radius: 3px;
+        }
+        
+        #roadmap-screen::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+        
+        #roadmap-screen-header {
+            text-align: center;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-text);
+            margin-bottom: 1rem;
+        }
+        
+        #progress-summary {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: var(--color-card);
+            border-radius: 0.75rem;
+        }
+        
+        #progress-summary h3 {
+            font-size: 1rem;
+            color: var(--color-text-dim);
+            margin-bottom: 0.5rem;
+        }
+        
+        #progress-summary .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 0.5rem;
+        }
+        
+        #progress-summary .stat {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #progress-summary .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-green);
+        }
+        
+        #progress-summary .stat-label {
+            font-size: 0.75rem;
+            color: var(--color-text-dim);
+        }
+        
+        .unit-container {
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .unit-header {
+            padding: 0.5rem 1.25rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .unit-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .lesson-nodes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 65px);
+            justify-content: center;
+            gap: 1rem;
+            max-width: 320px;
+            width: 100%;
+        }
+        
+        @media (max-width: 375px) {
+            .lesson-nodes {
+                gap: 0.75rem;
+                grid-template-columns: repeat(auto-fit, 60px);
+            }
+            .lesson-node {
+                width: 60px;
+                height: 60px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        .lesson-node {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background-color: var(--color-card);
+            border: 4px solid var(--color-card-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            color: var(--color-text);
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+        
+        .lesson-node:not(:disabled):hover {
+            background-color: var(--color-card-hover);
+            transform: scale(1.05);
+            border-color: var(--color-blue);
+        }
+        
+        .lesson-node:disabled {
+            background-color: #333;
+            border-color: #444;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .lesson-node.completed {
+            border-color: var(--color-green);
+        }
+        
+        .lesson-node.completed:hover {
+            border-color: var(--color-green);
+        }
+
+        /* Main Quiz Screen */
+        #main-content {
+            padding: 1.25rem 1.25rem 0 1.25rem;
+        }
+
+        @media (min-width: 768px) {
+            #main-content {
+                padding: 1.5rem 1.5rem 0 1.5rem;
+            }
+        }
+
+        #progress-bar-container {
+            width: 100%;
+            height: 16px;
+            background-color: var(--color-card);
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-blue), #60a5fa);
+            border-radius: 8px;
+            transition: width 0.3s ease-out;
+            box-shadow: 0 1px 3px rgba(59, 130, 246, 0.5);
+        }
+        
+        #quit-lesson-button {
+            position: absolute;
+            top: 1.25rem;
+            left: 1rem;
+            color: var(--color-text-dim);
+            padding: 0.25rem;
+            z-index: 20;
+        }
+        
+        #quit-lesson-button:hover {
+            color: var(--color-text);
+        }
+
+        #prompt-area {
+            flex-shrink: 0;
+            text-align: center;
+            margin-bottom: 2rem;
+            margin-top: 1.5rem;
+            padding: 0 0.5rem;
+        }
+
+        #prompt-text {
+            font-size: 1.125rem;
+            color: var(--color-text-dim);
+            margin-bottom: 1.75rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+        
+        #prompt-focus {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        #prompt-focus-audio {
+            padding: 0.75rem;
+            background-color: var(--color-card);
+            border-radius: 0.75rem;
+            transition: background-color 0.2s;
+        }
+        
+        #prompt-focus-audio:hover {
+            background-color: var(--color-card-hover);
+        }
+        
+        #prompt-focus-text {
+            text-align: center;
+        }
+        
+        #prompt-hanzi {
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+        
+        #prompt-pinyin {
+            font-size: 1.125rem;
+            color: var(--color-text-dim);
+        }
+
+        #options-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 0.5rem;
+            margin-right: -0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        
+        /* Custom scrollbar for options area */
+        #options-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        #options-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        #options-area::-webkit-scrollbar-thumb {
+            background: var(--color-card-hover);
+            border-radius: 2px;
+        }
+        
+        #options-area::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+        
+        .option-button {
+            width: 100%;
+            min-height: 65px;
+            border: 2px solid var(--color-card);
+            background-color: var(--color-card);
+            border-radius: 0.75rem;
+            transition: all 0.2s;
+            overflow: hidden;
+            display: flex;
+            align-items: stretch;
+        }
+        
+        .option-button:not(:disabled):hover {
+            background-color: var(--color-card-hover);
+            border-color: var(--color-card-hover);
+        }
+        
+        .option-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .option-button.correct {
+            background-color: var(--color-green-dark);
+            border-color: var(--color-green);
+            opacity: 1;
+        }
+
+        .option-button.incorrect {
+            background-color: var(--color-red-dark);
+            border-color: var(--color-red);
+            opacity: 1;
+        }
+        
+        .option-content-text {
+            padding: 1.25rem 1.5rem;
+            font-size: 1.125rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            min-height: 65px;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+        
+        .option-content-image-text {
+            display: flex;
+            min-height: 8rem;
+            height: auto;
+        }
+
+        .option-content-image-text .image-container {
+            width: 65%;
+            min-height: 8rem;
+            position: relative;
+        }
+
+        .option-content-image-text .text-container {
+            width: 35%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .option-content-image {
+            display: flex;
+            flex-direction: column;
+            min-height: 10rem;
+            height: auto;
+        }
+
+        .option-content-image .image-container {
+            flex: 2;
+            min-height: 7rem;
+            width: 100%;
+            position: relative;
+        }
+
+        .option-content-image .text-container {
+            flex: 1;
+            min-height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        
+        .image-container {
+            background-color: var(--color-card-hover);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+        
+        .image-container .error-text {
+            font-size: 0.75rem;
+            color: var(--color-text-dim);
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        /* Footer & Feedback Panel */
+        #footer {
+            flex-shrink: 0;
+            padding: 0 1.25rem 1.25rem 1.25rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        @media (min-width: 768px) {
+            #footer {
+                padding: 0 1.5rem 1.5rem 1.5rem;
+            }
+        }
+
+        #continue-button {
+            width: 100%;
+            font-size: 1.125rem;
+            font-weight: 700;
+            padding: 1rem 1.5rem;
+            min-height: 54px;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+            position: relative;
+            z-index: 15;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        #continue-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+        }
+        
+        #continue-button.green {
+            background-color: var(--color-green);
+            color: white;
+        }
+        
+        #continue-button.green:hover {
+            background-color: #059669;
+        }
+        
+        #continue-button.red {
+            background-color: var(--color-red);
+            color: white;
+        }
+        
+        #continue-button.red:hover {
+            background-color: #dc2626;
+        }
+        
+        #feedback-panel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2rem 1.5rem 6.5rem 1.5rem;
+            border-top-left-radius: 1.5rem;
+            border-top-right-radius: 1.5rem;
+            transition: transform 0.4s ease-in-out;
+            transform: translateY(100%);
+            z-index: 5;
+        }
+        
+        #feedback-panel.show {
+            transform: translateY(0);
+        }
+
+        #feedback-panel.correct {
+            background-image: linear-gradient(to top, var(--color-green-feedback), var(--color-green-dark));
+        }
+        
+        #feedback-panel.incorrect {
+            background-image: linear-gradient(to top, var(--color-red-feedback), var(--color-red-dark));
+        }
+
+        #feedback-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        #feedback-header .icon-container {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        #feedback-header .icon-container.correct {
+            background-color: var(--color-green);
+        }
+        
+        #feedback-header .icon-container.incorrect {
+            background-color: var(--color-red);
+        }
+        
+        #feedback-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        #feedback-text p:first-child {
+            color: var(--color-text-dim);
+            margin-bottom: 0.25rem;
+        }
+        
+        #feedback-text span {
+            font-weight: 700;
+        }
+        
+        #feedback-text p:last-child {
+            color: var(--color-text-dim);
+        }
+
+        /* Quiz Complete Screen */
+        #quiz-complete-screen {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        #quiz-complete-icon {
+            color: var(--color-green);
+            margin-bottom: 1.5rem;
+        }
+        
+        #quiz-complete-screen h1 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        #quiz-complete-screen p {
+            font-size: 1.125rem;
+            color: var(--color-text-dim);
+            margin-bottom: 2rem;
+        }
+        
+        #roadmap-button {
+            width: 100%;
+            max-width: 320px;
+            background-color: var(--color-blue);
+            color: white;
+            font-weight: 700;
+            padding: 0.85rem;
+            border-radius: 0.75rem;
+            font-size: 1.125rem;
+            transition: background-color 0.2s;
+        }
+        
+        #roadmap-button:hover {
+            background-color: #2563eb;
+        }
+
+        /* Enhanced Responsive Design */
+
+        /* Tablet landscape and small desktops */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            #app-container {
+                max-width: 520px;
+            }
+
+            #prompt-area {
+                margin-top: 2rem;
+                margin-bottom: 2.5rem;
+            }
+
+            #prompt-hanzi {
+                font-size: 2.5rem;
+            }
+
+            .option-content-text {
+                font-size: 1.25rem;
+                padding: 1.5rem 2rem;
+            }
+
+            #options-area {
+                gap: 1.25rem;
+            }
+        }
+
+        /* Small phones - refined */
+        @media (max-width: 375px) {
+            #prompt-area {
+                margin-top: 1rem;
+                margin-bottom: 1.5rem;
+                padding: 0 0.75rem;
+            }
+
+            #prompt-text {
+                font-size: 1rem;
+                margin-bottom: 1.25rem;
+            }
+
+            #prompt-hanzi {
+                font-size: 2rem;
+            }
+
+            #prompt-pinyin {
+                font-size: 1rem;
+            }
+
+            .option-content-text {
+                padding: 1rem 1.25rem;
+                font-size: 1rem;
+            }
+
+            #options-area {
+                gap: 0.875rem;
+            }
+
+            #feedback-panel {
+                padding: 1.5rem 1rem 6rem 1rem;
+            }
+
+            #feedback-title {
+                font-size: 1.25rem;
+            }
+
+            .option-content-image-text {
+                min-height: 7rem;
+            }
+
+            .option-content-image {
+                min-height: 9rem;
+            }
+        }
+
+        /* Very small phones */
+        @media (max-width: 320px) {
+            #main-content {
+                padding: 0.75rem 0.75rem 0 0.75rem;
+            }
+
+            #prompt-hanzi {
+                font-size: 1.75rem;
+            }
+
+            .option-content-text {
+                padding: 0.875rem 1rem;
+                font-size: 0.9375rem;
+            }
+
+            #progress-bar-container {
+                height: 14px;
+                margin-bottom: 1rem;
+            }
+
+            .option-content-image-text {
+                min-height: 6.5rem;
+            }
+
+            .option-content-image-text .text-container {
+                font-size: 1rem;
+                padding: 0.75rem;
+            }
+
+            .option-content-image {
+                min-height: 8.5rem;
+            }
+
+            .option-content-image .text-container {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app-wrapper">
+        <div id="app-container">
+            <!-- Screen 1: Learning Roadmap -->
+            <div id="roadmap-screen" class="app-screen active">
+                <h1 id="roadmap-screen-header">Your Learning Path</h1>
+                <div id="progress-summary">
+                    <h3>Progress</h3>
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-value" id="completed-lessons">0</div>
+                            <div class="stat-label">Lessons</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="total-progress">0%</div>
+                            <div class="stat-label">Complete</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="roadmap-content"></div>
+            </div>
+
+            <!-- Screen 2: Main Content Area (Quiz) -->
+            <div id="main-content" class="app-screen">
+                <button id="quit-lesson-button" aria-label="Quit lesson">
+                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+                <div id="progress-bar-container">
+                    <div id="progress-bar"></div>
+                </div>
+                
+                <div id="prompt-area">
+                    <h1 id="prompt-text"></h1>
+                    <div id="prompt-focus">
+                        <button id="prompt-focus-audio" aria-label="Play audio">
+                            <svg id="icon-volume" class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                        </button>
+                        <div id="prompt-focus-text">
+                            <h2 id="prompt-hanzi"></h2>
+                            <p id="prompt-pinyin"></p>
+                        </div>
+                    </div>
+                </div>
+                <div id="options-area"></div>
+            </div>
+
+            <!-- Screen 3: Quiz Complete Screen -->
+            <div id="quiz-complete-screen" class="app-screen">
+                <svg id="quiz-complete-icon" class="icon-xl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h1>Lesson Complete!</h1>
+                <p id="quiz-complete-subtitle"></p>
+                <button id="roadmap-button">Back to Roadmap</button>
+            </div>
+
+            <!-- Footer (Shared by Quiz Screen) -->
+            <div id="footer" class="hidden">
+                <button id="continue-button" class="hidden"></button>
+                <div id="feedback-panel">
+                    <div id="feedback-header">
+                        <div class="icon-container">
+                            <svg id="icon-feedback" class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></svg>
+                        </div>
+                        <h3 id="feedback-title"></h3>
+                    </div>
+                    <div id="feedback-text">
+                        <p id="feedback-text-label"></p>
+                        <p>
+                            <span id="feedback-hanzi"></span>
+                            (<span id="feedback-pinyin"></span>)
+                        </p>
+                        <p id="feedback-english"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // COMPREHENSIVE HSK 1-2 CURRICULUM DATA
+        const CURRICULUM_DATA = {
+            // Unit 1: Greetings & Basics (7 lessons × 3 questions = 21 questions)
+            'u1l1': {
+                id: 'u1l1',
+                title: 'Hello & Goodbye',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '你好', pinyin: 'nǐ hǎo', english: 'Hello', options: [{text: 'Hello'}, {text: 'Goodbye'}, {text: 'Thank you'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '再见', pinyin: 'zàijiàn', english: 'Goodbye', options: [{text: 'Hello'}, {text: 'Goodbye'}, {text: 'Please'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '嗨', pinyin: 'hāi', english: 'Hi', options: [{text: 'Hi'}, {text: 'Bye'}, {text: 'Yes'}], correctAnswer: 0 }
+                ]
+            },
+            'u1l2': {
+                id: 'u1l2',
+                title: 'Thank You',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '谢谢', pinyin: 'xièxie', english: 'Thank you', options: [{text: 'Sorry'}, {text: 'Thank you'}, {text: 'Please'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '不客气', pinyin: 'bù kèqi', english: 'You\'re welcome', options: [{text: 'You\'re welcome'}, {text: 'Excuse me'}, {text: 'Sorry'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '没问题', pinyin: 'méi wèntí', english: 'No problem', options: [{text: 'Yes'}, {text: 'No problem'}, {text: 'Maybe'}], correctAnswer: 1 }
+                ]
+            },
+            'u1l3': {
+                id: 'u1l3',
+                title: 'Please & Sorry',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '请', pinyin: 'qǐng', english: 'Please', options: [{text: 'Please'}, {text: 'Sorry'}, {text: 'Thank you'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '对不起', pinyin: 'duìbuqǐ', english: 'Sorry', options: [{text: 'Thank you'}, {text: 'Sorry'}, {text: 'Goodbye'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '不好意思', pinyin: 'bù hǎoyìsi', english: 'Excuse me', options: [{text: 'Hello'}, {text: 'Excuse me'}, {text: 'Bye'}], correctAnswer: 1 }
+                ]
+            },
+            'u1l4': {
+                id: 'u1l4',
+                title: 'Yes & No',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '是', pinyin: 'shì', english: 'Yes/Is', options: [{text: 'Yes'}, {text: 'No'}, {text: 'Maybe'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '不', pinyin: 'bù', english: 'Not/No', options: [{text: 'Yes'}, {text: 'Not'}, {text: 'Very'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '很', pinyin: 'hěn', english: 'Very', options: [{text: 'Not'}, {text: 'Also'}, {text: 'Very'}], correctAnswer: 2 }
+                ]
+            },
+            'u1l5': {
+                id: 'u1l5',
+                title: 'Question Words 1',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '吗', pinyin: 'ma', english: '(question particle)', options: [{text: '(yes/no question)'}, {text: '(what about...)'}, {text: '(possessive)'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this mean?', hanzi: '呢', pinyin: 'ne', english: 'What about...?', options: [{text: '(yes/no question)'}, {text: '(what about...)'}, {text: '(suggestion)'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '什么', pinyin: 'shénme', english: 'What', options: [{text: 'What'}, {text: 'Who'}, {text: 'Where'}], correctAnswer: 0 }
+                ]
+            },
+            'u1l6': {
+                id: 'u1l6',
+                title: 'Question Words 2',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '谁', pinyin: 'shéi', english: 'Who', options: [{text: 'What'}, {text: 'Who'}, {text: 'Where'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '哪里', pinyin: 'nǎlǐ', english: 'Where', options: [{text: 'When'}, {text: 'Where'}, {text: 'Why'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '什么时候', pinyin: 'shénme shíhou', english: 'When', options: [{text: 'When'}, {text: 'How'}, {text: 'Why'}], correctAnswer: 0 }
+                ]
+            },
+            'u1l7': {
+                id: 'u1l7',
+                title: 'Common Phrases',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '你好吗？', pinyin: 'nǐ hǎo ma?', english: 'How are you?', options: [{text: 'How are you?'}, {text: 'What\'s your name?'}, {text: 'Where are you?'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '我很好', pinyin: 'wǒ hěn hǎo', english: 'I\'m fine', options: [{text: 'I\'m sorry'}, {text: 'I\'m fine'}, {text: 'I\'m busy'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '回头见', pinyin: 'huítóu jiàn', english: 'See you later', options: [{text: 'See you tomorrow'}, {text: 'See you later'}, {text: 'Goodbye'}], correctAnswer: 1 }
+                ]
+            },
+
+            // Unit 2: Self Introduction (7 lessons)
+            'u2l1': {
+                id: 'u2l1',
+                title: 'I & You',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '我', pinyin: 'wǒ', english: 'I/me', options: [{text: 'I'}, {text: 'You'}, {text: 'He'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '你', pinyin: 'nǐ', english: 'You', options: [{text: 'I'}, {text: 'You'}, {text: 'We'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '他/她', pinyin: 'tā', english: 'He/She', options: [{text: 'We'}, {text: 'They'}, {text: 'He/She'}], correctAnswer: 2 }
+                ]
+            },
+            'u2l2': {
+                id: 'u2l2',
+                title: 'Names',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '叫', pinyin: 'jiào', english: 'To be called', options: [{text: 'To be called'}, {text: 'To be'}, {text: 'To have'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '你叫什么名字？', pinyin: 'nǐ jiào shénme míngzi?', english: 'What is your name?', options: [{text: 'How are you?'}, {text: 'What is your name?'}, {text: 'Where are you from?'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '名字', pinyin: 'míngzi', english: 'Name', options: [{text: 'Name'}, {text: 'Age'}, {text: 'Job'}], correctAnswer: 0 }
+                ]
+            },
+            'u2l3': {
+                id: 'u2l3',
+                title: 'Nationality',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '中国人', pinyin: 'Zhōngguó rén', english: 'Chinese person', options: [{text: 'Chinese person'}, {text: 'American'}, {text: 'English person'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '美国人', pinyin: 'Měiguó rén', english: 'American', options: [{text: 'Chinese'}, {text: 'American'}, {text: 'French'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '国家', pinyin: 'guójiā', english: 'Country', options: [{text: 'City'}, {text: 'Country'}, {text: 'People'}], correctAnswer: 1 }
+                ]
+            },
+            'u2l4': {
+                id: 'u2l4',
+                title: 'Languages',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '中文', pinyin: 'Zhōngwén', english: 'Chinese language', options: [{text: 'Chinese'}, {text: 'English'}, {text: 'French'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '英语', pinyin: 'Yīngyǔ', english: 'English', options: [{text: 'Chinese'}, {text: 'English'}, {text: 'Spanish'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '说', pinyin: 'shuō', english: 'To speak', options: [{text: 'To listen'}, {text: 'To speak'}, {text: 'To write'}], correctAnswer: 1 }
+                ]
+            },
+            'u2l5': {
+                id: 'u2l5',
+                title: 'Professions',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '老师', pinyin: 'lǎoshī', english: 'Teacher', options: [{text: 'Student'}, {text: 'Teacher'}, {text: 'Doctor'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '学生', pinyin: 'xuésheng', english: 'Student', options: [{text: 'Student'}, {text: 'Teacher'}, {text: 'Worker'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '医生', pinyin: 'yīshēng', english: 'Doctor', options: [{text: 'Nurse'}, {text: 'Doctor'}, {text: 'Teacher'}], correctAnswer: 1 }
+                ]
+            },
+            'u2l6': {
+                id: 'u2l6',
+                title: 'To be & To have',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '是', pinyin: 'shì', english: 'To be', options: [{text: 'To be'}, {text: 'To have'}, {text: 'To do'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '有', pinyin: 'yǒu', english: 'To have', options: [{text: 'To be'}, {text: 'To have'}, {text: 'To want'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '没有', pinyin: 'méiyǒu', english: 'Don\'t have', options: [{text: 'Have'}, {text: 'Don\'t have'}, {text: 'Want'}], correctAnswer: 1 }
+                ]
+            },
+            'u2l7': {
+                id: 'u2l7',
+                title: 'Introduction Review',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '我是学生', pinyin: 'wǒ shì xuésheng', english: 'I am a student', options: [{text: 'I am a student'}, {text: 'I am a teacher'}, {text: 'You are a student'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '很高兴认识你', pinyin: 'hěn gāoxìng rènshi nǐ', english: 'Nice to meet you', options: [{text: 'How are you?'}, {text: 'Nice to meet you'}, {text: 'Goodbye'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '也', pinyin: 'yě', english: 'Also', options: [{text: 'Very'}, {text: 'Also'}, {text: 'Not'}], correctAnswer: 1 }
+                ]
+            },
+
+            // Unit 3: Family & People (7 lessons)
+            'u3l1': {
+                id: 'u3l1',
+                title: 'Parents',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '爸爸', pinyin: 'bàba', english: 'Dad', options: [{text: 'Mom'}, {text: 'Dad'}, {text: 'Brother'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '妈妈', pinyin: 'māma', english: 'Mom', options: [{text: 'Mom'}, {text: 'Dad'}, {text: 'Sister'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '父母', pinyin: 'fùmǔ', english: 'Parents', options: [{text: 'Children'}, {text: 'Parents'}, {text: 'Siblings'}], correctAnswer: 1 }
+                ]
+            },
+            'u3l2': {
+                id: 'u3l2',
+                title: 'Siblings',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '哥哥', pinyin: 'gēge', english: 'Older brother', options: [{text: 'Younger brother'}, {text: 'Older brother'}, {text: 'Sister'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '弟弟', pinyin: 'dìdi', english: 'Younger brother', options: [{text: 'Younger brother'}, {text: 'Older brother'}, {text: 'Father'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '姐姐', pinyin: 'jiějie', english: 'Older sister', options: [{text: 'Younger sister'}, {text: 'Older sister'}, {text: 'Mother'}], correctAnswer: 1 }
+                ]
+            },
+            'u3l3': {
+                id: 'u3l3',
+                title: 'Children',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '儿子', pinyin: 'érzi', english: 'Son', options: [{text: 'Son'}, {text: 'Daughter'}, {text: 'Child'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '女儿', pinyin: 'nǚ\'ér', english: 'Daughter', options: [{text: 'Son'}, {text: 'Daughter'}, {text: 'Sister'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '孩子', pinyin: 'háizi', english: 'Child', options: [{text: 'Parent'}, {text: 'Child'}, {text: 'Adult'}], correctAnswer: 1 }
+                ]
+            },
+            'u3l4': {
+                id: 'u3l4',
+                title: 'Extended Family',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '爷爷', pinyin: 'yéye', english: 'Grandfather', options: [{text: 'Grandmother'}, {text: 'Grandfather'}, {text: 'Uncle'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '奶奶', pinyin: 'nǎinai', english: 'Grandmother', options: [{text: 'Grandmother'}, {text: 'Grandfather'}, {text: 'Aunt'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '家', pinyin: 'jiā', english: 'Family/Home', options: [{text: 'School'}, {text: 'Family'}, {text: 'Work'}], correctAnswer: 1 }
+                ]
+            },
+            'u3l5': {
+                id: 'u3l5',
+                title: 'Possessive',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this particle mean?', hanzi: '的', pinyin: 'de', english: '\'s (possessive)', options: [{text: '(possessive)'}, {text: '(question)'}, {text: '(suggestion)'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '我的妈妈', pinyin: 'wǒ de māma', english: 'My mom', options: [{text: 'My dad'}, {text: 'My mom'}, {text: 'Your mom'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '你的家', pinyin: 'nǐ de jiā', english: 'Your family', options: [{text: 'My family'}, {text: 'Your family'}, {text: 'His family'}], correctAnswer: 1 }
+                ]
+            },
+            'u3l6': {
+                id: 'u3l6',
+                title: 'Counting People',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '几个人？', pinyin: 'jǐ ge rén?', english: 'How many people?', options: [{text: 'Who?'}, {text: 'How many people?'}, {text: 'Where?'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '个', pinyin: 'ge', english: '(measure word)', options: [{text: '(general measure)'}, {text: '(animal measure)'}, {text: '(book measure)'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '人', pinyin: 'rén', english: 'Person', options: [{text: 'Thing'}, {text: 'Person'}, {text: 'Place'}], correctAnswer: 1 }
+                ]
+            },
+            'u3l7': {
+                id: 'u3l7',
+                title: 'Family Review',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '我有妹妹', pinyin: 'wǒ yǒu mèimei', english: 'I have a younger sister', options: [{text: 'I have a brother'}, {text: 'I have a younger sister'}, {text: 'I don\'t have siblings'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '妹妹', pinyin: 'mèimei', english: 'Younger sister', options: [{text: 'Older sister'}, {text: 'Younger sister'}, {text: 'Sister-in-law'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '都', pinyin: 'dōu', english: 'Both/All', options: [{text: 'Both'}, {text: 'Some'}, {text: 'None'}], correctAnswer: 0 }
+                ]
+            },
+
+            // Unit 4: Food & Restaurant (7 lessons)
+            'u4l1': {
+                id: 'u4l1',
+                title: 'Basic Foods',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchImageAndText', prompt: 'What does this mean?', hanzi: '米饭', pinyin: 'mǐfàn', english: 'Rice', options: [
+                        { imagePrompt: 'simple icon of a bowl of white rice, minimalist, white background', text: 'Rice' },
+                        { imagePrompt: 'simple icon of noodles in a bowl, minimalist, white background', text: 'Noodles' }
+                    ], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '菜', pinyin: 'cài', english: 'Vegetables/Dish', options: [{text: 'Vegetables'}, {text: 'Meat'}, {text: 'Fruit'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '面条', pinyin: 'miàntiáo', english: 'Noodles', options: [{text: 'Rice'}, {text: 'Noodles'}, {text: 'Bread'}], correctAnswer: 1 }
+                ]
+            },
+            'u4l2': {
+                id: 'u4l2',
+                title: 'Drinks',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchImageAndText', prompt: 'What does this mean?', hanzi: '水', pinyin: 'shuǐ', english: 'Water', options: [
+                        { imagePrompt: 'simple icon of a glass of water, minimalist, white background', text: 'Water' },
+                        { imagePrompt: 'simple icon of a cup of tea, minimalist, white background', text: 'Tea' }
+                    ], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '茶', pinyin: 'chá', english: 'Tea', options: [{text: 'Coffee'}, {text: 'Tea'}, {text: 'Juice'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '咖啡', pinyin: 'kāfēi', english: 'Coffee', options: [{text: 'Tea'}, {text: 'Coffee'}, {text: 'Milk'}], correctAnswer: 1 }
+                ]
+            },
+            'u4l3': {
+                id: 'u4l3',
+                title: 'Eating & Drinking',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '吃', pinyin: 'chī', english: 'To eat', options: [{text: 'To eat'}, {text: 'To drink'}, {text: 'To cook'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '喝', pinyin: 'hē', english: 'To drink', options: [{text: 'To eat'}, {text: 'To drink'}, {text: 'To see'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '要', pinyin: 'yào', english: 'To want', options: [{text: 'To have'}, {text: 'To want'}, {text: 'To need'}], correctAnswer: 1 }
+                ]
+            },
+            'u4l4': {
+                id: 'u4l4',
+                title: 'Ordering Food',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '我要吃', pinyin: 'wǒ yào chī', english: 'I want to eat', options: [{text: 'I want to eat'}, {text: 'I want to drink'}, {text: 'I want to buy'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '一碗', pinyin: 'yī wǎn', english: 'A bowl of', options: [{text: 'A cup of'}, {text: 'A bowl of'}, {text: 'A plate of'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '碗', pinyin: 'wǎn', english: 'Bowl', options: [{text: 'Bowl'}, {text: 'Cup'}, {text: 'Plate'}], correctAnswer: 0 }
+                ]
+            },
+            'u4l5': {
+                id: 'u4l5',
+                title: 'Taste',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '好吃', pinyin: 'hǎochī', english: 'Delicious', options: [{text: 'Bad'}, {text: 'Delicious'}, {text: 'Spicy'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '好喝', pinyin: 'hǎohē', english: 'Good to drink', options: [{text: 'Good to drink'}, {text: 'Bad to drink'}, {text: 'Sweet'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '好', pinyin: 'hǎo', english: 'Good', options: [{text: 'Bad'}, {text: 'Good'}, {text: 'So-so'}], correctAnswer: 1 }
+                ]
+            },
+            'u4l6': {
+                id: 'u4l6',
+                title: 'Paying',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '多少钱？', pinyin: 'duōshao qián?', english: 'How much money?', options: [{text: 'What time?'}, {text: 'How much money?'}, {text: 'How many?'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '钱', pinyin: 'qián', english: 'Money', options: [{text: 'Money'}, {text: 'Time'}, {text: 'Thing'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '多少', pinyin: 'duōshao', english: 'How much/many', options: [{text: 'How much'}, {text: 'How many people'}, {text: 'What'}], correctAnswer: 0 }
+                ]
+            },
+            'u4l7': {
+                id: 'u4l7',
+                title: 'Restaurant Review',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '我要一碗米饭', pinyin: 'wǒ yào yī wǎn mǐfàn', english: 'I want a bowl of rice', options: [{text: 'I want tea'}, {text: 'I want a bowl of rice'}, {text: 'I want water'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '太贵了', pinyin: 'tài guì le', english: 'Too expensive', options: [{text: 'Too cheap'}, {text: 'Too expensive'}, {text: 'Just right'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '太', pinyin: 'tài', english: 'Too', options: [{text: 'Very'}, {text: 'Too'}, {text: 'A little'}], correctAnswer: 1 }
+                ]
+            },
+
+            // Unit 5: Shopping (7 lessons)
+            'u5l1': {
+                id: 'u5l1',
+                title: 'Buy & Sell',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '买', pinyin: 'mǎi', english: 'To buy', options: [{text: 'To buy'}, {text: 'To sell'}, {text: 'To see'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '卖', pinyin: 'mài', english: 'To sell', options: [{text: 'To buy'}, {text: 'To sell'}, {text: 'To want'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '东西', pinyin: 'dōngxi', english: 'Thing', options: [{text: 'Person'}, {text: 'Thing'}, {text: 'Place'}], correctAnswer: 1 }
+                ]
+            },
+            'u5l2': {
+                id: 'u5l2',
+                title: 'This & That',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '这个', pinyin: 'zhège', english: 'This', options: [{text: 'This'}, {text: 'That'}, {text: 'Which'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '那个', pinyin: 'nàge', english: 'That', options: [{text: 'This'}, {text: 'That'}, {text: 'Which'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '哪个', pinyin: 'nǎge', english: 'Which one', options: [{text: 'This'}, {text: 'That'}, {text: 'Which'}], correctAnswer: 2 }
+                ]
+            },
+            'u5l3': {
+                id: 'u5l3',
+                title: 'Numbers 1-5',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the number', hanzi: '一', pinyin: 'yī', english: 'One', options: [{text: '1'}, {text: '2'}, {text: '3'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'What number is this?', hanzi: '二', pinyin: 'èr', english: 'Two', options: [{text: '1'}, {text: '2'}, {text: '3'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the number', hanzi: '五', pinyin: 'wǔ', english: 'Five', options: [{text: '3'}, {text: '4'}, {text: '5'}], correctAnswer: 2 }
+                ]
+            },
+            'u5l4': {
+                id: 'u5l4',
+                title: 'Numbers 6-10',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What number is this?', hanzi: '六', pinyin: 'liù', english: 'Six', options: [{text: '5'}, {text: '6'}, {text: '7'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the number', hanzi: '八', pinyin: 'bā', english: 'Eight', options: [{text: '7'}, {text: '8'}, {text: '9'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What number is this?', hanzi: '十', pinyin: 'shí', english: 'Ten', options: [{text: '8'}, {text: '9'}, {text: '10'}], correctAnswer: 2 }
+                ]
+            },
+            'u5l5': {
+                id: 'u5l5',
+                title: 'Large Numbers',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '百', pinyin: 'bǎi', english: 'Hundred', options: [{text: '10'}, {text: '100'}, {text: '1000'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this mean?', hanzi: '千', pinyin: 'qiān', english: 'Thousand', options: [{text: '100'}, {text: '1000'}, {text: '10000'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the number', hanzi: '万', pinyin: 'wàn', english: '10,000', options: [{text: '1000'}, {text: '10000'}, {text: '100000'}], correctAnswer: 1 }
+                ]
+            },
+            'u5l6': {
+                id: 'u5l6',
+                title: 'Prices',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '块', pinyin: 'kuài', english: 'Yuan (money)', options: [{text: 'Yuan'}, {text: 'Dollar'}, {text: 'Euro'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '贵', pinyin: 'guì', english: 'Expensive', options: [{text: 'Cheap'}, {text: 'Expensive'}, {text: 'Free'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '便宜', pinyin: 'piányi', english: 'Cheap', options: [{text: 'Cheap'}, {text: 'Expensive'}, {text: 'Moderate'}], correctAnswer: 0 }
+                ]
+            },
+            'u5l7': {
+                id: 'u5l7',
+                title: 'Shopping Review',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '我要买这个', pinyin: 'wǒ yào mǎi zhège', english: 'I want to buy this', options: [{text: 'I want to buy this'}, {text: 'I want to sell that'}, {text: 'I don\'t want'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '这个多少钱？', pinyin: 'zhège duōshao qián?', english: 'How much is this?', options: [{text: 'What is this?'}, {text: 'How much is this?'}, {text: 'Where is this?'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '一点儿', pinyin: 'yīdiǎnr', english: 'A little', options: [{text: 'Very'}, {text: 'A little'}, {text: 'Too much'}], correctAnswer: 1 }
+                ]
+            },
+
+            // Unit 6: Time & Travel (7 lessons)
+            'u6l1': {
+                id: 'u6l1',
+                title: 'Time Words',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '现在', pinyin: 'xiànzài', english: 'Now', options: [{text: 'Now'}, {text: 'Before'}, {text: 'After'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '今天', pinyin: 'jīntiān', english: 'Today', options: [{text: 'Yesterday'}, {text: 'Today'}, {text: 'Tomorrow'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '明天', pinyin: 'míngtiān', english: 'Tomorrow', options: [{text: 'Today'}, {text: 'Tomorrow'}, {text: 'Yesterday'}], correctAnswer: 1 }
+                ]
+            },
+            'u6l2': {
+                id: 'u6l2',
+                title: 'Days',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '昨天', pinyin: 'zuótiān', english: 'Yesterday', options: [{text: 'Yesterday'}, {text: 'Today'}, {text: 'Tomorrow'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this mean?', hanzi: '天', pinyin: 'tiān', english: 'Day/Sky', options: [{text: 'Night'}, {text: 'Day'}, {text: 'Hour'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '星期', pinyin: 'xīngqī', english: 'Week', options: [{text: 'Day'}, {text: 'Week'}, {text: 'Month'}], correctAnswer: 1 }
+                ]
+            },
+            'u6l3': {
+                id: 'u6l3',
+                title: 'Time of Day',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '早上', pinyin: 'zǎoshang', english: 'Morning', options: [{text: 'Morning'}, {text: 'Afternoon'}, {text: 'Evening'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '下午', pinyin: 'xiàwǔ', english: 'Afternoon', options: [{text: 'Morning'}, {text: 'Afternoon'}, {text: 'Night'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '晚上', pinyin: 'wǎnshang', english: 'Evening', options: [{text: 'Afternoon'}, {text: 'Evening'}, {text: 'Night'}], correctAnswer: 1 }
+                ]
+            },
+            'u6l4': {
+                id: 'u6l4',
+                title: 'Transportation',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '出租车', pinyin: 'chūzūchē', english: 'Taxi', options: [{text: 'Bus'}, {text: 'Taxi'}, {text: 'Train'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this mean?', hanzi: '飞机', pinyin: 'fēijī', english: 'Airplane', options: [{text: 'Car'}, {text: 'Airplane'}, {text: 'Boat'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '车', pinyin: 'chē', english: 'Car/Vehicle', options: [{text: 'Car'}, {text: 'Bike'}, {text: 'Walk'}], correctAnswer: 0 }
+                ]
+            },
+            'u6l5': {
+                id: 'u6l5',
+                title: 'Going Places',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '去', pinyin: 'qù', english: 'To go', options: [{text: 'To go'}, {text: 'To come'}, {text: 'To return'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '来', pinyin: 'lái', english: 'To come', options: [{text: 'To go'}, {text: 'To come'}, {text: 'To leave'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '回', pinyin: 'huí', english: 'To return', options: [{text: 'To go'}, {text: 'To come'}, {text: 'To return'}], correctAnswer: 2 }
+                ]
+            },
+            'u6l6': {
+                id: 'u6l6',
+                title: 'Places',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '学校', pinyin: 'xuéxiào', english: 'School', options: [{text: 'Home'}, {text: 'School'}, {text: 'Work'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this mean?', hanzi: '医院', pinyin: 'yīyuàn', english: 'Hospital', options: [{text: 'Hospital'}, {text: 'Store'}, {text: 'Restaurant'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '饭店', pinyin: 'fàndiàn', english: 'Hotel/Restaurant', options: [{text: 'Hospital'}, {text: 'Hotel'}, {text: 'Airport'}], correctAnswer: 1 }
+                ]
+            },
+            'u6l7': {
+                id: 'u6l7',
+                title: 'Travel Review',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'I\'m going to school', hanzi: '我去学校', pinyin: 'wǒ qù xuéxiào', english: 'I\'m going to school', options: [{text: 'I\'m at school'}, {text: 'I\'m going to school'}, {text: 'I came from school'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '几点？', pinyin: 'jǐ diǎn?', english: 'What time?', options: [{text: 'What day?'}, {text: 'What time?'}, {text: 'How long?'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'O\'clock', hanzi: '点', pinyin: 'diǎn', english: 'O\'clock', options: [{text: 'Hour'}, {text: 'O\'clock'}, {text: 'Minute'}], correctAnswer: 1 }
+                ]
+            },
+
+            // Unit 7: Daily Life (7 lessons)
+            'u7l1': {
+                id: 'u7l1',
+                title: 'Feelings',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '喜欢', pinyin: 'xǐhuan', english: 'To like', options: [{text: 'To like'}, {text: 'To love'}, {text: 'To hate'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '高兴', pinyin: 'gāoxìng', english: 'Happy', options: [{text: 'Sad'}, {text: 'Happy'}, {text: 'Angry'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '爱', pinyin: 'ài', english: 'Love', options: [{text: 'Like'}, {text: 'Love'}, {text: 'Want'}], correctAnswer: 1 }
+                ]
+            },
+            'u7l2': {
+                id: 'u7l2',
+                title: 'Actions 1',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '看', pinyin: 'kàn', english: 'To see/watch', options: [{text: 'To see'}, {text: 'To listen'}, {text: 'To read'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '听', pinyin: 'tīng', english: 'To listen', options: [{text: 'To see'}, {text: 'To listen'}, {text: 'To speak'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '读', pinyin: 'dú', english: 'To read', options: [{text: 'To write'}, {text: 'To read'}, {text: 'To speak'}], correctAnswer: 1 }
+                ]
+            },
+            'u7l3': {
+                id: 'u7l3',
+                title: 'Actions 2',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '写', pinyin: 'xiě', english: 'To write', options: [{text: 'To write'}, {text: 'To draw'}, {text: 'To type'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '工作', pinyin: 'gōngzuò', english: 'To work', options: [{text: 'To study'}, {text: 'To work'}, {text: 'To rest'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '学习', pinyin: 'xuéxí', english: 'To study', options: [{text: 'To work'}, {text: 'To study'}, {text: 'To teach'}], correctAnswer: 1 }
+                ]
+            },
+            'u7l4': {
+                id: 'u7l4',
+                title: 'Daily Routines',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '睡觉', pinyin: 'shuìjiào', english: 'To sleep', options: [{text: 'To eat'}, {text: 'To sleep'}, {text: 'To wake up'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '起床', pinyin: 'qǐchuáng', english: 'To get up', options: [{text: 'To get up'}, {text: 'To go to bed'}, {text: 'To rest'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this verb mean?', hanzi: '休息', pinyin: 'xiūxi', english: 'To rest', options: [{text: 'To work'}, {text: 'To rest'}, {text: 'To play'}], correctAnswer: 1 }
+                ]
+            },
+            'u7l5': {
+                id: 'u7l5',
+                title: 'Locations',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '在', pinyin: 'zài', english: 'At/In/On', options: [{text: 'At'}, {text: 'From'}, {text: 'To'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this mean?', hanzi: '里', pinyin: 'lǐ', english: 'Inside', options: [{text: 'Outside'}, {text: 'Inside'}, {text: 'On top'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '上', pinyin: 'shàng', english: 'On/Above', options: [{text: 'Below'}, {text: 'On top'}, {text: 'Inside'}], correctAnswer: 1 }
+                ]
+            },
+            'u7l6': {
+                id: 'u7l6',
+                title: 'Objects',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '书', pinyin: 'shū', english: 'Book', options: [{text: 'Book'}, {text: 'Pen'}, {text: 'Paper'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '电视', pinyin: 'diànshì', english: 'TV', options: [{text: 'Computer'}, {text: 'TV'}, {text: 'Phone'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '电影', pinyin: 'diànyǐng', english: 'Movie', options: [{text: 'TV show'}, {text: 'Movie'}, {text: 'Music'}], correctAnswer: 1 }
+                ]
+            },
+            'u7l7': {
+                id: 'u7l7',
+                title: 'Daily Life Review',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this phrase mean?', hanzi: '我喜欢看电影', pinyin: 'wǒ xǐhuan kàn diànyǐng', english: 'I like watching movies', options: [{text: 'I like reading books'}, {text: 'I like watching movies'}, {text: 'I like listening to music'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '会', pinyin: 'huì', english: 'Can/Know how to', options: [{text: 'Want'}, {text: 'Can'}, {text: 'Must'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '和', pinyin: 'hé', english: 'And/With', options: [{text: 'Or'}, {text: 'And'}, {text: 'But'}], correctAnswer: 1 }
+                ]
+            },
+
+            // Unit 8: Integration & Review (7 lessons for mastery)
+            'u8l1': {
+                id: 'u8l1',
+                title: 'Colors',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '红色', pinyin: 'hóngsè', english: 'Red', options: [{text: 'Red'}, {text: 'Blue'}, {text: 'Yellow'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '白色', pinyin: 'báisè', english: 'White', options: [{text: 'Black'}, {text: 'White'}, {text: 'Gray'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '黑色', pinyin: 'hēisè', english: 'Black', options: [{text: 'White'}, {text: 'Black'}, {text: 'Brown'}], correctAnswer: 1 }
+                ]
+            },
+            'u8l2': {
+                id: 'u8l2',
+                title: 'Weather',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '天气', pinyin: 'tiānqì', english: 'Weather', options: [{text: 'Weather'}, {text: 'Temperature'}, {text: 'Season'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this mean?', hanzi: '冷', pinyin: 'lěng', english: 'Cold', options: [{text: 'Hot'}, {text: 'Cold'}, {text: 'Warm'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '热', pinyin: 'rè', english: 'Hot', options: [{text: 'Cold'}, {text: 'Hot'}, {text: 'Cool'}], correctAnswer: 1 }
+                ]
+            },
+            'u8l3': {
+                id: 'u8l3',
+                title: 'Describing Things',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '大', pinyin: 'dà', english: 'Big', options: [{text: 'Big'}, {text: 'Small'}, {text: 'Medium'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '小', pinyin: 'xiǎo', english: 'Small', options: [{text: 'Big'}, {text: 'Small'}, {text: 'Long'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '多', pinyin: 'duō', english: 'Many/Much', options: [{text: 'Few'}, {text: 'Many'}, {text: 'Some'}], correctAnswer: 1 }
+                ]
+            },
+            'u8l4': {
+                id: 'u8l4',
+                title: 'More Descriptions',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '新', pinyin: 'xīn', english: 'New', options: [{text: 'Old'}, {text: 'New'}, {text: 'Young'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this mean?', hanzi: '旧', pinyin: 'jiù', english: 'Old', options: [{text: 'New'}, {text: 'Old'}, {text: 'Ancient'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '漂亮', pinyin: 'piàoliang', english: 'Beautiful', options: [{text: 'Ugly'}, {text: 'Beautiful'}, {text: 'Good'}], correctAnswer: 1 }
+                ]
+            },
+            'u8l5': {
+                id: 'u8l5',
+                title: 'Modal Verbs',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '想', pinyin: 'xiǎng', english: 'Want to/Think', options: [{text: 'Want to'}, {text: 'Must'}, {text: 'Can'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '能', pinyin: 'néng', english: 'Can/Able to', options: [{text: 'Want'}, {text: 'Can'}, {text: 'Must'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this mean?', hanzi: '应该', pinyin: 'yīnggāi', english: 'Should', options: [{text: 'Can'}, {text: 'Should'}, {text: 'Will'}], correctAnswer: 1 }
+                ]
+            },
+            'u8l6': {
+                id: 'u8l6',
+                title: 'Conjunctions',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'Select the correct translation', hanzi: '但是', pinyin: 'dànshì', english: 'But', options: [{text: 'And'}, {text: 'But'}, {text: 'Or'}], correctAnswer: 1 },
+                    { id: 'q2', type: 'matchText', prompt: 'What does this mean?', hanzi: '因为', pinyin: 'yīnwèi', english: 'Because', options: [{text: 'Because'}, {text: 'So'}, {text: 'If'}], correctAnswer: 0 },
+                    { id: 'q3', type: 'matchText', prompt: 'Select the correct translation', hanzi: '所以', pinyin: 'suǒyǐ', english: 'So/Therefore', options: [{text: 'Because'}, {text: 'So'}, {text: 'But'}], correctAnswer: 1 }
+                ]
+            },
+            'u8l7': {
+                id: 'u8l7',
+                title: 'Final Review',
+                quizQuestions: [
+                    { id: 'q1', type: 'matchText', prompt: 'What does this mean?', hanzi: '认识', pinyin: 'rènshi', english: 'Know (person)', options: [{text: 'Know (person)'}, {text: 'Know (fact)'}, {text: 'Meet'}], correctAnswer: 0 },
+                    { id: 'q2', type: 'matchText', prompt: 'Select the correct translation', hanzi: '知道', pinyin: 'zhīdào', english: 'Know (fact)', options: [{text: 'Understand'}, {text: 'Know (fact)'}, {text: 'Think'}], correctAnswer: 1 },
+                    { id: 'q3', type: 'matchText', prompt: 'What does this particle mean?', hanzi: '了', pinyin: 'le', english: '(completed action)', options: [{text: '了'}, {text: '吗'}, {text: '的'}], correctAnswer: 0 }
+                ]
+            },
+        };
+
+        // Roadmap structure
+        const ROADMAP_STRUCTURE = [
+            { id: 'u1', title: 'Unit 1: Greetings & Basics', color: 'var(--color-blue)', lessons: ['u1l1', 'u1l2', 'u1l3', 'u1l4', 'u1l5', 'u1l6', 'u1l7'] },
+            { id: 'u2', title: 'Unit 2: Self Introduction', color: 'var(--color-purple)', lessons: ['u2l1', 'u2l2', 'u2l3', 'u2l4', 'u2l5', 'u2l6', 'u2l7'] },
+            { id: 'u3', title: 'Unit 3: Family & People', color: 'var(--color-red)', lessons: ['u3l1', 'u3l2', 'u3l3', 'u3l4', 'u3l5', 'u3l6', 'u3l7'] },
+            { id: 'u4', title: 'Unit 4: Food & Restaurant', color: 'var(--color-green)', lessons: ['u4l1', 'u4l2', 'u4l3', 'u4l4', 'u4l5', 'u4l6', 'u4l7'] },
+            { id: 'u5', title: 'Unit 5: Shopping', color: 'var(--color-amber)', lessons: ['u5l1', 'u5l2', 'u5l3', 'u5l4', 'u5l5', 'u5l6', 'u5l7'] },
+            { id: 'u6', title: 'Unit 6: Time & Travel', color: 'var(--color-orange)', lessons: ['u6l1', 'u6l2', 'u6l3', 'u6l4', 'u6l5', 'u6l6', 'u6l7'] },
+            { id: 'u7', title: 'Unit 7: Daily Life', color: 'var(--color-blue)', lessons: ['u7l1', 'u7l2', 'u7l3', 'u7l4', 'u7l5', 'u7l6', 'u7l7'] },
+            { id: 'u8', title: 'Unit 8: Integration', color: 'var(--color-purple)', lessons: ['u8l1', 'u8l2', 'u8l3', 'u8l4', 'u8l5', 'u8l6', 'u8l7'] },
+        ];
+
+        // ============================================
+        // STATE & DOM
+        // ============================================
+
+        const state = {
+            currentQuestionIndex: 0,
+            showFeedback: false,
+            isCorrect: false,
+            quizComplete: false,
+            imageCache: {},
+            currentLessonData: null,
+            lessonProgress: {},
+        };
+
+        const dom = {
+            roadmapScreen: document.getElementById('roadmap-screen'),
+            roadmapContent: document.getElementById('roadmap-content'),
+            completedLessons: document.getElementById('completed-lessons'),
+            totalProgress: document.getElementById('total-progress'),
+            mainContent: document.getElementById('main-content'),
+            quizCompleteScreen: document.getElementById('quiz-complete-screen'),
+            quitLessonButton: document.getElementById('quit-lesson-button'),
+            progressBar: document.getElementById('progress-bar'),
+            promptText: document.getElementById('prompt-text'),
+            promptHanzi: document.getElementById('prompt-hanzi'),
+            promptPinyin: document.getElementById('prompt-pinyin'),
+            promptFocusAudio: document.getElementById('prompt-focus-audio'),
+            optionsArea: document.getElementById('options-area'),
+            footer: document.getElementById('footer'),
+            continueButton: document.getElementById('continue-button'),
+            feedbackPanel: document.getElementById('feedback-panel'),
+            iconFeedback: document.getElementById('icon-feedback'),
+            feedbackTitle: document.getElementById('feedback-title'),
+            feedbackTextLabel: document.getElementById('feedback-text-label'),
+            feedbackHanzi: document.getElementById('feedback-hanzi'),
+            feedbackPinyin: document.getElementById('feedback-pinyin'),
+            feedbackEnglish: document.getElementById('feedback-english'),
+            quizCompleteSubtitle: document.getElementById('quiz-complete-subtitle'),
+            roadmapButton: document.getElementById('roadmap-button'),
+        };
+
+        const icons = {
+            check: '<polyline points="20 6 9 17 4 12"></polyline>',
+            x: '<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>',
+        };
+
+        // ============================================
+        // PERSISTENCE
+        // ============================================
+
+        function loadProgress() {
+            try {
+                const saved = localStorage.getItem('chineseLearnerProgress');
+                if (saved) {
+                    state.lessonProgress = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('Error loading progress:', e);
+            }
+        }
+
+        function saveProgress() {
+            try {
+                localStorage.setItem('chineseLearnerProgress', JSON.stringify(state.lessonProgress));
+            } catch (e) {
+                console.error('Error saving progress:', e);
+            }
+        }
+
+        // ============================================
+        // API & IMAGE GENERATION
+        // ============================================
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        async function generateImage(prompt, imgElement, loaderElement, errorElement) {
+            // Check cache first
+            if (state.imageCache[prompt]) {
+                imgElement.src = state.imageCache[prompt];
+                loaderElement.classList.add('hidden');
+                imgElement.classList.remove('hidden');
+                return;
+            }
+
+            // IMPORTANT: Add your Google AI API key here
+            const apiKey = "YOUR_API_KEY_HERE";
+            
+            if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
+                errorElement.textContent = 'API key needed';
+                errorElement.classList.remove('hidden');
+                loaderElement.classList.add('hidden');
+                return;
+            }
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`;
+            const payload = {
+                instances: [{ prompt: prompt }],
+                parameters: { sampleCount: 1 }
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+                const result = await response.json();
+
+                if (result.predictions?.[0]?.bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    state.imageCache[prompt] = imageUrl;
+                    imgElement.src = imageUrl;
+                    imgElement.classList.remove('hidden');
+                } else {
+                    throw new Error('Invalid response');
+                }
+            } catch (err) {
+                console.error('Image generation error:', err);
+                errorElement.textContent = 'Could not load image';
+                errorElement.classList.remove('hidden');
+            } finally {
+                loaderElement.classList.add('hidden');
+            }
+        }
+
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+
+        function handlePlayAudio() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const text = dom.promptHanzi.textContent;
+                if (!text) return;
+
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function handleAnswerSelect(selectedIndex, correctIndex) {
+            if (state.showFeedback) return;
+
+            state.isCorrect = selectedIndex === correctIndex;
+            state.showFeedback = true;
+
+            // Disable all buttons and mark correct/incorrect
+            Array.from(dom.optionsArea.children).forEach((button, index) => {
+                button.disabled = true;
+                if (index === correctIndex) {
+                    button.classList.add('correct');
+                } else if (index === selectedIndex) {
+                    button.classList.add('incorrect');
+                }
+            });
+
+            updateFeedbackPanel(state.isCorrect);
+            dom.feedbackPanel.classList.add('show');
+
+            dom.continueButton.textContent = 'Continue';
+            dom.continueButton.className = state.isCorrect ? 'green' : 'red';
+            dom.continueButton.classList.remove('hidden');
+        }
+
+        function handleContinue() {
+            state.showFeedback = false;
+            state.isCorrect = false;
+
+            dom.feedbackPanel.classList.remove('show');
+            dom.continueButton.classList.add('hidden');
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            const lesson = state.currentLessonData;
+            if (state.currentQuestionIndex + 1 < lesson.quizQuestions.length) {
+                state.currentQuestionIndex++;
+                renderCurrentQuestion();
+            } else {
+                // Lesson complete
+                state.quizComplete = true;
+                state.lessonProgress[lesson.id] = 'completed';
+                saveProgress();
+                renderQuizComplete();
+            }
+            updateProgressBar();
+        }
+
+        function handleGoToRoadmap() {
+            state.currentQuestionIndex = 0;
+            state.quizComplete = false;
+            state.currentLessonData = null;
+
+            dom.quizCompleteScreen.classList.remove('active');
+            dom.mainContent.classList.remove('active');
+            dom.footer.classList.add('hidden');
+
+            dom.roadmapScreen.classList.add('active');
+            renderRoadmap();
+        }
+
+        function handleStartLesson(lessonId) {
+            const lessonData = CURRICULUM_DATA[lessonId];
+            if (!lessonData) {
+                console.error('No lesson data for:', lessonId);
+                return;
+            }
+
+            state.currentLessonData = lessonData;
+            state.currentQuestionIndex = 0;
+            state.quizComplete = false;
+            state.showFeedback = false;
+            state.isCorrect = false;
+
+            dom.roadmapScreen.classList.remove('active');
+            dom.mainContent.classList.add('active');
+            dom.footer.classList.remove('hidden');
+
+            dom.continueButton.classList.add('hidden');
+            dom.feedbackPanel.classList.remove('show');
+
+            renderCurrentQuestion();
+            updateProgressBar();
+        }
+
+        // ============================================
+        // RENDERING
+        // ============================================
+
+        function renderRoadmap() {
+            dom.roadmapContent.innerHTML = '';
+
+            // Update progress summary
+            const totalLessons = Object.keys(CURRICULUM_DATA).length;
+            const completedCount = Object.values(state.lessonProgress).filter(v => v === 'completed').length;
+            const progressPercent = Math.round((completedCount / totalLessons) * 100);
+
+            dom.completedLessons.textContent = completedCount;
+            dom.totalProgress.textContent = progressPercent + '%';
+
+            // Render units
+            ROADMAP_STRUCTURE.forEach(unit => {
+                const unitContainer = document.createElement('div');
+                unitContainer.className = 'unit-container';
+
+                const unitHeader = document.createElement('div');
+                unitHeader.className = 'unit-header';
+                unitHeader.style.backgroundColor = unit.color;
+                unitHeader.innerHTML = `<h2>${unit.title}</h2>`;
+
+                const lessonNodes = document.createElement('div');
+                lessonNodes.className = 'lesson-nodes';
+
+                unit.lessons.forEach((lessonId, index) => {
+                    const lessonData = CURRICULUM_DATA[lessonId];
+                    if (!lessonData) return;
+
+                    const node = document.createElement('button');
+                    node.className = 'lesson-node';
+                    node.dataset.lessonId = lessonId;
+                    node.innerHTML = `<span>${index + 1}</span>`;
+
+                    if (state.lessonProgress[lessonId] === 'completed') {
+                        node.classList.add('completed');
+                    }
+
+                    node.onclick = () => handleStartLesson(lessonId);
+                    lessonNodes.appendChild(node);
+                });
+
+                unitContainer.appendChild(unitHeader);
+                unitContainer.appendChild(lessonNodes);
+                dom.roadmapContent.appendChild(unitContainer);
+            });
+        }
+
+        function updateProgressBar() {
+            if (!state.currentLessonData) return;
+
+            const total = state.currentLessonData.quizQuestions.length;
+            const current = state.currentQuestionIndex + 1;
+            const percent = (current / total) * 100;
+            dom.progressBar.style.width = `${percent}%`;
+        }
+
+        function updateFeedbackPanel(isCorrect) {
+            const question = state.currentLessonData.quizQuestions[state.currentQuestionIndex];
+
+            if (isCorrect) {
+                dom.feedbackPanel.className = 'correct';
+                dom.iconFeedback.innerHTML = icons.check;
+                dom.feedbackTitle.textContent = 'Nicely done!';
+                dom.feedbackTextLabel.textContent = 'Meaning:';
+            } else {
+                dom.feedbackPanel.className = 'incorrect';
+                dom.iconFeedback.innerHTML = icons.x;
+                dom.feedbackTitle.textContent = 'Incorrect';
+                dom.feedbackTextLabel.textContent = 'Correct answer:';
+            }
+
+            const iconContainer = dom.feedbackPanel.querySelector('.icon-container');
+            iconContainer.className = isCorrect ? 'icon-container correct' : 'icon-container incorrect';
+
+            dom.feedbackHanzi.textContent = question.hanzi;
+            dom.feedbackPinyin.textContent = question.pinyin;
+            dom.feedbackEnglish.textContent = question.english;
+        }
+
+        function createOptionButton(option, index, question) {
+            const button = document.createElement('button');
+            button.className = 'option-button';
+            button.onclick = () => handleAnswerSelect(index, question.correctAnswer);
+
+            if (question.type === 'matchText') {
+                button.innerHTML = `<div class="option-content-text">${option.text}</div>`;
+            } else if (question.type === 'matchImageAndText') {
+                button.innerHTML = `
+                    <div class="option-content-image-text">
+                        <div class="image-container">
+                            <div class="loader"></div>
+                            <img class="hidden" alt="${option.text}">
+                            <div class="error-text hidden"></div>
+                        </div>
+                        <div class="text-container">${option.text}</div>
+                    </div>`;
+
+                const img = button.querySelector('img');
+                const loader = button.querySelector('.loader');
+                const error = button.querySelector('.error-text');
+                generateImage(option.imagePrompt, img, loader, error);
+            } else if (question.type === 'matchImage') {
+                button.innerHTML = `
+                    <div class="option-content-image">
+                        <div class="image-container">
+                            <div class="loader"></div>
+                            <img class="hidden" alt="${option.text}">
+                            <div class="error-text hidden"></div>
+                        </div>
+                        <div class="text-container">${option.text}</div>
+                    </div>`;
+
+                const img = button.querySelector('img');
+                const loader = button.querySelector('.loader');
+                const error = button.querySelector('.error-text');
+                generateImage(option.imagePrompt, img, loader, error);
+            }
+
+            return button;
+        }
+
+        function renderCurrentQuestion() {
+            const question = state.currentLessonData.quizQuestions[state.currentQuestionIndex];
+
+            dom.promptText.textContent = question.prompt;
+            dom.promptHanzi.textContent = question.hanzi;
+            dom.promptPinyin.textContent = question.pinyin;
+
+            dom.optionsArea.innerHTML = '';
+
+            question.options.forEach((option, index) => {
+                const button = createOptionButton(option, index, question);
+                dom.optionsArea.appendChild(button);
+            });
+        }
+
+        function renderQuizComplete() {
+            dom.mainContent.classList.remove('active');
+            dom.footer.classList.add('hidden');
+            dom.quizCompleteScreen.classList.add('active');
+            dom.quizCompleteSubtitle.textContent = `You finished "${state.currentLessonData.title}"`;
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        function initApp() {
+            // Verify DOM elements
+            for (const key in dom) {
+                if (!dom[key]) {
+                    console.error(`Missing DOM element: ${key}`);
+                    return;
+                }
+            }
+
+            // Load saved progress
+            loadProgress();
+
+            // Attach event listeners
+            dom.continueButton.addEventListener('click', handleContinue);
+            dom.promptFocusAudio.addEventListener('click', handlePlayAudio);
+            dom.roadmapButton.addEventListener('click', handleGoToRoadmap);
+            dom.quitLessonButton.addEventListener('click', handleGoToRoadmap);
+
+            // Render initial roadmap
+            renderRoadmap();
+        }
+
+        // Start the app
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
