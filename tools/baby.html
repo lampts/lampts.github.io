@@ -1,0 +1,461 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Roll Simulator // LamLabs</title>
+    <style>
+        /* Global Styles */
+        body {
+            background-color: #2e2e2e; /* Dark grey background for the "desktop" */
+            font-family: 'IBM Plex Mono', monospace;
+            margin: 0;
+            padding: 50px; /* Padding to show desktop background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Prevent body scroll */
+            color: #d8d8d8; /* Default text color */
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap');
+
+        /* Terminal Window Container */
+        .terminal-window {
+            background-color: #1a1a1a; /* Darker background for the terminal */
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 900px; /* Wider to accommodate layout */
+            min-height: 600px; /* Minimum height for CLI feel */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative; /* For traffic lights positioning */
+            border: 1px solid #3a3a3a;
+        }
+
+        /* Terminal Header (Traffic Lights) */
+        .terminal-header {
+            background-color: #2b2b2b;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #3a3a3a;
+            position: relative;
+        }
+        .terminal-header-title {
+            color: #b0b0b0;
+            font-size: 0.9em;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .traffic-lights {
+            display: flex;
+            gap: 8px;
+        }
+        .light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .light.red { background-color: #ff5f56; }
+        .light.yellow { background-color: #ffbd2e; }
+        .light.green { background-color: #27c93f; }
+
+        /* Main Content Area */
+        .terminal-content {
+            padding: 20px 25px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Info Boxes */
+        .top-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 20px;
+        }
+
+        .info-box {
+            border: 1px dashed #5a5a5a;
+            padding: 15px;
+            flex: 1;
+            min-width: 280px; /* Ensure boxes don't get too small */
+        }
+        .info-box.full-width {
+            flex-basis: 100%; /* For "What's new" if it needs its own line */
+        }
+
+        .info-box h2 {
+            color: #ff8c00; /* Orange for titles */
+            font-size: 1.1em;
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.85em;
+        }
+        .info-box ul li {
+            margin-bottom: 5px;
+            color: #a0a0a0;
+        }
+        .info-box ul li:before {
+            content: "> ";
+            color: #ff8c00; /* Orange bullet */
+        }
+        .info-box .param-item {
+            display: block;
+            margin-bottom: 5px;
+            color: #a0a0a0;
+            font-size: 0.85em;
+        }
+        .info-box .param-item strong {
+            color: #d8d8d8;
+            font-weight: normal;
+        }
+
+
+        /* Command/Output Area */
+        .cli-output-area {
+            flex-grow: 1; /* Take remaining space */
+            border-top: 1px dashed #5a5a5a;
+            padding-top: 20px;
+            overflow-y: auto; /* Scroll for output */
+            max-height: 250px; /* Limit height for output */
+            margin-bottom: 20px;
+        }
+
+        .cli-line {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 5px;
+            color: #d8d8d8;
+        }
+        .cli-prompt {
+            color: #ff8c00; /* Orange prompt */
+            margin-right: 10px;
+        }
+        .cli-command {
+            flex-grow: 1;
+        }
+
+        /* Button */
+        button {
+            background-color: transparent;
+            color: #ff8c00; /* Orange button text */
+            border: 1px solid #ff8c00;
+            padding: 10px 20px;
+            font-family: 'IBM Plex Mono', monospace;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.2s ease-in-out;
+            display: block;
+            margin: 20px auto 0; /* Center button */
+            text-transform: uppercase;
+            box-shadow: 0 0 5px rgba(255, 140, 0, 0.3); /* Subtle glow */
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #ff8c00;
+            color: #1a1a1a;
+            box-shadow: 0 0 10px rgba(255, 140, 0, 0.6);
+        }
+        button:disabled {
+            border-color: #5a5a5a;
+            color: #5a5a5a;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Output specific */
+        .roll-result {
+            margin-bottom: 5px;
+            color: #d8d8d8;
+            font-size: 0.9em;
+        }
+        .die-emoticon {
+            font-size: 1.4em;
+            vertical-align: middle;
+            margin: 0 3px;
+            color: #fff; /* White for dice */
+        }
+        .success-message {
+            color: #27c93f; /* Green for success */
+            font-weight: bold;
+        }
+        .failure-message {
+            color: #ff5f56; /* Red for failure */
+        }
+        .cost-info {
+            color: #a0a0a0;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 30px;
+            font-size: 0.75em;
+            color: #5a5a5a;
+            text-align: center;
+            width: 100%;
+            padding-bottom: 10px;
+            border-top: 1px dashed #3a3a3a;
+            padding-top: 15px;
+        }
+
+        /* --- Overlay Styles --- */
+        #congratulationsOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.98); /* Near opaque black */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #congratulationsOverlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .overlay-content {
+            border: 1px solid #ff8c00; /* Orange border */
+            padding: 30px;
+            text-align: center;
+            max-width: 600px;
+            background-color: #1a1a1a; /* Terminal background for content box */
+            box-shadow: 0 0 25px rgba(255, 140, 0, 0.5); /* Orange glow */
+            border-radius: 8px;
+        }
+
+        .overlay-message {
+            font-size: 1.6em;
+            color: #ff8c00; /* Orange for message */
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .overlay-babycry-image {
+            max-width: 280px; /* Slightly smaller for overlay */
+            height: auto;
+            border: 1px solid #d8d8d8; /* Light grey border */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); /* Subtle white glow */
+            margin-bottom: 20px;
+            border-radius: 4px; /* Slight roundness */
+        }
+
+        .overlay-cost-info {
+            font-size: 1em;
+            color: #a0a0a0; /* Grey for info */
+            margin-top: 10px;
+        }
+        .overlay-reset-info {
+            font-size: 1em;
+            color: #d8d8d8;
+            margin-top: 15px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="terminal-window">
+        <div class="terminal-header">
+            <div class="traffic-lights">
+                <span class="light red"></span>
+                <span class="light yellow"></span>
+                <span class="light green"></span>
+            </div>
+            <span class="terminal-header-title">Dice Roll Simulator // LamLabs</span>
+        </div>
+
+        <div class="terminal-content">
+            <div class="top-info">
+                <div class="info-box">
+                    <h2>// Simulation Parameters</h2>
+                    <ul>
+                        <li>Roll (4) six-sided dice.</li>
+                        <li>Target event: Two (2) faces displaying '6' and two (2) faces displaying even numbers (2 or 4).</li>
+                        <li>Calculated probability for this specific event: ~1/144.</li>
+                        <li>Each roll (unbox attempt) costs $5.00 USD.</li>
+                    </ul>
+                </div>
+                <div class="info-box">
+                    <h2>// Current Session Stats</h2>
+                    <div class="param-item"><strong>Rolls:</strong> <span id="rollsThisGame">0</span></div>
+                    <div class="param-item"><strong>Cumulative Cost:</strong> <span id="costThisGame">$0.00</span></div>
+                    <div class="param-item"><strong>Target Acquired:</strong> <span id="targetAcquired">NO</span></div>
+                </div>
+            </div>
+
+            <div class="cli-output-area" id="output">
+                <div class="cli-line">
+                    <span class="cli-prompt">></span>
+                    <span class="cli-command">SYSTEM: Click "Roll Dice [Execute]" to initiate simulation sequence.</span>
+                </div>
+            </div>
+
+            <button id="rollDiceButton">Roll Dice [Execute]</button>
+        </div>
+
+        <footer>
+            &copy; 2024 LamLabs. Data simulated. Not financial advice.
+        </footer>
+    </div>
+
+    <div id="congratulationsOverlay">
+        <div class="overlay-content">
+            <div class="overlay-message">> CONGRATULATIONS: SECRET BABYCRY ACQUIRED! ✨</div>
+            <img src="https://github-production-user-asset-6210df.s3.amazonaws.com/656949/515698919-1a91d5c0-778f-45b6-b7f1-6b77fa8a5463.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20251118%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20251118T113641Z&X-Amz-Expires=300&X-Amz-Signature=336baa4bec932be4b6ae2b8a4a545c2658e5c9927eff0a2f60e180b68de844c2&X-Amz-SignedHeaders=host" alt="Secret Babycry" class="overlay-babycry-image">
+            <div id="overlayCostInfo" class="overlay-cost-info">Cost to acquire: $0.00</div>
+            <div class="overlay-reset-info">> SYSTEM: Game resetting in <span id="resetCountdown">4</span> seconds...</div>
+        </div>
+    </div>
+
+    <script>
+        const rollDiceButton = document.getElementById('rollDiceButton');
+        const outputDiv = document.getElementById('output');
+        const rollsThisGameSpan = document.getElementById('rollsThisGame');
+        const costThisGameSpan = document.getElementById('costThisGame');
+        const targetAcquiredSpan = document.getElementById('targetAcquired');
+        const congratulationsOverlay = document.getElementById('congratulationsOverlay');
+        const overlayCostInfo = document.getElementById('overlayCostInfo');
+        const resetCountdownSpan = document.getElementById('resetCountdown');
+
+        const COST_PER_ROLL = 5.00; // Each unbox attempt costs $5.00
+        const RESET_TIMEOUT = 4000; // 4 seconds for overlay display
+
+        let rollCountTotal = 0; // Total rolls across all games (kept for potential future stats)
+        let rollsInCurrentGame = 0;
+        let cumulativeCost = 0;
+        let countdownInterval;
+
+        // Emoticons for dice faces
+        const diceEmoticons = {
+            1: '⚀', // U+2680 DIE FACE-1
+            2: '⚁', // U+2681 DIE FACE-2
+            3: '⚂', // U+2682 DIE FACE-3
+            4: '⚃', // U+2683 DIE FACE-4
+            5: '⚄', // U+2684 DIE FACE-5
+            6: '⚅'  // U+2685 DIE FACE-6
+        };
+
+        // Function to update the stats display
+        function updateStats() {
+            rollsThisGameSpan.textContent = rollsInCurrentGame;
+            costThisGameSpan.textContent = `$${cumulativeCost.toFixed(2)}`;
+            targetAcquiredSpan.textContent = "NO"; // Reset on game start/reset
+        }
+
+        // Function to reset the game state
+        function resetGame() {
+            rollsInCurrentGame = 0;
+            cumulativeCost = 0;
+            outputDiv.innerHTML = `
+                <div class="cli-line">
+                    <span class="cli-prompt">></span>
+                    <span class="cli-command">SYSTEM: Game reset. Click "Roll Dice [Execute]" to initiate new simulation sequence.</span>
+                </div>
+            `;
+            congratulationsOverlay.classList.remove('active'); // Hide overlay
+            rollDiceButton.disabled = false; // Re-enable the button
+            clearInterval(countdownInterval); // Clear any running countdown
+            updateStats();
+        }
+
+        // Function to simulate rolling a single die
+        function rollDie() {
+            return Math.floor(Math.random() * 6) + 1;
+        }
+
+        // Function to check if a roll array matches the success condition
+        function checkSuccess(rolls) {
+            let sixCount = 0;
+            let evenCount_2_4 = 0; // Counts 2s or 4s
+
+            for (const die of rolls) {
+                if (die === 6) {
+                    sixCount++;
+                } else if (die === 2 || die === 4) {
+                    evenCount_2_4++;
+                }
+            }
+
+            // We need exactly two 6s and exactly two 2s or 4s
+            return sixCount === 2 && evenCount_2_4 === 2;
+        }
+
+        rollDiceButton.addEventListener('click', () => {
+            if (rollDiceButton.disabled) return; // Prevent clicks when disabled
+
+            rollCountTotal++; // Total rolls
+            rollsInCurrentGame++; // Rolls in current game
+            cumulativeCost += COST_PER_ROLL; // Add cost for this roll
+
+            updateStats(); // Update stats display
+
+            const rolls = [];
+            for (let i = 0; i < 4; i++) {
+                rolls.push(rollDie());
+            }
+
+            const isSuccess = checkSuccess(rolls);
+
+            let resultHtml = `
+                <div class="cli-line roll-result">
+                    <span class="cli-prompt">></span>
+                    <span class="cli-command">ROLL #${String(rollsInCurrentGame).padStart(4, '0')}: `;
+            rolls.forEach(die => {
+                resultHtml += `<span class="die-emoticon">${diceEmoticons[die]}</span>`;
+            });
+
+            if (isSuccess) {
+                resultHtml += ` <span class="success-message">✨ TARGET EVENT ACHIEVED!</span> <span class="cost-info">(Cost: $${cumulativeCost.toFixed(2)})</span></span></div>`;
+                outputDiv.innerHTML += resultHtml;
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Auto-scroll to bottom
+
+                targetAcquiredSpan.textContent = "YES"; // Update stats panel
+                overlayCostInfo.textContent = `Cost to acquire: $${cumulativeCost.toFixed(2)}`;
+                congratulationsOverlay.classList.add('active'); // Show overlay
+                rollDiceButton.disabled = true; // Disable the button
+
+                // Start countdown for reset
+                let countdown = RESET_TIMEOUT / 1000;
+                resetCountdownSpan.textContent = countdown;
+                countdownInterval = setInterval(() => {
+                    countdown--;
+                    resetCountdownSpan.textContent = countdown;
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        resetGame();
+                    }
+                }, 1000);
+
+            } else {
+                resultHtml += ` <span class="failure-message">EVENT FAILURE.</span> <span class="cost-info">(Current Cost: $${cumulativeCost.toFixed(2)})</span></span></div>`;
+                outputDiv.innerHTML += resultHtml;
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Auto-scroll to bottom
+            }
+        });
+
+        // Initialize stats on page load
+        updateStats();
+    </script>
+</body>
+</html>
