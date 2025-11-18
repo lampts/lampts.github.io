@@ -664,13 +664,13 @@ Since then, it got a full re-write of the styles and many additional cool featur
 - [svg.html](svg.html) - *November 18, 2025*
 - [story.html](story.html) - *November 18, 2025*
 - [solar.html](solar.html) - *November 18, 2025*
-- [qr.html](qr.html) - *November 18, 2025*
 - [reservoir.html](reservoir.html) - *November 18, 2025*
 - [rock.html](rock.html) - *November 18, 2025*
 - [pq25.html](pq25.html) - *November 18, 2025*
 - [pictureme.html](pictureme.html) - *November 18, 2025*
 - [photo.html](photo.html) - *November 18, 2025*
 - [prompt.html](prompt.html) - *November 18, 2025*
+- [qr.html](qr.html) - *November 18, 2025*
 - [paws.html](paws.html) - *November 18, 2025*
 - [news.html](news.html) - *November 18, 2025*
 - [llm.html](llm.html) - *November 18, 2025*
