@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue Forecasting via Monte Carlo Simulation</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --text-primary: #1a1a1a;
+            --text-secondary: #666;
+            --text-tertiary: #999;
+            --border-color: #e0e0e0;
+            --accent: #0066cc;
+            --bg-code: #f8f8f8;
+            --success: #16a34a;
+            --warning: #dc2626;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Spectral', 'Georgia', serif;
+            font-size: 18px;
+            line-height: 1.7;
+            color: var(--text-primary);
+            background: #fff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .article-header {
+            max-width: 720px;
+            margin: 4rem auto 3rem;
+            padding: 0 2rem;
+        }
+
+        .article-title {
+            font-size: 2.5rem;
+            font-weight: 400;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .article-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            line-height: 1.5;
+        }
+
+        .article-meta {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+        }
+
+        .content-wrapper {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem;
+        }
+
+        .section {
+            margin: 3rem 0;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        p {
+            margin: 1rem 0;
+        }
+
+        .lead {
+            font-size: 1.25rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin: 2rem 0;
+        }
+
+        .interactive-panel {
+            background: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 2rem;
+            margin: 2rem 0;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .interactive-panel:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .form-group {
+            margin: 1.5rem 0;
+        }
+
+        .form-label {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: block;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.01em;
+        }
+
+        .form-help {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: 0.25rem;
+            font-style: italic;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.625rem;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        .btn {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.02em;
+        }
+
+        .btn-primary {
+            background: var(--text-primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-code);
+            border-color: var(--text-secondary);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .utility-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn-utility {
+            flex: 1;
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.75rem;
+            padding: 0.5rem;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-utility:hover {
+            background: var(--bg-code);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .stat-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 2rem;
+            font-weight: 500;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+        }
+
+        .stat-sublabel {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: 0.25rem;
+        }
+
+        .chart-container {
+            margin: 3rem 0;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 2rem;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .chart-container:hover {
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .chart-title {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            letter-spacing: -0.01em;
+        }
+
+        code {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.85em;
+            background: var(--bg-code);
+            padding: 0.125rem 0.375rem;
+            border-radius: 2px;
+            color: #e83e8c;
+        }
+
+        pre {
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 0.875rem;
+            background: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            padding: 1rem;
+            overflow-x: auto;
+            line-height: 1.5;
+            margin: 1rem 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        .math {
+            font-style: italic;
+            color: var(--accent);
+        }
+
+        .sidenote {
+            float: right;
+            clear: right;
+            margin-right: -240px;
+            width: 200px;
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            color: var(--text-tertiary);
+            margin-top: 0;
+        }
+
+        .callout {
+            background: var(--bg-code);
+            border-left: 3px solid var(--accent);
+            padding: 1rem 1.5rem;
+            margin: 2rem 0;
+            font-size: 0.95rem;
+        }
+
+        .callout-title {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-tertiary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--text-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .update-badge {
+            display: inline-block;
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 3px;
+            color: #92400e;
+            margin-top: 1rem;
+        }
+
+        .timestamp {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .perf-info {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        kbd {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.375rem;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 1200px) {
+            .sidenote {
+                float: none;
+                margin-right: 0;
+                width: 100%;
+                margin-top: 1rem;
+                padding: 1rem;
+                background: var(--bg-code);
+                border-left: 3px solid var(--border-color);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .article-title { font-size: 2rem; }
+            .article-subtitle { font-size: 1.125rem; }
+            body { font-size: 16px; }
+            .button-group { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .hidden { display: none !important; }
+        
+        ::selection {
+            background: rgba(0, 102, 204, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <header class="article-header">
+        <h1 class="article-title">Revenue Forecasting via Monte Carlo Simulation</h1>
+        <p class="article-subtitle">Autoregressive time series modeling with probabilistic simulation for realistic scenario planning</p>
+        <div class="article-meta">
+            Interactive Tool · Updated November 2025
+        </div>
+    </header>
+
+    <main class="content-wrapper">
+        <section class="section">
+            <p class="lead">
+                Traditional forecasting methods rely on point estimates that obscure uncertainty. 
+                This tool runs thousands of simulations to generate a probability distribution 
+                of possible outcomes, revealing both expected values and tail risks through 
+                autoregressive time series modeling.
+            </p>
+
+            <p>
+                Unlike naive approaches that treat each day independently, the default autoregressive 
+                model captures temporal dependencies: yesterday's strong performance predicts today's 
+                strength, weekly patterns repeat, and recent trends persist. Features include lag₁ 
+                (daily momentum), lag₇ (weekly seasonality), and rolling averages (MA7, MA14) that 
+                adapt to changing conditions.
+            </p>
+
+            <p>
+                The model learns optimal feature weights from historical data via linear regression, 
+                explaining which factors matter most. For comparison, a simpler baseline model using 
+                fixed volatility weights (60% current + 40% previous) is also available, though it 
+                ignores autocorrelation and produces less realistic forecasts.
+            </p>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Input Parameters</h2>
+            
+            <div class="interactive-panel">
+                <form id="forecastForm">
+                    <div class="form-group">
+                        <label class="form-label">Previous Period Revenue (Daily)</label>
+                        <textarea id="previousData">69.6, 66.6, 66.1, 62.8, 62, 69.9, 64.1, 65.6, 65, 76.9, 69, 61.8, 67.9, 67.8, 69.4, 64.4, 67.6, 60.3, 55.3, 67.7, 62.9, 63.2, 59.2, 62, 60, 55, 59.6, 59.5, 56.2, 56.6, 56.9</textarea>
+                        <div class="form-help">Baseline period for comparison (e.g., last month)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Current Period Revenue (Daily, So Far)</label>
+                        <textarea id="currentData">62.6, 56.1, 69, 70.4, 71.5, 67.3, 65.6, 62.5, 60.6, 82, 68.4, 70.2, 67.7, 71</textarea>
+                        <div class="form-help">Actual results from current period</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Period Length (Days)</label>
+                        <input type="number" id="periodLength" value="30" min="1" max="365">
+                        <div class="form-help">Total days in period: 28-31 for months, 7 for weeks</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Target Revenue</label>
+                        <input type="number" id="target" value="2000">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Seasonal Event Days</label>
+                        <input type="text" id="eventDays" value="28, 29, 30" placeholder="28, 29, 30">
+                        <div class="form-help">Days with expected revenue boost (e.g., Black Friday)</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Event Boost Range (min-max %)</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <input type="number" id="boostMin" value="5" step="1" placeholder="Min %">
+                            <input type="number" id="boostMax" value="15" step="1" placeholder="Max %">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Expected Downtime Events/Period</label>
+                        <input type="number" id="downtimeEvents" value="1" step="0.1">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Downtime Impact (%)</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                            <input type="number" id="downtimeMin" value="5" step="1" placeholder="Min %">
+                            <input type="number" id="downtimeMax" value="10" step="1" placeholder="Max %">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Number of Simulations</label>
+                        <select id="numSims">
+                            <option value="10000">10,000 (Fast)</option>
+                            <option value="50000" selected>50,000 (Balanced)</option>
+                            <option value="100000">100,000 (Accurate)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Forecasting Model</label>
+                        <select id="modelType">
+                            <option value="autoregressive" selected>Autoregressive (Recommended)</option>
+                            <option value="simple">Simple (Baseline)</option>
+                        </select>
+                        <div class="form-help">Autoregressive captures time dependencies; Simple uses i.i.d. sampling</div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" id="runButton" class="btn btn-primary">Run Simulation</button>
+                        <button type="button" id="exportButton" class="btn btn-secondary" disabled>Export CSV</button>
+                    </div>
+
+                    <div class="utility-buttons">
+                        <button type="button" id="saveConfig" class="btn-utility">Save Config</button>
+                        <button type="button" id="loadConfig" class="btn-utility">Load Config</button>
+                    </div>
+
+                    <div id="needsUpdate" class="update-badge hidden">
+                        ⚠️ Parameters changed — click "Run Simulation" to update results
+                    </div>
+                </form>
+            </div>
+
+            <div class="callout">
+                <div class="callout-title">Keyboard Shortcut</div>
+                <p>Press <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + <kbd>Enter</kbd> to re-run simulation quickly.</p>
+            </div>
+        </section>
+
+        <div id="loadingState" class="loading-state">
+            <div class="spinner"></div>
+            <p>Initializing visualization library...</p>
+        </div>
+
+        <section id="resultsSection" class="section hidden">
+            <h2 class="section-title">Simulation Results</h2>
+            
+            <div class="stats-grid" id="statsGrid"></div>
+            
+            <div class="timestamp" id="lastRunTime"></div>
+            <div class="perf-info" id="simSpeed"></div>
+
+            <div class="chart-container">
+                <div class="chart-title" id="chart1Title">Previous Period: Pattern Analysis</div>
+                <div id="chart1" style="width:100%; height:400px;"></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title" id="chart2Title">Previous vs Current: Comparative Analysis</div>
+                <div id="chart2" style="width:100%; height:400px;"></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title" id="chart3Title">Monte Carlo Distribution</div>
+                <div id="chart3" style="width:100%; height:400px;"></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title" id="chart4Title">Daily Forecast Zone & Cumulative Progress</div>
+                <div id="chart4" style="width:100%; height:400px;"></div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-title" id="chart5Title">Cumulative Revenue: On-Pace Analysis</div>
+                <div id="chart5" style="width:100%; height:400px;"></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Methodology</h2>
+
+            <h3 style="font-size: 1.25rem; margin: 2rem 0 1rem;">Autoregressive Model (Default)</h3>
+            
+            <p>
+                The autoregressive (AR) model treats revenue as a time series where each observation 
+                depends on recent history. This captures three critical patterns naive models miss:
+            </p>
+            
+            <ul style="margin: 1rem 0 1rem 2rem; line-height: 1.8;">
+                <li><strong>Momentum:</strong> Strong days tend to follow strong days (positive autocorrelation)</li>
+                <li><strong>Seasonality:</strong> Weekly patterns repeat (Monday ≠ Friday)</li>
+                <li><strong>Trend adaptation:</strong> Moving averages track regime shifts</li>
+            </ul>
+
+            <p><strong>Feature Engineering</strong></p>
+            <p>
+                For each day <em>t</em>, we extract five features from history:
+            </p>
+            <pre><code>lag₁  = revenue_{t-1}           # Yesterday's value (momentum)
+lag₇  = revenue_{t-7}           # Same weekday last week (seasonality)
+MA7   = mean(revenue_{t-7:t})   # Recent 7-day trend
+MA14  = mean(revenue_{t-14:t})  # Medium 14-day trend
+bias  = 1.0                     # Constant term</code></pre>
+
+            <p><strong>Model Fitting</strong></p>
+            <p>
+                We concatenate previous period + current period into a single time series of length <em>n</em>, 
+                then fit via ordinary least squares (OLS):
+            </p>
+            <pre><code># Build design matrix X and target vector y
+for t in [1, 2, ..., n]:
+    X[t] = [lag₁, lag₇, MA7, MA14, 1.0]
+    y[t] = actual_revenue[t]
+
+# Solve normal equations: (X'X)w = X'y
+weights = (X'X)⁻¹ X'y
+residual_σ = std(y - Xw)</code></pre>
+
+            <p>
+                This yields five learned weights w = [w₁, w₇, w₇ₐ, w₁₄ₐ, w₀] indicating feature importance. 
+                Model quality metrics:
+            </p>
+            <ul style="margin: 1rem 0 1rem 2rem; line-height: 1.8;">
+                <li><strong>R²:</strong> Fraction of variance explained (R² = 1 - SS_res/SS_tot). Values >0.2 indicate meaningful patterns.</li>
+                <li><strong>σ:</strong> Residual standard deviation. Smaller σ means tighter predictions.</li>
+            </ul>
+
+            <p><strong>Autoregressive Simulation</strong></p>
+            <p>
+                Unlike i.i.d. sampling, each simulated day depends on previous simulated days:
+            </p>
+            <pre><code>sim_history = actual_history.copy()
+
+for day in remaining_days:
+    # Extract features from simulated history
+    features = [lag₁, lag₇, MA7, MA14, 1.0]
+    
+    # Linear prediction + gaussian noise
+    prediction = dot(features, weights)
+    revenue = prediction + N(0, σ)
+    
+    # Apply independent shocks
+    if day in event_days:
+        revenue *= U(1.05, 1.15)
+    if random() < P(downtime):
+        revenue *= (1 - U(0.05, 0.10))
+    
+    # Append to history for next iteration
+    sim_history.append(revenue)</code></pre>
+
+            <p>
+                This stateful approach produces realistic trajectories where strong periods persist 
+                and weekly patterns emerge naturally, unlike the erratic jumps of i.i.d. sampling.
+            </p>
+
+            <h3 style="font-size: 1.25rem; margin: 2rem 0 1rem;">Simple Model (Baseline Comparison)</h3>
+            
+            <p>
+                The simple model treats each day as independent (i.i.d.) with fixed parameters:
+            </p>
+            <pre><code># Fixed volatility weighting
+σ_forecast = 0.60 × σ_current + 0.40 × σ_previous_2nd_half
+
+# Fixed downtrend
+baseline_t = μ - β × t × 0.5
+
+# Independent sampling (no history dependence)
+revenue_t = N(baseline_t, σ_forecast)</code></pre>
+
+            <p>
+                This ignores autocorrelation and produces higher estimated variance (overestimating risk). 
+                While simpler to explain, it's less accurate for revenue streams with momentum or patterns.
+            </p>
+
+            <h3 style="font-size: 1.25rem; margin: 2rem 0 1rem;">Independent Shocks (Both Models)</h3>
+            <p>
+                After computing the baseline prediction, both models apply multiplicative shocks 
+                for events (seasonal promotions) and downtime (system outages):
+            </p>
+            <pre><code>if day ∈ event_days:
+    revenue × U(1 + boost_min%, 1 + boost_max%)
+if random() < P(downtime):
+    revenue × (1 - U(impact_min%, impact_max%))</code></pre>
+            <p>
+                These shocks are modeled as independent because they're driven by external factors 
+                (marketing calendar, infrastructure reliability) rather than revenue dynamics.
+            </p>
+
+            <h3 style="font-size: 1.25rem; margin: 2rem 0 1rem;">Statistical Rigor</h3>
+            
+            <p><strong>Wilson Score Confidence Intervals</strong></p>
+            <p>
+                For success rate P(total ≥ target), we use Wilson score intervals rather than 
+                normal approximation. Given <em>k</em> successes in <em>n</em> simulations:
+            </p>
+            <pre><code>p̂ = k/n
+center = (p̂ + z²/2n) / (1 + z²/n)
+margin = z√(p̂(1-p̂)/n + z²/4n²) / (1 + z²/n)
+CI = [center - margin, center + margin]</code></pre>
+            <p>
+                where z = 1.96 for 95% confidence. This method provides accurate coverage 
+                even when p̂ is near 0 or 1, unlike normal approximation which fails at extremes.
+            </p>
+
+            <p><strong>Risk Measures</strong></p>
+            <p>
+                Percentiles map to planning scenarios:
+            </p>
+            <ul style="margin: 1rem 0 1rem 2rem; line-height: 1.8;">
+                <li><strong>P10:</strong> Pessimistic case (10% chance of doing worse)</li>
+                <li><strong>P50:</strong> Median outcome (most likely scenario)</li>
+                <li><strong>P90:</strong> Optimistic case (10% chance of doing better)</li>
+            </ul>
+            <p>
+                The gap P90 - P10 indicates forecast uncertainty. Narrow gaps suggest high confidence; 
+                wide gaps indicate volatile outcomes.
+            </p>
+
+            <h3 style="font-size: 1.25rem; margin: 2rem 0 1rem;">Model Selection Guidance</h3>
+            
+            <p><strong>Use Autoregressive When:</strong></p>
+            <ul style="margin: 1rem 0 1rem 2rem; line-height: 1.8;">
+                <li>You have 20+ days of history (sufficient data for 5-parameter model)</li>
+                <li>Revenue shows day-to-day persistence or weekly patterns</li>
+                <li>R² > 0.2 after fitting (indicating learnable structure)</li>
+                <li>You need realistic scenario trajectories for planning</li>
+            </ul>
+
+            <p><strong>Use Simple Model When:</strong></p>
+            <ul style="margin: 1rem 0 1rem 2rem; line-height: 1.8;">
+                <li>History is limited (&lt;14 days available)</li>
+                <li>Revenue is truly random (R² &lt; 0.1, no patterns)</li>
+                <li>You need fastest computation (5x faster)</li>
+                <li>Explaining to non-technical audience (simpler conceptually)</li>
+            </ul>
+
+            <p>
+                <strong>Recommended:</strong> Start with autoregressive (default). If R² is low (&lt;0.15) 
+                or results seem unrealistic, compare against simple model. The two approaches bound the 
+                uncertainty: autoregressive captures dependencies (realistic), simple assumes independence 
+                (conservative).
+            </p>
+        </section>
+    </main>
+
+    <script>
+        const CONFIG = {
+            volatility_weights: { current: 0.60, previous: 0.40 },
+            downtrend_dampening: 0.5,
+            storage_key: 'revenue_forecast_config',
+            confidence_level: 1.96
+        };
+
+        const mean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+        const sum = arr => arr.reduce((a, b) => a + b, 0);
+        const std = arr => {
+            const m = mean(arr);
+            return Math.sqrt(arr.reduce((sq, n) => sq + Math.pow(n - m, 2), 0) / arr.length);
+        };
+        const randomNormal = (mu, sigma) => {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random();
+            while(v === 0) v = Math.random();
+            return mu + sigma * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        };
+        const randomUniform = (min, max) => min + Math.random() * (max - min);
+        const parseCSV = (str) => str.split(',').map(x => parseFloat(x.trim())).filter(x => !isNaN(x));
+        const percentile = (arr, p) => {
+            const sorted = [...arr].sort((a, b) => a - b);
+            return sorted[Math.floor(sorted.length * p)];
+        };
+        const wilsonInterval = (successes, total) => {
+            const p = successes / total;
+            const z = CONFIG.confidence_level;
+            const denominator = 1 + z*z/total;
+            const center = (p + z*z/(2*total)) / denominator;
+            const margin = z * Math.sqrt(p*(1-p)/total + z*z/(4*total*total)) / denominator;
+            return [center - margin, center + margin];
+        };
+
+        const linearRegression = (x, y) => {
+            const n = x.length;
+            const sumX = sum(x);
+            const sumY = sum(y);
+            const sumXY = x.reduce((acc, xi, i) => acc + xi * y[i], 0);
+            const sumX2 = x.reduce((acc, xi) => acc + xi * xi, 0);
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            return { slope, intercept };
+        };
+
+        // ============================================
+        // Autoregressive Forecaster
+        // ============================================
+
+        const dot = (a, b) => a.reduce((sum, val, i) => sum + val * b[i], 0);
+
+        const matmul = (A, B) => {
+            const m = A.length;
+            const n = A[0].length;
+            const p = B[0].length;
+            const C = Array(m).fill(0).map(() => Array(p).fill(0));
+            for (let i = 0; i < m; i++) {
+                for (let j = 0; j < p; j++) {
+                    for (let k = 0; k < n; k++) {
+                        C[i][j] += A[i][k] * B[k][j];
+                    }
+                }
+            }
+            return C;
+        };
+
+        const transpose = A => {
+            const m = A.length;
+            const n = A[0].length;
+            const At = Array(n).fill(0).map(() => Array(m).fill(0));
+            for (let i = 0; i < m; i++) {
+                for (let j = 0; j < n; j++) {
+                    At[j][i] = A[i][j];
+                }
+            }
+            return At;
+        };
+
+        const gaussianElimination = (A, b) => {
+            const n = A.length;
+            const Ab = A.map((row, i) => [...row, b[i]]);
+            for (let k = 0; k < n; k++) {
+                let maxRow = k;
+                for (let i = k + 1; i < n; i++) {
+                    if (Math.abs(Ab[i][k]) > Math.abs(Ab[maxRow][k])) {
+                        maxRow = i;
+                    }
+                }
+                [Ab[k], Ab[maxRow]] = [Ab[maxRow], Ab[k]];
+                for (let i = k + 1; i < n; i++) {
+                    const factor = Ab[i][k] / Ab[k][k];
+                    for (let j = k; j < n + 1; j++) {
+                        Ab[i][j] -= factor * Ab[k][j];
+                    }
+                }
+            }
+            const x = Array(n).fill(0);
+            for (let i = n - 1; i >= 0; i--) {
+                x[i] = Ab[i][n];
+                for (let j = i + 1; j < n; j++) {
+                    x[i] -= Ab[i][j] * x[j];
+                }
+                x[i] /= Ab[i][i];
+            }
+            return x;
+        };
+
+        const extractFeatures = (history, t) => {
+            if (t === 0) return null;
+            const lag_1 = t >= 1 ? history[t - 1] : 0;
+            const lag_7 = t >= 7 ? history[t - 7] : lag_1;
+            const window7 = history.slice(Math.max(0, t - 7), t);
+            const window14 = history.slice(Math.max(0, t - 14), t);
+            const ma7 = window7.length > 0 ? mean(window7) : lag_1;
+            const ma14 = window14.length > 0 ? mean(window14) : ma7;
+            return [lag_1, lag_7, ma7, ma14, 1.0];
+        };
+
+        const buildDataset = history => {
+            const X = [], y = [];
+            for (let t = 1; t < history.length; t++) {
+                const features = extractFeatures(history, t);
+                X.push(features);
+                y.push(history[t]);
+            }
+            return [X, y];
+        };
+
+        const fitLinear = (X, y) => {
+            const Xt = transpose(X);
+            const XtX = matmul(Xt, X);
+            const Xty = Xt.map(row => dot(row, y));
+            const w = gaussianElimination(XtX, Xty);
+            const yPred = X.map(features => dot(features, w));
+            const residuals = y.map((yi, i) => yi - yPred[i]);
+            const residualStd = std(residuals);
+            return [w, residualStd];
+        };
+
+        class AutoRegressiveForecaster {
+            constructor(previousPeriod, currentPeriod, target, eventDays, boostRange, downtimeProb, downtimeRange, periodLength) {
+                this.previousPeriod = previousPeriod;
+                this.currentPeriod = currentPeriod;
+                this.target = target;
+                this.eventDays = eventDays;
+                this.boostRange = boostRange;
+                this.downtimeProb = downtimeProb;
+                this.downtimeRange = downtimeRange;
+                this.periodLength = periodLength;
+                this.daysElapsed = currentPeriod.length;
+                this.daysRemaining = periodLength - this.daysElapsed;
+                this.history = [...previousPeriod, ...currentPeriod];
+                
+                // Extract previous period features (for chart compatibility)
+                const split = Math.floor(previousPeriod.length / 2);
+                this.meanPrevious = mean(previousPeriod);
+                this.stdPrevious = std(previousPeriod);
+                this.totalPrevious = sum(previousPeriod);
+                this.firstHalf = previousPeriod.slice(0, split);
+                this.meanFirstHalf = mean(this.firstHalf);
+                this.stdFirstHalf = std(this.firstHalf);
+                this.totalFirstHalf = sum(this.firstHalf);
+                this.secondHalf = previousPeriod.slice(split);
+                this.meanSecondHalf = mean(this.secondHalf);
+                this.stdSecondHalf = std(this.secondHalf);
+                this.totalSecondHalf = sum(this.secondHalf);
+                this.downtrendPerDay = (this.meanFirstHalf - this.meanSecondHalf) / this.secondHalf.length;
+                
+                // Extract current period features (for chart compatibility)
+                this.meanCurrent = mean(currentPeriod);
+                this.stdCurrent = std(currentPeriod);
+                this.banked = sum(currentPeriod);
+                this.needed = target - this.banked;
+                this.requiredAvg = this.needed / this.daysRemaining;
+                this.expectedDailyRate = target / periodLength;
+                
+                // Fit model
+                const [X, y] = buildDataset(this.history);
+                [this.weights, this.sigma] = fitLinear(X, y);
+                
+                // Compute R²
+                const yPred = X.map(features => dot(features, this.weights));
+                const residuals = y.map((yi, i) => yi - yPred[i]);
+                const ssRes = residuals.reduce((sum, r) => sum + r * r, 0);
+                const yMean = mean(y);
+                const ssTot = y.reduce((sum, yi) => sum + Math.pow(yi - yMean, 2), 0);
+                this.rSquared = 1 - ssRes / ssTot;
+            }
+
+            simulate(nSims) {
+                const results = [];
+                const trajectories = [];
+                
+                for (let sim = 0; sim < nSims; sim++) {
+                    const simHistory = [...this.history];
+                    const dailyPath = [];
+                    
+                    for (let dayIdx = 0; dayIdx < this.daysRemaining; dayIdx++) {
+                        const t = simHistory.length;
+                        const features = extractFeatures(simHistory, t);
+                        const prediction = dot(features, this.weights);
+                        
+                        const noise = randomNormal(0, this.sigma);
+                        let revenue = prediction + noise;
+                        
+                        const dayOfPeriod = this.daysElapsed + dayIdx + 1;
+                        
+                        if (this.eventDays.includes(dayOfPeriod)) {
+                            const boost = randomUniform(
+                                1 + this.boostRange[0] / 100,
+                                1 + this.boostRange[1] / 100
+                            );
+                            revenue *= boost;
+                        }
+                        
+                        if (Math.random() < this.downtimeProb) {
+                            const impact = randomUniform(
+                                this.downtimeRange[0] / 100,
+                                this.downtimeRange[1] / 100
+                            );
+                            revenue *= (1 - impact);
+                        }
+                        
+                        revenue = Math.max(0, revenue);
+                        simHistory.push(revenue);
+                        dailyPath.push(revenue);
+                    }
+                    
+                    results.push(this.banked + sum(dailyPath));
+                    trajectories.push(dailyPath);
+                }
+                
+                return { totals: results, trajectories: trajectories };
+            }
+        }
+
+        const validateInputs = (previousData, currentData, target, periodLength) => {
+            if (previousData.length < 7) throw new Error('Need at least 7 days of previous period data');
+            if (currentData.length < 1) throw new Error('Need at least 1 day of current period data');
+            if (previousData.some(x => x < 0) || currentData.some(x => x < 0)) throw new Error('Revenue cannot be negative');
+            if (target <= 0) throw new Error('Target must be positive');
+            if (currentData.length >= periodLength) throw new Error('Period already complete');
+            if (sum(currentData) >= target) throw new Error(`Target already exceeded`);
+        };
+
+        class RevenueForecaster {
+            constructor(previousPeriod, currentPeriod, target, eventDays, boostRange, downtimeProb, downtimeRange, periodLength) {
+                this.previousPeriod = previousPeriod;
+                this.currentPeriod = currentPeriod;
+                this.target = target;
+                this.eventDays = eventDays;
+                this.boostRange = boostRange;
+                this.downtimeProb = downtimeProb;
+                this.downtimeRange = downtimeRange;
+                this.periodLength = periodLength;
+                this.daysElapsed = currentPeriod.length;
+                this.daysRemaining = periodLength - this.daysElapsed;
+                this.extractPreviousPeriodFeatures();
+                this.extractCurrentPeriodFeatures();
+                this.computeForecastParams();
+            }
+
+            extractPreviousPeriodFeatures() {
+                const data = this.previousPeriod;
+                const split = Math.floor(data.length / 2);
+                this.meanPrevious = mean(data);
+                this.stdPrevious = std(data);
+                this.totalPrevious = sum(data);
+                this.firstHalf = data.slice(0, split);
+                this.meanFirstHalf = mean(this.firstHalf);
+                this.stdFirstHalf = std(this.firstHalf);
+                this.totalFirstHalf = sum(this.firstHalf);
+                this.secondHalf = data.slice(split);
+                this.meanSecondHalf = mean(this.secondHalf);
+                this.stdSecondHalf = std(this.secondHalf);
+                this.totalSecondHalf = sum(this.secondHalf);
+                this.downtrendPerDay = (this.meanFirstHalf - this.meanSecondHalf) / this.secondHalf.length;
+            }
+
+            extractCurrentPeriodFeatures() {
+                const data = this.currentPeriod;
+                this.meanCurrent = mean(data);
+                this.stdCurrent = std(data);
+                this.banked = sum(data);
+                this.needed = this.target - this.banked;
+                this.requiredAvg = this.needed / this.daysRemaining;
+                this.expectedDailyRate = this.target / this.periodLength;
+            }
+
+            computeForecastParams() {
+                const wCurr = CONFIG.volatility_weights.current;
+                const wPrev = CONFIG.volatility_weights.previous;
+                this.forecastStd = wCurr * this.stdCurrent + wPrev * this.stdSecondHalf;
+                this.forecastBaseline = this.meanCurrent;
+            }
+
+            simulate(nSims) {
+                const results = [];
+                const trajectories = [];
+                for (let sim = 0; sim < nSims; sim++) {
+                    let simRevenueTotal = 0;
+                    const dailyPath = [];
+                    for (let i = 0; i < this.daysRemaining; i++) {
+                        const dayOfPeriod = this.daysElapsed + i + 1;
+                        const daysFromNow = i + 1;
+                        const declineFactor = -this.downtrendPerDay * daysFromNow * CONFIG.downtrend_dampening;
+                        let base = this.forecastBaseline + declineFactor;
+                        let dailyRevenue = randomNormal(base, this.forecastStd);
+                        if (this.eventDays.includes(dayOfPeriod)) {
+                            dailyRevenue *= randomUniform(1 + this.boostRange[0]/100, 1 + this.boostRange[1]/100);
+                        }
+                        if (Math.random() < this.downtimeProb) {
+                            dailyRevenue *= (1 - randomUniform(this.downtimeRange[0]/100, this.downtimeRange[1]/100));
+                        }
+                        dailyRevenue = Math.max(0, dailyRevenue);
+                        simRevenueTotal += dailyRevenue;
+                        dailyPath.push(dailyRevenue);
+                    }
+                    results.push(this.banked + simRevenueTotal);
+                    trajectories.push(dailyPath);
+                }
+                return { totals: results, trajectories: trajectories };
+            }
+        }
+
+        const exportToCSV = (totals, forecaster, analysis) => {
+            const rows = [
+                ['Revenue Forecast Simulation Results'],
+                [`Date: ${new Date().toISOString()}`],
+                [`Target: ${forecaster.target}`],
+                [`Success Rate: ${(analysis.successRate * 100).toFixed(2)}%`],
+                [`Expected Total: ${analysis.expectedTotal.toFixed(2)}`],
+                [],
+                ['Simulation', 'Total Revenue', 'Met Target', 'Gap to Target'],
+                ...totals.map((total, i) => [i + 1, total.toFixed(2), total >= forecaster.target ? 'Yes' : 'No', (total - forecaster.target).toFixed(2)])
+            ];
+            const csv = rows.map(row => row.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `revenue_forecast_${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        const saveConfiguration = () => {
+            const config = {
+                previousData: document.getElementById('previousData').value,
+                currentData: document.getElementById('currentData').value,
+                periodLength: document.getElementById('periodLength').value,
+                target: document.getElementById('target').value,
+                eventDays: document.getElementById('eventDays').value,
+                boostMin: document.getElementById('boostMin').value,
+                boostMax: document.getElementById('boostMax').value,
+                downtimeEvents: document.getElementById('downtimeEvents').value,
+                downtimeMin: document.getElementById('downtimeMin').value,
+                downtimeMax: document.getElementById('downtimeMax').value,
+                numSims: document.getElementById('numSims').value,
+                modelType: document.getElementById('modelType').value
+            };
+            localStorage.setItem(CONFIG.storage_key, JSON.stringify(config));
+            alert('Configuration saved!');
+        };
+
+        const loadConfiguration = () => {
+            const saved = localStorage.getItem(CONFIG.storage_key);
+            if (!saved) { alert('No saved configuration found'); return; }
+            const config = JSON.parse(saved);
+            Object.keys(config).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) element.value = config[key];
+            });
+            alert('Configuration loaded!');
+        };
+
+        document.getElementById('saveConfig').addEventListener('click', saveConfiguration);
+        document.getElementById('loadConfig').addEventListener('click', loadConfiguration);
+
+        ['previousData', 'currentData', 'periodLength', 'target', 'eventDays', 'boostMin', 'boostMax', 'downtimeEvents', 'downtimeMin', 'downtimeMax', 'numSims', 'modelType'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', () => {
+                document.getElementById('needsUpdate').classList.remove('hidden');
+            });
+        });
+
+        document.getElementById('forecastForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('needsUpdate').classList.add('hidden');
+            
+            const runButton = document.getElementById('runButton');
+            const exportButton = document.getElementById('exportButton');
+            runButton.disabled = true;
+            runButton.textContent = 'Running...';
+
+            setTimeout(() => {
+                const startTime = performance.now();
+                try {
+                    const previousData = parseCSV(document.getElementById('previousData').value);
+                    const currentData = parseCSV(document.getElementById('currentData').value);
+                    const periodLength = parseInt(document.getElementById('periodLength').value);
+                    const target = parseFloat(document.getElementById('target').value);
+                    const eventDays = parseCSV(document.getElementById('eventDays').value);
+                    const boostMin = parseFloat(document.getElementById('boostMin').value);
+                    const boostMax = parseFloat(document.getElementById('boostMax').value);
+                    const downtimeEvents = parseFloat(document.getElementById('downtimeEvents').value);
+                    const downtimeMin = parseFloat(document.getElementById('downtimeMin').value);
+                    const downtimeMax = parseFloat(document.getElementById('downtimeMax').value);
+                    const numSims = parseInt(document.getElementById('numSims').value);
+                    const modelType = document.getElementById('modelType').value;
+                    
+                    validateInputs(previousData, currentData, target, periodLength);
+                    
+                    // Create forecaster based on selected model
+                    let forecaster;
+                    if (modelType === 'autoregressive') {
+                        forecaster = new AutoRegressiveForecaster(
+                            previousData, currentData, target, eventDays,
+                            [boostMin, boostMax], downtimeEvents / periodLength, [downtimeMin, downtimeMax], periodLength
+                        );
+                    } else {
+                        forecaster = new RevenueForecaster(
+                            previousData, currentData, target, eventDays,
+                            [boostMin, boostMax], downtimeEvents / periodLength, [downtimeMin, downtimeMax], periodLength
+                        );
+                    }
+                    
+                    const { totals, trajectories } = forecaster.simulate(numSims);
+                    
+                    const successCount = totals.filter(x => x >= target).length;
+                    const successRate = successCount / numSims;
+                    const [ciLow, ciHigh] = wilsonInterval(successCount, numSims);
+                    const expectedTotal = mean(totals);
+                    const p10 = percentile(totals, 0.10);
+                    const p50 = percentile(totals, 0.50);
+                    const p90 = percentile(totals, 0.90);
+                    const analysis = { successRate, ciLow, ciHigh, expectedTotal, p10, p50, p90 };
+                    
+                    ['chart1', 'chart2', 'chart3', 'chart4', 'chart5'].forEach(id => {
+                        const div = document.getElementById(id);
+                        if (div?.data) Plotly.purge(div);
+                    });
+                    
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('resultsSection').classList.remove('hidden');
+                    
+                    document.getElementById('lastRunTime').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                    const elapsed = performance.now() - startTime;
+                    document.getElementById('simSpeed').textContent = `${numSims.toLocaleString()} simulations in ${elapsed.toFixed(0)}ms (~${(numSims/elapsed*1000).toFixed(0).toLocaleString()} sims/sec)`;
+                    
+                    // Model diagnostics
+                    const modelInfo = modelType === 'autoregressive' 
+                        ? `Autoregressive Model (R² = ${forecaster.rSquared.toFixed(3)}, σ = ${forecaster.sigma.toFixed(2)})`
+                        : `Simple Model (i.i.d. sampling)`;
+                    document.getElementById('simSpeed').innerHTML += `<br><span style="font-family: Inter, sans-serif; color: var(--accent);">${modelInfo}</span>`;
+                    
+                    const gapColor = forecaster.meanCurrent - forecaster.requiredAvg >= 0 ? 'var(--success)' : 'var(--warning)';
+                    
+                    // Add model-specific stats if autoregressive
+                    let modelStatsHtml = '';
+                    if (modelType === 'autoregressive') {
+                        modelStatsHtml = `
+                        <div class="stat-card" style="grid-column: 1 / -1;">
+                            <div class="stat-label" style="margin-bottom: 0.5rem;">Autoregressive Weights</div>
+                            <div style="font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--text-secondary); display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem;">
+                                <div>lag₁ = ${forecaster.weights[0].toFixed(3)}</div>
+                                <div>lag₇ = ${forecaster.weights[1].toFixed(3)}</div>
+                                <div>MA7 = ${forecaster.weights[2].toFixed(3)}</div>
+                                <div>MA14 = ${forecaster.weights[3].toFixed(3)}</div>
+                                <div>bias = ${forecaster.weights[4].toFixed(2)}</div>
+                            </div>
+                        </div>
+                        `;
+                    }
+                    
+                    document.getElementById('statsGrid').innerHTML = `
+                        ${modelStatsHtml}
+                        <div class="stat-card">
+                            <div class="stat-value">${(successRate * 100).toFixed(1)}%</div>
+                            <div class="stat-label">Success Rate</div>
+                            <div class="stat-sublabel">[${(ciLow*100).toFixed(1)}%, ${(ciHigh*100).toFixed(1)}%]</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${expectedTotal.toFixed(0)}</div>
+                            <div class="stat-label">Expected Total</div>
+                            <div class="stat-sublabel">P50: ${p50.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${forecaster.meanCurrent.toFixed(1)}</div>
+                            <div class="stat-label">Current Avg (${currentData.length}d)</div>
+                            <div class="stat-sublabel">Σ ${forecaster.banked.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: ${gapColor}">${(forecaster.meanCurrent - forecaster.requiredAvg).toFixed(1)}</div>
+                            <div class="stat-label">Gap vs Required</div>
+                            <div class="stat-sublabel">${forecaster.requiredAvg.toFixed(1)}/day needed</div>
+                        </div>
+                    `;
+                    
+                    const plotConfig = {
+                        displayModeBar: false,
+                        responsive: true
+                    };
+                    const plotLayout = {
+                        font: { family: 'Inter, -apple-system, sans-serif', size: 11, color: '#666' },
+                        plot_bgcolor: '#fff',
+                        paper_bgcolor: '#fff',
+                        margin: { l: 60, r: 40, t: 40, b: 60 }
+                    };
+
+                    // Chart 1: Previous Period
+                    const prevDays = Array.from({length: previousData.length}, (_, i) => i + 1);
+                    const split = Math.floor(previousData.length / 2);
+                    
+                    // Calculate trend line
+                    const regression = linearRegression(prevDays, previousData);
+                    const trendLine = prevDays.map(x => regression.intercept + regression.slope * x);
+                    const trendColor = regression.slope < 0 ? '#dc2626' : '#0066cc';
+                    const trendLabel = regression.slope < 0 ? 'Downtrend' : 'Uptrend';
+                    
+                    document.getElementById('chart1Title').textContent = 
+                        `Previous Period: Pattern Analysis (Total: ${forecaster.totalPrevious.toFixed(0)})`;
+                    
+                    Plotly.newPlot('chart1', [
+                        { x: prevDays, y: previousData, mode: 'lines+markers', name: 'Daily', line: {color: '#1a1a1a', width: 2}, marker: {size: 5} },
+                        { x: prevDays, y: trendLine, mode: 'lines', name: `${trendLabel} (β=${regression.slope.toFixed(3)})`, line: {color: trendColor, width: 2, dash: 'dash'} },
+                        { x: [1, split], y: [forecaster.meanFirstHalf, forecaster.meanFirstHalf], mode: 'lines', name: `1st Half (μ=${forecaster.meanFirstHalf.toFixed(1)})`, line: {color: '#666', width: 2, dash: 'dot'} },
+                        { x: [split + 1, previousData.length], y: [forecaster.meanSecondHalf, forecaster.meanSecondHalf], mode: 'lines', name: `2nd Half (μ=${forecaster.meanSecondHalf.toFixed(1)})`, line: {color: '#999', width: 2, dash: 'dot'} }
+                    ], { ...plotLayout, xaxis: {title: 'Day'}, yaxis: {title: 'Revenue'}, showlegend: true }, plotConfig);
+
+                    // Chart 2: Comparison
+                    const currDays = Array.from({length: currentData.length}, (_, i) => i + 1);
+                    const previousAtCurrentDay = sum(previousData.slice(0, currentData.length));
+                    
+                    // Calculate current period trend line
+                    const currRegression = linearRegression(currDays, currentData);
+                    const currTrendLine = currDays.map(x => currRegression.intercept + currRegression.slope * x);
+                    const currTrendColor = currRegression.slope < 0 ? '#dc2626' : '#0066cc';
+                    const currTrendLabel = currRegression.slope < 0 ? 'Current Downtrend' : 'Current Uptrend';
+                    
+                    document.getElementById('chart2Title').textContent = 
+                        `Previous (Σ=${previousAtCurrentDay.toFixed(0)}) vs Current (Σ=${forecaster.banked.toFixed(0)}, Remaining: ${forecaster.needed.toFixed(0)})`;
+                    
+                    Plotly.newPlot('chart2', [
+                        { x: prevDays, y: previousData, mode: 'lines', name: 'Previous', line: {color: '#ccc', width: 1.5} },
+                        { x: currDays, y: currentData, mode: 'lines+markers', name: 'Current', line: {color: '#1a1a1a', width: 2.5}, marker: {size: 6} },
+                        { x: currDays, y: currTrendLine, mode: 'lines', name: `${currTrendLabel} (β=${currRegression.slope.toFixed(3)})`, line: {color: currTrendColor, width: 2, dash: 'dash'} },
+                        { x: [1, forecaster.daysElapsed], y: [forecaster.meanCurrent, forecaster.meanCurrent], mode: 'lines', name: `Current μ=${forecaster.meanCurrent.toFixed(1)}`, line: {color: '#666', width: 2, dash: 'dot'} },
+                        { x: [1, periodLength], y: [forecaster.expectedDailyRate, forecaster.expectedDailyRate], mode: 'lines', name: `Target Rate=${forecaster.expectedDailyRate.toFixed(1)}`, line: {color: '#f59e0b', width: 2, dash: 'dot'} }
+                    ], { ...plotLayout, xaxis: {title: 'Day'}, yaxis: {title: 'Revenue'} }, plotConfig);
+
+                    // Chart 3: Distribution
+                    document.getElementById('chart3Title').textContent = 
+                        `Monte Carlo Distribution (${numSims.toLocaleString()} sims) — P(success) = ${(successRate*100).toFixed(1)}% [${(ciLow*100).toFixed(1)}%, ${(ciHigh*100).toFixed(1)}%]`;
+                    
+                    const binSize = (Math.max(...totals) - Math.min(...totals)) / 50;
+                    Plotly.newPlot('chart3', [
+                        { x: totals.filter(x => x < target), type: 'histogram', name: 'Below', marker: {color: 'rgba(150,150,150,0.7)'}, xbins: {size: binSize} },
+                        { x: totals.filter(x => x >= target), type: 'histogram', name: 'Above', marker: {color: 'rgba(26,26,26,0.7)'}, xbins: {size: binSize} }
+                    ], {
+                        ...plotLayout,
+                        xaxis: {title: 'Total Revenue'},
+                        yaxis: {title: 'Frequency'},
+                        barmode: 'stack',
+                        shapes: [
+                            { type: 'line', x0: target, x1: target, y0: 0, y1: 1, yref: 'paper', line: {color: '#1a1a1a', width: 2, dash: 'dash'} },
+                            { type: 'line', x0: expectedTotal, x1: expectedTotal, y0: 0, y1: 1, yref: 'paper', line: {color: '#0066cc', width: 2} }
+                        ],
+                        annotations: [
+                            { x: target, y: 1, yref: 'paper', text: `Target`, showarrow: true, arrowhead: 2, ax: 40, ay: -30 },
+                            { x: expectedTotal, y: 0.8, yref: 'paper', text: `Expected`, showarrow: true, arrowhead: 2, ax: -40, ay: -30 }
+                        ]
+                    }, plotConfig);
+
+                    // Chart 4: Daily Forecast
+                    const actualDaysX = Array.from({length: currentData.length}, (_, i) => i + 1);
+                    const forecastDaysX = [forecaster.daysElapsed];
+                    for (let i = 1; i <= forecaster.daysRemaining; i++) forecastDaysX.push(forecaster.daysElapsed + i);
+                    
+                    const p10_path = [currentData[currentData.length - 1]];
+                    const p50_path = [currentData[currentData.length - 1]];
+                    const p90_path = [currentData[currentData.length - 1]];
+                    
+                    for (let i = 0; i < forecaster.daysRemaining; i++) {
+                        const dailyVals = trajectories.map(sim => sim[i]).sort((a,b) => a-b);
+                        p10_path.push(dailyVals[Math.floor(numSims * 0.10)]);
+                        p50_path.push(dailyVals[Math.floor(numSims * 0.50)]);
+                        p90_path.push(dailyVals[Math.floor(numSims * 0.90)]);
+                    }
+                    
+                    Plotly.newPlot('chart4', [
+                        { x: actualDaysX, y: currentData, mode: 'lines+markers', name: 'Actual', line: {color: '#1a1a1a', width: 2.5}, marker: {size: 6} },
+                        {
+                            x: forecastDaysX.slice(1).concat([...forecastDaysX.slice(1)].reverse()),
+                            y: p10_path.slice(1).concat([...p90_path.slice(1)].reverse()),
+                            fill: 'toself',
+                            fillcolor: 'rgba(200,200,200,0.3)',
+                            line: {width: 0},
+                            name: 'P10-P90',
+                            showlegend: true
+                        },
+                        { x: forecastDaysX, y: p50_path, mode: 'lines', name: 'P50', line: {color: '#666', width: 2, dash: 'dash'} }
+                    ], { ...plotLayout, xaxis: {title: 'Day'}, yaxis: {title: 'Daily Revenue'} }, plotConfig);
+
+                    // Chart 5: Cumulative
+                    const cumPrev = previousData.reduce((acc, v, i) => [...acc, (acc[i-1]||0) + v], []);
+                    const cumCurr = currentData.reduce((acc, v, i) => [...acc, (acc[i-1]||0) + v], []);
+                    const cumExp = Array.from({length: periodLength}, (_, i) => (i + 1) * forecaster.expectedDailyRate);
+                    const gap = cumCurr[cumCurr.length - 1] - cumExp[currentData.length - 1];
+                    const gapPct = (gap / cumExp[currentData.length - 1] * 100).toFixed(1);
+                    
+                    document.getElementById('chart5Title').textContent = 
+                        `Cumulative Revenue: On-Pace Analysis (Gap: ${gap.toFixed(0)} | ${gapPct}%)`;
+                    
+                    Plotly.newPlot('chart5', [
+                        { x: prevDays, y: cumPrev, mode: 'lines', name: 'Previous', line: {color: '#ccc', width: 2} },
+                        { x: currDays, y: cumCurr, mode: 'lines+markers', name: 'Current', line: {color: '#1a1a1a', width: 3}, marker: {size: 6} },
+                        { x: Array.from({length: periodLength}, (_, i) => i + 1), y: cumExp, mode: 'lines', name: 'Expected', line: {color: '#0066cc', width: 2, dash: 'dash'} }
+                    ], {
+                        ...plotLayout,
+                        xaxis: {title: 'Day'},
+                        yaxis: {title: 'Cumulative Revenue'},
+                        shapes: [{ type: 'line', x0: currentData.length, x1: currentData.length, y0: 0, y1: Math.max(...cumExp), line: {color: '#999', width: 1, dash: 'dot'} }],
+                        annotations: [{ x: currentData.length, y: cumCurr[cumCurr.length - 1], text: `Gap: ${gap.toFixed(0)}`, showarrow: true, ax: 40, ay: -40 }]
+                    }, plotConfig);
+                    
+                    exportButton.disabled = false;
+                    exportButton.onclick = () => exportToCSV(totals, forecaster, analysis);
+                    
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                } finally {
+                    runButton.disabled = false;
+                    runButton.textContent = 'Run Simulation';
+                }
+            }, 10);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('forecastForm').dispatchEvent(new Event('submit'));
+            }
+        });
+
+        function initializeApp() {
+            if (typeof Plotly === 'undefined') {
+                setTimeout(initializeApp, 100);
+                return;
+            }
+            document.getElementById('loadingState').style.display = 'none';
+            const saved = localStorage.getItem(CONFIG.storage_key);
+            if (saved) loadConfiguration();
+            document.getElementById('forecastForm').dispatchEvent(new Event('submit'));
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
+</body>
+</html>
