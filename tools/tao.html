@@ -6,9 +6,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✒️</text></svg>">
   <style>
+    /* IMPORT: Inter (Distill-style) and Roboto Mono (Berkeley-style fallback) 
+       Includes support for Cyrillic (Russian) and Vietnamese */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap');
+
     :root {
-      --font-content: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
-      --font-ui: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      /* OPTION 1: Distill Pub / Modern Research Style (Active)
+         'Inter' is widely used in modern research/tech blogs (like Distill) 
+         and has perfect support for Vietnamese and Russian. */
+      --font-content: 'Inter', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      
+      /* OPTION 2: Berkeley Mono / Hacker Style (Uncomment to use)
+         Use this if you prefer the technical terminal feel. 
+         Includes fallbacks to Roboto Mono/Fira Code if Berkeley isn't installed. */
+      /* --font-content: 'Berkeley Mono', 'Roboto Mono', 'Fira Code', 'Consolas', monospace; */
+
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       
       /* Light Mode */
       --bg-color: #fffff8;
@@ -310,7 +323,7 @@
 <body>
   <textarea id="editor" placeholder="Just write… (Tab=Quote, Ctrl/Cmd+U=Underline)" spellcheck="true" autofocus></textarea>
   <div id="stats-bar">0 words · 0 characters · 1 line</div>
-  
+   
   <div class="top-buttons">
     <button id="agent-toggle" class="icon-btn" aria-label="Toggle agent"></button>
     <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme"></button>
@@ -398,7 +411,7 @@
         'startupideas.html', 'before.html', 'wealth.html', 'disagree.html',
         'say.html', 'foundervisa.html', 'ambitious.html', 'popular.html'
       ];
-      
+       
       // Coach state management
       const getCoachState = () => {
         const state = localStorage.getItem('inkflowCoach');
@@ -416,7 +429,7 @@
       const updateStreak = () => {
         const state = getCoachState();
         const today = new Date().toDateString();
-        
+         
         if (state.lastPracticeDate === today) {
           // Already practiced today
         } else if (state.lastPracticeDate === new Date(Date.now() - 86400000).toDateString()) {
@@ -429,7 +442,7 @@
           // First time
           state.streak = 1;
         }
-        
+         
         state.lastPracticeDate = today;
         saveCoachState(state);
         streakBadge.textContent = `Day ${state.streak}`;
@@ -444,12 +457,12 @@
       };
 
       const save = () => localStorage.setItem('inkflowContent', editor.value);
-      
+       
       const load = () => {
         const saved = localStorage.getItem('inkflowContent');
         if (saved) editor.value = saved;
         updateStats();
-        
+         
         // Load streak
         const state = getCoachState();
         streakBadge.textContent = `Day ${state.streak}`;
@@ -581,10 +594,10 @@ ${essayText.slice(0, 3000)}`;
           const cursorPos = editor.selectionStart;
           const before = editor.value.substring(0, cursorPos);
           const after = editor.value.substring(cursorPos);
-          
+           
           editor.value = before + '\n\n' + patterns + '\n\n' + after;
           editor.dispatchEvent(new Event('input'));
-          
+           
           // Position cursor after inserted text
           const newPos = cursorPos + patterns.length + 4;
           editor.focus();
@@ -653,26 +666,26 @@ Be direct and constructive. This is for a non-native speaker practicing English.
         state.history.push(session);
         saveCoachState(state);
         updateStreak();
-        
+         
         alert(`Practice saved! Streak: ${state.streak} days`);
       };
 
       const handleTab = (e) => {
         if (e.key !== 'Tab') return;
-        
+         
         const { selectionStart: start, selectionEnd: end, value } = editor;
         if (start === end) return;
-        
+         
         e.preventDefault();
         const lineStart = value.lastIndexOf('\n', start - 1) + 1;
         const lineEnd = value.indexOf('\n', end) === -1 ? value.length : value.indexOf('\n', end);
         const lines = value.substring(lineStart, lineEnd).split('\n');
-        
+         
         const newLines = lines.map(line => {
           if (e.shiftKey) return line.replace(/^>\s?/, '');
           return line.trim() ? '> ' + line : line;
         });
-        
+         
         const newText = newLines.join('\n');
         editor.value = value.substring(0, lineStart) + newText + value.substring(lineEnd);
         editor.selectionStart = lineStart;
@@ -682,15 +695,15 @@ Be direct and constructive. This is for a non-native speaker practicing English.
 
       const handleUnderline = (e) => {
         if (e.key !== 'u' || (!e.ctrlKey && !e.metaKey)) return;
-        
+         
         const { selectionStart: start, selectionEnd: end, value } = editor;
         if (start === end) return;
-        
+         
         e.preventDefault();
         const selected = value.substring(start, end);
         const isUnderlined = value.substring(start - 2, start) === '++' && 
-                            value.substring(end, end + 2) === '++';
-        
+                             value.substring(end, end + 2) === '++';
+         
         if (isUnderlined) {
           editor.value = value.substring(0, start - 2) + selected + value.substring(end + 2);
           editor.selectionStart = start - 2;
@@ -713,7 +726,7 @@ Be direct and constructive. This is for a non-native speaker practicing English.
       editor.addEventListener('input', () => { save(); updateStats(); });
       editor.addEventListener('keydown', handleTab);
       editor.addEventListener('keydown', handleUnderline);
-      
+       
       themeToggle.addEventListener('click', () => 
         setTheme(!document.body.classList.contains('dark-mode'))
       );
@@ -743,7 +756,7 @@ Be direct and constructive. This is for a non-native speaker practicing English.
           alert('No result to copy.');
           return;
         }
-        
+         
         navigator.clipboard.writeText(lastAgentResponse).then(() => {
           const original = copyResult.textContent;
           copyResult.textContent = 'Copied!';
@@ -793,7 +806,7 @@ Be direct and constructive. This is for a non-native speaker practicing English.
       const savedTheme = localStorage.getItem('inkflowTheme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setTheme(savedTheme === 'dark' || (!savedTheme && prefersDark));
-      
+       
       load();
     })();
   </script>
