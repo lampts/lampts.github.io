@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NanoFluency: Native Echo</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎤</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #0f0f0f;
+            --bg-input: transparent;
+            --border-color: #2d2d2d;
+            --text-primary: #e5e5e5;
+            --text-secondary: #666;
+            --text-tertiary: #9ca3af;
+            --accent-green: #4ade80;
+            --input-bg: #1a1a1a;
+            --title-highlight: #ffffff;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-input: transparent;
+            --border-color: #e5e7eb;
+            --text-primary: #1f2937;
+            --text-secondary: #9ca3af;
+            --text-tertiary: #6b7280;
+            --accent-green: #10b981;
+            --input-bg: #f3f4f6;
+            --title-highlight: #059669;
+        }
+
+        body { 
+            font-family: 'Space Mono', monospace; 
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .title-highlight {
+            color: var(--title-highlight);
+        }
+
+        .word-container {
+            display: inline-block;
+            margin-right: 0.35em;
+            margin-bottom: 0.5em;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.3;
+            transform-origin: center bottom;
+            position: relative;
+        }
+
+        .word-container.active {
+            opacity: 1;
+            color: var(--accent-green);
+            transform: scale(1.15) translateY(-4px);
+            text-shadow: 0 0 15px rgba(74, 222, 128, 0.4);
+            font-weight: 700;
+        }
+
+        .word-container.past {
+            opacity: 0.5;
+            color: var(--text-secondary);
+            transform: scale(1);
+        }
+
+        .duration-bar {
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            height: 2px;
+            background: var(--accent-green);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .word-container.active .duration-bar {
+            opacity: 0.6;
+        }
+
+        #lyricsContainer {
+            scroll-behavior: smooth;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            padding-top: 30vh; 
+            padding-bottom: 30vh;
+        }
+
+        .waveform {
+            display: flex;
+            gap: 4px;
+            height: 20px;
+            align-items: center;
+        }
+        .bar {
+            width: 4px;
+            background: var(--accent-green);
+            animation: wave 1s infinite ease-in-out;
+        }
+        .bar:nth-child(2) { animation-delay: 0.1s; }
+        .bar:nth-child(3) { animation-delay: 0.2s; }
+        .bar:nth-child(4) { animation-delay: 0.3s; }
+        
+        @keyframes wave {
+            0%, 100% { height: 4px; }
+            50% { height: 20px; }
+        }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .theme-toggle {
+            cursor: pointer;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--accent-green);
+        }
+
+        .header-border {
+            border-color: var(--border-color);
+            background-color: var(--bg-secondary);
+        }
+
+        .input-field {
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        .input-field:focus {
+            border-color: var(--accent-green);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-green);
+        }
+
+        [data-theme="light"] .btn-primary {
+            background-color: #10b981;
+        }
+
+        [data-theme="light"] .btn-primary:hover {
+            background-color: #059669;
+        }
+
+        .recording-pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .comparison-row {
+            transition: background-color 0.2s;
+        }
+
+        .comparison-row:hover {
+            background-color: var(--input-bg);
+        }
+
+        #comparisonTable tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        [data-theme="light"] #comparisonTable tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        #comparisonTable tr:hover {
+            background: var(--input-bg) !important;
+        }
+
+        .status-perfect { color: #4ade80; }
+        .status-good { color: #4ade80; }
+        .status-slow { color: #fbbf24; }
+        .status-fast { color: #fbbf24; }
+        .status-rushed { color: #ef4444; }
+        .status-dragged { color: #ef4444; }
+        .status-missing { color: #6b7280; }
+
+        .text-mismatch-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        [data-theme="dark"] .text-mismatch-warning {
+            background: #451a03;
+            border-color: #f59e0b;
+            color: #fbbf24;
+        }
+
+        #inputLayer h2 {
+            letter-spacing: 0.05em;
+        }
+
+        #inputLayer ol li,
+        #inputLayer ul li {
+            margin-top: 0.5rem;
+        }
+
+        #inputLayer .space-y-4 > * + * {
+            margin-top: 1rem;
+        }
+
+        #inputLayer .space-y-2 > * + * {
+            margin-top: 0.5rem;
+        }
+
+        #inputLayer .space-y-1 > * + * {
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex flex-col">
+
+    <header class="flex justify-between items-center p-4 border-b header-border z-20">
+        <div class="flex items-center gap-3">
+            <div class="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_10px_#4ade80]"></div>
+            <h1 class="text-sm font-bold tracking-widest text-gray-400">NANO<span class="title-highlight">FLUENCY</span></h1>
+            <span id="difficultyBadge" class="text-xs text-gray-500 ml-2 hidden"></span>
+        </div>
+        
+        <div class="flex gap-3 items-center">
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+                <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 relative flex flex-col">
+        
+        <div id="inputLayer" class="absolute inset-0 z-10 transition-opacity duration-500 flex items-center justify-center" style="background-color: var(--bg-primary);">
+            <div class="w-full max-w-6xl px-8">
+                <div class="mb-8">
+                    <h2 class="text-5xl font-bold mb-3">NATIVE ECHO</h2>
+                    <p class="text-sm" style="color: var(--text-secondary);">
+                        Practice English pronunciation by matching native speaker timing and rhythm patterns
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-12 gap-6">
+                    <div class="col-span-8">
+                        <div class="mb-4">
+                            <label class="text-xs font-bold mb-2 block" style="color: var(--text-secondary);">INPUT TEXT</label>
+                            <div class="relative">
+                                <textarea id="textInput" class="w-full h-64 input-field text-base p-4 border rounded focus:outline-none resize-none font-light leading-relaxed" 
+                                placeholder="Enter text to practice pronunciation...&#10;&#10;Example: To speak like a native, you must feel the rhythm. English is a stress-timed language where stressed syllables occur at regular intervals."></textarea>
+                                <div class="absolute bottom-4 right-4 text-xs font-mono" id="charCounter">
+                                    <span id="charCount">0</span><span style="color: var(--text-secondary);">/500</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="border rounded p-4" style="border-color: var(--border-color);">
+                                <div class="text-xs mb-2" style="color: var(--text-secondary);">VOICE</div>
+                                <select id="voiceSelect" class="input-field text-sm rounded px-2 py-1 w-full focus:outline-none border" style="border-color: var(--border-color);">
+                                    <option value="alloy">Alloy</option>
+                                    <option value="echo">Echo</option>
+                                    <option value="shimmer">Shimmer</option>
+                                    <option value="ash">Ash</option>
+                                </select>
+                            </div>
+                            <div class="border rounded p-4" style="border-color: var(--border-color);">
+                                <div class="text-xs mb-2" style="color: var(--text-secondary);">API KEY</div>
+                                <input type="password" id="apiKey" placeholder="sk-..." class="input-field text-sm border rounded px-2 py-1 w-full outline-none" style="border-color: var(--border-color);" autocomplete="off">
+                            </div>
+                            <div class="border rounded p-4 flex items-end" style="border-color: var(--border-color);">
+                                <button id="generateBtn" class="btn-primary hover:bg-green-500 text-white text-sm font-bold px-6 py-2 rounded transition-colors w-full">
+                                    GENERATE AUDIO
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-span-4">
+                        <div class="border rounded p-6" style="border-color: var(--border-color); background-color: var(--bg-secondary);">
+                            <h3 class="text-sm font-bold mb-4">ABOUT THIS TOOL</h3>
+                            <div class="space-y-4 text-sm leading-relaxed" style="color: var(--text-tertiary);">
+                                <p>
+                                    Native Echo uses AI to generate native-quality speech, then provides word-by-word timing analysis to help you match natural rhythm patterns.
+                                </p>
+                                <div>
+                                    <div class="font-bold mb-2" style="color: var(--text-primary);">HOW IT WORKS:</div>
+                                    <ol class="space-y-2 pl-5 list-decimal">
+                                        <li>Enter text (max 500 characters)</li>
+                                        <li>Generate native pronunciation</li>
+                                        <li>Practice with visual timing cues</li>
+                                        <li>Record your attempt</li>
+                                        <li>Compare timing metrics</li>
+                                    </ol>
+                                </div>
+                                <div>
+                                    <div class="font-bold mb-2" style="color: var(--text-primary);">WHAT YOU'LL LEARN:</div>
+                                    <ul class="space-y-1 pl-5 list-disc">
+                                        <li>Word duration patterns</li>
+                                        <li>Natural speech rhythm</li>
+                                        <li>Stress-timing alignment</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="playerLayer" class="absolute inset-0 z-0 hidden flex items-center justify-center">
+            <div id="lyricsContainer" class="w-full max-w-5xl text-center h-[80vh] overflow-y-auto px-4 no-scrollbar"></div>
+        </div>
+
+        <div id="practiceLayer" class="absolute inset-0 z-0 hidden flex items-center justify-center" style="background-color: var(--bg-primary);">
+            <div class="w-full max-w-5xl p-8">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-bold mb-2">PRACTICE MODE</h2>
+                    <p class="text-sm" style="color: var(--text-secondary);">Read the text aloud to compare with native timing</p>
+                </div>
+                
+                <div id="mismatchWarning" class="text-mismatch-warning hidden">
+                    ⚠️ <strong>Note:</strong> The native audio says: "<span id="mismatchText"></span>" which differs slightly from your input. Practice with the native version shown below.
+                </div>
+
+                <div class="border rounded-lg p-8 mb-8" style="border-color: var(--border-color); background-color: var(--bg-secondary);">
+                    <p id="practiceText" class="text-lg leading-relaxed"></p>
+                </div>
+
+                <div class="flex justify-center gap-4">
+                    <button id="recordBtn" class="bg-red-600 hover:bg-red-500 text-white font-bold px-8 py-3 rounded transition-colors flex items-center gap-2">
+                        <span id="recordDot" class="w-3 h-3 bg-white rounded-full"></span>
+                        <span id="recordText">START RECORDING</span>
+                    </button>
+                    <button id="skipPracticeBtn" class="border hover:border-gray-500 font-bold px-8 py-3 rounded transition-colors" style="border-color: var(--border-color);">
+                        SKIP
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="comparisonLayer" class="absolute inset-0 z-0 hidden overflow-y-auto" style="background-color: var(--bg-primary);">
+            <div class="w-full max-w-7xl mx-auto p-8">
+                <div class="mb-8">
+                    <h2 class="text-4xl font-bold mb-2">PERFORMANCE</h2>
+                    <div class="flex items-center gap-6 mt-4 text-sm">
+                        <button id="playNativeBtn" class="flex items-center gap-2 hover:text-green-400 transition-colors">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                            <span>PLAY NATIVE</span>
+                        </button>
+                        <button id="playUserBtn" class="flex items-center gap-2 hover:text-blue-400 transition-colors">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span>PLAY YOURS</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-4 gap-4 mb-8">
+                    <div class="border rounded p-4" style="border-color: var(--border-color);">
+                        <div class="text-xs text-gray-400 mb-1">OVERALL</div>
+                        <div class="text-3xl font-bold" id="overallScore">--</div>
+                    </div>
+                    <div class="border rounded p-4" style="border-color: var(--border-color);">
+                        <div class="text-xs text-gray-400 mb-1">TIMING</div>
+                        <div class="text-3xl font-bold" id="timingScore">--</div>
+                    </div>
+                    <div class="border rounded p-4" style="border-color: var(--border-color);">
+                        <div class="text-xs text-gray-400 mb-1">CLARITY</div>
+                        <div class="text-3xl font-bold" id="clarityScore">--</div>
+                    </div>
+                    <div class="border rounded p-4" style="border-color: var(--border-color);">
+                        <div class="text-xs text-gray-400 mb-1">COMPLETION</div>
+                        <div class="text-3xl font-bold" id="completionScore">--</div>
+                    </div>
+                </div>
+
+                <div class="border rounded overflow-hidden" style="border-color: var(--border-color);">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b" style="background-color: var(--bg-secondary); border-color: var(--border-color);">
+                                <th class="px-4 py-3 text-left font-bold text-xs">RANK</th>
+                                <th class="px-4 py-3 text-left font-bold text-xs">WORD</th>
+                                <th class="px-4 py-3 text-right font-bold text-xs">NATIVE</th>
+                                <th class="px-4 py-3 text-right font-bold text-xs">YOU</th>
+                                <th class="px-4 py-3 text-right font-bold text-xs">DRIFT</th>
+                                <th class="px-4 py-3 text-center font-bold text-xs">STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTable">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex justify-center gap-4 mt-8">
+                    <button id="tryAgainBtn" class="bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-2 rounded transition-colors text-sm">
+                        TRY AGAIN
+                    </button>
+                    <button id="newTextBtn" class="border hover:border-gray-500 font-bold px-6 py-2 rounded transition-colors text-sm" style="border-color: var(--border-color);">
+                        NEW TEXT
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="loaderLayer" class="absolute inset-0 bg-black/90 z-30 hidden flex flex-col items-center justify-center gap-4 backdrop-blur-sm">
+            <div class="waveform">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+            <p id="loaderText" class="text-xs animate-pulse" style="color: var(--accent-green);">SYNTHESIZING AUDIO...</p>
+        </div>
+    </main>
+
+    <footer class="p-4 border-t header-border flex justify-center gap-6 text-gray-500 text-xs z-20">
+        <button id="resetBtn" class="hover:text-white transition-colors">RESET</button>
+        
+        <div id="controls" class="hidden flex gap-4 items-center">
+            <label class="flex items-center gap-2">
+                <span>SPEED</span>
+                <input type="range" id="speedControl" min="0.5" max="2" step="0.1" value="1" class="w-20">
+                <span id="speedValue">1.0x</span>
+            </label>
+            <button id="loopBtn" class="hover:text-white transition-colors">LOOP: OFF</button>
+            <button id="practiceBtn" class="hover:text-white transition-colors text-green-400">PRACTICE MODE</button>
+        </div>
+        
+        <span id="statusText">READY</span>
+        <button id="replayBtn" class="hover:text-white transition-colors hidden">REPLAY</button>
+    </footer>
+
+    <audio id="audioEngine" class="hidden"></audio>
+    <audio id="userAudioEngine" class="hidden"></audio>
+
+    <script>
+        const MAX_CHARS = 500;
+
+        const dom = {
+            key: document.getElementById('apiKey'),
+            input: document.getElementById('textInput'),
+            voice: document.getElementById('voiceSelect'),
+            btn: document.getElementById('generateBtn'),
+            reset: document.getElementById('resetBtn'),
+            replay: document.getElementById('replayBtn'),
+            loop: document.getElementById('loopBtn'),
+            speed: document.getElementById('speedControl'),
+            speedValue: document.getElementById('speedValue'),
+            controls: document.getElementById('controls'),
+            inputLayer: document.getElementById('inputLayer'),
+            playerLayer: document.getElementById('playerLayer'),
+            practiceLayer: document.getElementById('practiceLayer'),
+            comparisonLayer: document.getElementById('comparisonLayer'),
+            loaderLayer: document.getElementById('loaderLayer'),
+            loaderText: document.getElementById('loaderText'),
+            container: document.getElementById('lyricsContainer'),
+            audio: document.getElementById('audioEngine'),
+            userAudio: document.getElementById('userAudioEngine'),
+            status: document.getElementById('statusText'),
+            difficulty: document.getElementById('difficultyBadge'),
+            charCount: document.getElementById('charCount'),
+            charCounter: document.getElementById('charCounter'),
+            themeToggle: document.getElementById('themeToggle'),
+            sunIcon: document.getElementById('sunIcon'),
+            moonIcon: document.getElementById('moonIcon'),
+            practiceBtn: document.getElementById('practiceBtn'),
+            practiceText: document.getElementById('practiceText'),
+            recordBtn: document.getElementById('recordBtn'),
+            recordText: document.getElementById('recordText'),
+            recordDot: document.getElementById('recordDot'),
+            skipPracticeBtn: document.getElementById('skipPracticeBtn'),
+            comparisonTable: document.getElementById('comparisonTable'),
+            overallScore: document.getElementById('overallScore'),
+            timingScore: document.getElementById('timingScore'),
+            clarityScore: document.getElementById('clarityScore'),
+            completionScore: document.getElementById('completionScore'),
+            playNativeBtn: document.getElementById('playNativeBtn'),
+            playUserBtn: document.getElementById('playUserBtn'),
+            tryAgainBtn: document.getElementById('tryAgainBtn'),
+            newTextBtn: document.getElementById('newTextBtn'),
+            mismatchWarning: document.getElementById('mismatchWarning'),
+            mismatchText: document.getElementById('mismatchText')
+        };
+
+        const theme = {
+            current: localStorage.getItem('theme') || 'dark',
+            toggle() {
+                this.current = this.current === 'dark' ? 'light' : 'dark';
+                this.apply();
+            },
+            apply() {
+                document.documentElement.setAttribute('data-theme', this.current);
+                localStorage.setItem('theme', this.current);
+                if (this.current === 'light') {
+                    dom.sunIcon.classList.remove('hidden');
+                    dom.moonIcon.classList.add('hidden');
+                } else {
+                    dom.sunIcon.classList.add('hidden');
+                    dom.moonIcon.classList.remove('hidden');
+                }
+            }
+        };
+
+        theme.apply();
+        dom.themeToggle.onclick = () => theme.toggle();
+
+        const savedKey = localStorage.getItem('OPENAI_API_KEY');
+        if (savedKey) dom.key.value = savedKey;
+        dom.key.addEventListener('input', (e) => {
+            localStorage.setItem('OPENAI_API_KEY', e.target.value);
+        });
+
+        dom.input.addEventListener('input', (e) => {
+            const len = e.target.value.length;
+            dom.charCount.textContent = len;
+            
+            if (len > MAX_CHARS) {
+                dom.charCounter.classList.add('text-red-500');
+            } else if (len > MAX_CHARS * 0.8) {
+                dom.charCounter.classList.remove('text-red-500');
+                dom.charCounter.classList.add('text-yellow-500');
+            } else {
+                dom.charCounter.classList.remove('text-red-500', 'text-yellow-500');
+                dom.charCounter.classList.add('text-gray-400');
+            }
+        });
+
+        let state = { 
+            native: { words: [], audioUrl: null, duration: 0, transcribedText: '' },
+            user: { words: [], audioUrl: null, duration: 0 },
+            loopEnabled: false,
+            animationFrame: null,
+            originalText: '',
+            mediaRecorder: null,
+            audioChunks: []
+        };
+
+        function countSyllables(word) {
+            word = word.toLowerCase().replace(/[^a-z]/g, '');
+            if (word.length <= 3) return 1;
+            word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+            word = word.replace(/^y/, '');
+            const matches = word.match(/[aeiouy]{1,2}/g);
+            return matches ? matches.length : 1;
+        }
+
+        function calculateDifficulty(words, duration) {
+            const totalWords = words.length;
+            const uniqueWords = new Set(words.map(w => w.text.toLowerCase().replace(/[^a-z]/g, ''))).size;
+            const totalSyllables = words.reduce((acc, w) => acc + countSyllables(w.text), 0);
+            const syllablesPerSecond = totalSyllables / (duration / 1000);
+            const uniqueness = uniqueWords / totalWords;
+            const score = Math.round(syllablesPerSecond * 10 * uniqueness);
+            
+            if (score < 15) return 'EASY';
+            if (score < 25) return 'MEDIUM';
+            return 'HARD';
+        }
+
+        function normalizeWord(word) {
+            return word.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        function levenshtein(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) {
+                matrix[i] = [i];
+            }
+            for (let j = 0; j <= a.length; j++) {
+                matrix[0][j] = j;
+            }
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function fuzzyMatch(a, b, threshold = 2) {
+            if (!a || !b) return false;
+            const aNorm = normalizeWord(a);
+            const bNorm = normalizeWord(b);
+            if (aNorm === bNorm) return true;
+            const dist = levenshtein(aNorm, bNorm);
+            return dist <= threshold && dist <= Math.max(aNorm.length, bNorm.length) * 0.3;
+        }
+
+        function alignWords(nativeWords, userWords) {
+            const aligned = [];
+            let userIdx = 0;
+            
+            for (let nWord of nativeWords) {
+                let bestMatch = null;
+                let bestIdx = -1;
+                
+                for (let i = userIdx; i < Math.min(userIdx + 3, userWords.length); i++) {
+                    if (fuzzyMatch(nWord.text, userWords[i]?.word)) {
+                        bestMatch = userWords[i];
+                        bestIdx = i;
+                        break;
+                    }
+                }
+                
+                if (bestMatch) {
+                    const drift = (bestMatch.end - bestMatch.start - nWord.duration / 1000) / (nWord.duration / 1000);
+                    aligned.push({
+                        word: nWord.text,
+                        nativeDuration: nWord.duration,
+                        userDuration: (bestMatch.end - bestMatch.start) * 1000,
+                        drift: drift,
+                        confidence: 1.0,
+                        status: calculateStatus(drift)
+                    });
+                    userIdx = bestIdx + 1;
+                } else {
+                    aligned.push({
+                        word: nWord.text,
+                        nativeDuration: nWord.duration,
+                        userDuration: null,
+                        drift: null,
+                        confidence: 0,
+                        status: 'missing'
+                    });
+                }
+            }
+            return aligned;
+        }
+
+        function calculateStatus(drift) {
+            if (drift === null) return 'missing';
+            if (Math.abs(drift) < 0.15) return 'perfect';
+            if (drift < -0.30) return 'rushed';
+            if (drift < -0.15) return 'fast';
+            if (drift < 0.30) return 'slow';
+            return 'dragged';
+        }
+
+        function calculateScores(aligned) {
+            const validWords = aligned.filter(w => w.drift !== null);
+            
+            if (validWords.length === 0) {
+                return { overall: 0, timing: 0, clarity: 0, completion: 0 };
+            }
+
+            const timingMatches = validWords.map(w => Math.abs(w.drift) < 0.15 ? 1 : Math.abs(w.drift) < 0.30 ? 0.5 : 0);
+            const avgTiming = timingMatches.reduce((a, b) => a + b, 0) / timingMatches.length;
+            
+            const completionRate = validWords.length / aligned.length;
+            
+            const overall = Math.round((
+                0.5 * avgTiming +
+                0.3 * 0.85 +
+                0.2 * completionRate
+            ) * 100);
+
+            return {
+                overall: overall,
+                timing: Math.round(avgTiming * 100),
+                clarity: 85,
+                completion: Math.round(completionRate * 100)
+            };
+        }
+
+        function checkTextMismatch(original, transcribed) {
+            const origWords = original.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w);
+            const transWords = transcribed.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(w => w);
+            
+            if (origWords.length !== transWords.length) return true;
+            
+            let mismatches = 0;
+            for (let i = 0; i < origWords.length; i++) {
+                if (!fuzzyMatch(origWords[i], transWords[i])) {
+                    mismatches++;
+                }
+            }
+            
+            return mismatches > Math.max(2, origWords.length * 0.1);
+        }
+
+        async function fetchAudio() {
+            const key = dom.key.value;
+            let text = dom.input.value.trim();
+            
+            if (!key || !text) return alert("API Key and Text required.");
+
+            if (text.length > MAX_CHARS) {
+                text = text.substring(0, MAX_CHARS);
+                dom.input.value = text;
+                dom.charCount.textContent = MAX_CHARS;
+                dom.status.textContent = `TRUNCATED TO ${MAX_CHARS} CHARS`;
+                setTimeout(() => dom.status.textContent = 'READY', 2000);
+            }
+
+            state.originalText = text;
+            dom.loaderLayer.classList.remove('hidden');
+            dom.loaderText.textContent = 'SYNTHESIZING AUDIO...';
+            
+            try {
+                const ttsPayload = {
+                    model: "gpt-4o-audio-preview",
+                    modalities: ["text", "audio"],
+                    audio: { voice: dom.voice.value, format: "mp3" },
+                    temperature: 0,
+                    messages: [
+                        { 
+                            role: "system", 
+                            content: "You are a text-to-speech system. Read ONLY the exact text provided by the user word-for-word. Do not add, remove, modify, or paraphrase any words. Do not add greetings, explanations, or commentary. Output audio that matches the input text exactly, preserving all words in their exact order and form." 
+                        },
+                        { role: "user", content: text }
+                    ]
+                };
+
+                const ttsRes = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+                    body: JSON.stringify(ttsPayload)
+                });
+
+                const ttsData = await ttsRes.json();
+                if (ttsData.error) throw new Error(ttsData.error.message);
+
+                const b64 = ttsData.choices[0].message.audio.data;
+                const audioBlob = await (await fetch(`data:audio/mp3;base64,${b64}`)).blob();
+                state.native.audioUrl = URL.createObjectURL(audioBlob);
+
+                dom.loaderText.textContent = 'ALIGNING TIMESTAMPS...';
+                
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'speech.mp3');
+                formData.append('model', 'whisper-1');
+                formData.append('response_format', 'verbose_json');
+                formData.append('timestamp_granularities[]', 'word');
+                formData.append('prompt', text);
+
+                const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${key}` },
+                    body: formData
+                });
+
+                const whisperData = await whisperRes.json();
+                if (whisperData.error) throw new Error(whisperData.error.message);
+
+                state.native.words = whisperData.words.map((w, i) => ({
+                    id: i,
+                    text: w.word.trim(),
+                    start: w.start * 1000,
+                    end: w.end * 1000,
+                    duration: (w.end - w.start) * 1000
+                }));
+
+                state.native.transcribedText = whisperData.text;
+
+                setupStage();
+
+            } catch (e) {
+                alert(`Error: ${e.message}`);
+                console.error(e);
+                dom.loaderLayer.classList.add('hidden');
+            }
+        }
+
+        function setupStage() {
+            dom.loaderLayer.classList.add('hidden');
+            dom.inputLayer.classList.add('hidden');
+            dom.playerLayer.classList.remove('hidden');
+            dom.replay.classList.remove('hidden');
+            dom.controls.classList.remove('hidden');
+
+            const maxDuration = Math.max(...state.native.words.map(x => x.duration));
+            
+            dom.container.innerHTML = state.native.words.map(w => {
+                const barWidth = (w.duration / maxDuration) * 100;
+                return `<span id="word-${w.id}" class="word-container">
+                    ${w.text}
+                    <div class="duration-bar" style="width: ${barWidth}%"></div>
+                </span>`;
+            }).join(' ');
+
+            dom.audio.src = state.native.audioUrl;
+            dom.audio.onloadedmetadata = () => {
+                state.native.duration = dom.audio.duration * 1000;
+                const diff = calculateDifficulty(state.native.words, state.native.duration);
+                dom.difficulty.textContent = `DIFFICULTY: ${diff}`;
+                dom.difficulty.classList.remove('hidden');
+                startPacer();
+            };
+
+            dom.audio.onended = () => {
+                if (state.loopEnabled) {
+                    dom.audio.currentTime = 0;
+                    startPacer();
+                } else {
+                    dom.status.textContent = 'FINISHED';
+                }
+            };
+        }
+
+        function startPacer() {
+            if (state.animationFrame) cancelAnimationFrame(state.animationFrame);
+            
+            dom.status.textContent = 'PLAYING...';
+            dom.audio.play();
+            const startTime = performance.now();
+            
+            function loop() {
+                const elapsed = (performance.now() - startTime) * dom.audio.playbackRate;
+                
+                state.native.words.forEach(w => {
+                    const el = document.getElementById(`word-${w.id}`);
+                    if (!el) return;
+
+                    if (elapsed >= w.start && elapsed < w.end) {
+                        if (!el.classList.contains('active')) {
+                            el.classList.add('active');
+                            el.classList.remove('past');
+                            el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+                        }
+                    } else if (elapsed >= w.end) {
+                        el.classList.remove('active');
+                        el.classList.add('past');
+                    } else {
+                        el.classList.remove('active', 'past');
+                    }
+                });
+
+                if (!dom.audio.paused) {
+                    state.animationFrame = requestAnimationFrame(loop);
+                }
+            }
+            
+            state.animationFrame = requestAnimationFrame(loop);
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                state.mediaRecorder = new MediaRecorder(stream);
+                state.audioChunks = [];
+
+                state.mediaRecorder.ondataavailable = (e) => {
+                    state.audioChunks.push(e.data);
+                };
+
+                state.mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(state.audioChunks, { type: 'audio/webm' });
+                    state.user.audioUrl = URL.createObjectURL(audioBlob);
+                    dom.userAudio.src = state.user.audioUrl;
+                    
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    await transcribeUserAudio(audioBlob);
+                };
+
+                state.mediaRecorder.start();
+                
+                dom.recordText.textContent = 'RECORDING...';
+                dom.recordDot.classList.add('recording-pulse');
+                dom.recordBtn.classList.remove('bg-red-600');
+                dom.recordBtn.classList.add('bg-red-700');
+
+            } catch (e) {
+                alert('Microphone access denied or not available');
+                console.error(e);
+            }
+        }
+
+        function stopRecording() {
+            if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') {
+                state.mediaRecorder.stop();
+                dom.recordText.textContent = 'START RECORDING';
+                dom.recordDot.classList.remove('recording-pulse');
+                dom.recordBtn.classList.remove('bg-red-700');
+                dom.recordBtn.classList.add('bg-red-600');
+            }
+        }
+
+        async function transcribeUserAudio(audioBlob) {
+            const key = dom.key.value;
+            
+            dom.loaderLayer.classList.remove('hidden');
+            dom.loaderText.textContent = 'ANALYZING YOUR SPEECH...';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'user.webm');
+                formData.append('model', 'whisper-1');
+                formData.append('response_format', 'verbose_json');
+                formData.append('timestamp_granularities[]', 'word');
+                formData.append('prompt', state.native.transcribedText);
+
+                const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${key}` },
+                    body: formData
+                });
+
+                const whisperData = await whisperRes.json();
+                if (whisperData.error) throw new Error(whisperData.error.message);
+
+                state.user.words = whisperData.words;
+                
+                showComparison();
+
+            } catch (e) {
+                alert(`Error analyzing speech: ${e.message}`);
+                console.error(e);
+                dom.loaderLayer.classList.add('hidden');
+            }
+        }
+
+        function showComparison() {
+            dom.loaderLayer.classList.add('hidden');
+            dom.practiceLayer.classList.add('hidden');
+            dom.comparisonLayer.classList.remove('hidden');
+
+            const aligned = alignWords(state.native.words, state.user.words);
+            const scores = calculateScores(aligned);
+
+            dom.overallScore.textContent = scores.overall;
+            dom.timingScore.textContent = scores.timing + '%';
+            dom.clarityScore.textContent = scores.clarity + '%';
+            dom.completionScore.textContent = scores.completion + '%';
+
+            const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim();
+
+            dom.comparisonTable.innerHTML = aligned.map((w, idx) => {
+                const statusConfig = {
+                    'perfect': { icon: '●', color: '#4ade80', label: 'PERFECT' },
+                    'good': { icon: '●', color: '#4ade80', label: 'GOOD' },
+                    'fast': { icon: '●', color: '#fbbf24', label: 'FAST' },
+                    'slow': { icon: '●', color: '#fbbf24', label: 'SLOW' },
+                    'rushed': { icon: '●', color: '#ef4444', label: 'RUSHED' },
+                    'dragged': { icon: '●', color: '#ef4444', label: 'DRAGGED' },
+                    'missing': { icon: '●', color: '#6b7280', label: 'SKIPPED' }
+                };
+
+                const status = statusConfig[w.status];
+                const driftText = w.drift !== null 
+                    ? (w.drift > 0 ? '+' : '') + (w.drift * 100).toFixed(0) + '%'
+                    : '--';
+                
+                const driftColor = w.drift === null ? 'inherit' 
+                    : w.drift > 0 ? '#ef4444' 
+                    : w.drift < 0 ? '#4ade80' 
+                    : 'inherit';
+
+                const isEven = idx % 2 === 0;
+                const theme = document.documentElement.getAttribute('data-theme');
+                const rowBg = isEven ? 'transparent' : (theme === 'light' ? 'rgba(0,0,0,0.02)' : 'rgba(255,255,255,0.02)');
+                
+                return `
+                    <tr class="border-b transition-colors hover:bg-opacity-50" style="background: ${rowBg}; border-color: ${borderColor};">
+                        <td class="px-4 py-3 text-gray-500 font-mono text-xs">${idx + 1}</td>
+                        <td class="px-4 py-3 font-mono">${w.word}</td>
+                        <td class="px-4 py-3 text-right font-mono text-xs">${(w.nativeDuration / 1000).toFixed(3)}s</td>
+                        <td class="px-4 py-3 text-right font-mono text-xs">${w.userDuration ? (w.userDuration / 1000).toFixed(3) + 's' : '--'}</td>
+                        <td class="px-4 py-3 text-right font-mono text-xs font-bold" style="color: ${driftColor}">${driftText}</td>
+                        <td class="px-4 py-3 text-center">
+                            <span class="inline-flex items-center gap-1 text-xs font-bold">
+                                <span style="color: ${status.color}">${status.icon}</span>
+                                <span style="color: ${status.color}">${status.label}</span>
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        dom.btn.onclick = fetchAudio;
+        dom.reset.onclick = () => location.reload();
+        dom.replay.onclick = () => { 
+            dom.audio.currentTime = 0; 
+            state.native.words.forEach(w => {
+                const el = document.getElementById(`word-${w.id}`);
+                if (el) el.classList.remove('active', 'past');
+            });
+            startPacer(); 
+        };
+
+        dom.loop.onclick = () => {
+            state.loopEnabled = !state.loopEnabled;
+            dom.loop.textContent = `LOOP: ${state.loopEnabled ? 'ON' : 'OFF'}`;
+        };
+
+        dom.speed.oninput = (e) => {
+            const speed = parseFloat(e.target.value);
+            dom.audio.playbackRate = speed;
+            dom.speedValue.textContent = `${speed.toFixed(1)}x`;
+        };
+
+        dom.practiceBtn.onclick = () => {
+            dom.playerLayer.classList.add('hidden');
+            dom.practiceLayer.classList.remove('hidden');
+            
+            const hasMismatch = checkTextMismatch(state.originalText, state.native.transcribedText);
+            if (hasMismatch) {
+                dom.mismatchWarning.classList.remove('hidden');
+                dom.mismatchText.textContent = state.native.transcribedText;
+                dom.practiceText.textContent = state.native.transcribedText;
+            } else {
+                dom.mismatchWarning.classList.add('hidden');
+                dom.practiceText.textContent = state.originalText;
+            }
+            
+            dom.audio.pause();
+            if (state.animationFrame) cancelAnimationFrame(state.animationFrame);
+        };
+
+        dom.recordBtn.onclick = () => {
+            if (!state.mediaRecorder || state.mediaRecorder.state === 'inactive') {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        };
+
+        dom.skipPracticeBtn.onclick = () => {
+            dom.practiceLayer.classList.add('hidden');
+            dom.playerLayer.classList.remove('hidden');
+        };
+
+        dom.playNativeBtn.onclick = () => {
+            dom.audio.currentTime = 0;
+            dom.audio.play();
+        };
+
+        dom.playUserBtn.onclick = () => {
+            dom.userAudio.currentTime = 0;
+            dom.userAudio.play();
+        };
+
+        dom.tryAgainBtn.onclick = () => {
+            dom.comparisonLayer.classList.add('hidden');
+            dom.practiceLayer.classList.remove('hidden');
+            
+            const hasMismatch = checkTextMismatch(state.originalText, state.native.transcribedText);
+            if (hasMismatch) {
+                dom.mismatchWarning.classList.remove('hidden');
+                dom.mismatchText.textContent = state.native.transcribedText;
+                dom.practiceText.textContent = state.native.transcribedText;
+            } else {
+                dom.mismatchWarning.classList.add('hidden');
+                dom.practiceText.textContent = state.originalText;
+            }
+        };
+
+        dom.newTextBtn.onclick = () => location.reload();
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !dom.inputLayer.classList.contains('hidden') === false) {
+                e.preventDefault();
+                if (dom.audio.paused) {
+                    dom.audio.play();
+                    startPacer();
+                } else {
+                    dom.audio.pause();
+                    if (state.animationFrame) cancelAnimationFrame(state.animationFrame);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
