@@ -1,318 +1,181 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-  <!-- Head -->
-  <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">    <!-- Metadata, OpenGraph and Schema.org -->
-    
+      gtag('config', 'G-VC31GENS6S');
+    </script>
 
-    <!-- Standard metadata -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pham Thanh Lam</title>
-    <meta name="author" content="Lam Thanh Pham">
-    <meta name="description" content="A simple, whitespace theme for academics. Based on [*folio](https://github.com/bogoli/-folio) design.
-">
-    <meta name="keywords" content="jekyll, jekyll-theme, academic-website, portfolio-website">
-
-
-    <!-- Bootstrap & MDB -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-DF7Zhf293AJxJNTmh5zhoYYIMs2oXitRfBjY+9L//AY=" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/css/mdb.min.css" integrity="sha256-jpjYvU3G3N6nrrBwXJoVEYI/0zw8htfFnhT9ljN3JJw=" crossorigin="anonymous">
-
-    <!-- Bootstrap Table -->
-    <link defer rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.21.4/dist/bootstrap-table.min.css">
-
-    <!-- Fonts & Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" integrity="sha256-mUZM63G8m73Mcidfrv5E+Y61y7a12O5mW4ezU3bxqW4=" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.1/css/academicons.min.css" integrity="sha256-i1+4qU2G2860dGGIOJscdC30s9beBXjFfzjWLjBRsBg=" crossorigin="anonymous">
-    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons">
-
-    <!-- Code Syntax Highlighting -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jwarby/jekyll-pygments-themes@master/github.css" media="" id="highlight_theme_light">
-
+    <meta name="description" content="Building AI systems that ship at scale.">
+    <meta name="author" content="Pham Thanh Lam">
     
-
-    <!-- Styles -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
     
-    <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%F0%9F%90%AC&lt;/text&gt;&lt;/svg&gt;">
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <link rel="stylesheet" href="/assets/css/main.css">
-    <link rel="canonical" href="https://lampts.github.io/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
 
-    <!-- Dark Mode -->
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jwarby/jekyll-pygments-themes@master/native.css" media="none" id="highlight_theme_dark">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white">
 
-    <script src="/assets/js/theme.js"></script>
-    <script src="/assets/js/dark_mode.js"></script>
-    
-
-  </head>
-
-  <!-- Body -->
-  <body class="fixed-top-nav ">
-
-    <!-- Header -->
-    <header>
-
-      <!-- Nav Bar -->
-      <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top">
-        <div class="container">
-          
-          <!-- Navbar Toggle -->
-          <button class="navbar-toggler collapsed ml-auto" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar top-bar"></span>
-            <span class="icon-bar middle-bar"></span>
-            <span class="icon-bar bottom-bar"></span>
-          </button>
-
-          <div class="collapse navbar-collapse text-right" id="navbarNav">
-            <ul class="navbar-nav ml-auto flex-nowrap">
-
-              <!-- About -->
-              <li class="nav-item active">
-                <a class="nav-link" href="/">about<span class="sr-only">(current)</span></a>
-              </li>
-              
-
-              <!-- Other pages -->
-
-              <!-- Toogle theme mode -->
-              <li class="toggle-container">
-                <button id="light-toggle" title="Change theme">
-                  <i class="fas fa-moon"></i>
-                  <i class="fas fa-sun"></i>
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
-
-      <!-- Scrolling Progress Bar -->
-      <progress id="progress" value="0">
-        <div class="progress-container">
-          <span class="progress-bar"></span>
-        </div>
-      </progress>
-    </header>
-
-
-    <!-- Content -->
-    <div class="container mt-5">
-      
-        <!-- about.html -->
-      <div class="post">
-        <header class="post-header">
-          <h1 class="post-title">
-           Pham Thanh Lam
-          </h1>
-          <p class="desc"><a href="http://lampt.org/lamp.html" rel="external nofollow noopener" target="_blank">Big/Small Data | AI/ML/LLMs | Products </a>.</p>
-        </header>
-
-        <article>
-          <div class="profile float-right">
-
-              <figure>
-
-  <picture>
-    
-
-    <!-- Fallback to the original file -->
-    <img src="/assets/img/prof_pic.jpg" class="img-fluid z-depth-1 rounded" width="auto" height="auto" alt="prof_pic.jpg" onerror="this.onerror=null; $('.responsive-img-srcset').remove();">
-
-  </picture>
-
-</figure>
-
-            <div class="address">
-              <p>laampt@icloud.com</p> <p>Vietnam, HCMC, 70000</p>
-
-            </div>
-          </div>
-
-          <div class="clearfix">
-            <p>I am Chief Data Science and AI Officer at Cake by VPbank.</p>
-
-<p>I am building nextgen AI bank for the largest digital bank in Vietnam.</p>
-
-<p>I’ve built AI products with over $1M in ARR and 10M+ users for B2B2C at Vietnam’s first tech unicorn from 2019 to 2023.</p>
-
-<p>I delivered a keynote on digital identity platforms at IFC World Bank FIDN in 2020.</p>
-
-<p>I won the WSDM Analytics Cup for fake news detection in 2019.</p>
-
-<p>I work with vast amounts of data and numbers daily.</p>
-
-<p>I’m a lifelong learner with a passion for growth. ❤️</p>
-
-
-          </div>
-
-          <!-- News -->
-          
-
-          <!-- Latest posts -->
-          
-
-          <!-- Selected papers -->
-          
-
-          <!-- Social -->
-            <div class="social">
-              <div class="contact-icons">
-                <a href="mailto:%6C%61%61%6D%70%74@%67%6D%61%69%6C.%63%6F%6D" title="email"><i class="fas fa-envelope"></i></a>
-            <a href="https://github.com/lampts" title="GitHub" rel="external nofollow noopener" target="_blank"><i class="fab fa-github"></i></a>
-            <a href="https://www.linkedin.com/in/lam-pham-thanh-1428602b" title="LinkedIn" rel="external nofollow noopener" target="_blank"><i class="fab fa-linkedin"></i></a>
-            <a href="https://twitter.com/saigonapps#%20your%20Twitter%20handle" title="Twitter" rel="external nofollow noopener" target="_blank"><i class="fab fa-twitter"></i></a>
-            <a href="https://www.kaggle.com/saigonapps#%20your%20kaggle%20id" title="Kaggle" rel="external nofollow noopener" target="_blank"><i class="fab fa-kaggle"></i></a>
+    <div class="p-4 md:p-12 overflow-hidden min-h-screen">
+        <div class="w-full max-w-xl mx-auto">
             
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <a class="text-3xl font-serif font-medium tracking-tight flex items-center gap-2" href="/">
+                    <span>Pham Thanh Lam (Laam)</span>
+                </a>
+                <div class="flex gap-4 text-xs uppercase tracking-wider">
+                    <a class="underline underline-offset-4 hover:decoration-2 decoration-1" href="mailto:laampt@icloud.com">Email</a>
+                    <a class="underline underline-offset-4 hover:decoration-2 decoration-1" href="https://github.com/lampts" target="_blank">GitHub</a>
+                    <a class="underline underline-offset-4 hover:decoration-2 decoration-1" href="https://www.linkedin.com/in/lam-pham-thanh-1428602b" target="_blank">LinkedIn</a>
+                </div>
+            </header>
 
-              </div>
-
-              <div class="contact-note">
-                Feel free to contact me for any inqueries.
-
-              </div>
-
+            <div class="mt-8 mb-12">
+                <div class="flex flex-col-reverse sm:flex-row gap-6 items-start">
+                    <div class="flex-1">
+                        <p class="mb-4 leading-relaxed font-semibold text-base">
+                            Building AI systems that ship at scale.
+                        </p>
+                        <p class="mb-4 leading-relaxed text-muted">
+                            I build AI systems that ship. Currently Chief Data Science & AI Officer at <span class="text-foreground">Cake by VPBank</span>, Vietnam's largest digital bank, where I manage 15+ people running 100+ models and 150+ voice agents in production.
+                        </p>
+                        <p class="mb-4 leading-relaxed text-muted">
+                            The work: transforming traditional banking into agentic AI operations. We're building toward unicorn status through digital twins and multi-agent systems that handle real customer money.
+                        </p>
+                        <p class="text-xs text-muted">Based in Ho Chi Minh City, Vietnam.</p>
+                    </div>
+                    <div class="shrink-0 border border-black p-1 shadow-[3px_3px_0px_#000]">
+                        <img src="/assets/img/prof_pic.jpg" alt="Pham Thanh Lam" class="w-24 h-24 object-cover grayscale hover:grayscale-0 transition-all" onerror="this.style.display='none'">
+                    </div>
+                </div>
             </div>
-        </article>
 
-</div>
+            <h2 class="font-serif text-lg font-bold mb-6 border-b border-black pb-2">Timeline</h2>
 
-      
+            <div class="pl-2">
+                <div class="relative flex flex-col space-y-6 border-l border-gray-300 py-2">
+                    
+                    <a href="https://cake.vn" target="_blank" class="flex flex-col gap-2 px-4 py-3 ml-6 group cursor-pointer bg-white border border-black shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] transition-all relative">
+                        <div class="absolute size-[7px] bg-black -left-[32px] top-[18px] outline outline-white outline-4"></div>
+                        
+                        <div class="flex items-baseline gap-2 justify-between relative">
+                            <div class="flex items-center gap-2 min-w-0 flex-1">
+                                <div class="px-1.5 py-0.5 bg-[#FBD45B] text-black text-[10px] font-medium border border-black">CURRENT</div>
+                                <div class="text-xs truncate font-bold">Chief Data Science & AI Officer</div>
+                            </div>
+                            <div class="text-[10px] text-muted shrink-0 ml-2">2024 - Present</div>
+                        </div>
+                        <p class="text-xs text-muted no-underline mt-1">
+                            Cake by VPBank. Running 100+ AI models and 150+ voice agents. Building agentic banking infrastructure—causal inference, revenue forecasting, and Personal AI Infrastructure.
+                        </p>
+                    </a>
+
+                    <div class="flex flex-col gap-1 px-4 py-2 ml-6 hover:bg-gray-50 group cursor-pointer relative">
+                        <div class="absolute size-[7px] bg-gray-400 -left-[32px] top-[14px] outline outline-white outline-4"></div>
+                        
+                        <div class="flex items-baseline gap-1 justify-between text-xs w-full">
+                            <div class="font-semibold truncate">Vietnam's First Tech Unicorn</div>
+                            <div class="text-[10px] text-muted whitespace-nowrap shrink-0">2019 - 2023</div>
+                        </div>
+                        <div class="text-xs text-muted">
+                            Built AI products crossing $1M ARR with 10M+ users (B2B2C). Learned what works when stakes are high.
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1 px-4 py-2 ml-6 hover:bg-gray-50 group cursor-pointer relative">
+                        <div class="absolute size-[7px] bg-gray-400 -left-[32px] top-[14px] outline outline-white outline-4"></div>
+                        
+                        <div class="flex items-baseline gap-1 justify-between text-xs w-full">
+                            <div class="font-semibold truncate">IFC World Bank FIDN</div>
+                            <div class="text-[10px] text-muted whitespace-nowrap shrink-0">2020</div>
+                        </div>
+                        <div class="text-xs text-muted">
+                            Keynote on digital identity platforms. Banking infrastructure meets identity verification at scale.
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-1 px-4 py-2 ml-6 hover:bg-gray-50 group cursor-pointer relative">
+                        <div class="absolute size-[7px] bg-gray-400 -left-[32px] top-[14px] outline outline-white outline-4"></div>
+                        
+                        <div class="flex items-baseline gap-1 justify-between text-xs w-full">
+                            <div class="font-semibold truncate">WSDM Analytics Cup Winner</div>
+                            <div class="text-[10px] text-muted whitespace-nowrap shrink-0">2019</div>
+                        </div>
+                        <div class="text-xs text-muted">
+                            First competitive ML win that mattered. Fake news detection algorithms with modified Bert version.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <h2 class="font-serif text-lg font-bold mt-12 mb-4 border-b border-black pb-2">Philosophy</h2>
+            <div class="flex flex-col gap-4 text-xs leading-relaxed text-muted">
+                <p>
+                    <strong class="text-foreground">What I care about:</strong> Systems that work at scale. Code that ships beats papers that don't. Agentic workflows replacing human ops. Causal inference in production, not just notebooks. Building tools that multiply force—like Unix philosophy but for AI systems.
+                </p>
+            </div>
+
+            <h2 class="font-serif text-lg font-bold mt-12 mb-4 border-b border-black pb-2">Building</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="border border-gray-200 p-3 hover:border-black transition-colors">
+                    <div class="font-semibold text-xs mb-1">MAI Agents</div>
+                    <div class="text-xs text-muted">Research review & automation</div>
+                </div>
+                <div class="border border-gray-200 p-3 hover:border-black transition-colors">
+                    <div class="font-semibold text-xs mb-1">Revenue Forecasting</div>
+                    <div class="text-xs text-muted">Monte Carlo methods under uncertainty</div>
+                </div>
+            </div>
+
+            <h2 class="font-serif text-lg font-bold mt-12 mb-4 border-b border-black pb-2">Connect</h2>
+            <p class="mb-4 text-xs text-muted">
+                Vietnam, HCMC, 70000
+            </p>
+            <div class="flex flex-wrap gap-4 text-xs">
+                <a href="https://twitter.com/saigonapps" class="border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors" target="_blank">Twitter</a>
+                <a href="https://www.kaggle.com/saigonapps" class="border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors" target="_blank">Kaggle</a>
+                <a href="https://github.com/lampts" class="border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors" target="_blank">GitHub</a>
+                <a href="https://www.linkedin.com/in/lam-pham-thanh-1428602b" class="border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors" target="_blank">LinkedIn</a>
+            </div>
+
+            <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
+                <p class="font-serif text-sm text-black">Pham Thanh Lam (λ)</p>
+                <div class="flex gap-4">
+                    <span>&copy; 2025</span>
+                </div>
+            </footer>
+
+        </div>
     </div>
-
-    <!-- Footer -->    
-    <footer class="fixed-bottom">
-      <div class="container mt-0">
-        © Copyright 2025 Lam Thanh Pham. Powered by <a href="https://jekyllrb.com/" target="_blank" rel="external nofollow noopener">Jekyll</a> with <a href="https://github.com/alshedivat/al-folio" rel="external nofollow noopener" target="_blank">al-folio</a> theme. Hosted by <a href="https://pages.github.com/" target="_blank" rel="external nofollow noopener">GitHub Pages</a>. Photos from <a href="https://unsplash.com" target="_blank" rel="external nofollow noopener">Unsplash</a>.
-
-      </div>
-    </footer>
-
-    <!-- JavaScripts -->
-    <!-- jQuery -->
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-
-    <!-- Bootsrap & MDB scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js" integrity="sha256-fgLAgv7fyCGopR/gBNq2iW3ZKIdqIcyshnUULC4vex8=" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mdbootstrap@4.20.0/js/mdb.min.js" integrity="sha256-NdbiivsvWt7VYCt6hYNT3h/th9vSTL4EDWeGs5SN3DA=" crossorigin="anonymous"></script>
-
-    <!-- Masonry & imagesLoaded -->
-  <script defer src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/imagesloaded@4/imagesloaded.pkgd.min.js"></script>
-  <script defer src="/assets/js/masonry.js" type="text/javascript"></script>
-    
-  <!-- Medium Zoom JS -->
-  <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.8/dist/medium-zoom.min.js" integrity="sha256-7PhEpEWEW0XXQ0k6kQrPKwuoIomz8R8IYyuU1Qew4P8=" crossorigin="anonymous"></script>
-  <script defer src="/assets/js/zoom.js"></script>
-
-  <!-- Bootstrap Table -->
-  <script defer src="https://unpkg.com/bootstrap-table@1.21.4/dist/bootstrap-table.min.js"></script>
-
-  <!-- Load Common JS -->
-  <script src="/assets/js/no_defer.js"></script>
-  <script defer src="/assets/js/common.js"></script>
-  <script defer src="/assets/js/copy_code.js" type="text/javascript"></script>
-
-    
-  <script async src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script>
-  <script async src="https://badge.dimensions.ai/badge.js"></script>
-
-    <!-- MathJax -->
-  <script type="text/javascript">
-    window.MathJax = {
-      tex: {
-        tags: 'ams'
-      }
-    };
-  </script>
-  <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-mml-chtml.js"></script>
-  <script defer src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-
-    
-    
-
-<!-- Scrolling Progress Bar -->
-<script type="text/javascript">
-  /*
-   * This JavaScript code has been adapted from the article 
-   * https://css-tricks.com/reading-position-indicator/ authored by Pankaj Parashar, 
-   * published on the website https://css-tricks.com on the 7th of May, 2014.
-   * Couple of changes were made to the original code to make it compatible 
-   * with the `al-foio` theme.
-   */
-  const progressBar = $("#progress");
-  /*
-   * We set up the bar after all elements are done loading.
-   * In some cases, if the images in the page are larger than the intended
-   * size they'll have on the page, they'll be resized via CSS to accomodate
-   * the desired size. This mistake, however, breaks the computations as the
-   * scroll size is computed as soon as the elements finish loading.
-   * To account for this, a minimal delay was introduced before computing the
-   * values.
-   */
-  window.onload = function () {
-    setTimeout(progressBarSetup, 50);
-  };
-  /*
-   * We set up the bar according to the browser.
-   * If the browser supports the progress element we use that.
-   * Otherwise, we resize the bar thru CSS styling
-   */
-  function progressBarSetup() {
-    if ("max" in document.createElement("progress")) {
-      initializeProgressElement();
-      $(document).on("scroll", function() {
-        progressBar.attr({ value: getCurrentScrollPosition() });
-      });
-      $(window).on("resize", initializeProgressElement);
-    } else {
-      resizeProgressBar();
-      $(document).on("scroll", resizeProgressBar);
-      $(window).on("resize", resizeProgressBar);
-    }
-  }
-  /*
-   * The vertical scroll position is the same as the number of pixels that
-   * are hidden from view above the scrollable area. Thus, a value > 0 is
-   * how much the user has scrolled from the top
-   */
-  function getCurrentScrollPosition() {
-    return $(window).scrollTop();
-  }
-
-  function initializeProgressElement() {
-    let navbarHeight = $("#navbar").outerHeight(true);
-    $("body").css({ "padding-top": navbarHeight });
-    $("progress-container").css({ "padding-top": navbarHeight });
-    progressBar.css({ top: navbarHeight });
-    progressBar.attr({
-      max: getDistanceToScroll(),
-      value: getCurrentScrollPosition(),
-    });
-  }
-  /*
-   * The offset between the html document height and the browser viewport
-   * height will be greater than zero if vertical scroll is possible.
-   * This is the distance the user can scroll
-   */
-  function getDistanceToScroll() {
-    return $(document).height() - $(window).height();
-  }
-
-  function resizeProgressBar() {
-    progressBar.css({ width: getWidthPercentage() + "%" });
-  }
-  // The scroll ratio equals the percentage to resize the bar
-  function getWidthPercentage() {
-    return (getCurrentScrollPosition() / getDistanceToScroll()) * 100;
-  }
-</script>
-
-  </body>
+</body>
 </html>
