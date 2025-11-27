@@ -318,7 +318,7 @@
 
                 // STAGE 2: REVIEW (With Validation Logic)
                 setStatus('reviewing');
-                const MIN_DRAFT_LENGTH = 30;
+                const MIN_DRAFT_LENGTH = 50;
                 const validDrafts = Object.entries(drafts).filter(([_, content]) => {
                     return content && content.length >= MIN_DRAFT_LENGTH && !content.startsWith('Error');
                 });
