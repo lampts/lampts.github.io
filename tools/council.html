@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>LLM Council / λ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                    },
+                    boxShadow: {
+                        'laam': '3px 3px 0px #000000',
+                        'laam-hover': '5px 5px 0px #000000',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #ffffff; color: #000000; }
+        .blink { animation: blink 1s steps(1) infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-left: 1px solid #000; }
+        ::-webkit-scrollbar-thumb { background: #000; border: 1px solid #000; }
+        ::-webkit-scrollbar-thumb:hover { background: #333; }
+        
+        .tab-content { animation: fadeIn 0.2s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; background: #000000; cursor: pointer; border: 1px solid #000000; margin-top: -6px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #e5e7eb; border: 1px solid #000; }
+    </style>
+</head>
+<body class="font-mono text-sm antialiased selection:bg-black selection:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useEffect, useMemo, useRef, useState } = React;
+
+      // --- Configuration ---
+      const PROVIDERS = {
+        openai: { key: 'openai', label: 'OpenAI', defaultModel: 'gpt-4.1', doc: 'https://platform.openai.com/docs/' },
+        anthropic: { key: 'anthropic', label: 'Anthropic', defaultModel: 'claude-sonnet-4-5', doc: 'https://docs.anthropic.com/' },
+        google: { key: 'google', label: 'Google', defaultModel: 'gemini-2.5-flash', doc: 'https://ai.google.dev/' },
+        deepseek: { key: 'deepseek', label: 'DeepSeek', defaultModel: 'deepseek-chat', doc: 'https://api-docs.deepseek.com/' },
+        kimi: { key: 'kimi', label: 'Kimi', defaultModel: 'kimi-k2-turbo-preview', doc: 'https://platform.moonshot.ai/docs' },
+        xai: { key: 'xai', label: 'xAI', defaultModel: 'grok-4', doc: 'https://docs.x.ai/' }
+      };
+      
+      const defaultModels = Object.fromEntries(Object.entries(PROVIDERS).map(([k, v]) => [k, v.defaultModel]));
+      const getInitialState = (key, defaultValue) => { try { return JSON.parse(localStorage.getItem(key)) || defaultValue; } catch { return defaultValue; } };
+      const formatSec = (s) => (s ? `${s.toFixed(2)}s` : '-');
+
+      // --- API Engine ---
+      const callProvider = async ({ pkey, apiKey, model, messages, temperature, maxTokens, systemPrompt, signal, onChunk, onFirstToken }) => {
+        let apiUrl, body, headers;
+        let finalMessages = [...messages];
+        let sysInstruction = systemPrompt;
+
+        // OpenAI/Compatible System Prompt Injection
+        if (systemPrompt && !['google', 'anthropic'].includes(pkey)) {
+             finalMessages = [{ role: 'system', content: systemPrompt }, ...messages];
+        }
+
+        if (['openai', 'deepseek', 'kimi', 'xai'].includes(pkey)) {
+            apiUrl = pkey === 'openai' ? "https://api.openai.com/v1/chat/completions" :
+                     pkey === 'deepseek' ? "https://api.deepseek.com/chat/completions" :
+                     pkey === 'kimi' ? "https://api.moonshot.ai/v1/chat/completions" :
+                     "https://api.x.ai/v1/chat/completions";
+            headers = { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` };
+            body = JSON.stringify({ model, messages: finalMessages, temperature, max_tokens: maxTokens, stream: true });
+        } else if (pkey === 'google') {
+            apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`;
+            headers = { "Content-Type": "application/json", "x-goog-api-key": apiKey };
+            
+            const contents = messages.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.content }] }));
+            let systemObj = sysInstruction ? { parts: [{ text: sysInstruction }] } : undefined;
+            
+            // --- NEW: Safety Settings to prevent blocking ---
+            const safetySettings = [
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" }
+            ];
+
+            body = JSON.stringify({ 
+                contents, 
+                systemInstruction: systemObj, 
+                generationConfig: { temperature, maxOutputTokens: maxTokens },
+                safetySettings: safetySettings 
+            });
+
+        } else if (pkey === 'anthropic') {
+            apiUrl = "https://api.anthropic.com/v1/messages";
+            headers = { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json", "anthropic-dangerous-direct-browser-access": "true" };
+            body = JSON.stringify({ model, messages: messages, system: sysInstruction, max_tokens: maxTokens, temperature, stream: true });
+        }
+
+        const response = await fetch(apiUrl, { method: "POST", headers, body, signal });
+        if (!response.ok) throw new Error(await response.text());
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let firstTokenReceived = false;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            if (!firstTokenReceived) {
+                firstTokenReceived = true;
+                if (onFirstToken) onFirstToken();
+            }
+
+            buffer += decoder.decode(value, { stream: true });
+            
+            if (pkey === 'google') {
+                const lines = buffer.split("\n");
+                buffer = lines.pop();
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const jsonStr = line.substring(5).trim();
+                            if (!jsonStr) continue;
+                            const data = JSON.parse(jsonStr);
+                            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (text) onChunk(text);
+                        } catch(e) {}
+                    }
+                }
+            } else if (pkey === 'anthropic') {
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+                for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const jsonStr = line.substring(6).trim();
+                            if (!jsonStr) continue;
+                            const data = JSON.parse(jsonStr);
+                            if (data.type === 'content_block_delta' && data.delta?.text) onChunk(data.delta.text);
+                        } catch(e) {}
+                    }
+                }
+            } else {
+                const lines = buffer.split("\n");
+                buffer = lines.pop();
+                for (const line of lines) {
+                    const clean = line.replace(/^data: /, "").trim();
+                    if (clean && clean !== "[DONE]") {
+                        try {
+                            const data = JSON.parse(clean);
+                            const text = data.choices?.[0]?.delta?.content;
+                            if (text) onChunk(text);
+                        } catch(e) {}
+                    }
+                }
+            }
+        }
+      };
+
+      // --- UI Components ---
+      const Button = ({ onClick, disabled, children, primary = false, active = false, className = "" }) => {
+        const base = "px-3 py-2 border border-black text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed uppercase tracking-wider";
+        const style = primary 
+            ? "bg-white shadow-laam hover:shadow-laam-hover hover:-translate-y-0.5 active:translate-y-0 active:shadow-none" 
+            : active 
+                ? "bg-black text-white" 
+                : "bg-white hover:bg-black hover:text-white";
+        return <button onClick={onClick} disabled={disabled} className={`${base} ${style} ${className}`}>{children}</button>;
+      };
+
+      const Badge = ({ children, color = "bg-gray-200" }) => (
+        <span className={`${color} px-1.5 py-0.5 text-[10px] font-bold border border-black uppercase`}>{children}</span>
+      );
+
+      const StatsFooter = ({ stats }) => (
+        <div className="p-2 border-t border-gray-200 text-[10px] text-muted font-mono flex gap-4 bg-white sticky bottom-0">
+           <div><span className="font-bold text-black">TTFT:</span> {formatSec(stats?.ttft)}</div>
+           <div><span className="font-bold text-black">Total:</span> {formatSec(stats?.elapsed)}</div>
+           <div><span className="font-bold text-black">Len:</span> {stats?.content?.length || 0}</div>
+        </div>
+      );
+
+      const ProgressBar = ({ stage }) => {
+        const stages = ['idle', 'drafting', 'reviewing', 'synthesizing', 'complete'];
+        const currentIndex = stages.indexOf(stage);
+        return (
+            <div className="flex items-center gap-1 mb-6 text-xs font-mono border-b border-black pb-4">
+                <div className={`flex items-center gap-2 ${currentIndex >= 1 ? 'text-black font-bold' : 'text-muted'}`}>
+                    <div className={`w-3 h-3 border border-black ${currentIndex === 1 ? 'bg-black animate-pulse' : currentIndex > 1 ? 'bg-black' : 'bg-white'}`}></div>
+                    STAGE 1: DRAFTING
+                </div>
+                <div className="w-8 h-[1px] bg-black"></div>
+                <div className={`flex items-center gap-2 ${currentIndex >= 2 ? 'text-black font-bold' : 'text-muted'}`}>
+                    <div className={`w-3 h-3 border border-black ${currentIndex === 2 ? 'bg-black animate-pulse' : currentIndex > 2 ? 'bg-black' : 'bg-white'}`}></div>
+                    STAGE 2: REVIEW
+                </div>
+                <div className="w-8 h-[1px] bg-black"></div>
+                <div className={`flex items-center gap-2 ${currentIndex >= 3 ? 'text-black font-bold' : 'text-muted'}`}>
+                    <div className={`w-3 h-3 border border-black ${currentIndex === 3 ? 'bg-black animate-pulse' : currentIndex > 3 ? 'bg-black' : 'bg-white'}`}></div>
+                    STAGE 3: SYNTHESIS
+                </div>
+            </div>
+        );
+      };
+
+      // --- Main Logic ---
+      function App() {
+        const [apiKeys, setApiKeys] = useState(() => getInitialState('apiKeys', { openai: '', google: '', anthropic: '', deepseek: '', kimi: '', xai: '' }));
+        const [modelNames, setModelNames] = useState(() => getInitialState('modelNames', defaultModels));
+        const [council, setCouncil] = useState(() => getInitialState('council', { openai: true, google: true, anthropic: true, deepseek: false, kimi: false, xai: false }));
+        const [chairman, setChairman] = useState(() => getInitialState('chairman', 'anthropic'));
+        
+        const [temperature, setTemperature] = useState(() => getInitialState('temperature', 0.7));
+        const [maxTokens, setMaxTokens] = useState(() => getInitialState('maxTokens', 2000));
+        const [systemPrompt, setSystemPrompt] = useState(() => getInitialState('systemPrompt', ''));
+
+        const [prompt, setPrompt] = useState('Why is the sky blue?');
+        const [status, setStatus] = useState('idle');
+        const [showSettings, setShowSettings] = useState(false);
+        const [activeTab, setActiveTab] = useState('drafts');
+
+        const [stage1Drafts, setStage1Drafts] = useState({});
+        const [stage2Reviews, setStage2Reviews] = useState({});
+        const [finalOutput, setFinalOutput] = useState({ content: '', ttft: 0, elapsed: 0 });
+        
+        const controllers = useRef({});
+
+        useEffect(() => localStorage.setItem('apiKeys', JSON.stringify(apiKeys)), [apiKeys]);
+        useEffect(() => localStorage.setItem('modelNames', JSON.stringify(modelNames)), [modelNames]);
+        useEffect(() => localStorage.setItem('council', JSON.stringify(council)), [council]);
+        useEffect(() => localStorage.setItem('chairman', JSON.stringify(chairman)), [chairman]);
+        useEffect(() => localStorage.setItem('temperature', JSON.stringify(temperature)), [temperature]);
+        useEffect(() => localStorage.setItem('maxTokens', JSON.stringify(maxTokens)), [maxTokens]);
+        useEffect(() => localStorage.setItem('systemPrompt', JSON.stringify(systemPrompt)), [systemPrompt]);
+
+        const activeMembers = useMemo(() => Object.keys(council).filter(k => council[k] && apiKeys[k]), [council, apiKeys]);
+
+        const copyToClipboard = (text) => { if (text) navigator.clipboard.writeText(text); };
+
+        const exportJSON = () => {
+          const data = {
+            prompt,
+            timestamp: new Date().toISOString(),
+            chairman: { model: chairman, result: finalOutput },
+            stage1_drafts: stage1Drafts,
+            stage2_reviews: stage2Reviews,
+            config: { active_council: activeMembers, models: modelNames, temperature, maxTokens, systemPrompt }
+          };
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = 'llm-council-session.json';
+          document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        };
+
+        const runCouncil = async () => {
+            if (!prompt.trim() || status !== 'idle') return;
+            
+            setStage1Drafts({});
+            setStage2Reviews({});
+            setFinalOutput({ content: '', ttft: 0, elapsed: 0 });
+            controllers.current = {};
+            
+            try {
+                // STAGE 1: DRAFTING
+                setStatus('drafting');
+                const drafts = {};
+                const draftPromises = activeMembers.map(async (pkey) => {
+                    const ctrl = new AbortController();
+                    controllers.current[`stage1_${pkey}`] = ctrl;
+                    setStage1Drafts(prev => ({...prev, [pkey]: { content: '', ttft: 0, elapsed: 0 }}));
+                    const start = performance.now();
+                    let content = '';
+                    
+                    try {
+                        await callProvider({
+                            pkey, apiKey: apiKeys[pkey], model: modelNames[pkey],
+                            messages: [{ role: 'user', content: prompt }],
+                            temperature: temperature, maxTokens: maxTokens, systemPrompt: systemPrompt,
+                            signal: ctrl.signal,
+                            onFirstToken: () => setStage1Drafts(prev => ({...prev, [pkey]: { ...prev[pkey], ttft: (performance.now() - start) / 1000 }})),
+                            onChunk: (text) => { content += text; setStage1Drafts(prev => ({...prev, [pkey]: { ...prev[pkey], content }})); }
+                        });
+                        drafts[pkey] = content;
+                    } catch (e) {
+                        setStage1Drafts(prev => ({...prev, [pkey]: { ...prev[pkey], content: `Error: ${e.message}`, error: e.message }}));
+                    } finally {
+                        setStage1Drafts(prev => ({...prev, [pkey]: { ...prev[pkey], elapsed: (performance.now() - start) / 1000 }}));
+                    }
+                });
+                await Promise.all(draftPromises);
+
+                // STAGE 2: REVIEW (With Validation Logic)
+                setStatus('reviewing');
+                const MIN_DRAFT_LENGTH = 30;
+                const validDrafts = Object.entries(drafts).filter(([_, content]) => {
+                    return content && content.length >= MIN_DRAFT_LENGTH && !content.startsWith('Error');
+                });
+
+                if (validDrafts.length === 0) throw new Error("No valid drafts generated (all failed or too short).");
+
+                const labels = validDrafts.map((_, i) => String.fromCharCode(65 + i));
+                const reviewsText = validDrafts.map(([_, content], i) => `Response ${labels[i]}:\n${content}`).join('\n\n');
+                const reviewPrompt = `You are a critic in an LLM Council. Question: "${prompt}"\n\nHere are anonymized responses from other models:\n${reviewsText}\n\nTask:\n1. Critically evaluate each response (accuracy, depth, clarity).\n2. Rank them from best to worst.\n3. Be concise.`;
+                
+                const reviews = {};
+                const reviewPromises = activeMembers.map(async (pkey) => {
+                    const ctrl = new AbortController();
+                    controllers.current[`stage2_${pkey}`] = ctrl;
+                    setStage2Reviews(prev => ({...prev, [pkey]: { content: '', ttft: 0, elapsed: 0 }}));
+                    const start = performance.now();
+                    let content = '';
+                     try {
+                        await callProvider({
+                            pkey, apiKey: apiKeys[pkey], model: modelNames[pkey],
+                            messages: [{ role: 'user', content: reviewPrompt }],
+                            temperature: 0.5, maxTokens: 800,
+                            signal: ctrl.signal,
+                            onFirstToken: () => setStage2Reviews(prev => ({...prev, [pkey]: { ...prev[pkey], ttft: (performance.now() - start) / 1000 }})),
+                            onChunk: (text) => { content += text; setStage2Reviews(prev => ({...prev, [pkey]: { ...prev[pkey], content }})); }
+                        });
+                        reviews[pkey] = content;
+                    } catch (e) {
+                        setStage2Reviews(prev => ({...prev, [pkey]: { ...prev[pkey], content: `Error: ${e.message}` }}));
+                    } finally {
+                        setStage2Reviews(prev => ({...prev, [pkey]: { ...prev[pkey], elapsed: (performance.now() - start) / 1000 }}));
+                    }
+                });
+                await Promise.all(reviewPromises);
+
+                // STAGE 3
+                setStatus('synthesizing');
+                const chairmanKey = chairman;
+                if (!activeMembers.includes(chairmanKey)) throw new Error("Chairman is not an active council member");
+                const synthesisContext = `You are the Chairman of the LLM Council.\nUser Question: "${prompt}"\n\nStage 1 (Drafts):\n${validDrafts.map(([k, v]) => `Model ${k}: ${v.substring(0, 500)}...`).join('\n')}\n\nStage 2 (Peer Reviews):\n${Object.entries(reviews).map(([k, v]) => `Reviewer ${k}: ${v.substring(0, 500)}...`).join('\n')}\n\nTask:\nSynthesize a FINAL, comprehensive answer based on the best parts of the drafts and the critiques. Do not meta-talk about the process. Just answer the user's question with authority and depth.`;
+                const ctrl = new AbortController();
+                controllers.current['stage3'] = ctrl;
+                const start = performance.now();
+                let content = '';
+                await callProvider({
+                    pkey: chairmanKey, apiKey: apiKeys[chairmanKey], model: modelNames[chairmanKey],
+                    messages: [{ role: 'user', content: synthesisContext }],
+                    temperature: temperature, maxTokens: maxTokens, systemPrompt: systemPrompt,
+                    signal: ctrl.signal,
+                    onFirstToken: () => setFinalOutput(prev => ({ ...prev, ttft: (performance.now() - start) / 1000 })),
+                    onChunk: (text) => { content += text; setFinalOutput(prev => ({ ...prev, content })); }
+                });
+                setFinalOutput(prev => ({ ...prev, elapsed: (performance.now() - start) / 1000 }));
+                setStatus('complete');
+            } catch (error) {
+                console.error("Workflow failed", error);
+                setFinalOutput(prev => ({ ...prev, content: `\n\n[SYSTEM ERROR]: ${error.message}` }));
+                setStatus('complete');
+            }
+        };
+
+        const stopAll = () => { Object.values(controllers.current).forEach(c => c.abort()); setStatus('idle'); };
+
+        return (
+            <div className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto flex flex-col">
+                <div className="flex justify-between items-center mb-8 border-b border-black pb-4">
+                    <div>
+                        <h1 className="font-serif text-3xl font-bold">LLM Council</h1>
+                        <p className="text-xs text-muted mt-1">Multi-Agent Consensus System</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button onClick={exportJSON}>Export JSON</Button>
+                        <Button onClick={() => setShowSettings(true)}>Settings / API</Button>
+                    </div>
+                </div>
+
+                <ProgressBar stage={status} />
+
+                <div className="flex flex-col gap-6 mb-12">
+                    <div className="relative group">
+                         <div className="absolute inset-0 bg-black translate-x-1 translate-y-1 hidden md:block group-focus-within:translate-x-2 group-focus-within:translate-y-2 transition-transform"></div>
+                         <textarea value={prompt} onChange={e => setPrompt(e.target.value)} disabled={status !== 'idle'} className="relative w-full border border-black p-4 font-mono text-sm min-h-[100px] focus:outline-none bg-white z-10" placeholder="State your query for the council..." />
+                         <div className="absolute bottom-4 right-4 z-20">
+                             {status === 'idle' ? (
+                                <Button primary onClick={runCouncil} disabled={activeMembers.length < 2}>Conven Council ▶</Button>
+                             ) : (
+                                <Button onClick={stopAll} className="border-red-600 text-red-600 hover:bg-red-600">Stop Session ■</Button>
+                             )}
+                         </div>
+                    </div>
+
+                    {(status === 'synthesizing' || status === 'complete' || finalOutput.content) && (
+                        <div className="border border-black bg-white shadow-laam animate-in fade-in duration-500">
+                            <div className="p-4 bg-black text-white flex justify-between items-center">
+                                <div className="flex items-center gap-2"><span className="font-serif font-bold text-lg">Final Decision</span><span className="text-xs bg-white text-black px-2 py-0.5 font-bold uppercase">{PROVIDERS[chairman]?.label || chairman}</span></div>
+                                <button onClick={() => copyToClipboard(finalOutput.content)} className="text-xs hover:underline">Copy</button>
+                            </div>
+                            <div className="p-6 prose prose-sm max-w-none font-serif leading-relaxed whitespace-pre-wrap min-h-[150px]">
+                                {finalOutput.content || <span className="animate-pulse italic text-muted">The Chairman is deliberating...</span>}
+                            </div>
+                            <StatsFooter stats={finalOutput} />
+                        </div>
+                    )}
+                </div>
+
+                <div className="mt-8 border-t border-black pt-8">
+                    <h3 className="font-mono font-bold text-xs uppercase mb-4 tracking-wider text-muted">Council Chamber Records</h3>
+                    <div className="flex gap-1 mb-4">
+                        <button onClick={() => setActiveTab('drafts')} className={`px-4 py-2 text-xs border border-black ${activeTab === 'drafts' ? 'bg-black text-white' : 'bg-white hover:bg-gray-100'}`}>Stage 1: Drafts</button>
+                        <button onClick={() => setActiveTab('reviews')} className={`px-4 py-2 text-xs border border-black ${activeTab === 'reviews' ? 'bg-black text-white' : 'bg-white hover:bg-gray-100'}`}>Stage 2: Peer Reviews</button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {activeTab === 'drafts' && activeMembers.map(key => (
+                            <div key={key} className="border border-black bg-white flex flex-col h-72 shadow-[3px_3px_0px_#eee]">
+                                <div className="flex justify-between items-center p-2 border-b border-gray-100">
+                                    <div className="flex items-center gap-2"><span className="font-bold text-xs">{PROVIDERS[key].label}</span>{status === 'drafting' && !stage1Drafts[key]?.content && <span className="text-[10px] blink">writing...</span>}</div>
+                                    <button onClick={() => copyToClipboard(stage1Drafts[key]?.content)} className="text-[10px] border border-black px-1 hover:bg-black hover:text-white" title="Copy">CPY</button>
+                                </div>
+                                <div className="flex-1 p-4 overflow-y-auto text-xs text-muted whitespace-pre-wrap">{stage1Drafts[key]?.content || <span className="opacity-30 italic">Waiting for draft...</span>}</div>
+                                <StatsFooter stats={stage1Drafts[key]} />
+                            </div>
+                        ))}
+                        {activeTab === 'reviews' && activeMembers.map(key => (
+                            <div key={key} className="border border-black bg-white flex flex-col h-72 shadow-[3px_3px_0px_#eee]">
+                                <div className="flex justify-between items-center p-2 border-b border-gray-100">
+                                    <div className="flex items-center gap-2"><span className="font-bold text-xs">{PROVIDERS[key].label} (Critic)</span>{status === 'reviewing' && !stage2Reviews[key]?.content && <span className="text-[10px] blink">reviewing...</span>}</div>
+                                    <button onClick={() => copyToClipboard(stage2Reviews[key]?.content)} className="text-[10px] border border-black px-1 hover:bg-black hover:text-white" title="Copy">CPY</button>
+                                </div>
+                                <div className="flex-1 p-4 overflow-y-auto text-xs text-muted whitespace-pre-wrap">{stage2Reviews[key]?.content || <span className="opacity-30 italic">Waiting for reviews...</span>}</div>
+                                <StatsFooter stats={stage2Reviews[key]} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {showSettings && (
+                    <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowSettings(false)}>
+                        <div className="bg-white border border-black shadow-laam p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                            <h2 className="font-serif text-2xl font-bold mb-6 border-b border-black pb-2">Configuration</h2>
+                            <div className="space-y-8">
+                                <div>
+                                    <h3 className="font-bold text-xs uppercase mb-4 bg-black text-white inline-block px-2 py-1">Global Parameters</h3>
+                                    <div className="grid md:grid-cols-2 gap-6 bg-gray-50 p-4 border border-black">
+                                        <div className="space-y-4">
+                                            <div><div className="flex justify-between text-xs mb-1"><span className="font-bold">Temperature</span><span>{temperature}</span></div><input type="range" min="0" max="2" step="0.1" value={temperature} onChange={e => setTemperature(parseFloat(e.target.value))} className="w-full" /></div>
+                                            <div><div className="flex justify-between text-xs mb-1"><span className="font-bold">Max Tokens</span><span>{maxTokens}</span></div><input type="range" min="256" max="8192" step="256" value={maxTokens} onChange={e => setMaxTokens(parseInt(e.target.value))} className="w-full" /></div>
+                                        </div>
+                                        <div className="space-y-2"><label className="text-xs font-bold uppercase">System Prompt (Persona)</label><textarea value={systemPrompt} onChange={e => setSystemPrompt(e.target.value)} rows="3" className="w-full p-2 border border-black text-xs focus:outline-none focus:bg-white bg-gray-100 resize-none" placeholder="e.g. You are a helpful assistant..."></textarea></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xs uppercase mb-3">Select Chairman</h3>
+                                    <div className="flex flex-wrap gap-4 bg-gray-50 p-4 border border-black">
+                                        {Object.values(PROVIDERS).map(p => (
+                                            <label key={p.key} className="flex items-center gap-2 cursor-pointer hover:opacity-70"><input type="radio" name="chairman" checked={chairman === p.key} onChange={() => setChairman(p.key)} className="accent-black" /><span className="text-sm font-mono">{p.label}</span></label>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xs uppercase mb-3">Council Members</h3>
+                                    <div className="space-y-3">
+                                        {Object.values(PROVIDERS).map(p => (
+                                            <div key={p.key} className="flex items-start gap-4 p-3 border border-gray-200 hover:border-black transition-colors">
+                                                <input type="checkbox" checked={council[p.key]} onChange={() => setCouncil(prev => ({...prev, [p.key]: !prev[p.key]}))} className="mt-1.5 accent-black w-4 h-4" />
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="flex justify-between"><span className="font-bold text-sm">{p.label}</span><a href={p.doc} target="_blank" className="text-[10px] underline">Get Key</a></div>
+                                                    <div className="flex gap-2"><input type="password" placeholder="API Key" value={apiKeys[p.key] || ''} onChange={e => setApiKeys(prev => ({...prev, [p.key]: e.target.value}))} className="flex-1 text-xs p-1.5 border border-gray-300 focus:border-black focus:outline-none font-mono" /><input type="text" value={modelNames[p.key] || ''} onChange={e => setModelNames(prev => ({...prev, [p.key]: e.target.value}))} className="w-1/3 text-xs p-1.5 border border-gray-300 focus:border-black focus:outline-none bg-gray-50 font-mono" /></div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-8 flex justify-end sticky bottom-0 bg-white pt-4 border-t border-gray-100"><Button primary onClick={() => setShowSettings(false)}>Save Configuration</Button></div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+      }
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

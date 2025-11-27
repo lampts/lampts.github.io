@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>LLM Comparison / λ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                    },
+                    boxShadow: {
+                        'laam': '3px 3px 0px #000000',
+                        'laam-hover': '5px 5px 0px #000000',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #ffffff; color: #000000; }
+        .blink { animation: blink 1s steps(1) infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-left: 1px solid #000; }
+        ::-webkit-scrollbar-thumb { background: #000; border: 1px solid #000; }
+        ::-webkit-scrollbar-thumb:hover { background: #333; }
+    </style>
+</head>
+<body class="font-mono text-sm antialiased selection:bg-black selection:text-white">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useEffect, useMemo, useRef, useState } = React;
+
+      // --- Updated Providers Configuration ---
+      const PROVIDERS = {
+        openai: { 
+            key: 'openai', 
+            label: 'OpenAI', 
+            defaultModel: 'gpt-4.1', 
+            doc: 'https://platform.openai.com/docs/' 
+        },
+        anthropic: { 
+            key: 'anthropic', 
+            label: 'Anthropic', 
+            defaultModel: 'claude-sonnet-4-5', 
+            doc: 'https://docs.anthropic.com/' 
+        },
+        google: { 
+            key: 'google', 
+            label: 'Google', 
+            defaultModel: 'gemini-2.5-flash', 
+            doc: 'https://ai.google.dev/' 
+        },
+        deepseek: { 
+            key: 'deepseek', 
+            label: 'DeepSeek', 
+            defaultModel: 'deepseek-chat', 
+            doc: 'https://api-docs.deepseek.com/' 
+        },
+        kimi: { 
+            key: 'kimi', 
+            label: 'Kimi', 
+            defaultModel: 'kimi-k2-turbo-preview', 
+            doc: 'https://platform.moonshot.ai/docs' 
+        },
+        xai: { 
+            key: 'xai', 
+            label: 'xAI', 
+            defaultModel: 'grok-4', 
+            doc: 'https://docs.x.ai/' 
+        }
+      };
+      
+      const defaultModels = Object.fromEntries(Object.entries(PROVIDERS).map(([k, v]) => [k, v.defaultModel]));
+      
+      const getInitialState = (key, defaultValue) => {
+        try {
+          const item = localStorage.getItem(key);
+          return item ? JSON.parse(item) : defaultValue;
+        } catch (error) {
+          console.error(`Error reading ${key}:`, error);
+          return defaultValue;
+        }
+      };
+
+      // --- UI Components ---
+
+      const Button = ({ onClick, disabled, children, title, primary = false, active = false }) => {
+        const baseClass = "px-3 py-1.5 border border-black text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed";
+        if (primary) {
+            return (
+                <button 
+                    onClick={onClick} disabled={disabled} title={title}
+                    className={`${baseClass} bg-white shadow-laam hover:shadow-laam-hover hover:-translate-y-0.5 active:translate-y-0 active:shadow-none`}
+                >
+                    {children}
+                </button>
+            );
+        }
+        if (active) {
+            return (
+                <button onClick={onClick} disabled={disabled} title={title} className={`${baseClass} bg-black text-white`}>
+                    {children}
+                </button>
+            );
+        }
+        return (
+            <button 
+                onClick={onClick} disabled={disabled} title={title}
+                className={`${baseClass} bg-white hover:bg-black hover:text-white`}
+            >
+                {children}
+            </button>
+        );
+      };
+
+      const Header = ({ exportJSON, setShowSettings }) => (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-black pb-4">
+          <div className="flex items-center gap-3">
+             <div className="font-serif text-2xl font-bold tracking-tight">System Comparison</div>
+             <span className="bg-black text-white text-[10px] px-1.5 py-0.5 font-bold">BETA</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button onClick={exportJSON}>Export JSON</Button>
+            <Button onClick={() => setShowSettings(true)}>Config / API</Button>
+          </div>
+        </div>
+      );
+
+      const SettingsModal = ({ showSettings, setShowSettings, apiKeys, setApiKeys, modelNames, setModelNames, selected, setSelected, temperature, setTemperature, maxTokens, setMaxTokens, systemPrompt, setSystemPrompt }) => {
+        if (!showSettings) return null;
+
+        const handleKeyChange = (pkey, value) => setApiKeys(prev => ({ ...prev, [pkey]: value }));
+        const handleModelChange = (pkey, value) => setModelNames(prev => ({ ...prev, [pkey]: value }));
+        const handleSelectedChange = (pkey) => setSelected(prev => ({ ...prev, [pkey]: !prev[pkey] }));
+
+        return (
+          <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={() => setShowSettings(false)}>
+            <div className="bg-white border border-black shadow-laam p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+              <h2 className="font-serif text-xl font-bold mb-6 border-b border-black pb-2">Configuration</h2>
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                {Object.values(PROVIDERS).map((p) => (
+                  <div key={p.key} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                             <input 
+                                type="checkbox" 
+                                id={`toggle-${p.key}`}
+                                checked={!!selected[p.key]} 
+                                onChange={() => handleSelectedChange(p.key)}
+                                className="accent-black h-4 w-4"
+                                disabled={!apiKeys[p.key]?.trim()}
+                             />
+                            <span className="font-bold">{p.label}</span>
+                        </div>
+                         <a href={p.doc} target="_blank" className="text-[10px] underline text-muted hover:text-black">docs</a>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <input 
+                        type="password" 
+                        className="w-full px-2 py-1.5 border border-black text-xs placeholder-muted focus:outline-none focus:bg-gray-50 font-mono"
+                        placeholder="API Key" 
+                        value={apiKeys[p.key] || ''} 
+                        onChange={(e) => handleKeyChange(p.key, e.target.value)} 
+                      />
+                      <input 
+                        type="text" 
+                        className="w-full px-2 py-1.5 border border-black text-xs placeholder-muted focus:outline-none focus:bg-gray-50 font-mono"
+                        placeholder={`Model (default: ${p.defaultModel})`} 
+                        value={modelNames[p.key] || ''} 
+                        onChange={(e) => handleModelChange(p.key, e.target.value)} 
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-black grid md:grid-cols-2 gap-8">
+                 <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase">System Prompt</label>
+                        <textarea 
+                            value={systemPrompt} 
+                            onChange={e => setSystemPrompt(e.target.value)} 
+                            rows="4" 
+                            className="w-full p-2 border border-black text-xs focus:outline-none focus:bg-gray-50"
+                            placeholder="You are a helpful assistant..."
+                        ></textarea>
+                    </div>
+                 </div>
+                 <div className="space-y-6">
+                    <div>
+                        <div className="flex justify-between text-xs mb-1">
+                            <span>Temperature</span>
+                            <span>{temperature}</span>
+                        </div>
+                        <input 
+                            type="range" min="0" max="2" step="0.1" 
+                            value={temperature} 
+                            onChange={e => setTemperature(parseFloat(e.target.value))} 
+                            className="w-full accent-black h-1 bg-gray-200 rounded-none appearance-none cursor-pointer" 
+                        />
+                    </div>
+                    <div>
+                        <div className="flex justify-between text-xs mb-1">
+                            <span>Max Tokens</span>
+                            <span>{maxTokens}</span>
+                        </div>
+                        <input 
+                            type="range" min="256" max="8192" step="256" 
+                            value={maxTokens} 
+                            onChange={e => setMaxTokens(parseInt(e.target.value))} 
+                            className="w-full accent-black h-1 bg-gray-200 rounded-none appearance-none cursor-pointer" 
+                        />
+                    </div>
+                    <div className="flex justify-end pt-4">
+                        <Button onClick={() => setShowSettings(false)} primary={true}>Save Changes</Button>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+      
+      const Controls = ({ selected, setSelected, apiKeys, prompt, setPrompt, handleSend, isStreaming, stopAll, clearAll, promptInputRef, hasAnyKey, activeProviders }) => (
+        <div className="space-y-4 mb-8">
+          <div className="flex flex-wrap gap-2 pb-4 border-b border-gray-100">
+            {Object.values(PROVIDERS).map((p) => {
+                 const hasKey = !!apiKeys[p.key]?.trim();
+                 return (
+                  <Button
+                    key={p.key}
+                    onClick={() => setSelected((prev) => ({ ...prev, [p.key]: !prev[p.key] }))}
+                    disabled={!hasKey}
+                    active={selected[p.key] && hasKey}
+                  >
+                    {p.label}
+                  </Button>
+                )
+            })}
+             {!hasAnyKey && <span className="text-xs text-red-600 self-center ml-2">⚠️ Configure API keys in settings</span>}
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-4 items-start">
+            <div className="flex-1 w-full relative group">
+                <div className="absolute inset-0 bg-black translate-x-1 translate-y-1 hidden md:block group-focus-within:translate-x-2 group-focus-within:translate-y-2 transition-transform"></div>
+                <textarea
+                ref={promptInputRef}
+                rows={3}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Enter prompt..."
+                className="relative z-10 w-full p-4 border border-black bg-white focus:outline-none resize-y text-base font-mono"
+                />
+            </div>
+            
+            <div className="flex md:flex-col gap-2 shrink-0">
+              <Button 
+                onClick={handleSend} 
+                disabled={!prompt.trim() || activeProviders.length === 0 || isStreaming}
+                primary={true}
+              >
+                RUN ▶
+              </Button>
+              
+              {isStreaming ? (
+                <Button onClick={stopAll} className="hover:bg-red-500 hover:text-white border-red-500 text-red-500">
+                  STOP ■
+                </Button>
+              ) : (
+                <Button onClick={clearAll}>
+                  CLEAR
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+
+      const Panel = ({ pkey, responses, modelNames, stopOne, copyOne, clearOne }) => {
+        const p = PROVIDERS[pkey];
+        const r = responses[pkey];
+        const formatSec = (s) => (s ? `${s.toFixed(2)}s` : '-');
+
+        return (
+          <div className="border border-black flex flex-col h-[500px] hover:shadow-laam transition-shadow bg-white">
+            <div className="p-3 border-b border-black flex items-center justify-between bg-gray-50">
+              <div className="flex flex-col">
+                <span className="font-serif font-bold text-sm">{p.label}</span>
+                <span className="text-[10px] text-muted font-mono">{r.model || modelNames[pkey]}</span>
+              </div>
+              <div className="flex gap-2">
+                 {r.streaming ? (
+                    <button onClick={() => stopOne(pkey)} className="text-[10px] border border-black px-1 hover:bg-black hover:text-white">STOP</button>
+                 ) : (
+                     <>
+                        <button onClick={() => copyOne(pkey)} disabled={!r.content} className="text-[10px] underline decoration-1 underline-offset-2 hover:bg-black hover:text-white px-1 disabled:opacity-30">CPY</button>
+                        <button onClick={() => clearOne(pkey)} className="text-[10px] underline decoration-1 underline-offset-2 hover:bg-black hover:text-white px-1">CLR</button>
+                     </>
+                 )}
+              </div>
+            </div>
+            
+            <div className="flex-1 p-4 overflow-y-auto font-mono text-xs leading-relaxed whitespace-pre-wrap">
+              {r.error ? (
+                <div className="text-red-600 border border-red-200 bg-red-50 p-2">Error: {r.error}</div>
+              ) : (
+                <>
+                  {r.content}
+                  {r.streaming && <span className="inline-block w-2 h-4 bg-black ml-1 blink align-middle"></span>}
+                  {!r.content && !r.streaming && <span className="text-muted italic opacity-50">Waiting for input...</span>}
+                </>
+              )}
+            </div>
+            
+            <div className="p-2 border-t border-gray-200 text-[10px] text-muted font-mono flex gap-4 bg-white">
+               <div><span className="font-bold text-black">TTFT:</span> {formatSec(r.ttft)}</div>
+               <div><span className="font-bold text-black">Total:</span> {formatSec(r.elapsed)}</div>
+               <div><span className="font-bold text-black">Len:</span> {r.chars}</div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- Main Application Logic ---
+      function App() {
+        const [apiKeys, setApiKeys] = useState(() => getInitialState('apiKeys', { openai: '', google: '', anthropic: '', deepseek: '', kimi: '', xai: '' }));
+        const [modelNames, setModelNames] = useState(() => getInitialState('modelNames', defaultModels));
+        const [selected, setSelected] = useState(() => getInitialState('selected', { openai: true, google: true, anthropic: true, deepseek: true, kimi: true, xai: true }));
+        const [prompt, setPrompt] = useState('Explain the concept of "Agentic Workflows" briefly.');
+        const [responses, setResponses] = useState(
+          Object.fromEntries(
+            Object.keys(PROVIDERS).map((k) => [
+              k,
+              { content: '', streaming: false, ttft: 0, elapsed: 0, chunks: 0, chars: 0, error: null, model: defaultModels[k] },
+            ])
+          )
+        );
+        const [showSettings, setShowSettings] = useState(false);
+        const [temperature, setTemperature] = useState(() => getInitialState('temperature', 0.7));
+        const [maxTokens, setMaxTokens] = useState(() => getInitialState('maxTokens', 1024));
+        const [systemPrompt, setSystemPrompt] = useState(() => getInitialState('systemPrompt', ''));
+
+        const controllersRef = useRef({});
+        const promptInputRef = useRef(null);
+
+        useEffect(() => { localStorage.setItem('apiKeys', JSON.stringify(apiKeys)); }, [apiKeys]);
+        useEffect(() => { localStorage.setItem('modelNames', JSON.stringify(modelNames)); }, [modelNames]);
+        useEffect(() => { localStorage.setItem('selected', JSON.stringify(selected)); }, [selected]);
+        useEffect(() => { localStorage.setItem('temperature', JSON.stringify(temperature)); }, [temperature]);
+        useEffect(() => { localStorage.setItem('maxTokens', JSON.stringify(maxTokens)); }, [maxTokens]);
+        useEffect(() => { localStorage.setItem('systemPrompt', JSON.stringify(systemPrompt)); }, [systemPrompt]);
+
+        const activeProviders = useMemo(() => Object.keys(PROVIDERS).filter(pkey => selected[pkey] && apiKeys[pkey]), [selected, apiKeys]);
+        const isStreaming = useMemo(() => Object.values(responses).some(r => r.streaming), [responses]);
+        const hasAnyKey = useMemo(() => Object.values(apiKeys).some((v) => v?.trim()), [apiKeys]);
+        
+        const updateResponse = (key, patch) => setResponses((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+
+        const handleSend = async () => {
+          if (!prompt.trim() || isStreaming) return;
+
+          const currentControllers = {};
+          activeProviders.forEach(pkey => {
+            currentControllers[pkey] = new AbortController();
+            updateResponse(pkey, { content: '', streaming: true, ttft: 0, elapsed: 0, chunks: 0, chars: 0, error: null, model: modelNames[pkey] });
+          });
+          controllersRef.current = currentControllers;
+          const now = () => performance.now();
+
+          const promises = activeProviders.map(async (pkey) => {
+            const apiKey = apiKeys[pkey];
+            const model = modelNames[pkey] || PROVIDERS[pkey].defaultModel;
+            const controller = controllersRef.current[pkey];
+            const start = now();
+            let firstChunk = true;
+
+            try {
+              let response;
+              if (['openai', 'deepseek', 'kimi', 'xai'].includes(pkey)) {
+                let apiUrl = "https://api.openai.com/v1/chat/completions";
+                if(pkey === 'deepseek') apiUrl = "https://api.deepseek.com/chat/completions";
+                if(pkey === 'kimi') apiUrl = "https://api.moonshot.ai/v1/chat/completions";
+                if(pkey === 'xai') apiUrl = "https://api.x.ai/v1/chat/completions";
+
+                const messages = [];
+                if (systemPrompt && systemPrompt.trim()) messages.push({ role: "system", content: systemPrompt });
+                messages.push({ role: "user", content: prompt });
+
+                response = await fetch(apiUrl, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+                  body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens, stream: true }),
+                  signal: controller.signal,
+                });
+                if (!response.ok) throw new Error(await response.text());
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  buffer += decoder.decode(value, { stream: true });
+                  const lines = buffer.split("\n");
+                  buffer = lines.pop();
+                  const parsedLines = lines.map(l => l.replace(/^data: /, "").trim()).filter(l => l !== "" && l !== "[DONE]").map(l => { try { return JSON.parse(l); } catch(e) { return null; } }).filter(Boolean);
+                  
+                  for (const parsedLine of parsedLines) {
+                    const content = parsedLine.choices?.[0]?.delta?.content;
+                    if (content) {
+                      if (firstChunk) { updateResponse(pkey, { ttft: (now() - start) / 1000 }); firstChunk = false; }
+                      setResponses(prev => ({...prev, [pkey]: { ...prev[pkey], content: (prev[pkey].content || '') + content, chunks: prev[pkey].chunks + 1, chars: (prev[pkey].content || '').length + content.length, elapsed: (now() - start) / 1000 }}));
+                    }
+                  }
+                }
+              } else if (pkey === 'google') {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${apiKey}&alt=sse`;
+                const googleBody = { contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature, maxOutputTokens: maxTokens } };
+                if (systemPrompt && systemPrompt.trim()) googleBody.systemInstruction = { parts: [{ text: systemPrompt }] };
+                
+                response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(googleBody), signal: controller.signal });
+                if (!response.ok) throw new Error(await response.text());
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    const lines = decoder.decode(value).split("\n");
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = JSON.parse(line.substring(5));
+                            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (text) {
+                                if (firstChunk) { updateResponse(pkey, { ttft: (now() - start) / 1000 }); firstChunk = false; }
+                                setResponses(prev => ({...prev, [pkey]: { ...prev[pkey], content: (prev[pkey].content || '') + text, chunks: prev[pkey].chunks + 1, chars: (prev[pkey].content || '').length + text.length, elapsed: (now() - start) / 1000 }}));
+                            }
+                        }
+                    }
+                }
+              } else if (pkey === 'anthropic') {
+                  const anthropicBody = { model, messages: [{ role: "user", content: prompt }], max_tokens: maxTokens, temperature, stream: true };
+                  if (systemPrompt && systemPrompt.trim()) anthropicBody.system = systemPrompt;
+                  
+                  response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json", "anthropic-dangerous-direct-browser-access": "true" },
+                    body: JSON.stringify(anthropicBody),
+                    signal: controller.signal,
+                  });
+                  if (!response.ok) throw new Error(await response.text());
+                  const reader = response.body.getReader();
+                  const decoder = new TextDecoder();
+                  let buffer = '';
+                  while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop();
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.substring(6);
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.type === 'message_start') updateResponse(pkey, { model: parsed.message.model });
+                                else if (parsed.type === 'content_block_delta' && parsed.delta.type === 'text_delta') {
+                                    if (firstChunk) { updateResponse(pkey, { ttft: (now() - start) / 1000 }); firstChunk = false; }
+                                    const textChunk = parsed.delta.text;
+                                    setResponses(prev => ({...prev, [pkey]: { ...prev[pkey], content: (prev[pkey].content || '') + textChunk, chunks: prev[pkey].chunks + 1, chars: (prev[pkey].content || '').length + textChunk.length, elapsed: (now() - start) / 1000 }}));
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                  }
+              }
+            } catch (error) {
+              if (error.name !== 'AbortError') { console.error(error); updateResponse(pkey, { error: error.message }); }
+            } finally { updateResponse(pkey, { streaming: false, elapsed: (now() - start) / 1000 }); }
+          });
+          await Promise.allSettled(promises);
+        };
+
+        const stopOne = (pkey) => { controllersRef.current[pkey]?.abort(); updateResponse(pkey, { streaming: false }); };
+        const stopAll = () => { Object.keys(controllersRef.current).forEach(pkey => stopOne(pkey)); };
+        const clearOne = (pkey) => { updateResponse(pkey, { content: '', streaming: false, ttft: 0, elapsed: 0, chunks: 0, chars: 0, error: null, model: modelNames[pkey] }); }
+        const clearAll = () => { Object.keys(PROVIDERS).forEach(k => clearOne(k)); setPrompt(''); promptInputRef.current?.focus(); };
+        const copyOne = (pkey) => { if(responses[pkey]?.content) navigator.clipboard.writeText(responses[pkey].content); }
+        const exportJSON = () => {
+          const data = { prompt, systemPrompt, temperature, maxTokens, models: modelNames, results: responses, timestamp: new Date().toISOString() };
+          const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+          a.download = 'llm-results.json'; document.body.appendChild(a); a.click(); a.remove();
+        };
+
+        return (
+          <div className="min-h-screen p-4 md:p-12 max-w-7xl mx-auto">
+            <Header exportJSON={exportJSON} setShowSettings={setShowSettings} />
+            <Controls 
+              selected={selected} setSelected={setSelected} apiKeys={apiKeys} 
+              prompt={prompt} setPrompt={setPrompt} handleSend={handleSend} 
+              isStreaming={isStreaming} stopAll={stopAll} clearAll={clearAll} 
+              promptInputRef={promptInputRef} hasAnyKey={hasAnyKey} activeProviders={activeProviders}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Object.keys(PROVIDERS).map((k) => (
+                selected[k] && apiKeys[k]?.trim() ? 
+                <Panel key={k} pkey={k} responses={responses} modelNames={modelNames} stopOne={stopOne} copyOne={copyOne} clearOne={clearOne} /> : null
+              ))}
+            </div>
+            <SettingsModal 
+              showSettings={showSettings} setShowSettings={setShowSettings} 
+              apiKeys={apiKeys} setApiKeys={setApiKeys} modelNames={modelNames} setModelNames={setModelNames}
+              selected={selected} setSelected={setSelected} temperature={temperature} setTemperature={setTemperature}
+              maxTokens={maxTokens} setMaxTokens={setMaxTokens} systemPrompt={systemPrompt} setSystemPrompt={setSystemPrompt}
+            />
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
