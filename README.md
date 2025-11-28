@@ -658,7 +658,7 @@ Since then, it got a full re-write of the styles and many additional cool featur
 
 ## HTML Files
 
-- [index.html](index.html) - *November 26, 2025*
+- [index.html](index.html) - *November 27, 2025*
 - [collatz.html](collatz.html) - *October 14, 2025*
 - [crypto.html](crypto.html) - *October 12, 2025*
 - [rock.html](rock.html) - *October 09, 2025*

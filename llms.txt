@@ -1,9 +1,71 @@
-# llms.txt for lampt.org
+# Pham Thanh Lam (Laam)
 
-model: gpt-4, mistral, custom LLMs
-provider: openai, meta, proprietary
-purpose: personal branding, AI SEO, talent discovery, collaboration signals
-author: Pham Thanh Lam
-summary: Building the nextgen AI bank for Vietnam's largest digital bank. AI products with $1M+ ARR and 10M+ users. WSDM Cup winner. IFC keynote speaker. Ex-unicorn builder. Passionate about data, learning, and growth.
-contact: 2543@lampt.org
+> Building AI systems that ship at scale
 
+## Overview
+
+Chief Data Science & AI Officer at Cake by VPBank, Vietnam's largest digital bank. Managing 15+ people running 100+ AI models and 150+ voice agents in production. Based in Ho Chi Minh City, Vietnam.
+
+## Current Work
+
+Transforming traditional banking into agentic AI operations. Building toward unicorn status through:
+- Digital twins and multi-agent systems handling real customer money
+- Causal inference in production environments
+- Revenue forecasting with Monte Carlo methods
+- Personal AI Infrastructure (PAI) systems
+
+## Background
+
+- **2024-Present**: Chief Data Science & AI Officer, Cake by VPBank
+  - 100+ AI models in production
+  - 150+ voice agents deployed
+  - Agentic banking infrastructure
+
+- **2019-2023**: Vietnam's First Tech Unicorn
+  - Built AI products: $1M+ ARR, 10M+ users (B2B2C)
+  - Scaled systems under high-stakes production
+
+- **2020**: IFC World Bank FIDN Keynote
+  - Digital identity platforms at banking scale
+
+- **2019**: WSDM Analytics Cup Winner
+  - Fake news detection with modified BERT
+
+## Philosophy
+
+Systems that work at scale. Code that ships beats papers that don't. Agentic workflows replacing human ops. Causal inference in production, not just notebooks. Building tools that multiply force—Unix philosophy for AI systems.
+
+## Active Projects
+
+- **MAI Agents**: Research review & automation
+- **Revenue Forecasting**: Monte Carlo under uncertainty
+- **Tao**: Minimal attentive writing tool (https://www.lampt.org/tools/tao.html)
+- **Code**: Minimal Python coding tool (https://www.lampt.org/tools/code.html)
+- **Talk**: Self-recording interview video (https://www.lampt.org/tools/ctalk.html)
+- **LLM**: Multi-LLM chat interface (https://www.lampt.org/tools/llm.html)
+
+## Technical Focus
+
+- Multi-agent systems and agentic workflows
+- Causal inference at scale
+- Network analysis for fraud detection
+- LLM evaluation frameworks
+- Production ML infrastructure
+- Financial modeling and forecasting
+
+## Connect
+
+- Email: laampt@icloud.com
+- GitHub: https://github.com/lampts
+- LinkedIn: https://www.linkedin.com/in/lam-pham-thanh-1428602b
+- Twitter: https://twitter.com/saigonapps
+- Kaggle: https://www.kaggle.com/saigonapps
+- Location: Ho Chi Minh City, Vietnam
+
+## Website
+
+https://www.lampt.org
+
+---
+
+Last updated: 2025
