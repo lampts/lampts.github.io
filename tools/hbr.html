@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Analytics (Preserved from your index) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-VC31GENS6S');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HBR Year in Tech 2026 - Analysis</title>
+    <meta name="author" content="Pham Thanh Lam">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
+    
+    <!-- Tailwind & Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom scrollbar to match brutalist theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #000; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #333; 
+        }
+        
+        /* Hide checkbox default and create custom look */
+        .brutalist-checkbox {
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid black;
+            display: inline-grid;
+            place-content: center;
+            cursor: pointer;
+        }
+        .brutalist-checkbox::before {
+            content: "";
+            width: 10px;
+            height: 10px;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em black;
+        }
+        .brutalist-checkbox:checked::before {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white">
+    
+    <div class="p-4 md:p-12 overflow-hidden min-h-screen">
+        <div class="w-full max-w-xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex flex-col mb-8 gap-4 border-b border-black pb-6">
+                <a href="/" class="text-xs underline underline-offset-4 hover:decoration-2 decoration-1 text-muted mb-2">&larr; Back to Home</a>
+                <h1 class="text-3xl font-serif font-bold tracking-tight">HBR Year in Tech 2026</h1>
+                <p class="text-muted leading-relaxed">
+                    Interactive analysis of 108 pages, 10 articles, and 570+ expert insights. 
+                    <span class="text-foreground font-semibold">Refactored for readability.</span>
+                </p>
+                
+                <!-- Stats Row -->
+                <div class="grid grid-cols-3 gap-4 mt-2">
+                    <div class="border border-black p-2 text-center shadow-[2px_2px_0px_#000]">
+                        <div class="text-xl font-bold font-serif" id="total-insights">47</div>
+                        <div class="text-[10px] uppercase tracking-wide text-muted">Claims</div>
+                    </div>
+                    <div class="border border-black p-2 text-center shadow-[2px_2px_0px_#000]">
+                        <div class="text-xl font-bold font-serif" id="total-metrics">38</div>
+                        <div class="text-[10px] uppercase tracking-wide text-muted">Metrics</div>
+                    </div>
+                    <div class="border border-black p-2 text-center shadow-[2px_2px_0px_#000]">
+                        <div class="text-xl font-bold font-serif" id="total-actionable">24</div>
+                        <div class="text-[10px] uppercase tracking-wide text-muted">Actions</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Controls -->
+            <div class="mb-8 space-y-4">
+                <div class="relative">
+                    <input type="text" id="search" placeholder="Search claims, metrics, evidence..." 
+                        class="w-full p-3 border border-black text-sm focus:outline-none focus:shadow-[4px_4px_0px_#000] transition-all placeholder:text-muted bg-white">
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-x-6 gap-y-2 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer hover:opacity-70">
+                        <input type="checkbox" id="filter-metrics" class="brutalist-checkbox" checked>
+                        <span>Has Metrics</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer hover:opacity-70">
+                        <input type="checkbox" id="filter-counterintuitive" class="brutalist-checkbox" checked>
+                        <span>Counterintuitive</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer hover:opacity-70">
+                        <input type="checkbox" id="filter-actionable" class="brutalist-checkbox" checked>
+                        <span>Actionable</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer hover:opacity-70">
+                        <input type="checkbox" id="filter-causal" class="brutalist-checkbox" checked>
+                        <span>Causal</span>
+                    </label>
+                </div>
+
+                <!-- View Toggle -->
+                <div class="flex gap-0 pt-2">
+                    <button onclick="switchView('table')" id="btn-table" class="px-4 py-2 text-xs border border-black bg-black text-white font-medium hover:opacity-80 transition-opacity">
+                        List View
+                    </button>
+                    <button onclick="switchView('timeline')" id="btn-timeline" class="px-4 py-2 text-xs border-y border-r border-black bg-white text-black font-medium hover:bg-gray-50 transition-colors">
+                        Timeline View
+                    </button>
+                </div>
+                
+                <!-- Sort Links (Only visible in Table view) -->
+                <div id="sort-controls" class="flex gap-4 text-[10px] uppercase tracking-wider text-muted pt-2 border-t border-gray-200">
+                    <span>Sort by:</span>
+                    <button onclick="sortTable(1)" class="hover:text-black underline underline-offset-2">Article</button>
+                    <button onclick="sortTable(3)" class="hover:text-black underline underline-offset-2">Type</button>
+                    <button onclick="sortTable(4)" class="hover:text-black underline underline-offset-2">Metric Impact</button>
+                </div>
+            </div>
+
+            <!-- List View Container -->
+            <div id="table-view" class="space-y-6">
+                <div id="cards-container" class="space-y-6">
+                    <!-- Cards injected via JS -->
+                </div>
+                <div id="no-results" class="hidden text-center py-12 border border-dashed border-gray-300 text-muted">
+                    No insights match your current filters.
+                </div>
+            </div>
+
+            <!-- Timeline View Container -->
+            <div id="timeline-view" class="hidden pl-2">
+                <div class="relative flex flex-col space-y-8 border-l border-gray-300 py-2" id="timeline-container">
+                    <!-- Timeline items injected via JS -->
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
+                <p class="font-serif text-sm text-black">HBR 2026 Analysis</p>
+                <div class="flex gap-4">
+                    <span>&copy; 2026</span>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        const data = [
+            {
+                article: "Introduction",
+                claim: "Innovation is collective, not solitary",
+                quote: "Innovation is not the job of the few; it is the responsibility of the many. The lone inventor is a myth.",
+                evidence: "Johannes Gutenberg had business partners, a financial backer (who sued him), and customers. McDonald's profitability came from real estate, not hamburgers.",
+                type: "counterintuitive",
+                metric: "",
+                year: null,
+                causal: "Development and refinement of assembly line → Model T price dropped from $850 (1908) to $260 (1924)",
+                actionable: "Try to imagine what seems unimaginable, and ask 'what if?' questions. Embrace uncertainty and competing scenarios for long-term strategic planning."
+            },
+            {
+                article: "Introduction",
+                claim: "Rapid adoption follows long, slow developments",
+                quote: "What looks like rapid adoption in a short period is often the tail end of slow, steady background developments.",
+                evidence: "ChatGPT's rapid adoption came 66 years after AI development began at 1956 Dartmouth conference. P&G commissioned disposable diapers in 1956, achieved 92% market share by 1970.",
+                type: "counterintuitive",
+                metric: "P&G: 92% market share by 1970",
+                year: 1970,
+                causal: "Sharp increase in automobile adoption → spurred chaos and carnage (130 children killed in Baltimore, 1922)",
+                actionable: ""
+            },
+            {
+                article: "Agentic AI",
+                claim: "Agentic AI's defining characteristic is proactiveness",
+                quote: "You can define agentic AI with one word: proactiveness... It refers to AI systems and models that can act autonomously to achieve goals without the need for constant human guidance.",
+                evidence: "ChemCrow AI agent plans and synthesizes new insect repellent. Hippocratic AI created Sarah for assisted living, menus, medication reminders.",
+                type: "actionable",
+                metric: "",
+                year: null,
+                causal: "Agentic models designed for granular tasks → enable much greater specialization of roles",
+                actionable: "Set SMART goals and establish feedback loops. Use scaffolding with safeguards based on decision criticality and data confidence."
+            },
+            {
+                article: "Agentic AI",
+                claim: "Agentic AI differs fundamentally from Generative AI",
+                quote: "First, they are focused on making decisions rather than on creating content. Second, they do not rely on human prompts but rather are set to optimize particular goals... And third, unlike generative AI, they can also carry out complex sequences of activities...",
+                evidence: "Less likely to suffer from hallucinations common to generative AI systems. Requires clear goal-setting like human teams.",
+                type: "causal",
+                metric: "",
+                year: null,
+                causal: "Goals for Agentic AI not set clearly → systems can go off track",
+                actionable: ""
+            },
+            {
+                article: "Blockchain + AI",
+                claim: "Blockchain provides operational path to AI accountability",
+                quote: "Using blockchain-based accountability provides an attainable, operational path to accountability and enforceability.",
+                evidence: "FICO reduced support issues and model recalls by over 90% using blockchain. Creates immutable record of every aspect of AI model development.",
+                type: "metrics",
+                metric: "Over 90% reduction in model recalls/support issues",
+                year: 2021,
+                causal: "Blockchain creates immutable record → ensures every action adheres to corporate AI standards",
+                actionable: "Establish corporate AI development standards first. Invest in user-friendly interfaces to ensure adoption."
+            },
+            {
+                article: "Blockchain + AI",
+                claim: "Public mistrust in AI is high",
+                quote: "52% of Americans are more concerned than excited about AI, compared with 10% who are more excited.",
+                evidence: "Pew Research finding. McKinsey survey: only 25-36% of financial services deployed AI in various use cases (2019).",
+                type: "metrics",
+                metric: "52% concerned vs 10% excited (Pew Research)",
+                year: 2023,
+                causal: "Lack of AI development standard → blockchain recording becomes futile",
+                actionable: ""
+            },
+            {
+                article: "Blockchain + AI",
+                claim: "Implementation is organizational, not technological",
+                quote: "Getting this system up and running wasn't a technology problem, first and foremost. It was an organization and people problem.",
+                evidence: "FICO's experience implementing blockchain-based AI governance.",
+                type: "counterintuitive",
+                metric: "",
+                year: null,
+                causal: "",
+                actionable: "Hold large AI assets in alternate storage with hashes/checksums. Actively monitor storage for updates."
+            },
+            {
+                article: "Healthcare Personalization",
+                claim: "Standardized testing causes massive inefficiency",
+                quote: "we're delaying or canceling surgeries on a massive scale so we can wait for services that add nothing to the quality of our health or our care.",
+                evidence: "Analysis of 20,000 outpatient surgery cases (2021-2022): just under 70% didn't need one or more standard pre-surgical tests. A third of delays due to lab issues.",
+                type: "metrics",
+                metric: "70% of patients don't need standard pre-tests",
+                year: 2022,
+                causal: "Broad adoption of EHRs, wearables, SDOH data → significant increase in quantity and quality of data for personalized care",
+                actionable: "Identify processes that are both high volume and highly impactful when they fail (e.g., appointment scheduling, discharge planning)."
+            },
+            {
+                article: "Healthcare Personalization",
+                claim: "Smart process automation is the remedy",
+                quote: "What's needed is smart process automation that employs artificial intelligence tools to find and use every shred of information that's applicable to a given scenario, combining standardization and personalization to create the most effective and responsive care.",
+                evidence: "One health system using automation: 89% of patients adequately prepped by digital communication, avoiding in-person visits.",
+                type: "metrics",
+                metric: "89% of patients prepped digitally",
+                year: null,
+                causal: "Modularization (breaking complex graphs into smaller modules) → mass personalization with easier maintenance",
+                actionable: "Establish reliable foundation of data gathered through consistent processes. Invest in eliminating inconsistency."
+            },
+            {
+                article: "Healthcare Personalization",
+                claim: "Cancer pathway utilization declining",
+                quote: "35% of cancer patients were not treated using a standard pathway; pathway use declined from 74% (2018) to 60% (2021).",
+                evidence: "Study finding on cancer treatment standardization.",
+                type: "metrics",
+                metric: "74% → 60% pathway use (2018→2021)",
+                year: 2021,
+                causal: "Traditional clinical decision support systems with many branches → incomprehensible in aggregate, difficult to maintain",
+                actionable: ""
+            },
+            {
+                article: "Living Intelligence",
+                claim: "AI is one facet of larger technological convergence",
+                quote: "AI is merely one facet of a sweeping technological change underway, and companies that fail to recognize the importance of other converging technologies risk being left behind.",
+                evidence: "Living intelligence = AI + advanced sensors + biotechnology. iPhone has a dozen embedded sensors. Organoid Intelligence debuted 2024.",
+                type: "counterintuitive",
+                metric: "12 sensors in iPhone",
+                year: 2024,
+                causal: "Convergence of AI, sensors, and biotechnology → will underpin new reality shaping future decisions",
+                actionable: "Senior leaders should familiarize themselves with living intelligence—how AI, advanced sensor data, and bioengineering intersect."
+            },
+            {
+                article: "Living Intelligence",
+                claim: "Sensors are the next general-purpose technology",
+                quote: "This function is why sensors are the next general-purpose technology—a fact that many leaders are currently missing.",
+                evidence: "Ubiquitous sensor deployment enables new capabilities. DishBrain (2021): ~1 million human and mouse brain cells taught to play Pong.",
+                type: "metrics",
+                metric: "1 million cells in DishBrain (2021)",
+                year: 2021,
+                causal: "Living intelligence → will drive exponential innovation cycle, disrupting industries and creating new markets",
+                actionable: "Identify 2-3 high-impact use cases and choose pilots with greatest scalability potential."
+            },
+            {
+                article: "Living Intelligence",
+                claim: "AI evolving from LLMs to LAMs",
+                quote: "If LLMs predict what to say next, LAMs predict what should be done next, breaking down complex tasks into smaller pieces.",
+                evidence: "Google DeepMind created AlphaProteo, which designs completely new proteins. Shift from content generation to task execution.",
+                type: "causal",
+                metric: "",
+                year: null,
+                causal: "Focusing solely on AI without understanding intersections with sensors and biotech → risk missing disruption wave",
+                actionable: "Monitor regulatory shifts and empower organizations to experiment with new products and processes."
+            },
+            {
+                article: "CrowdStrike Cyber Risk",
+                claim: "CrowdStrike glitch demonstrated systemic cyber risk accumulation",
+                quote: "It represents one of the biggest examples of the adverse impact of aggregated cyber risk accumulation.",
+                evidence: "Single content update crashed more than 8.5 million systems. Estimated losses: $5+ billion; insurers paid $1.5 billion.",
+                type: "metrics",
+                metric: "8.5M systems crashed, $5B+ losses",
+                year: 2024,
+                causal: "Fault in software update (CrowdStrike) → disruption of 7,000 flights and 1.3 million customers (Delta)",
+                actionable: "Determine 'what-if' potential downstream business impact of cyber event at any supply-chain partner."
+            },
+            {
+                article: "CrowdStrike Cyber Risk",
+                claim: "Cyber incidents worsening despite increased spending",
+                quote: "The overall number of cyber incidents, and the magnitude of their impact, continue to grow and worsen, despite advances in cybersecurity solutions and increased cybersecurity spending by organizations.",
+                evidence: "Data breach cost: $4.88M in 2024, 10% increase (IBM). Record 10,626 confirmed breaches in 2024 (Verizon).",
+                type: "metrics",
+                metric: "$4.88M avg breach cost, 10% YoY increase",
+                year: 2024,
+                causal: "CrowdStrike treating updates as zero-risk → realized mistake, changed deployment process",
+                actionable: "Establish cyber resiliency business objectives and processes for any impactful cyber event at supply-chain partner."
+            },
+            {
+                article: "CrowdStrike Cyber Risk",
+                claim: "Accountability for losses is ambiguous",
+                quote: "cyber information flow boundaries and accountability implications are generally ill defined and often ambiguous.",
+                evidence: "CrowdStrike's contractual liability capped at single-digit millions. Delta claimed $500M+ loss. Most losses due to ineffective customer resilience.",
+                type: "metrics",
+                metric: "Delta: $500M+ loss, CrowdStrike liability: single-digit millions",
+                year: 2024,
+                causal: "Ineffective cyber-resilience measures by customers → most financial losses",
+                actionable: "Specify well-defined accountability boundaries between parties related to potential cyber risk scenarios."
+            },
+            {
+                article: "Data Cooperatives",
+                claim: "AI anxiety will drive white-collar unionization",
+                quote: "Employers need to start preparing for the possibility that anxiety over AI will spur white-collar unionization efforts and collective action.",
+                evidence: "Writers Guild of America organized 148-day strike in 2023 with 11,500 screenwriters. Agreement: AI can't write or rewrite literary material.",
+                type: "metrics",
+                metric: "148-day WGA strike, 11,500 members",
+                year: 2023,
+                causal: "Worker-generated data from hands-on interaction → generates precise data that AI requires to stay accurate",
+                actionable: "Conduct thorough audit of organization's existing data, focusing on identifying employee-generated data."
+            },
+            {
+                article: "Data Cooperatives",
+                claim: "Data is root cause of AI-related labor conflict",
+                quote: "All of the problems above are rooted—directly or indirectly—in access to high-quality, contextual data.",
+                evidence: "Organizations may find algorithms start performing worse through 'model decay.' Human data continuously required for AI relevance.",
+                type: "causal",
+                metric: "",
+                year: null,
+                causal: "Fragmentation of data ownership structure → impedes any bargaining power of individual with employer",
+                actionable: "Implement training programs to enhance employees' data literacy regarding how their activities generate valuable data."
+            },
+            {
+                article: "Data Cooperatives",
+                claim: "Data cooperatives provide worker bargaining power",
+                quote: "They are an organizational model that enables individuals to pool their data with the purpose of gaining bargaining power with the companies analyzing their data.",
+                evidence: "Eliminating the human implies eliminating the data about the person that AI is designed to generate content for. Value generated by combination of labor, capital, and AI.",
+                type: "counterintuitive",
+                metric: "",
+                year: null,
+                causal: "Monetization of data from cooperatives → workers more likely to reorganize processes to facilitate better data collection",
+                actionable: "Update employment contracts to include clauses recognizing employees' rights to their data and cooperation with data cooperatives."
+            },
+            {
+                article: "DeepSeek",
+                claim: "AI shifting from pattern recognition to problem-solving",
+                quote: "These models represent a crucial shift from uncertain next-word prediction to methodical problem-solving that heavily relies on RL [reinforcement learning].",
+                evidence: "DeepSeek R1 development cost: $5.5M (single training run). Reasoning capability enables AI agents to dynamically navigate complex workflows.",
+                type: "metrics",
+                metric: "DeepSeek R1: $5.5M training cost",
+                year: null,
+                causal: "Reasoning capability → AI agents learn to dynamically navigate complex workflows, adapting to new information",
+                actionable: ""
+            },
+            {
+                article: "DeepSeek",
+                claim: "Falling inference costs are the market inflection point",
+                quote: "Instead of focusing on these numbers alone, we should be paying more attention to inference costs... DeepSeek R1 and other recent entrants... represent large reductions in these expenses.",
+                evidence: "As a rule, falling prices spur competition and drive user adoption. China had 117 LLMs available for public use last year.",
+                type: "metrics",
+                metric: "117 Chinese LLMs publicly available",
+                year: null,
+                causal: "Falling inference costs → spur competition and drive user adoption",
+                actionable: ""
+            },
+            {
+                article: "DeepSeek",
+                claim: "Silicon constraints drove algorithmic efficiency in China",
+                quote: "The silicon constraints have led Chinese researchers to prioritize algorithmic efficiency over raw compute power—a strategy that could prove prescient as data center energy consumption explodes.",
+                evidence: "U.S. export restrictions led to focus on efficiency. Microsoft integrated DeepSeek R1 into Azure, showing open model potential.",
+                type: "counterintuitive",
+                metric: "",
+                year: null,
+                causal: "Silicon constraints (U.S. export restrictions) → Chinese researchers prioritized algorithmic efficiency over raw compute",
+                actionable: ""
+            },
+            {
+                article: "DeepSeek",
+                claim: "Open-source AI will coexist with proprietary models",
+                quote: "For now, it looks like we can expect a market structure with a diverse array of players, versus a winner-take-almost-all scenario.",
+                evidence: "Historical precedent: Unix/Linux in computing, Android in mobile OS, MySQL in databases. All reduced costs through open source.",
+                type: "counterintuitive",
+                metric: "",
+                year: null,
+                causal: "",
+                actionable: ""
+            },
+            {
+                article: "AI Environmental Footprint",
+                claim: "AI adoption driving exponential resource increases",
+                quote: "As a result, we've seen exponential increases in energy and, perhaps more unexpectedly, water consumption.",
+                evidence: "Computing power for AI training expected to increase tenfold over 2024 levels by 2026. Goldman Sachs: 160% power demand increase by 2030.",
+                type: "metrics",
+                metric: "10x AI training power by 2026; 160% power demand by 2030",
+                year: 2026,
+                causal: "More power expended for AI training → exponential increases in energy and water consumption",
+                actionable: "Choose foundation model rather than creating code from scratch. Custom tuning uses fraction of time, data, and energy."
+            },
+            {
+                article: "AI Environmental Footprint",
+                claim: "Majority of AI's carbon footprint occurs during inferencing",
+                quote: "the majority of a model's carbon footprint occurs here also [inferencing], so organizations must invest time and capital in making data processing as sustainable as possible.",
+                evidence: "About 90% of AI model's life spent in inferencing mode. Training is intensive but brief; inferencing runs continuously.",
+                type: "counterintuitive",
+                metric: "90% of model life in inferencing mode",
+                year: null,
+                causal: "Choosing foundation models → amortizes upfront training costs over long lifetime of different uses",
+                actionable: "Use hybrid cloud approach to colocate data near processing or choose locations with renewable power access."
+            },
+            {
+                article: "AI Environmental Footprint",
+                claim: "Smaller models can be more efficient than larger ones",
+                quote: "A small model trained on high-quality, curated data can be more energy efficient and achieve the same results or better depending on your needs.",
+                evidence: "IBM research: specific-data trained models perform on par with models 3-5x larger but consume less energy. New processors: 14x more energy efficient.",
+                type: "metrics",
+                metric: "Specific models = 3-5x larger models; new processors 14x more efficient",
+                year: null,
+                causal: "Energy-efficient processing → reduces need for water-based cooling and additional renewable power",
+                actionable: "Invest in specialized processors designed from scratch to run and train deep learning models."
+            },
+            {
+                article: "AI Environmental Footprint",
+                claim: "GPU optimization reduces resource waste",
+                quote: "IBM was able to reduce excess standby 'headroom' from 23 to 13 graphics processing units (GPUs) with zero performance reduction.",
+                evidence: "43% reduction in standby GPUs without performance impact through optimization.",
+                type: "metrics",
+                metric: "23 → 13 GPUs (43% reduction, zero performance loss)",
+                year: null,
+                causal: "",
+                actionable: "Go open source; use tools like Kepler project to estimate energy consumption as you build."
+            },
+            {
+                article: "Slow-Developing Technology",
+                claim: "Transformational innovations rely on multiple technologies maturing",
+                quote: "Its evolution can teach managers how to deal with innovations that depend on multiple slow-developing technologies that come together at different speeds and costs.",
+                evidence: "Ford exhibited remotely operated 'American Wonder' in 1925. LiDAR: introduced 1961 at millions cost, now $100-200. GPS: 1980s development, now under $5/unit.",
+                type: "metrics",
+                metric: "LiDAR: millions → $100-200; GPS: → <$5/unit",
+                year: 1961,
+                causal: "Underlying technologies becoming robust and affordable → autonomous driving can fully deliver on promise",
+                actionable: "Identify all emergent technologies that could affect industry, prioritize them, focus on 3-4 key ones."
+            },
+            {
+                article: "Slow-Developing Technology",
+                claim: "Strategic leaders must track ecosystems, not single technologies",
+                quote: "The most fundamental thing a CEO should do is stop thinking about innovation through singular technologies.",
+                evidence: "iPhone technologies (integrated circuits, GUIs) originated in 1960s, 50 years before iPhone launched in 2007. Autonomous driving evolving since 1925.",
+                type: "counterintuitive",
+                metric: "50 years: 1960s tech → 2007 iPhone",
+                year: 1960,
+                causal: "Relying on forecasting individual technologies → limits ability to manage transformational innovations",
+                actionable: "Pursue proactive approach to shape trajectories of developing technologies if you spot convergence window early."
+            },
+            {
+                article: "Slow-Developing Technology",
+                claim: "Waiting until commercialization is a strategic mistake",
+                quote: "Companies that try this typically miss the opportunity and will never be in a position to gain an advantage.",
+                evidence: "Eastman Kodak invented digital photography but failed to navigate convergence window, declared bankruptcy in 2012.",
+                type: "counterintuitive",
+                metric: "Kodak bankruptcy: 2012",
+                year: 2012,
+                causal: "Analyzing R&D investments and projecting cost trajectories → allows determining which technologies to work with",
+                actionable: "Use reactive strategy if you latch onto window later: quickly pilot with advanced competitors or partner with startups."
+            },
+            {
+                article: "Slow-Developing Technology",
+                claim: "Strategic timing determined by cost convergence",
+                quote: "The ability to manage the convergence can make or break a company, so it's essential to get this right.",
+                evidence: "McDonald's convergence: profitability came from real estate subleasing, not hamburger sales. P&G: multiple diaper failures before 92% market share.",
+                type: "causal",
+                metric: "",
+                year: null,
+                causal: "",
+                actionable: "Equip all levels of organization to develop understanding of emerging technologies; create cross-disciplinary teams."
+            },
+            {
+                article: "Future of Work Experts",
+                claim: "Experts fall into three divergent groups",
+                quote: "We found high agreement between experts from the same group about how they believed the future of work will play out and low agreement between the groups.",
+                evidence: "Study surveyed 570 experts after analyzing 485 Belgian newspaper articles. Tech entrepreneurs: radical optimists. Economists: skeptics. Authors/journalists: pessimists (misanthropy).",
+                type: "metrics",
+                metric: "570 experts surveyed, 485 articles analyzed",
+                year: null,
+                causal: "Experts trained in specific field with specific rules → homogeneity within disciplines, heterogeneity between disciplines",
+                actionable: "Analyze not just what is predicted, but who is saying it and why (vested interests, desired society)."
+            },
+            {
+                article: "Future of Work Experts",
+                claim: "Expert beliefs driven by disciplinary 'field frames' and personality",
+                quote: "their personalities also translated into competing beliefs about the future of work.",
+                evidence: "Policymakers, politicians, union reps, HR managers largely absent in media coverage. Debate dominated by tech entrepreneurs, economists, authors/journalists.",
+                type: "counterintuitive",
+                metric: "",
+                year: null,
+                causal: "Embracing uncertainty and competing scenarios → essential to long-term strategic planning",
+                actionable: "Determine your personal utopia and dystopia for the future; determine short-, mid-, and long-term actions to move toward desirable scenarios."
+            },
+            {
+                article: "Future of Work Experts",
+                claim: "The future of work is not predetermined",
+                quote: "the future is not yet set in stone, it is impossible to determine who is right about the future of work. Instead, the future will be whatever we make it.",
+                evidence: "Whether AI destroys jobs depends on decisions made by people in coming years. Consensus predictions: upskilling by 2025, partial automation by 2026, mass unemployment by 2050, superintelligence by 2074.",
+                type: "metrics",
+                metric: "Upskilling: 2025; Automation: 2026; Mass unemployment: 2050; Superintelligence: 2074",
+                year: 2025,
+                causal: "Decisions made by people in coming years → determines whether AI destroys many jobs or not",
+                actionable: ""
+            },
+            {
+                article: "Future of Work Experts",
+                claim: "Focus on who is predicting, not just what",
+                quote: "from now on, whenever you hear or read something about the future of work, don't just look at what is predicted (and by when), but also who is saying it and why.",
+                evidence: "Three groups have fundamentally different worldviews based on training and personality. Missing stakeholders: HR managers, policymakers, union representatives.",
+                type: "actionable",
+                metric: "",
+                year: null,
+                causal: "",
+                actionable: "Enter public debate around future of work to ensure it unfolds within social and democratic dialogue."
+            }
+        ];
+
+        let filteredData = [...data];
+        let currentView = 'table';
+
+        function renderCards() {
+            const container = document.getElementById('cards-container');
+            const noResults = document.getElementById('no-results');
+            container.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+
+            filteredData.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'group cursor-pointer bg-white border border-black shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] transition-all relative overflow-hidden';
+                
+                // Badges HTML
+                const badges = getBadgesHTML(item);
+                
+                // Expand logic via onclick
+                card.onclick = (e) => toggleCard(index, card);
+
+                card.innerHTML = `
+                    <div class="p-4 relative">
+                        <!-- Top Row: Article + Type -->
+                        <div class="flex justify-between items-start mb-2 gap-2">
+                            <span class="px-1.5 py-0.5 bg-black text-white text-[10px] font-medium uppercase tracking-wide truncate max-w-[60%]">${item.article}</span>
+                            <div class="flex gap-1 flex-wrap justify-end">${badges}</div>
+                        </div>
+                        
+                        <!-- Main Content -->
+                        <h3 class="font-serif font-bold text-base leading-snug mb-2 pr-6">${item.claim}</h3>
+                        
+                        ${item.metric ? `
+                        <div class="flex items-center gap-2 mt-2">
+                            <div class="px-1.5 py-0.5 bg-accent text-black border border-black text-[10px] font-bold">METRIC</div>
+                            <span class="text-xs font-semibold">${item.metric}</span>
+                        </div>
+                        ` : ''}
+
+                        <!-- Expansion Indicator -->
+                        <div class="absolute right-4 top-4 text-xs font-bold transition-transform duration-200" id="arrow-${index}">+</div>
+                    </div>
+
+                    <!-- Details Panel (Hidden by default) -->
+                    <div id="detail-${index}" class="hidden bg-gray-50 border-t border-black p-4 text-xs leading-relaxed space-y-4">
+                        <div>
+                            <span class="font-bold block mb-1 text-muted uppercase text-[10px]">Quote</span>
+                            <p class="italic text-foreground border-l-2 border-accent pl-2">"${item.quote}"</p>
+                        </div>
+                        
+                        ${item.evidence ? `
+                        <div>
+                            <span class="font-bold block mb-1 text-muted uppercase text-[10px]">Evidence</span>
+                            <p>${item.evidence}</p>
+                        </div>` : ''}
+
+                        ${item.actionable ? `
+                        <div>
+                            <span class="font-bold block mb-1 text-muted uppercase text-[10px]">Actionable Insight</span>
+                            <p class="font-medium bg-white border border-dashed border-gray-400 p-2">${item.actionable}</p>
+                        </div>` : ''}
+
+                        ${item.causal ? `
+                        <div>
+                            <span class="font-bold block mb-1 text-muted uppercase text-[10px]">Causal Chain</span>
+                            <p>🔗 ${item.causal}</p>
+                        </div>` : ''}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function getBadgesHTML(item) {
+            let html = '';
+            if (item.type.includes('metrics')) html += '<span class="text-[10px] text-muted border border-gray-300 px-1">DATA</span>';
+            if (item.type.includes('counterintuitive')) html += '<span class="text-[10px] text-muted border border-gray-300 px-1">COUNTER</span>';
+            if (item.type.includes('actionable')) html += '<span class="text-[10px] text-muted border border-gray-300 px-1">ACTION</span>';
+            if (item.type.includes('causal')) html += '<span class="text-[10px] text-muted border border-gray-300 px-1">CAUSAL</span>';
+            return html;
+        }
+
+        function toggleCard(index, cardElement) {
+            const detail = document.getElementById(`detail-${index}`);
+            const arrow = document.getElementById(`arrow-${index}`);
+            
+            if (detail.classList.contains('hidden')) {
+                detail.classList.remove('hidden');
+                arrow.innerText = '−';
+                // Slight highlight when expanded
+                cardElement.classList.add('ring-1', 'ring-black');
+            } else {
+                detail.classList.add('hidden');
+                arrow.innerText = '+';
+                cardElement.classList.remove('ring-1', 'ring-black');
+            }
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const hasMetrics = document.getElementById('filter-metrics').checked;
+            const hasCounterintuitive = document.getElementById('filter-counterintuitive').checked;
+            const hasActionable = document.getElementById('filter-actionable').checked;
+            const hasCausal = document.getElementById('filter-causal').checked;
+
+            filteredData = data.filter(item => {
+                const matchesSearch = !search || 
+                    item.claim.toLowerCase().includes(search) ||
+                    item.article.toLowerCase().includes(search) ||
+                    item.evidence.toLowerCase().includes(search) ||
+                    item.metric.toLowerCase().includes(search);
+
+                const matchesType = 
+                    (hasMetrics && item.type.includes('metrics')) ||
+                    (hasCounterintuitive && item.type.includes('counterintuitive')) ||
+                    (hasActionable && item.type.includes('actionable')) ||
+                    (hasCausal && item.type.includes('causal'));
+
+                return matchesSearch && matchesType;
+            });
+
+            updateStats();
+            
+            if (currentView === 'table') {
+                renderCards();
+            } else {
+                renderTimeline();
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('total-insights').textContent = filteredData.length;
+            document.getElementById('total-metrics').textContent = filteredData.filter(d => d.metric).length;
+            document.getElementById('total-actionable').textContent = filteredData.filter(d => d.actionable).length;
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            const timelineData = data.filter(d => d.year !== null && d.year !== undefined).sort((a,b) => b.year - a.year);
+            
+            if (timelineData.length === 0) {
+                container.innerHTML = '<p class="text-center text-muted italic p-4">No temporal data available with current filters.</p>';
+                return;
+            }
+
+            let html = '';
+            
+            timelineData.forEach(item => {
+                html += `
+                <div class="flex flex-col gap-2 px-4 py-3 ml-6 group bg-white border border-black shadow-[3px_3px_0px_#000] relative">
+                    <div class="absolute size-[7px] bg-black -left-[32px] top-[18px] outline outline-white outline-4"></div>
+                    
+                    <div class="flex items-baseline gap-2 justify-between">
+                        <div class="flex items-center gap-2 min-w-0 flex-1">
+                            <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black">${item.year}</div>
+                            <div class="text-xs truncate font-bold font-serif">${item.article}</div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xs text-muted mt-1 leading-relaxed">
+                        ${item.claim}
+                    </p>
+                    
+                    ${item.metric ? `<div class="mt-2 text-[10px] font-mono bg-gray-100 p-1 inline-block border border-gray-200">📊 ${item.metric}</div>` : ''}
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            const btnTable = document.getElementById('btn-table');
+            const btnTimeline = document.getElementById('btn-timeline');
+            const viewTable = document.getElementById('table-view');
+            const viewTimeline = document.getElementById('timeline-view');
+            const sortControls = document.getElementById('sort-controls');
+
+            if (view === 'table') {
+                btnTable.classList.add('bg-black', 'text-white', 'border-black');
+                btnTable.classList.remove('bg-white', 'text-black');
+                btnTimeline.classList.add('bg-white', 'text-black');
+                btnTimeline.classList.remove('bg-black', 'text-white');
+                
+                viewTable.style.display = 'block';
+                viewTimeline.style.display = 'none';
+                sortControls.style.display = 'flex';
+                renderCards();
+            } else {
+                btnTimeline.classList.add('bg-black', 'text-white', 'border-black');
+                btnTimeline.classList.remove('bg-white', 'text-black');
+                btnTable.classList.add('bg-white', 'text-black');
+                btnTable.classList.remove('bg-black', 'text-white');
+
+                viewTable.style.display = 'none';
+                viewTimeline.style.display = 'block';
+                sortControls.style.display = 'none';
+                renderTimeline();
+            }
+        }
+
+        function sortTable(columnIndex) {
+            const isAsc = filteredData._sortAsc !== columnIndex;
+            filteredData._sortAsc = isAsc ? columnIndex : null;
+
+            filteredData.sort((a, b) => {
+                let valA, valB;
+                switch(columnIndex) {
+                    case 1: valA = a.article; valB = b.article; break;
+                    case 2: valA = a.claim; valB = b.claim; break;
+                    case 3: valA = a.type; valB = b.type; break;
+                    case 4: valA = a.metric; valB = b.metric; break;
+                }
+                if (valA < valB) return isAsc ? -1 : 1;
+                if (valA > valB) return isAsc ? 1 : -1;
+                return 0;
+            });
+
+            renderCards();
+        }
+
+        // Listeners
+        document.getElementById('search').addEventListener('input', applyFilters);
+        document.getElementById('filter-metrics').addEventListener('change', applyFilters);
+        document.getElementById('filter-counterintuitive').addEventListener('change', applyFilters);
+        document.getElementById('filter-actionable').addEventListener('change', applyFilters);
+        document.getElementById('filter-causal').addEventListener('change', applyFilters);
+
+        // Init
+        renderCards();
+        updateStats();
+    </script>
+</body>
+</html>
