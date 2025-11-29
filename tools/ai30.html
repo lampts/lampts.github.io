@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-VC31GENS6S');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Market Trends Strategy Board 2025-2030</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'], // Defaulting sans to mono for that "terminal" feel
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        'accent-yellow': '#FBD45B',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for the brutalist look */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #000;
+        }
+        
+        /* Hide scrollbar for clean hovering but keep functionality */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-xs md:text-sm antialiased selection:bg-black selection:text-white pb-20">
+
+    <div class="p-4 md:p-12 min-h-screen">
+        <div class="w-full max-w-xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex flex-col gap-2 mb-8 border-b border-black pb-4">
+                <h1 class="text-2xl md:text-3xl font-serif font-bold tracking-tight">
+                    Market Trends 2030
+                </h1>
+                <p class="text-muted text-xs uppercase tracking-wider">
+                    Strategic Intelligence & AI Disruption Forecast
+                </p>
+            </header>
+
+            <!-- Context / Executive Summary -->
+            <div class="mb-12">
+                <div class="flex flex-col-reverse sm:flex-row gap-6 items-start">
+                    <div class="flex-1">
+                        <div class="p-4 border border-black shadow-[3px_3px_0px_#000] bg-white">
+                            <h3 class="font-serif font-bold text-base mb-2">The Enterprise Scale Gap</h3>
+                            <p class="leading-relaxed text-muted mb-2">
+                                The 2025–2030 market is defined by the transition from pilot to scale. Only 39% of orgs see systemic value.
+                            </p>
+                            <div class="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200">
+                                <span class="text-[10px] bg-black text-white px-1.5 py-0.5">TAM</span>
+                                <span class="font-bold">$1.5 Trillion (2030)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Filters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10">
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] uppercase text-muted font-bold">Category</label>
+                    <select id="filter-category" onchange="applyFilters()" class="border border-black p-2 bg-white focus:outline-none focus:shadow-[2px_2px_0px_#000] transition-shadow cursor-pointer text-xs">
+                        <option value="all">View All Trends</option>
+                        <option value="Agentic AI">Agentic AI</option>
+                        <option value="Sovereign AI">Sovereign AI</option>
+                        <option value="Physical AI">Physical AI</option>
+                        <option value="Enterprise Scale">Enterprise Scale</option>
+                        <option value="Governance">Governance & Risk</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] uppercase text-muted font-bold">Search Impact</label>
+                    <input type="text" id="filter-impact" placeholder="e.g. 'ROI'" onkeyup="applyFilters()" class="border border-black p-2 bg-white focus:outline-none focus:shadow-[2px_2px_0px_#000] transition-shadow text-xs placeholder:text-gray-300">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] uppercase text-muted font-bold">Search Adoption</label>
+                    <input type="text" id="filter-adoption" placeholder="e.g. 'Fastest'" onkeyup="applyFilters()" class="border border-black p-2 bg-white focus:outline-none focus:shadow-[2px_2px_0px_#000] transition-shadow text-xs placeholder:text-gray-300">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-[10px] uppercase text-muted font-bold">Search Action</label>
+                    <input type="text" id="filter-action" placeholder="e.g. 'Upskill'" onkeyup="applyFilters()" class="border border-black p-2 bg-white focus:outline-none focus:shadow-[2px_2px_0px_#000] transition-shadow text-xs placeholder:text-gray-300">
+                </div>
+            </div>
+
+            <!-- Trends Grid (Building Style) -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Strategic Board</h2>
+            <p class="text-[10px] text-muted mb-4 italic md:hidden">Tap cards to view details.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="cards-container">
+                <!-- Cards injected here -->
+            </div>
+
+            <!-- Analogy Section (Timeline/Post Style) -->
+            <h2 class="font-serif text-lg font-bold mt-12 mb-4 border-b border-black pb-2">Analogy</h2>
+            <div class="border border-black p-4 relative">
+                <div class="absolute -top-3 -right-3 bg-[#FBD45B] border border-black px-2 py-1 text-[10px] font-bold shadow-[2px_2px_0px_#000]">
+                    INSIGHT
+                </div>
+                <div class="flex gap-4">
+                    <div class="text-4xl grayscale">🏎️</div>
+                    <div>
+                        <h3 class="font-serif font-bold mb-2">The Sports Car</h3>
+                        <p class="text-muted text-xs leading-relaxed mb-2">
+                            <span class="text-foreground font-semibold">The Pilot:</span> 74% of companies can prove the car runs a fast lap (pilot success).
+                        </p>
+                        <p class="text-muted text-xs leading-relaxed">
+                            <span class="text-foreground font-semibold">The Gap:</span> The failure isn't the car—it's the track. To win the championship (scale), you must redesign the pit crew and race strategy (workflows), not just drive faster.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-20 border-t border-black pt-6 flex justify-between items-baseline text-[10px] text-muted uppercase tracking-wider">
+                <p>AI Strategy 2030</p>
+                <p>Generated by Gemini</p>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        // Dataset
+        const marketData = [
+            {
+                id: 1,
+                category: "Agentic AI",
+                title: "Autonomous Agentic Systems",
+                description: "Autonomous AI systems capable of planning and executing complex, multistep workflows to achieve defined goals, acting as 'virtual coworkers'.",
+                drivers: ["Leap toward autonomous action", "CIO confidence & budget", "B2B restructuring"],
+                barriers: ["No decision delegation frameworks", "Rigid legacy systems", "Orchestration skills gap"],
+                adoption: "Fastest-growing. 96% of CIOs planning usage. 62% experimenting.",
+                impact: "Market Domination. Intermediating $15T of B2B spend by 2028.",
+                action: "Embed governance. Build monitoring workforce. Modernize API platforms."
+            },
+            {
+                id: 2,
+                category: "Sovereign AI",
+                title: "Data Sovereignty & Control",
+                description: "Ensuring data, proprietary AI models, and compute resources remain securely within controlled boundaries (national/regional).",
+                drivers: ["Data localization laws", "IP protection", "Local cultural alignment"],
+                barriers: ["Regulatory complexity", "Infrastructure control", "High CapEx for local data centers"],
+                adoption: "Top strategic priority for govts & enterprises.",
+                impact: "Safeguards control. Enables competitive superiority via fine-tuning.",
+                action: "Strategic mandate. Fine-tune on proprietary data. Monitor regulations."
+            },
+            {
+                id: 3,
+                category: "Physical AI",
+                title: "Convergence of AI & Physical",
+                description: "AI converging with the physical world: autonomous vehicles, robots, digital twins, and smart health devices.",
+                drivers: ["Industrial automation demand", "Economic safety/scale", "Robotics market $260B (2030)"],
+                barriers: ["High CapEx/ROI timelines", "Fragmented machinery", "Safety & workforce readiness"],
+                adoption: "44% of mfg using digital twins. Moving to frontline ops.",
+                impact: "20–30% maintenance reduction. $400B autonomous vehicle revenue.",
+                action: "Safety protocols. Infrastructure retrofitting. Change management."
+            },
+            {
+                id: 4,
+                category: "Enterprise Scale",
+                title: "Enterprise Scale Gap",
+                description: "The failure to translate successful pilots into systemic financial value across the enterprise.",
+                drivers: ["74% positive pilot ROI", "GenAI unlocking $4.4T value", "$15.7T global revenue (2030)"],
+                barriers: ["Organizational inertia", "Talent deficit", "Data quality/bias"],
+                adoption: "78% using AI, but only 39% seeing enterprise EBIT impact.",
+                impact: "10.3x returns for scalers. 0.5% annual GDP boost.",
+                action: "Redesign workflows. Unified strategy. Recruit & Upskill."
+            },
+            {
+                id: 5,
+                category: "Governance",
+                title: "Governance & Risk",
+                description: "Technology solutions and policies to manage legal, ethical, and operational performance of AI systems.",
+                drivers: ["Autonomous risk", "Policy lag", "OECD/UN urgency"],
+                barriers: ["Regional fragmentation", "Bias/Transparency issues", "Public sector security"],
+                adoption: "Top 2025 trend. 80% have risk functions.",
+                impact: "Moves from cost to enabler. Strengthening brand trust.",
+                action: "Implement governance frameworks. Prioritize explainability."
+            }
+        ];
+
+        const container = document.getElementById('cards-container');
+
+        function renderCards(data) {
+            container.innerHTML = '';
+            if (data.length === 0) {
+                container.innerHTML = '<div class="col-span-1 md:col-span-2 text-center text-muted py-8 border border-gray-200 border-dashed">No trends match filters.</div>';
+                return;
+            }
+
+            data.forEach(trend => {
+                const card = document.createElement('div');
+                // Styling: White card with gray border that turns black on hover.
+                // Group class allows child elements (the hover panel) to react to hover state.
+                card.className = 'group relative border border-gray-200 p-4 hover:border-black transition-colors bg-white cursor-pointer h-64 md:h-60 flex flex-col justify-between overflow-hidden';
+                
+                // Touch handling for mobile
+                card.onclick = () => {
+                    // Mobile: toggle a class that forces the hover state
+                    const expanded = card.classList.contains('mobile-expanded');
+                    document.querySelectorAll('.mobile-expanded').forEach(c => c.classList.remove('mobile-expanded'));
+                    if(!expanded) card.classList.add('mobile-expanded');
+                };
+
+                const driversList = trend.drivers.map(d => `<li class="pl-3 relative before:content-['+'] before:absolute before:left-0 before:text-gray-400">${d}</li>`).join('');
+                
+                card.innerHTML = `
+                    <!-- Content (Visible Default) -->
+                    <div class="flex flex-col h-full justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="font-bold text-xs uppercase bg-gray-100 px-1.5 py-0.5">${trend.category}</span>
+                            </div>
+                            <h3 class="font-serif font-bold text-lg leading-tight mb-2">${trend.title}</h3>
+                            <p class="text-xs text-muted leading-relaxed line-clamp-3">${trend.description}</p>
+                        </div>
+                        
+                        <div class="border-t border-gray-100 pt-3 mt-2">
+                            <div class="flex justify-between items-baseline text-[10px] text-muted">
+                                <span>IMPACT</span>
+                                <span class="font-mono text-foreground font-semibold truncate max-w-[120px]">${trend.adoption.split('.')[0]}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Details Panel (Visible on Hover/Click) -->
+                    <!-- Brutalist style: Solid white, border black, covers entire card -->
+                    <div class="absolute inset-0 bg-white p-4 border border-black opacity-0 group-hover:opacity-100 md:group-hover:opacity-100 mobile-expanded:opacity-100 transition-opacity duration-200 z-10 flex flex-col gap-3 overflow-y-auto no-scrollbar pointer-events-none group-hover:pointer-events-auto mobile-expanded:pointer-events-auto">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase border-b border-black pb-1 mb-1 block">Drivers</span>
+                            <ul class="text-[10px] text-muted space-y-1">
+                                ${driversList}
+                            </ul>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase border-b border-black pb-1 mb-1 block">Action</span>
+                            <p class="text-[10px] text-foreground font-medium leading-relaxed">
+                                ${trend.action}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            // Add style for mobile expansion class dynamically
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .mobile-expanded .opacity-0 { opacity: 1 !important; pointer-events: auto !important; }
+            `;
+            document.head.appendChild(style);
+        }
+
+        function applyFilters() {
+            const catFilter = document.getElementById('filter-category').value.toLowerCase();
+            const adoptFilter = document.getElementById('filter-adoption').value.toLowerCase();
+            const impactFilter = document.getElementById('filter-impact').value.toLowerCase();
+            const actionFilter = document.getElementById('filter-action').value.toLowerCase();
+
+            const filtered = marketData.filter(item => {
+                if (catFilter !== 'all' && !item.category.toLowerCase().includes(catFilter)) return false;
+                if (adoptFilter && !item.adoption.toLowerCase().includes(adoptFilter)) return false;
+                if (impactFilter && !item.impact.toLowerCase().includes(impactFilter)) return false;
+                if (actionFilter && !item.action.toLowerCase().includes(actionFilter)) return false;
+                return true;
+            });
+
+            renderCards(filtered);
+        }
+
+        // Initial Render
+        renderCards(marketData);
+    </script>
+</body>
+</html>

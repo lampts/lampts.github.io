@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-VC31GENS6S');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Skills Gap Heatmap (2015-2025)</title>
+    
+    <!-- Fonts matching your landing page -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B', // Your specific yellow
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-left: 1px solid #000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #000; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #333; 
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(7, minmax(130px, 1fr));
+            gap: 0; /* No gap, borders handle separation */
+            border-top: 1px solid #000;
+            border-left: 1px solid #000;
+            overflow-x: auto;
+            padding-bottom: 40px;
+        }
+
+        .cell {
+            position: relative;
+            padding: 1rem 0.5rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+            text-align: center;
+            border-right: 1px solid #000;
+            border-bottom: 1px solid #000;
+            transition: all 0.1s ease;
+        }
+
+        /* Hard Shadow Hover Effect */
+        .cell:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px #000;
+            z-index: 10;
+            border: 1px solid #000;
+            background-color: #fff !important;
+            color: #000 !important;
+        }
+        
+        /* Force text black on hover even if it was white */
+        .cell:hover * {
+            color: #000 !important;
+        }
+
+        .cell-selected {
+            background-color: var(--accent) !important;
+            color: #000 !important;
+            box-shadow: inset 0 0 0 2px #000;
+            z-index: 20;
+        }
+        .cell-selected span, .cell-selected i {
+             color: #000 !important;
+        }
+
+        /* Animation Classes */
+        .year-row {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease-out, transform 0.3s ease-out;
+        }
+
+        .year-row.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Mono-Brutalist Intensity Scale */
+        .intensity-1 { background-color: #ffffff; color: #000000; }
+        .intensity-2 { background-color: #f3f4f6; color: #000000; } /* Gray 100 */
+        .intensity-3 { background-color: #d1d5db; color: #000000; } /* Gray 300 */
+        .intensity-4 { background-color: #6b7280; color: #ffffff; } /* Gray 500 */
+        .intensity-5 { background-color: #000000; color: #ffffff; } /* Black */
+
+        .header-cell {
+            background-color: #ffffff;
+            color: #000;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            font-size: 0.7rem;
+            line-height: 1.2;
+            text-transform: uppercase;
+            padding: 12px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            border-bottom: 2px solid #000; /* Thicker separator */
+            border-right: 1px solid #000;
+            cursor: help;
+        }
+        
+        .row-label {
+            background-color: #ffffff;
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Serif', serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            position: sticky;
+            left: 0;
+            z-index: 25;
+            border-right: 2px solid #000; /* Thicker separator */
+            border-bottom: 1px solid #000;
+        }
+
+        /* Tooltip - Neo-Brutalist Style */
+        .header-cell:hover .tooltip-box {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .tooltip-box {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-5px);
+            width: 200px;
+            background-color: white;
+            color: black;
+            padding: 12px;
+            border: 1px solid #000;
+            box-shadow: 4px 4px 0px #000; /* Hard shadow */
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 400;
+            text-align: left;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.1s ease-in-out;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* Details Panel */
+        #detailsPanel {
+            background-color: #fff;
+            border-top: 2px solid #000;
+            color: #000;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-accent selection:text-black min-h-screen flex flex-col p-4 md:p-12">
+
+    <!-- Header -->
+    <header class="mb-8 w-full max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-black pb-4">
+            <div>
+                <h1 class="text-3xl font-serif font-bold tracking-tight">
+                    Skills Gap Matrix
+                </h1>
+                <p class="text-xs text-muted mt-1 font-mono">
+                    Timeline: 2015-2025 // Intensity: 1-5
+                </p>
+            </div>
+            
+            <button onclick="replayAnimation()" class="px-4 py-2 bg-white border border-black hover:bg-black hover:text-white transition-colors text-xs font-bold uppercase tracking-wider shadow-[3px_3px_0px_#000] hover:shadow-[1px_1px_0px_#000] active:translate-x-[2px] active:translate-y-[2px]">
+                <i class="fas fa-play mr-2"></i> Replay
+            </button>
+        </div>
+    </header>
+
+    <!-- Legend -->
+    <div class="max-w-7xl mx-auto w-full mb-8 flex flex-wrap gap-6 text-xs text-black items-center font-mono border border-black p-4 shadow-[3px_3px_0px_#000]">
+        <span class="font-bold border-r border-black pr-4 mr-2">LEGEND</span>
+        
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 border border-black bg-white"></div> 1
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 border border-black bg-gray-100"></div> 2
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 border border-black bg-gray-300"></div> 3
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 border border-black bg-gray-500"></div> 4
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 border border-black bg-black"></div> 5
+        </div>
+        
+        <div class="w-px h-4 bg-gray-300 mx-2"></div>
+        
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 bg-[#FBD45B] border border-black"></div> 
+            <span class="font-bold">PEAK DEMAND</span>
+        </div>
+        <div class="flex items-center gap-2">
+             <i class="fas fa-star text-black"></i>
+            <span>NEW ROLE</span>
+        </div>
+    </div>
+
+    <!-- Heatmap Container -->
+    <div class="max-w-7xl mx-auto w-full flex-grow relative">
+        <div class="heatmap-grid" id="heatmapGrid">
+            <!-- Headers generated by JS -->
+        </div>
+        <div class="text-right text-[10px] text-muted mt-2 font-mono p-2">
+            SOURCE: WEF FUTURE OF JOBS, LINKEDIN SKILLS (2015-2025)
+        </div>
+    </div>
+
+    <!-- Details Panel (Sticky Bottom) -->
+    <div id="detailsPanel" class="fixed bottom-0 left-0 right-0 p-6 transform translate-y-full transition-transform duration-200 shadow-[0_-5px_20px_rgba(0,0,0,0.05)] z-50">
+        <div class="max-w-7xl mx-auto relative">
+            <button onclick="closeDetails()" class="absolute top-0 right-0 p-2 hover:bg-black hover:text-white transition-colors border border-transparent hover:border-black">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="md:w-1/4 border-r border-gray-200 pr-6">
+                    <div class="inline-block px-1.5 py-0.5 bg-[#FBD45B] text-black text-[10px] font-medium border border-black mb-2">SELECTED DATA</div>
+                    <h2 class="text-3xl font-bold font-serif mb-1" id="detailYear">Year</h2>
+                    <h3 class="text-sm font-bold uppercase tracking-wide border-b border-black pb-1 mb-2" id="detailCategory">Category</h3>
+                    
+                    <div class="mt-4 flex items-baseline gap-2">
+                        <span class="text-4xl font-bold font-mono" id="detailLevel">5</span>
+                        <span class="text-xs text-muted">/ 5 INTENSITY</span>
+                    </div>
+                </div>
+                <div class="md:w-3/4">
+                    <h4 class="font-bold text-xs uppercase mb-2 text-muted">Context</h4>
+                    <p id="detailText" class="text-base leading-relaxed font-mono">
+                        Select a cell to view details.
+                    </p>
+                    <div class="mt-6 flex flex-wrap gap-3" id="detailBadges">
+                        <!-- Badges injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data Configuration ---
+        const categoryDefinitions = {
+            "Machine Learning / Deep Learning": "Foundational neural networks & algorithms allowing systems to learn without explicit programming.",
+            "Data Science / Analytics": "Extracting actionable insights from vast datasets and verifying AI model outputs.",
+            "Core AI Programming": "Essential languages (Python, C++, SQL) that build the backbone of AI systems.",
+            "AI Infra / DevOps": "MLOps: deploying, scaling, and managing AI models in production.",
+            "Generative AI / Prompt Eng": "LLMs, image generation, and crafting inputs (prompts) for optimal results.",
+            "AI Ethics / Human-AI": "Responsible AI, bias mitigation, compliance, and intuitive interfaces.",
+            "Emerging Tech Roles": "Strategy and integration roles (e.g., AI Architects, Robotics Engineers)."
+        };
+
+        const categories = [
+            "Machine Learning / Deep Learning",
+            "Data Science / Analytics",
+            "Core AI Programming",
+            "AI Infra / DevOps",
+            "Generative AI / Prompt Eng",
+            "AI Ethics / Human-AI",
+            "Emerging Tech Roles"
+        ];
+
+        const years = [2015, 2018, 2021, 2023, 2025];
+
+        // Data structure based on the prompt
+        // I: Intensity (1-5), D: Demand (L, M, H, P), N: New Role (Y/N), T: Text
+        const heatmapData = {
+            2015: [
+                { I: 3, D: 'M', N: 'N', T: "Early phase of explosive growth; image recognition error rate was high (over 25%)." },
+                { I: 3, D: 'H', N: 'N', T: "Growing field supported by data proliferation." },
+                { I: 3, D: 'M', N: 'N', T: "Foundationally required but demand not yet peaking solely for AI integration." },
+                { I: 2, D: 'L', N: 'N', T: "Early recognition of robotics/autonomous systems as areas to thrive." },
+                { I: 1, D: 'L', N: 'N', T: "Technologies not yet displaying rapid-fire progress or capability for complex text generation." },
+                { I: 1, D: 'L', N: 'N', T: "Minimal focus; ethical concerns not yet cited as a major barrier." },
+                { I: 2, D: 'M', N: 'N', T: "IT specialists in robotics are forecast to thrive in the evolving landscape." }
+            ],
+            2018: [
+                { I: 4, D: 'H', N: 'N', T: "Dramatic plunges in error rates for NLP tasks begin." },
+                { I: 4, D: 'H', N: 'N', T: "Increasing reliance on immense datasets." },
+                { I: 3, D: 'M', N: 'N', T: "Steady demand for foundational programming." },
+                { I: 3, D: 'M', N: 'N', T: "Gradual increase in need for deployment infrastructure." },
+                { I: 2, D: 'L', N: 'N', T: "WEF estimated AI displacement (75M jobs by 2025) suggests foundational tech acceleration." },
+                { I: 2, D: 'M', N: 'N', T: "Ethical discussions begin to surface in academic circles." },
+                { I: 3, D: 'M', N: 'N', T: "Robotics and specialized architecture roles gain traction." }
+            ],
+            2021: [
+                { I: 4, D: 'H', N: 'N', T: "Post-pandemic acceleration towards remote work increased feasibility for automation adoption." },
+                { I: 4, D: 'H', N: 'N', T: "NLP model human equivalence level leaps dramatically (from elementary to college level)." },
+                { I: 4, D: 'H', N: 'N', T: "Urgency of upskilling in software development emphasized." },
+                { I: 3, D: 'M', N: 'N', T: "DevOps practices specifically for ML (MLOps) begin solidifying." },
+                { I: 3, D: 'M', N: 'N', T: "Generative AI models like Blender Bot 3 start demonstrating advanced capabilities." },
+                { I: 3, D: 'M', N: 'N', T: "Executives estimate 40% of the workforce needs reskilling due to AI/automation." },
+                { I: 3, D: 'M', N: 'N', T: "New job roles (97 million) created between 2020 and 2025." }
+            ],
+            2023: [
+                { I: 5, D: 'P', N: 'N', T: "Top barrier to deployment is limited AI skills (33%). ML is the #1 most in-demand AI skill." },
+                { I: 5, D: 'P', N: 'N', T: "Data Science is the #3 most in-demand skill (19.71% of jobs surveyed)." },
+                { I: 5, D: 'P', N: 'N', T: "Python, C++, SQL, and Java are all in the top 10 most in-demand skills." },
+                { I: 4, D: 'H', N: 'N', T: "DevOps and CI/CD are highly requested AI skills, indicating infrastructure demand." },
+                { I: 5, D: 'P', N: 'Y', T: "Demand skyrocketed (1,848% increase). Prompt Engineer is a new, fast-growing specialized role." },
+                { I: 4, D: 'H', N: 'Y', T: "Ethical concerns (23%) and lack of skills are major inhibitors. AI Ethicist role defined." },
+                { I: 4, D: 'H', N: 'Y', T: "AI Solutions Architect and AI Product Manager are identified as fast-growing specialized roles." }
+            ],
+            2025: [
+                { I: 5, D: 'P', N: 'N', T: "ML remains #1 most in-demand. AI roles globally require an 8.2x talent pool expansion." },
+                { I: 5, D: 'P', N: 'N', T: "Data Scientist is identified as a critical role gaining demand." },
+                { I: 5, D: 'P', N: 'N', T: "Technical skills continuously demanded to drive AI adoption." },
+                { I: 5, D: 'P', N: 'N', T: "Need for AI/ML/Gen AI Architects for solutions and practices is highlighted." },
+                { I: 5, D: 'P', N: 'Y', T: "Generative AI Specialist is a core technical role; Prompt Engineer is a top growth role." },
+                { I: 5, D: 'P', N: 'Y', T: "Ethical and regulatory expertise strongly in demand. AI Coach & Compliance Manager listed." },
+                { I: 5, D: 'P', N: 'Y', T: "AI Product Manager and Digital Twin Engineer identified as roles gaining top growth." }
+            ]
+        };
+
+        const grid = document.getElementById('heatmapGrid');
+        const detailsPanel = document.getElementById('detailsPanel');
+        let selectedCell = null;
+
+        function init() {
+            renderHeader();
+            renderRows();
+            animateRows();
+        }
+
+        function renderHeader() {
+            // Empty top-left cell
+            const corner = document.createElement('div');
+            corner.className = 'bg-white border-b-2 border-r-2 border-black sticky top-0 left-0 z-40';
+            grid.appendChild(corner);
+
+            categories.forEach(cat => {
+                const el = document.createElement('div');
+                el.className = 'header-cell group';
+                
+                // Header Text
+                const textSpan = document.createElement('span');
+                textSpan.innerText = cat;
+                el.appendChild(textSpan);
+
+                // Info Icon
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-info-circle text-gray-400 mt-2 text-[10px] group-hover:text-black transition-colors';
+                el.appendChild(icon);
+
+                // Tooltip Box
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip-box';
+                tooltip.innerHTML = `<span class="font-bold block mb-2 text-[9px] uppercase tracking-wider border-b border-black pb-1">Definition</span>${categoryDefinitions[cat]}`;
+                el.appendChild(tooltip);
+
+                grid.appendChild(el);
+            });
+        }
+
+        function renderRows() {
+            years.forEach(year => {
+                // Year Label
+                const yearLabel = document.createElement('div');
+                yearLabel.className = `row-label year-row year-${year}`;
+                yearLabel.innerText = year;
+                grid.appendChild(yearLabel);
+
+                // Data Cells
+                const yearData = heatmapData[year];
+                yearData.forEach((data, index) => {
+                    const cell = document.createElement('div');
+                    // Base classes
+                    cell.className = `cell intensity-${data.I} year-row year-${year}`;
+                    
+                    // Inner HTML
+                    let innerHTML = `<span class="text-xl font-bold font-mono z-10">${data.I}</span>`;
+                    
+                    // Icons
+                    if (data.D === 'P') {
+                        // Using the Yellow square as a Peak indicator background or similar
+                        innerHTML += `<div class="absolute top-1 right-1 w-2 h-2 bg-[#FBD45B] border border-black" title="Peak Demand"></div>`;
+                    }
+
+                    if (data.N === 'Y') {
+                         innerHTML += `<i class="fas fa-star absolute top-2 left-2 text-[10px] z-10 ${data.I > 3 ? 'text-white' : 'text-black'}" title="New Role"></i>`;
+                    }
+                    
+                    cell.innerHTML = innerHTML;
+
+                    // Interaction
+                    cell.onclick = () => selectCell(cell, year, index, data);
+                    
+                    grid.appendChild(cell);
+                });
+            });
+        }
+
+        function animateRows() {
+            const rows = document.querySelectorAll('.year-row');
+            // Reset state
+            rows.forEach(r => r.classList.remove('visible'));
+            
+            // Staggered animation based on Year
+            years.forEach((year, index) => {
+                setTimeout(() => {
+                    const elements = document.querySelectorAll(`.year-${year}`);
+                    elements.forEach(el => el.classList.add('visible'));
+                }, index * 600); 
+            });
+        }
+
+        function replayAnimation() {
+            animateRows();
+        }
+
+        function selectCell(element, year, catIndex, data) {
+            // UI Selection State
+            if (selectedCell) selectedCell.classList.remove('cell-selected');
+            selectedCell = element;
+            selectedCell.classList.add('cell-selected');
+
+            // Update Details Panel
+            document.getElementById('detailYear').innerText = year;
+            document.getElementById('detailCategory').innerText = categories[catIndex];
+            
+            const levelSpan = document.getElementById('detailLevel');
+            levelSpan.innerText = `${data.I}`;
+            
+            document.getElementById('detailText').innerText = data.T;
+
+            // Badges in details
+            const badgeContainer = document.getElementById('detailBadges');
+            badgeContainer.innerHTML = '';
+            
+            if (data.D === 'P') {
+                badgeContainer.innerHTML += `<div class="px-2 py-1 bg-[#FBD45B] border border-black text-black text-xs font-bold uppercase shadow-[2px_2px_0px_#000]">Peak Demand</div>`;
+            } else if (data.D === 'H') {
+                badgeContainer.innerHTML += `<div class="px-2 py-1 bg-white border border-black text-black text-xs font-bold uppercase shadow-[2px_2px_0px_#000]">High Demand</div>`;
+            } else {
+                 badgeContainer.innerHTML += `<div class="px-2 py-1 bg-gray-100 border border-black text-muted text-xs font-bold uppercase">Standard Demand</div>`;
+            }
+
+            if (data.N === 'Y') {
+                badgeContainer.innerHTML += `<div class="px-2 py-1 bg-black border border-black text-white text-xs font-bold uppercase shadow-[2px_2px_0px_#666]"><i class="fas fa-star mr-1 text-[10px]"></i> Emerging Role</div>`;
+            }
+
+            // Show Panel
+            detailsPanel.classList.remove('translate-y-full');
+        }
+
+        function closeDetails() {
+            detailsPanel.classList.add('translate-y-full');
+            if (selectedCell) selectedCell.classList.remove('cell-selected');
+            selectedCell = null;
+        }
+
+        // Initialize on load
+        window.onload = init;
+
+    </script>
+</body>
+</html>
