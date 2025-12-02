@@ -280,6 +280,7 @@
             border-radius: 4px;
             padding: 2rem;
             transition: box-shadow 0.3s ease;
+            position: relative;
         }
 
         .chart-container:hover {
@@ -293,6 +294,31 @@
             color: var(--text-primary);
             margin-bottom: 1rem;
             letter-spacing: -0.01em;
+        }
+
+        .chart-placeholder {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-code);
+            border-radius: 4px;
+        }
+
+        .placeholder-text {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-tertiary);
+            text-align: center;
+        }
+
+        .placeholder-subtext {
+            font-family: 'Inter', -apple-system, sans-serif;
+            font-size: 0.875rem;
+            color: var(--text-tertiary);
+            margin-top: 0.5rem;
         }
 
         code {
@@ -569,7 +595,7 @@
                     <div class="form-group">
                         <label class="form-label">Current Period Revenue (Daily, So Far)</label>
                         <textarea id="currentData">100,200</textarea>
-                        <div class="form-help">Actual results from current period</div>
+                        <div class="form-help">Actual results from current period (minimum 14 days for forecasting)</div>
                     </div>
 
                     <div class="form-group">
@@ -815,7 +841,8 @@ for day in [current_day + 1, ..., period_end]:
     <script>
         const CONFIG = {
             storage_key: 'revenue_forecast_config',
-            confidence_level: 1.96
+            confidence_level: 1.96,
+            min_days_for_forecast: 14
         };
 
         const mean = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
@@ -845,6 +872,18 @@ for day in [current_day + 1, ..., period_end]:
             const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
             const intercept = (sumY - slope * sumX) / n;
             return { slope, intercept };
+        };
+
+        const showPlaceholder = (elementId, message, subMessage) => {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div class="chart-placeholder">
+                    <div>
+                        <div class="placeholder-text">${message}</div>
+                        <div class="placeholder-subtext">${subMessage}</div>
+                    </div>
+                </div>
+            `;
         };
 
         class RevenueForecaster {
@@ -958,10 +997,8 @@ for day in [current_day + 1, ..., period_end]:
                 const preds = X.map(row => this._dot(row, this.w));
                 const residuals = y.map((yi, i) => yi - preds[i]);
                 
-                // Store residuals for bootstrap sampling
                 this.residuals = Float32Array.from(residuals);
                 
-                // Compute sigma and skewness for diagnostics
                 this.sigma = Math.sqrt(
                     residuals.reduce((sum, r) => sum + r * r, 0) / n
                 );
@@ -980,7 +1017,6 @@ for day in [current_day + 1, ..., period_end]:
                 for (let i = 0; i < nSims; i++) {
                     const row = [];
                     for (let j = 0; j < nDays; j++) {
-                        // Bootstrap: sample with replacement from actual residuals
                         const idx = Math.floor(rng.random() * n);
                         row.push(this.residuals[idx]);
                     }
@@ -1012,7 +1048,6 @@ for day in [current_day + 1, ..., period_end]:
                     return arr;
                 });
                 
-                // Bootstrap noise from actual residuals
                 const noise = this._sampleResiduals(nSims, daysRemaining, rng);
                 
                 const boosts = this._uniformMatrix(
@@ -1041,7 +1076,7 @@ for day in [current_day + 1, ..., period_end]:
                         for (let j = 0; j < feats.cols; j++) {
                             val += feats.data[s * feats.cols + j] * this.w[j];
                         }
-                        val += noise[s][t];  // Bootstrap noise instead of Gaussian
+                        val += noise[s][t];
                         
                         const dayOfPeriod = currentLen + t + 1;
                         if (eventDays.includes(dayOfPeriod)) {
@@ -1201,7 +1236,7 @@ for day in [current_day + 1, ..., period_end]:
         function runProgressiveForecast(previousData, actualCurrentData, periodLength, target, numSims, eventDays, boostMin, boostMax, downtimeEvents, downtimeMin, downtimeMax) {
             const progressiveResults = [];
             
-            for (let day = 1; day <= actualCurrentData.length; day++) {
+            for (let day = CONFIG.min_days_for_forecast; day <= actualCurrentData.length; day++) {
                 try {
                     const currentSlice = actualCurrentData.slice(0, day);
                     const forecaster = new RevenueForecaster(previousData, currentSlice);
@@ -1330,37 +1365,11 @@ for day in [current_day + 1, ..., period_end]:
                     
                     validateInputs(previousData, currentData, target, periodLength);
                     
-                    const progressiveResults = runProgressiveForecast(
-                        previousData, currentData, periodLength, target, numSims,
-                        eventDays, boostMin, boostMax, downtimeEvents, downtimeMin, downtimeMax
-                    );
+                    const hasEnoughData = currentData.length >= CONFIG.min_days_for_forecast;
                     
-                    const forecaster = new RevenueForecaster(previousData, currentData);
-                    forecaster.target = target;
-                    forecaster.banked = sum(currentData);
-                    forecaster.daysElapsed = currentData.length;
-                    forecaster.daysRemaining = periodLength - currentData.length;
-                    forecaster.needed = target - forecaster.banked;
-                    forecaster.requiredAvg = forecaster.needed / forecaster.daysRemaining;
-                    forecaster.expectedDailyRate = target / periodLength;
-                    forecaster.periodLength = periodLength;
-                    
-                    const results = forecaster.simulate({
-                        nSims: numSims,
-                        daysRemaining: forecaster.daysRemaining,
-                        targetTotal: target,
-                        eventDays: eventDays,
-                        boostRange: [boostMin, boostMax],
-                        downtimeProb: downtimeEvents / periodLength,
-                        downtimeRange: [downtimeMin, downtimeMax],
-                        seed: 42
-                    });
-                    
-                    const { totals, trajectories, r2, sigma, skew, weights, successRate, ciLow, ciHigh, expected, p50 } = results;
-                    
-                    const p10 = percentile(totals, 0.10);
-                    const p90 = percentile(totals, 0.90);
-                    const analysis = { successRate, ciLow, ciHigh, expectedTotal: expected, p10, p50, p90, expected };
+                    if (!hasEnoughData) {
+                        alert(`⚠️ Insufficient data for forecasting\n\nCurrent data: ${currentData.length} days\nRequired: ${CONFIG.min_days_for_forecast} days minimum\n\nDescriptive charts will be shown, but forecasting requires at least ${CONFIG.min_days_for_forecast} days of data to build reliable predictions.`);
+                    }
                     
                     ['chart1', 'chart2', 'chart3', 'chart4', 'chart5'].forEach(id => {
                         const div = document.getElementById(id);
@@ -1371,42 +1380,16 @@ for day in [current_day + 1, ..., period_end]:
                     document.getElementById('resultsSection').classList.remove('hidden');
                     
                     document.getElementById('lastRunTime').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
-                    const elapsed = performance.now() - startTime;
-                    document.getElementById('simSpeed').innerHTML = `${numSims.toLocaleString()} simulations in ${elapsed.toFixed(0)}ms (~${(numSims/elapsed*1000).toFixed(0).toLocaleString()} sims/sec)<br><span style="font-family: Inter, sans-serif; color: var(--accent);">Ridge Regression (R² = ${r2.toFixed(3)}, σ = ${sigma.toFixed(2)}, skew = ${skew.toFixed(2)}) · Bootstrap Noise</span>`;
                     
-                    const gapColor = forecaster.meanCurrent - forecaster.requiredAvg >= 0 ? 'var(--success)' : 'var(--warning)';
-                    
-                    const weightLabels = ['lag₁', 'lag₃', 'lag₇', 'lag₁₄', 'MA7', 'bias'];
-                    const weightsHtml = weights.map((w, i) => `<div>${weightLabels[i]} = ${w.toFixed(3)}</div>`).join('');
-                    
-                    document.getElementById('statsGrid').innerHTML = `
-                        <div class="stat-card" style="grid-column: 1 / -1;">
-                            <div class="stat-label" style="margin-bottom: 0.5rem;">Ridge Weights (α selected via CV) · Bootstrap Noise (skew = ${skew.toFixed(2)})</div>
-                            <div style="font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--text-secondary); display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem;">
-                                ${weightsHtml}
-                            </div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${(successRate * 100).toFixed(1)}%</div>
-                            <div class="stat-label">Success Rate</div>
-                            <div class="stat-sublabel">[${(ciLow*100).toFixed(1)}%, ${(ciHigh*100).toFixed(1)}%]</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${expected.toFixed(0)}</div>
-                            <div class="stat-label">Expected Total</div>
-                            <div class="stat-sublabel">P50: ${p50.toFixed(0)}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${forecaster.meanCurrent.toFixed(1)}</div>
-                            <div class="stat-label">Current Avg (${currentData.length}d)</div>
-                            <div class="stat-sublabel">Σ ${forecaster.banked.toFixed(0)}</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" style="color: ${gapColor}">${(forecaster.meanCurrent - forecaster.requiredAvg).toFixed(1)}</div>
-                            <div class="stat-label">Gap vs Required</div>
-                            <div class="stat-sublabel">${forecaster.requiredAvg.toFixed(1)}/day needed</div>
-                        </div>
-                    `;
+                    const forecaster = new RevenueForecaster(previousData, currentData);
+                    forecaster.target = target;
+                    forecaster.banked = sum(currentData);
+                    forecaster.daysElapsed = currentData.length;
+                    forecaster.daysRemaining = periodLength - currentData.length;
+                    forecaster.needed = target - forecaster.banked;
+                    forecaster.requiredAvg = forecaster.needed / forecaster.daysRemaining;
+                    forecaster.expectedDailyRate = target / periodLength;
+                    forecaster.periodLength = periodLength;
                     
                     const plotConfig = {
                         displayModeBar: false,
@@ -1456,116 +1439,204 @@ for day in [current_day + 1, ..., period_end]:
                         { x: [1, periodLength], y: [forecaster.expectedDailyRate, forecaster.expectedDailyRate], mode: 'lines', name: `Target Rate=${forecaster.expectedDailyRate.toFixed(1)}`, line: {color: '#f59e0b', width: 2, dash: 'dot'} }
                     ], { ...plotLayout, xaxis: {title: 'Day'}, yaxis: {title: 'Revenue'} }, plotConfig);
 
-                    document.getElementById('chart3Title').textContent = 
-                        `Monte Carlo Distribution (${numSims.toLocaleString()} sims) — P(success) = ${(successRate*100).toFixed(1)}% [${(ciLow*100).toFixed(1)}%, ${(ciHigh*100).toFixed(1)}%]`;
-                    
-                    const binSize = (Math.max(...totals) - Math.min(...totals)) / 50;
-                    Plotly.newPlot('chart3', [
-                        { x: totals.filter(x => x < target), type: 'histogram', name: 'Below', marker: {color: 'rgba(150,150,150,0.7)'}, xbins: {size: binSize} },
-                        { x: totals.filter(x => x >= target), type: 'histogram', name: 'Above', marker: {color: 'rgba(26,26,26,0.7)'}, xbins: {size: binSize} }
-                    ], {
-                        ...plotLayout,
-                        xaxis: {title: 'Total Revenue'},
-                        yaxis: {title: 'Frequency'},
-                        barmode: 'stack',
-                        shapes: [
-                            { type: 'line', x0: target, x1: target, y0: 0, y1: 1, yref: 'paper', line: {color: '#1a1a1a', width: 2, dash: 'dash'} },
-                            { type: 'line', x0: expected, x1: expected, y0: 0, y1: 1, yref: 'paper', line: {color: '#0066cc', width: 2} }
-                        ],
-                        annotations: [
-                            { x: target, y: 1, yref: 'paper', text: `Target`, showarrow: true, arrowhead: 2, ax: 40, ay: -30 },
-                            { x: expected, y: 0.8, yref: 'paper', text: `Expected`, showarrow: true, arrowhead: 2, ax: -40, ay: -30 }
-                        ]
-                    }, plotConfig);
+                    if (!hasEnoughData) {
+                        const gapColor = forecaster.meanCurrent - forecaster.requiredAvg >= 0 ? 'var(--success)' : 'var(--warning)';
+                        
+                        document.getElementById('statsGrid').innerHTML = `
+                            <div class="stat-card">
+                                <div class="stat-value">${forecaster.meanCurrent.toFixed(1)}</div>
+                                <div class="stat-label">Current Avg (${currentData.length}d)</div>
+                                <div class="stat-sublabel">Σ ${forecaster.banked.toFixed(0)}</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: ${gapColor}">${(forecaster.meanCurrent - forecaster.requiredAvg).toFixed(1)}</div>
+                                <div class="stat-label">Gap vs Required</div>
+                                <div class="stat-sublabel">${forecaster.requiredAvg.toFixed(1)}/day needed</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${CONFIG.min_days_for_forecast - currentData.length}</div>
+                                <div class="stat-label">Days Until Forecast</div>
+                                <div class="stat-sublabel">${currentData.length}/${CONFIG.min_days_for_forecast} days</div>
+                            </div>
+                        `;
+                        
+                        document.getElementById('simSpeed').innerHTML = `<span style="font-family: Inter, sans-serif; color: var(--warning);">⚠️ Forecasting requires ${CONFIG.min_days_for_forecast} days minimum (current: ${currentData.length} days)</span>`;
+                        
+                        showPlaceholder('chart3', 'Insufficient Data', `Need ${CONFIG.min_days_for_forecast - currentData.length} more days for Monte Carlo simulation`);
+                        showPlaceholder('chart4', 'Insufficient Data', `Need ${CONFIG.min_days_for_forecast - currentData.length} more days for forecast zone`);
+                        showPlaceholder('chart5', 'Insufficient Data', `Need ${CONFIG.min_days_for_forecast - currentData.length} more days for progressive forecast`);
+                        
+                        exportButton.disabled = true;
+                    } else {
+                        const progressiveResults = runProgressiveForecast(
+                            previousData, currentData, periodLength, target, numSims,
+                            eventDays, boostMin, boostMax, downtimeEvents, downtimeMin, downtimeMax
+                        );
+                        
+                        const results = forecaster.simulate({
+                            nSims: numSims,
+                            daysRemaining: forecaster.daysRemaining,
+                            targetTotal: target,
+                            eventDays: eventDays,
+                            boostRange: [boostMin, boostMax],
+                            downtimeProb: downtimeEvents / periodLength,
+                            downtimeRange: [downtimeMin, downtimeMax],
+                            seed: 42
+                        });
+                        
+                        const { totals, trajectories, r2, sigma, skew, weights, successRate, ciLow, ciHigh, expected, p50 } = results;
+                        
+                        const p10 = percentile(totals, 0.10);
+                        const p90 = percentile(totals, 0.90);
+                        const analysis = { successRate, ciLow, ciHigh, expectedTotal: expected, p10, p50, p90, expected };
+                        
+                        const elapsed = performance.now() - startTime;
+                        document.getElementById('simSpeed').innerHTML = `${numSims.toLocaleString()} simulations in ${elapsed.toFixed(0)}ms (~${(numSims/elapsed*1000).toFixed(0).toLocaleString()} sims/sec)<br><span style="font-family: Inter, sans-serif; color: var(--accent);">Ridge Regression (R² = ${r2.toFixed(3)}, σ = ${sigma.toFixed(2)}, skew = ${skew.toFixed(2)}) · Bootstrap Noise</span>`;
+                        
+                        const gapColor = forecaster.meanCurrent - forecaster.requiredAvg >= 0 ? 'var(--success)' : 'var(--warning)';
+                        
+                        const weightLabels = ['lag₁', 'lag₃', 'lag₇', 'lag₁₄', 'MA7', 'bias'];
+                        const weightsHtml = weights.map((w, i) => `<div>${weightLabels[i]} = ${w.toFixed(3)}</div>`).join('');
+                        
+                        document.getElementById('statsGrid').innerHTML = `
+                            <div class="stat-card" style="grid-column: 1 / -1;">
+                                <div class="stat-label" style="margin-bottom: 0.5rem;">Ridge Weights (α selected via CV) · Bootstrap Noise (skew = ${skew.toFixed(2)})</div>
+                                <div style="font-family: 'Fira Code', monospace; font-size: 0.75rem; color: var(--text-secondary); display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem;">
+                                    ${weightsHtml}
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${(successRate * 100).toFixed(1)}%</div>
+                                <div class="stat-label">Success Rate</div>
+                                <div class="stat-sublabel">[${(ciLow*100).toFixed(1)}%, ${(ciHigh*100).toFixed(1)}%]</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${expected.toFixed(0)}</div>
+                                <div class="stat-label">Expected Total</div>
+                                <div class="stat-sublabel">P50: ${p50.toFixed(0)}</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${forecaster.meanCurrent.toFixed(1)}</div>
+                                <div class="stat-label">Current Avg (${currentData.length}d)</div>
+                                <div class="stat-sublabel">Σ ${forecaster.banked.toFixed(0)}</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" style="color: ${gapColor}">${(forecaster.meanCurrent - forecaster.requiredAvg).toFixed(1)}</div>
+                                <div class="stat-label">Gap vs Required</div>
+                                <div class="stat-sublabel">${forecaster.requiredAvg.toFixed(1)}/day needed</div>
+                            </div>
+                        `;
+                        
+                        document.getElementById('chart3Title').textContent = 
+                            `Monte Carlo Distribution (${numSims.toLocaleString()} sims) — P(success) = ${(successRate*100).toFixed(1)}% [${(ciLow*100).toFixed(1)}%, ${(ciHigh*100).toFixed(1)}%]`;
+                        
+                        const binSize = (Math.max(...totals) - Math.min(...totals)) / 50;
+                        Plotly.newPlot('chart3', [
+                            { x: totals.filter(x => x < target), type: 'histogram', name: 'Below', marker: {color: 'rgba(150,150,150,0.7)'}, xbins: {size: binSize} },
+                            { x: totals.filter(x => x >= target), type: 'histogram', name: 'Above', marker: {color: 'rgba(26,26,26,0.7)'}, xbins: {size: binSize} }
+                        ], {
+                            ...plotLayout,
+                            xaxis: {title: 'Total Revenue'},
+                            yaxis: {title: 'Frequency'},
+                            barmode: 'stack',
+                            shapes: [
+                                { type: 'line', x0: target, x1: target, y0: 0, y1: 1, yref: 'paper', line: {color: '#1a1a1a', width: 2, dash: 'dash'} },
+                                { type: 'line', x0: expected, x1: expected, y0: 0, y1: 1, yref: 'paper', line: {color: '#0066cc', width: 2} }
+                            ],
+                            annotations: [
+                                { x: target, y: 1, yref: 'paper', text: `Target`, showarrow: true, arrowhead: 2, ax: 40, ay: -30 },
+                                { x: expected, y: 0.8, yref: 'paper', text: `Expected`, showarrow: true, arrowhead: 2, ax: -40, ay: -30 }
+                            ]
+                        }, plotConfig);
 
-                    const actualDaysX = Array.from({length: currentData.length}, (_, i) => i + 1);
-                    const forecastDaysX = [forecaster.daysElapsed];
-                    for (let i = 1; i <= forecaster.daysRemaining; i++) forecastDaysX.push(forecaster.daysElapsed + i);
-                    
-                    const p10_path = [currentData[currentData.length - 1]];
-                    const p50_path = [currentData[currentData.length - 1]];
-                    const p90_path = [currentData[currentData.length - 1]];
-                    
-                    for (let i = 0; i < forecaster.daysRemaining; i++) {
-                        const dailyVals = trajectories.map(sim => sim[i]).sort((a,b) => a-b);
-                        p10_path.push(dailyVals[Math.floor(numSims * 0.10)]);
-                        p50_path.push(dailyVals[Math.floor(numSims * 0.50)]);
-                        p90_path.push(dailyVals[Math.floor(numSims * 0.90)]);
+                        const actualDaysX = Array.from({length: currentData.length}, (_, i) => i + 1);
+                        const forecastDaysX = [forecaster.daysElapsed];
+                        for (let i = 1; i <= forecaster.daysRemaining; i++) forecastDaysX.push(forecaster.daysElapsed + i);
+                        
+                        const p10_path = [currentData[currentData.length - 1]];
+                        const p50_path = [currentData[currentData.length - 1]];
+                        const p90_path = [currentData[currentData.length - 1]];
+                        
+                        for (let i = 0; i < forecaster.daysRemaining; i++) {
+                            const dailyVals = trajectories.map(sim => sim[i]).sort((a,b) => a-b);
+                            p10_path.push(dailyVals[Math.floor(numSims * 0.10)]);
+                            p50_path.push(dailyVals[Math.floor(numSims * 0.50)]);
+                            p90_path.push(dailyVals[Math.floor(numSims * 0.90)]);
+                        }
+                        
+                        Plotly.newPlot('chart4', [
+                            { x: actualDaysX, y: currentData, mode: 'lines+markers', name: 'Actual', line: {color: '#1a1a1a', width: 2.5}, marker: {size: 6} },
+                            {
+                                x: forecastDaysX.slice(1).concat([...forecastDaysX.slice(1)].reverse()),
+                                y: p10_path.slice(1).concat([...p90_path.slice(1)].reverse()),
+                                fill: 'toself',
+                                fillcolor: 'rgba(200,200,200,0.3)',
+                                line: {width: 0},
+                                name: 'P10-P90',
+                                showlegend: true
+                            },
+                            { x: forecastDaysX, y: p50_path, mode: 'lines', name: 'P50', line: {color: '#666', width: 2, dash: 'dash'} }
+                        ], { ...plotLayout, xaxis: {title: 'Day'}, yaxis: {title: 'Daily Revenue'} }, plotConfig);
+
+                        const progDays = progressiveResults.map(r => r.day);
+                        const progR2 = progressiveResults.map(r => r.r2);
+                        const progSuccess = progressiveResults.map(r => r.successRate * 100);
+                        
+                        document.getElementById('chart5Title').textContent = 
+                            `Progressive Forecast Evolution: Model Quality & Success Rate (Day ${CONFIG.min_days_for_forecast} → ${currentData.length})`;
+                        
+                        Plotly.newPlot('chart5', [
+                            {
+                                x: progDays,
+                                y: progSuccess,
+                                mode: 'lines+markers',
+                                name: 'Success Rate (%)',
+                                yaxis: 'y',
+                                line: {color: '#0066cc', width: 3},
+                                marker: {size: 6}
+                            },
+                            {
+                                x: [CONFIG.min_days_for_forecast, currentData.length],
+                                y: [80, 80],
+                                mode: 'lines',
+                                name: 'Target (80%)',
+                                yaxis: 'y',
+                                line: {color: '#16a34a', width: 2, dash: 'dash'}
+                            },
+                            {
+                                x: progDays,
+                                y: progR2,
+                                mode: 'lines+markers',
+                                name: 'R² (fit quality)',
+                                yaxis: 'y2',
+                                line: {color: '#f59e0b', width: 2},
+                                marker: {size: 5, symbol: 'square'}
+                            }
+                        ], {
+                            ...plotLayout,
+                            xaxis: {title: 'Day of Current Period'},
+                            yaxis: {
+                                title: 'Success Rate (%)',
+                                range: [0, 100],
+                                side: 'left'
+                            },
+                            yaxis2: {
+                                title: 'R² (coefficient of determination)',
+                                range: [0, 1],
+                                overlaying: 'y',
+                                side: 'right'
+                            },
+                            legend: {
+                                x: 0.02,
+                                y: 0.98,
+                                xanchor: 'left',
+                                yanchor: 'top'
+                            }
+                        }, plotConfig);
+                        
+                        exportButton.disabled = false;
+                        exportButton.onclick = () => exportToCSV(totals, forecaster, analysis);
                     }
-                    
-                    Plotly.newPlot('chart4', [
-                        { x: actualDaysX, y: currentData, mode: 'lines+markers', name: 'Actual', line: {color: '#1a1a1a', width: 2.5}, marker: {size: 6} },
-                        {
-                            x: forecastDaysX.slice(1).concat([...forecastDaysX.slice(1)].reverse()),
-                            y: p10_path.slice(1).concat([...p90_path.slice(1)].reverse()),
-                            fill: 'toself',
-                            fillcolor: 'rgba(200,200,200,0.3)',
-                            line: {width: 0},
-                            name: 'P10-P90',
-                            showlegend: true
-                        },
-                        { x: forecastDaysX, y: p50_path, mode: 'lines', name: 'P50', line: {color: '#666', width: 2, dash: 'dash'} }
-                    ], { ...plotLayout, xaxis: {title: 'Day'}, yaxis: {title: 'Daily Revenue'} }, plotConfig);
-
-                    const progDays = progressiveResults.map(r => r.day);
-                    const progR2 = progressiveResults.map(r => r.r2);
-                    const progSuccess = progressiveResults.map(r => r.successRate * 100);
-                    const progSigma = progressiveResults.map(r => r.sigma);
-                    
-                    document.getElementById('chart5Title').textContent = 
-                        `Progressive Forecast Evolution: Model Quality & Success Rate (Day 1 → ${currentData.length})`;
-                    
-                    Plotly.newPlot('chart5', [
-                        {
-                            x: progDays,
-                            y: progSuccess,
-                            mode: 'lines+markers',
-                            name: 'Success Rate (%)',
-                            yaxis: 'y',
-                            line: {color: '#0066cc', width: 3},
-                            marker: {size: 6}
-                        },
-                        {
-                            x: [1, currentData.length],
-                            y: [80, 80],
-                            mode: 'lines',
-                            name: 'Target (80%)',
-                            yaxis: 'y',
-                            line: {color: '#16a34a', width: 2, dash: 'dash'}
-                        },
-                        {
-                            x: progDays,
-                            y: progR2,
-                            mode: 'lines+markers',
-                            name: 'R² (fit quality)',
-                            yaxis: 'y2',
-                            line: {color: '#f59e0b', width: 2},
-                            marker: {size: 5, symbol: 'square'}
-                        }
-                    ], {
-                        ...plotLayout,
-                        xaxis: {title: 'Day of Current Period'},
-                        yaxis: {
-                            title: 'Success Rate (%)',
-                            range: [0, 100],
-                            side: 'left'
-                        },
-                        yaxis2: {
-                            title: 'R² (coefficient of determination)',
-                            range: [0, 1],
-                            overlaying: 'y',
-                            side: 'right'
-                        },
-                        legend: {
-                            x: 0.02,
-                            y: 0.98,
-                            xanchor: 'left',
-                            yanchor: 'top'
-                        }
-                    }, plotConfig);
-                    
-                    exportButton.disabled = false;
-                    exportButton.onclick = () => exportToCSV(totals, forecaster, analysis);
                     
                 } catch (error) {
                     alert('Error: ' + error.message);
