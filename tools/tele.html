@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nanotele</title>
+    <meta name="description" content="Cut through noise. Extract signal from Telegram group chats.">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.2/marked.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-size: 13px; }
+        .shadow-brutal { box-shadow: 3px 3px 0px #000; }
+        .shadow-brutal-hover:hover { box-shadow: 5px 5px 0px #000; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: #f1f1f1; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #666; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #333; }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .llm-output h1, .llm-output h2, .llm-output h3 { 
+            font-family: 'IBM Plex Serif', serif;
+            font-weight: 700;
+            margin: 1rem 0 0.5rem;
+        }
+        .llm-output h1:first-child, .llm-output h2:first-child, .llm-output h3:first-child { margin-top: 0; }
+        .llm-output p { margin-bottom: 0.75rem; color: #666; }
+        .llm-output ul, .llm-output ol { margin: 0.5rem 0 0.75rem 1.5rem; color: #666; }
+        .llm-output li { margin-bottom: 0.25rem; }
+        .llm-output blockquote {
+            border-left: 3px solid #000;
+            padding-left: 1rem;
+            margin: 0.75rem 0;
+            color: #666;
+            font-style: italic;
+        }
+        .llm-output code {
+            font-family: 'IBM Plex Mono', monospace;
+            background: #f5f5f5;
+            padding: 0.125rem 0.375rem;
+            font-size: 0.85em;
+        }
+        .llm-output pre {
+            background: #f5f5f5;
+            padding: 1rem;
+            overflow-x: auto;
+            border: 1px solid #e5e5e5;
+        }
+        .llm-output pre code { background: none; padding: 0; }
+        .llm-output strong { color: #000; }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono antialiased selection:bg-black selection:text-white">
+
+    <div class="p-4 md:p-8 min-h-screen">
+        <div class="w-full max-w-5xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <a class="text-2xl font-serif font-bold tracking-tight flex items-center gap-2" href="/">
+                    <span>nanotele</span>
+                    <span class="text-xs font-mono font-normal text-muted">cut through noise</span>
+                </a>
+                <div class="flex gap-4 text-xs uppercase tracking-wider">
+                    <button id="btn-export" class="underline underline-offset-4 hover:decoration-2 decoration-1 cursor-pointer">Export</button>
+                    <button id="btn-copy" class="underline underline-offset-4 hover:decoration-2 decoration-1 cursor-pointer">Copy All</button>
+                    <button id="btn-settings" class="underline underline-offset-4 hover:decoration-2 decoration-1 cursor-pointer">Settings</button>
+                </div>
+            </header>
+
+            <!-- Stats Bar -->
+            <div class="flex flex-wrap gap-6 mb-8 pb-4 border-b border-gray-200">
+                <div class="flex flex-col">
+                    <span class="text-xl font-bold" id="stat-messages">0</span>
+                    <span class="text-[10px] text-muted uppercase tracking-wider">Messages</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-bold" id="stat-senders">0</span>
+                    <span class="text-[10px] text-muted uppercase tracking-wider">Senders</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-xl font-bold" id="stat-filtered">0</span>
+                    <span class="text-[10px] text-muted uppercase tracking-wider">Filtered</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-semibold" id="stat-date-range">—</span>
+                    <span class="text-[10px] text-muted uppercase tracking-wider">Date Range</span>
+                </div>
+            </div>
+
+            <!-- Data Source Panel -->
+            <div class="border border-black p-4 shadow-brutal mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-serif font-bold text-sm">Data Source</h2>
+                    <button id="btn-load" class="px-3 py-1 bg-accent text-black text-xs font-medium border border-black hover:shadow-brutal transition-all">
+                        Load
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">JSON URL</label>
+                    <input type="text" id="input-url" 
+                        class="w-full px-3 py-2 border border-gray-300 focus:border-black focus:outline-none text-xs"
+                        placeholder="https://raw.githubusercontent.com/user/nanotele/main/data/messages.json">
+                </div>
+                <div class="flex flex-wrap gap-4 items-end">
+                    <div>
+                        <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">Limit</label>
+                        <input type="number" id="filter-limit" value="200" min="1" max="10000"
+                            class="w-20 px-2 py-1 border border-gray-300 focus:border-black focus:outline-none text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">From</label>
+                        <input type="date" id="filter-from"
+                            class="px-2 py-1 border border-gray-300 focus:border-black focus:outline-none text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">To</label>
+                        <input type="date" id="filter-to"
+                            class="px-2 py-1 border border-gray-300 focus:border-black focus:outline-none text-xs">
+                    </div>
+                    <label class="flex items-center gap-2 text-xs text-muted cursor-pointer">
+                        <input type="checkbox" id="filter-bots" checked class="accent-black">
+                        <span>Exclude bots</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs text-muted cursor-pointer">
+                        <input type="checkbox" id="filter-recent" checked class="accent-black">
+                        <span>Recent first</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Main Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                
+                <!-- Messages Panel -->
+                <div class="border border-black shadow-brutal">
+                    <div class="flex items-center justify-between px-4 py-2 border-b border-black bg-gray-50">
+                        <h2 class="font-serif font-bold text-sm">Messages</h2>
+                        <span class="text-[10px] text-muted" id="msg-count">0 messages</span>
+                    </div>
+                    <div class="p-4 max-h-96 overflow-y-auto scrollbar-thin" id="messages-container">
+                        <div class="text-center py-8 text-muted text-xs">
+                            <p>No messages loaded</p>
+                            <p class="mt-1">Enter a JSON URL and click Load</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Senders Panel -->
+                <div class="border border-black shadow-brutal">
+                    <div class="flex items-center justify-between px-4 py-2 border-b border-black bg-gray-50">
+                        <h2 class="font-serif font-bold text-sm">Senders</h2>
+                        <button id="btn-clear-sender" class="text-[10px] text-muted underline underline-offset-2 hidden">Clear Filter</button>
+                    </div>
+                    <div class="p-4 max-h-96 overflow-y-auto scrollbar-thin" id="senders-container">
+                        <div class="text-center py-8 text-muted text-xs">
+                            <p>No data</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LLM Analysis Panel -->
+            <div class="border border-black p-4 shadow-brutal">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-serif font-bold text-sm">LLM Analysis</h2>
+                    <div class="flex gap-2">
+                        <button class="provider-btn px-2 py-1 text-[10px] border border-black bg-accent" data-provider="anthropic">Claude</button>
+                        <button class="provider-btn px-2 py-1 text-[10px] border border-gray-300 hover:border-black" data-provider="openai">GPT</button>
+                        <button class="provider-btn px-2 py-1 text-[10px] border border-gray-300 hover:border-black" data-provider="google">Gemini</button>
+                    </div>
+                </div>
+
+                <!-- Preset buttons -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button class="preset-btn px-2 py-1 text-[10px] border border-gray-300 hover:border-black hover:bg-gray-50" data-preset="summary">Summary</button>
+                    <button class="preset-btn px-2 py-1 text-[10px] border border-gray-300 hover:border-black hover:bg-gray-50" data-preset="quotes">Key Quotes</button>
+                    <button class="preset-btn px-2 py-1 text-[10px] border border-gray-300 hover:border-black hover:bg-gray-50" data-preset="topics">Topics</button>
+                    <button class="preset-btn px-2 py-1 text-[10px] border border-gray-300 hover:border-black hover:bg-gray-50" data-preset="persona">Persona</button>
+                    <button class="preset-btn px-2 py-1 text-[10px] border border-gray-300 hover:border-black hover:bg-gray-50" data-preset="insights">Insights</button>
+                </div>
+
+                <!-- Prompt textarea -->
+                <div class="mb-4">
+                    <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">Prompt</label>
+                    <textarea id="llm-prompt" rows="3"
+                        class="w-full px-3 py-2 border border-gray-300 focus:border-black focus:outline-none text-xs resize-y"
+                        placeholder="Enter your analysis prompt...">Summarize the key discussion points. Start with a one-paragraph overview. Then list the most interesting quotes. Finally, identify unusual or contrarian ideas. Keep the original language.</textarea>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex flex-wrap gap-3 mb-4">
+                    <button id="btn-analyze" class="px-3 py-1.5 bg-accent text-black text-xs font-medium border border-black hover:shadow-brutal transition-all">
+                        Analyze Messages
+                    </button>
+                    <button id="btn-analyze-sender" disabled class="px-3 py-1.5 text-xs border border-gray-300 text-muted disabled:opacity-50">
+                        Analyze Selected Sender
+                    </button>
+                    <button id="btn-copy-result" class="px-3 py-1.5 text-xs border border-gray-300 hover:border-black">
+                        Copy Result
+                    </button>
+                </div>
+
+                <!-- Output area -->
+                <div class="llm-output border border-gray-200 p-4 min-h-[200px] max-h-96 overflow-y-auto scrollbar-thin bg-gray-50" id="llm-output">
+                    <div class="text-center py-8 text-muted text-xs">
+                        <p>Analysis results will appear here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-12 pt-6 border-t border-black flex justify-between items-baseline text-xs text-muted">
+                <p class="font-serif text-sm text-black">nanotele (λ)</p>
+                <span>&copy; 2025</span>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="modal-settings">
+        <div class="bg-white border border-black shadow-brutal w-full max-w-md max-h-[90vh] overflow-y-auto m-4">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-black">
+                <h2 class="font-serif font-bold">Settings</h2>
+                <button id="btn-close-settings" class="text-xl leading-none hover:text-muted">&times;</button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">Default JSON URL</label>
+                    <input type="text" id="settings-url" 
+                        class="w-full px-3 py-2 border border-gray-300 focus:border-black focus:outline-none text-xs"
+                        placeholder="https://...">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">Anthropic API Key</label>
+                    <input type="password" id="settings-anthropic" 
+                        class="w-full px-3 py-2 border border-gray-300 focus:border-black focus:outline-none text-xs"
+                        placeholder="sk-ant-...">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">OpenAI API Key</label>
+                    <input type="password" id="settings-openai" 
+                        class="w-full px-3 py-2 border border-gray-300 focus:border-black focus:outline-none text-xs"
+                        placeholder="sk-...">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">Google AI API Key</label>
+                    <input type="password" id="settings-google" 
+                        class="w-full px-3 py-2 border border-gray-300 focus:border-black focus:outline-none text-xs"
+                        placeholder="AI...">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">Claude Model</label>
+                        <input type="text" id="settings-model-anthropic" 
+                            class="w-full px-3 py-2 border border-gray-300 focus:border-black focus:outline-none text-xs"
+                            placeholder="claude-sonnet-4-20250514">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">GPT Model</label>
+                        <input type="text" id="settings-model-openai" 
+                            class="w-full px-3 py-2 border border-gray-300 focus:border-black focus:outline-none text-xs"
+                            placeholder="gpt-4o-mini">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted uppercase tracking-wider block mb-1">Gemini Model</label>
+                    <input type="text" id="settings-model-google" 
+                        class="w-full px-3 py-2 border border-gray-300 focus:border-black focus:outline-none text-xs"
+                        placeholder="gemini-2.0-flash">
+                </div>
+                <button id="btn-save-settings" class="w-full px-3 py-2 bg-accent text-black text-xs font-medium border border-black hover:shadow-brutal transition-all">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ State ============
+        const state = {
+            rawData: null,
+            filteredMessages: [],
+            senderStats: {},
+            selectedSender: null,
+            selectedProvider: 'anthropic',
+            lastLLMResult: ''
+        };
+
+        // ============ Settings ============
+        const defaultSettings = {
+            url: '',
+            anthropicKey: '',
+            openaiKey: '',
+            googleKey: '',
+            modelAnthropic: 'claude-sonnet-4-20250514',
+            modelOpenai: 'gpt-4o-mini',
+            modelGoogle: 'gemini-2.0-flash'
+        };
+
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem('nanotele_settings');
+                return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+            } catch {
+                return defaultSettings;
+            }
+        }
+
+        function saveSettings(settings) {
+            localStorage.setItem('nanotele_settings', JSON.stringify(settings));
+        }
+
+        // ============ Prompt Presets ============
+        const presets = {
+            summary: `Summarize the key discussion points from these messages. 
+Start with a one-paragraph overview. 
+Then list the most interesting direct quotes (with attribution).
+Finally, identify any unusual or contrarian ideas.
+Keep the original language where appropriate.`,
+            quotes: `Extract the most insightful and memorable quotes from these messages.
+For each quote:
+- Include the exact text
+- Note who said it
+- Briefly explain why it's significant
+Group quotes by theme if patterns emerge.`,
+            topics: `Analyze the main topics discussed in these messages.
+For each topic:
+- Give it a clear name
+- Summarize the discussion
+- Note any consensus or disagreements
+- Identify key contributors
+Rank topics by engagement/importance.`,
+            persona: `Analyze the communication style and interests of this person based on their messages.
+Include:
+- Main topics they discuss
+- Their apparent expertise areas
+- Communication style (formal/casual, detailed/brief)
+- Notable opinions or viewpoints
+- How they interact with others
+Provide specific examples from their messages.`,
+            insights: `Extract actionable insights from these messages.
+Focus on:
+- Recommendations or advice given
+- Tools, resources, or methods mentioned
+- Lessons learned or mistakes to avoid
+- Opportunities or trends identified
+Format as a prioritized list with context.`
+        };
+
+        // ============ DOM Elements ============
+        const $ = id => document.getElementById(id);
+
+        const elements = {
+            inputUrl: $('input-url'),
+            btnLoad: $('btn-load'),
+            btnSettings: $('btn-settings'),
+            btnExport: $('btn-export'),
+            btnCopy: $('btn-copy'),
+            modalSettings: $('modal-settings'),
+            btnCloseSettings: $('btn-close-settings'),
+            btnSaveSettings: $('btn-save-settings'),
+            messagesContainer: $('messages-container'),
+            sendersContainer: $('senders-container'),
+            btnClearSender: $('btn-clear-sender'),
+            llmPrompt: $('llm-prompt'),
+            llmOutput: $('llm-output'),
+            btnAnalyze: $('btn-analyze'),
+            btnAnalyzeSender: $('btn-analyze-sender'),
+            btnCopyResult: $('btn-copy-result'),
+            filterLimit: $('filter-limit'),
+            filterFrom: $('filter-from'),
+            filterTo: $('filter-to'),
+            filterBots: $('filter-bots'),
+            filterRecent: $('filter-recent'),
+            msgCount: $('msg-count'),
+            statMessages: $('stat-messages'),
+            statSenders: $('stat-senders'),
+            statFiltered: $('stat-filtered'),
+            statDateRange: $('stat-date-range')
+        };
+
+        // ============ Data Loading ============
+        async function loadData() {
+            const url = elements.inputUrl.value.trim();
+            if (!url) {
+                alert('Please enter a JSON URL');
+                return;
+            }
+
+            elements.btnLoad.disabled = true;
+            elements.btnLoad.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                state.rawData = await response.json();
+                applyFilters();
+                
+                const settings = loadSettings();
+                settings.url = url;
+                saveSettings(settings);
+            } catch (error) {
+                alert(`Failed to load: ${error.message}`);
+            } finally {
+                elements.btnLoad.disabled = false;
+                elements.btnLoad.textContent = 'Load';
+            }
+        }
+
+        function applyFilters() {
+            if (!state.rawData?.messages) return;
+
+            let messages = [...state.rawData.messages];
+            const limit = parseInt(elements.filterLimit.value) || 200;
+            const fromDate = elements.filterFrom.value;
+            const toDate = elements.filterTo.value;
+            const excludeBots = elements.filterBots.checked;
+            const recentFirst = elements.filterRecent.checked;
+
+            if (excludeBots) {
+                messages = messages.filter(m => !m.is_bot);
+            }
+
+            if (fromDate) {
+                messages = messages.filter(m => m.date >= fromDate);
+            }
+            if (toDate) {
+                messages = messages.filter(m => m.date <= toDate + 'T23:59:59');
+            }
+
+            if (state.selectedSender) {
+                messages = messages.filter(m => m.sender_id === state.selectedSender);
+            }
+
+            if (recentFirst) {
+                messages.sort((a, b) => new Date(b.date) - new Date(a.date));
+            } else {
+                messages.sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+
+            messages = messages.slice(0, limit);
+
+            state.filteredMessages = messages;
+            calculateSenderStats();
+            renderMessages();
+            renderSenders();
+            updateStats();
+        }
+
+        function calculateSenderStats() {
+            state.senderStats = {};
+            const messages = state.rawData?.messages || [];
+            messages.forEach(m => {
+                if (!m.sender_id) return;
+                if (!state.senderStats[m.sender_id]) {
+                    state.senderStats[m.sender_id] = {
+                        id: m.sender_id,
+                        name: m.sender_name,
+                        username: m.sender_username,
+                        count: 0,
+                        is_bot: m.is_bot
+                    };
+                }
+                state.senderStats[m.sender_id].count++;
+            });
+        }
+
+        // ============ Rendering ============
+        function renderMessages() {
+            const container = elements.messagesContainer;
+            
+            if (!state.filteredMessages.length) {
+                container.innerHTML = `<div class="text-center py-8 text-muted text-xs"><p>No messages match filters</p></div>`;
+                elements.msgCount.textContent = '0 messages';
+                return;
+            }
+
+            container.innerHTML = `<div class="space-y-3">${
+                state.filteredMessages.map(m => `
+                    <div class="p-3 border-l-2 border-gray-200 hover:border-black hover:bg-gray-50 transition-colors">
+                        <div class="flex flex-wrap items-center gap-2 mb-1">
+                            <span class="text-[10px] text-muted">${formatDate(m.date)}</span>
+                            <span class="text-xs font-semibold">${escapeHtml(m.sender_name)}</span>
+                            ${m.reactions?.length ? `
+                                <div class="flex gap-1 ml-auto">
+                                    ${m.reactions.map(r => `<span class="text-[10px] px-1 bg-gray-100">${r.emoji} ${r.count}</span>`).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="text-xs text-muted whitespace-pre-wrap break-words">${escapeHtml(m.text)}</div>
+                    </div>
+                `).join('')
+            }</div>`;
+
+            elements.msgCount.textContent = `${state.filteredMessages.length} messages`;
+        }
+
+        function renderSenders() {
+            const container = elements.sendersContainer;
+            const excludeBots = elements.filterBots.checked;
+            
+            let senders = Object.values(state.senderStats);
+            if (excludeBots) {
+                senders = senders.filter(s => !s.is_bot);
+            }
+            senders.sort((a, b) => b.count - a.count);
+            
+            const maxCount = senders[0]?.count || 1;
+
+            if (!senders.length) {
+                container.innerHTML = `<div class="text-center py-8 text-muted text-xs"><p>No senders</p></div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="space-y-2">${
+                senders.map(s => `
+                    <div class="sender-item flex items-center justify-between p-2 cursor-pointer hover:bg-gray-50 transition-colors ${state.selectedSender === s.id ? 'bg-accent border-l-2 border-black' : 'border-l-2 border-transparent'}" data-sender-id="${s.id}">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs font-medium truncate">${escapeHtml(s.name)}</div>
+                            <div class="h-1 bg-gray-200 mt-1">
+                                <div class="h-full bg-black" style="width: ${(s.count / maxCount) * 100}%"></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-muted ml-3">${s.count}</span>
+                    </div>
+                `).join('')
+            }</div>`;
+
+            container.querySelectorAll('.sender-item').forEach(el => {
+                el.addEventListener('click', () => selectSender(parseInt(el.dataset.senderId)));
+            });
+        }
+
+        function selectSender(senderId) {
+            if (state.selectedSender === senderId) {
+                state.selectedSender = null;
+                elements.btnClearSender.classList.add('hidden');
+                elements.btnAnalyzeSender.disabled = true;
+                elements.btnAnalyzeSender.textContent = 'Analyze Selected Sender';
+                elements.btnAnalyzeSender.classList.remove('border-black', 'text-black');
+                elements.btnAnalyzeSender.classList.add('border-gray-300', 'text-muted');
+            } else {
+                state.selectedSender = senderId;
+                elements.btnClearSender.classList.remove('hidden');
+                elements.btnAnalyzeSender.disabled = false;
+                const senderInfo = state.senderStats[senderId];
+                if (senderInfo) {
+                    elements.btnAnalyzeSender.textContent = `Analyze ${senderInfo.name} (${senderInfo.count})`;
+                }
+                elements.btnAnalyzeSender.classList.add('border-black', 'text-black');
+                elements.btnAnalyzeSender.classList.remove('border-gray-300', 'text-muted');
+            }
+            applyFilters();
+        }
+
+        function updateStats() {
+            const raw = state.rawData;
+            if (!raw) return;
+
+            elements.statMessages.textContent = raw.meta?.message_count || raw.messages?.length || 0;
+            elements.statSenders.textContent = raw.meta?.unique_senders || Object.keys(state.senderStats).length;
+            elements.statFiltered.textContent = state.filteredMessages.length;
+
+            const dateRange = raw.meta?.date_range;
+            if (dateRange?.oldest && dateRange?.newest) {
+                const oldest = dateRange.oldest.slice(0, 10);
+                const newest = dateRange.newest.slice(0, 10);
+                elements.statDateRange.textContent = oldest === newest ? oldest : `${oldest} → ${newest}`;
+            }
+        }
+
+        // ============ LLM Integration ============
+        async function analyzeWithLLM(messages, prompt) {
+            const settings = loadSettings();
+            const provider = state.selectedProvider;
+            
+            const messageText = messages.map(m => 
+                `[${formatDate(m.date)}] ${m.sender_name}: ${m.text}`
+            ).join('\n\n');
+
+            const fullPrompt = `${prompt}\n\n---\nMESSAGES:\n${messageText}`;
+
+            elements.llmOutput.innerHTML = '<div class="text-center py-8 text-muted text-xs"><p>Analyzing...</p></div>';
+
+            try {
+                let result;
+                
+                if (provider === 'anthropic') {
+                    result = await callAnthropic(fullPrompt, settings);
+                } else if (provider === 'openai') {
+                    result = await callOpenAI(fullPrompt, settings);
+                } else if (provider === 'google') {
+                    result = await callGoogle(fullPrompt, settings);
+                }
+
+                elements.llmOutput.innerHTML = marked.parse(result);
+                state.lastLLMResult = result;
+            } catch (error) {
+                elements.llmOutput.innerHTML = `<div class="text-red-600 text-xs">Error: ${error.message}</div>`;
+                state.lastLLMResult = '';
+            }
+        }
+
+        async function callAnthropic(prompt, settings) {
+            const apiKey = settings.anthropicKey;
+            if (!apiKey) throw new Error('Anthropic API key not configured');
+
+            const response = await fetch('https://api.anthropic.com/v1/messages', {
+                method: 'POST',
+                headers: {
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01',
+                    'content-type': 'application/json',
+                    'anthropic-dangerous-direct-browser-access': 'true'
+                },
+                body: JSON.stringify({
+                    model: settings.modelAnthropic || 'claude-sonnet-4-20250514',
+                    max_tokens: 4096,
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error);
+            }
+
+            const data = await response.json();
+            return data.content[0].text;
+        }
+
+        async function callOpenAI(prompt, settings) {
+            const apiKey = settings.openaiKey;
+            if (!apiKey) throw new Error('OpenAI API key not configured');
+
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: settings.modelOpenai || 'gpt-4o-mini',
+                    max_tokens: 4096,
+                    messages: [{ role: 'user', content: prompt }]
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+
+        async function callGoogle(prompt, settings) {
+            const apiKey = settings.googleKey;
+            if (!apiKey) throw new Error('Google AI API key not configured');
+
+            const model = settings.modelGoogle || 'gemini-2.0-flash';
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { maxOutputTokens: 4096 }
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error);
+            }
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        // ============ Export ============
+        function exportJSON() {
+            if (!state.filteredMessages.length) {
+                alert('No messages to export');
+                return;
+            }
+
+            const data = {
+                exported_at: new Date().toISOString(),
+                filter_applied: {
+                    limit: elements.filterLimit.value,
+                    from: elements.filterFrom.value,
+                    to: elements.filterTo.value,
+                    exclude_bots: elements.filterBots.checked,
+                    selected_sender: state.selectedSender
+                },
+                message_count: state.filteredMessages.length,
+                messages: state.filteredMessages
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `nanotele-export-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyMessages() {
+            if (!state.filteredMessages.length) {
+                alert('No messages to copy');
+                return;
+            }
+
+            const text = state.filteredMessages.map(m => 
+                `[${formatDate(m.date)}] ${m.sender_name}: ${m.text}`
+            ).join('\n\n');
+
+            navigator.clipboard.writeText(text);
+            showCopied(elements.btnCopy);
+        }
+
+        function copyResult() {
+            if (!state.lastLLMResult) {
+                alert('No result to copy');
+                return;
+            }
+            navigator.clipboard.writeText(state.lastLLMResult);
+            showCopied(elements.btnCopyResult);
+        }
+
+        function showCopied(btn) {
+            const original = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = original, 1500);
+        }
+
+        // ============ Utilities ============
+        function formatDate(iso) {
+            const d = new Date(iso);
+            return d.toLocaleString('en-GB', { 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // ============ Settings Modal ============
+        function openSettings() {
+            const settings = loadSettings();
+            $('settings-url').value = settings.url || '';
+            $('settings-anthropic').value = settings.anthropicKey || '';
+            $('settings-openai').value = settings.openaiKey || '';
+            $('settings-google').value = settings.googleKey || '';
+            $('settings-model-anthropic').value = settings.modelAnthropic || '';
+            $('settings-model-openai').value = settings.modelOpenai || '';
+            $('settings-model-google').value = settings.modelGoogle || '';
+            elements.modalSettings.classList.add('active');
+        }
+
+        function closeSettings() {
+            elements.modalSettings.classList.remove('active');
+        }
+
+        function saveSettingsFromModal() {
+            const settings = {
+                url: $('settings-url').value.trim(),
+                anthropicKey: $('settings-anthropic').value.trim(),
+                openaiKey: $('settings-openai').value.trim(),
+                googleKey: $('settings-google').value.trim(),
+                modelAnthropic: $('settings-model-anthropic').value.trim() || defaultSettings.modelAnthropic,
+                modelOpenai: $('settings-model-openai').value.trim() || defaultSettings.modelOpenai,
+                modelGoogle: $('settings-model-google').value.trim() || defaultSettings.modelGoogle
+            };
+            saveSettings(settings);
+            closeSettings();
+        }
+
+        // ============ Event Listeners ============
+        function init() {
+            const settings = loadSettings();
+            if (settings.url) {
+                elements.inputUrl.value = settings.url;
+            }
+
+            elements.btnLoad.addEventListener('click', loadData);
+            elements.inputUrl.addEventListener('keypress', e => {
+                if (e.key === 'Enter') loadData();
+            });
+
+            elements.filterLimit.addEventListener('change', applyFilters);
+            elements.filterFrom.addEventListener('change', applyFilters);
+            elements.filterTo.addEventListener('change', applyFilters);
+            elements.filterBots.addEventListener('change', applyFilters);
+            elements.filterRecent.addEventListener('change', applyFilters);
+
+            elements.btnClearSender.addEventListener('click', () => {
+                state.selectedSender = null;
+                elements.btnClearSender.classList.add('hidden');
+                elements.btnAnalyzeSender.disabled = true;
+                elements.btnAnalyzeSender.textContent = 'Analyze Selected Sender';
+                elements.btnAnalyzeSender.classList.remove('border-black', 'text-black');
+                elements.btnAnalyzeSender.classList.add('border-gray-300', 'text-muted');
+                applyFilters();
+            });
+
+            elements.btnSettings.addEventListener('click', openSettings);
+            elements.btnCloseSettings.addEventListener('click', closeSettings);
+            elements.btnSaveSettings.addEventListener('click', saveSettingsFromModal);
+            elements.modalSettings.addEventListener('click', e => {
+                if (e.target === elements.modalSettings) closeSettings();
+            });
+
+            elements.btnExport.addEventListener('click', exportJSON);
+            elements.btnCopy.addEventListener('click', copyMessages);
+            elements.btnCopyResult.addEventListener('click', copyResult);
+
+            document.querySelectorAll('.provider-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.provider-btn').forEach(b => {
+                        b.classList.remove('bg-accent');
+                        b.classList.add('border-gray-300');
+                    });
+                    btn.classList.add('bg-accent');
+                    btn.classList.remove('border-gray-300');
+                    state.selectedProvider = btn.dataset.provider;
+                });
+            });
+
+            document.querySelectorAll('.preset-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    elements.llmPrompt.value = presets[btn.dataset.preset];
+                });
+            });
+
+            elements.btnAnalyze.addEventListener('click', () => {
+                const prompt = elements.llmPrompt.value.trim();
+                if (!prompt) {
+                    alert('Please enter a prompt');
+                    return;
+                }
+                if (!state.filteredMessages.length) {
+                    alert('No messages to analyze');
+                    return;
+                }
+                analyzeWithLLM(state.filteredMessages, prompt);
+            });
+
+            elements.btnAnalyzeSender.addEventListener('click', () => {
+                const prompt = elements.llmPrompt.value.trim();
+                if (!prompt) {
+                    alert('Please enter a prompt');
+                    return;
+                }
+                if (!state.selectedSender) {
+                    alert('Please select a sender first');
+                    return;
+                }
+                
+                let senderMessages = state.rawData.messages.filter(m => m.sender_id === state.selectedSender);
+                
+                const fromDate = elements.filterFrom.value;
+                const toDate = elements.filterTo.value;
+                if (fromDate) {
+                    senderMessages = senderMessages.filter(m => m.date >= fromDate);
+                }
+                if (toDate) {
+                    senderMessages = senderMessages.filter(m => m.date <= toDate + 'T23:59:59');
+                }
+                
+                const recentFirst = elements.filterRecent.checked;
+                if (recentFirst) {
+                    senderMessages.sort((a, b) => new Date(b.date) - new Date(a.date));
+                } else {
+                    senderMessages.sort((a, b) => new Date(a.date) - new Date(b.date));
+                }
+                
+                const limit = parseInt(elements.filterLimit.value) || 200;
+                senderMessages = senderMessages.slice(0, limit);
+                
+                if (!senderMessages.length) {
+                    alert('No messages from selected sender');
+                    return;
+                }
+                
+                const senderName = state.senderStats[state.selectedSender]?.name || 'Unknown';
+                const contextPrompt = `Analyze messages from "${senderName}".\n\n${prompt}`;
+                
+                analyzeWithLLM(senderMessages, contextPrompt);
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closeSettings();
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>
