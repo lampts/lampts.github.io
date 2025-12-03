@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF to Gist | Utility</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // Initialize PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                    },
+                    boxShadow: {
+                        'hard': '3px 3px 0px #000',
+                        'hard-hover': '5px 5px 0px #000',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar for a raw feel */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #fff; border-left: 1px solid #000; }
+        ::-webkit-scrollbar-thumb { background: #000; }
+        
+        /* Range Slider Reset */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            background: #000;
+            cursor: pointer;
+            margin-top: -7px;
+            border: 1px solid #000;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 2px;
+            cursor: pointer;
+            background: #000;
+        }
+        
+        .loader-dots::after {
+            content: ' .';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: ' .'; }
+            40% { content: ' ..'; }
+            60% { content: ' ...'; }
+            80%, 100% { content: ' ....'; }
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white min-h-screen">
+
+    <div class="max-w-2xl mx-auto p-6 md:p-12">
+        
+        <!-- Header -->
+        <header class="mb-12 border-b border-black pb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+            <div>
+                <h1 class="text-3xl font-serif font-bold tracking-tight">PDF to Gist</h1>
+                <p class="text-muted mt-2">Extract pages as images. Host on GitHub.</p>
+            </div>
+            <div class="flex gap-4 text-xs uppercase tracking-wider">
+                <a href="https://github.com/settings/tokens" target="_blank" class="underline underline-offset-4 hover:decoration-2 decoration-1">Get Token</a>
+                <span class="text-muted">v1.1.0</span>
+            </div>
+        </header>
+
+        <main class="space-y-12">
+            
+            <!-- SECTION 1: CONFIGURATION -->
+            <section>
+                <h2 class="font-serif text-lg font-bold mb-6 flex items-center gap-2">
+                    <span class="bg-black text-white px-1.5 py-0.5 text-xs font-mono">01</span> Configuration
+                </h2>
+                
+                <div class="space-y-6 pl-2 border-l border-gray-200">
+                    
+                    <!-- File Input -->
+                    <div class="group relative ml-4">
+                        <label class="block text-xs font-semibold mb-2 uppercase tracking-wide">Source PDF</label>
+                        <div class="border border-black p-1 shadow-hard transition-all hover:shadow-hard-hover bg-white">
+                            <input type="file" id="pdfInput" accept="application/pdf" 
+                                class="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:border-0 file:text-xs file:font-semibold
+                                file:bg-black file:text-white
+                                cursor-pointer focus:outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Token Input -->
+                    <div class="group relative ml-4">
+                        <label class="block text-xs font-semibold mb-2 uppercase tracking-wide">
+                            GitHub Token <span class="text-red-500">*</span>
+                        </label>
+                        <input type="password" id="githubToken" placeholder="ghp_..." 
+                            class="w-full bg-white border border-black px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-black placeholder-gray-400 font-mono shadow-[2px_2px_0px_#eee] focus:shadow-hard transition-all"
+                        />
+                        <p class="mt-1 text-[10px] text-muted">Required scope: `gist`. Saved locally.</p>
+                    </div>
+
+                    <!-- Meta Data Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 ml-4">
+                        <div>
+                            <label class="block text-xs font-semibold mb-2 uppercase tracking-wide">Description</label>
+                            <input type="text" id="gistDesc" placeholder="e.g. Annual Report"
+                                class="w-full bg-white border-b border-black py-2 text-sm focus:outline-none placeholder-gray-400 font-mono"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold mb-2 uppercase tracking-wide">Filename</label>
+                            <input type="text" id="gistFilename" placeholder="index.html"
+                                class="w-full bg-white border-b border-black py-2 text-sm focus:outline-none placeholder-gray-400 font-mono"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Quality Slider -->
+                    <div class="ml-4 pt-2">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-semibold uppercase tracking-wide">Quality / Compression</label>
+                            <span id="qualityValue" class="text-xs font-bold bg-gray-100 px-2 py-0.5 border border-gray-300">0.7</span>
+                        </div>
+                        <input type="range" id="qualityRange" min="0.1" max="1.0" step="0.1" value="0.7">
+                        <p class="mt-2 text-[10px] text-muted">Lower values = smaller file size. Recommended < 0.8 for Gists.</p>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- SECTION 2: ACTION -->
+            <section class="flex flex-col items-start gap-4">
+                <button id="processBtn" class="group relative inline-flex items-center gap-3 bg-black text-white px-8 py-4 text-sm font-medium uppercase tracking-widest hover:bg-white hover:text-black border border-black transition-all shadow-hard disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span>Execute Extraction</span>
+                    <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </button>
+
+                <!-- Status Console -->
+                <div id="statusContainer" class="hidden w-full font-mono text-xs border-t border-b border-gray-200 py-3 mt-4">
+                    <div class="flex justify-between items-center">
+                        <div class="flex gap-2 items-center">
+                            <span class="w-2 h-2 bg-black animate-pulse"></span>
+                            <span id="statusText">System Ready.</span>
+                        </div>
+                        <span id="progressBar" class="font-bold">0%</span>
+                    </div>
+                </div>
+
+                <!-- Error Box -->
+                <div id="errorContainer" class="hidden w-full bg-red-50 border border-red-500 p-4 text-red-600 text-xs mt-4">
+                    <p class="font-bold mb-1">ERROR</p>
+                    <p id="errorText">--</p>
+                </div>
+
+                <!-- Success Box -->
+                <div id="successContainer" class="hidden w-full border border-black p-6 bg-white shadow-hard mt-4 relative">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-black"></div>
+                    <h3 class="font-serif text-lg font-bold mb-2">Deployment Complete</h3>
+                    <p class="text-muted mb-6">Assets extracted and pushed to GitHub Gist successfully.</p>
+                    
+                    <div class="flex flex-wrap gap-4">
+                        <a id="previewLink" href="#" target="_blank" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors text-xs uppercase font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-eye"></i> Live Preview
+                        </a>
+                        <a id="gistLink" href="#" target="_blank" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors text-xs uppercase font-bold flex items-center gap-2">
+                            <i class="fa-brands fa-github"></i> Source Code
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: PREVIEW GRID -->
+            <section id="previewSection" class="hidden">
+                <h2 class="font-serif text-lg font-bold mb-6 flex items-center gap-2 border-t border-black pt-8">
+                    <span class="bg-black text-white px-1.5 py-0.5 text-xs font-mono">02</span> Artifacts
+                    <span id="pageCountBadge" class="ml-auto text-xs font-normal text-muted font-mono">(0 items)</span>
+                </h2>
+                
+                <div id="gallery" class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <!-- Images injected here -->
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
+            <p class="font-serif text-sm text-black">Utility / PDF-GIST</p>
+            <div class="flex gap-4">
+                <span>&copy; 2025</span>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        // DOM Elements
+        const pdfInput = document.getElementById('pdfInput');
+        const githubTokenInput = document.getElementById('githubToken');
+        const gistDescInput = document.getElementById('gistDesc');
+        const gistFilenameInput = document.getElementById('gistFilename');
+        const processBtn = document.getElementById('processBtn');
+        const gallery = document.getElementById('gallery');
+        const statusContainer = document.getElementById('statusContainer');
+        const statusText = document.getElementById('statusText');
+        const successContainer = document.getElementById('successContainer');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorText = document.getElementById('errorText');
+        const gistLink = document.getElementById('gistLink');
+        const previewLink = document.getElementById('previewLink');
+        const previewSection = document.getElementById('previewSection');
+        const qualityRange = document.getElementById('qualityRange');
+        const qualityValue = document.getElementById('qualityValue');
+        const progressBar = document.getElementById('progressBar');
+
+        // State
+        let extractedImages = [];
+        
+        // --- 1. Load Token from LocalStorage on Startup ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const storedToken = localStorage.getItem('github_token');
+            if (storedToken) {
+                githubTokenInput.value = storedToken;
+            }
+        });
+
+        // --- 2. Save Token on Change ---
+        githubTokenInput.addEventListener('input', (e) => {
+            localStorage.setItem('github_token', e.target.value.trim());
+        });
+
+        // --- 3. Auto-fill Metadata from Filename ---
+        pdfInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                const file = e.target.files[0];
+                // Remove extension (e.g., .pdf) to get base name
+                const baseName = file.name.replace(/\.[^/.]+$/, "");
+                
+                // Auto-fill inputs if they haven't been manually set or just overwrite for convenience
+                // Logic: Set Description to base name, Filename to baseName + .html
+                gistDescInput.value = baseName;
+                gistFilenameInput.value = `${baseName}.html`;
+            }
+        });
+        
+        // Quality slider update
+        qualityRange.addEventListener('input', (e) => {
+            qualityValue.textContent = e.target.value;
+        });
+
+        // Main Process Function
+        processBtn.addEventListener('click', async () => {
+            resetUI();
+            
+            const file = pdfInput.files[0];
+            const token = githubTokenInput.value.trim();
+            // Fallback for filename if empty
+            let filename = gistFilenameInput.value.trim();
+            if (!filename) filename = 'index.html'; 
+            
+            const description = gistDescInput.value.trim() || 'Extracted PDF Pages';
+            const quality = parseFloat(qualityRange.value);
+
+            if (!filename.endsWith('.html')) filename = filename.split('.')[0] + '.html';
+
+            if (!file) return showError("Input missing: Please select a PDF file.");
+            if (!token) return showError("Auth missing: GitHub Token is required.");
+            
+            // Ensure token is saved (redundant safety)
+            localStorage.setItem('github_token', token);
+
+            showStatus("Initializing read stream...", true);
+            previewSection.classList.remove('hidden');
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const totalPages = pdf.numPages;
+                document.getElementById('pageCountBadge').textContent = `(${totalPages} items)`;
+                
+                showStatus(`Processing 0/${totalPages} pages...`, true);
+
+                extractedImages = [];
+                
+                // HTML Template - Clean & Minimal
+                let htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+    <title>${description}</title>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; max-width: 800px; margin: 0 auto; padding: 40px 20px; background: #fff; color: #000; }
+        .page { margin-bottom: 40px; border: 1px solid #000; padding: 10px; box-shadow: 5px 5px 0px #000; }
+        img { max-width: 100%; height: auto; display: block; }
+        h1 { font-size: 24px; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px; }
+        .meta { color: #666; font-size: 12px; margin-bottom: 40px; }
+        .page-num { font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block; }
+    </style>
+</head>
+<body>
+    <h1>${description}</h1>
+    <div class="meta">GENERATED: ${new Date().toISOString().split('T')[0]}</div>
+`;
+
+                for (let i = 1; i <= totalPages; i++) {
+                    showStatus(`Rendering page ${i}/${totalPages}...`, true);
+                    progressBar.textContent = `${Math.round((i / totalPages) * 100)}%`;
+
+                    const page = await pdf.getPage(i);
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    
+                    addImageToGallery(dataUrl, i);
+                    
+                    extractedImages.push(dataUrl);
+                    htmlContent += `
+    <div class="page">
+        <span class="page-num">PAGE ${i.toString().padStart(2, '0')}</span>
+        <img src="${dataUrl}" alt="Page ${i}" />
+    </div>`;
+                }
+
+                htmlContent += `</body></html>`;
+
+                showStatus("Pushing to GitHub API...", true);
+                
+                // Step 1: Create Gist with HTML file only
+                const gistData = {
+                    description: description,
+                    public: false,
+                    files: {
+                        [filename]: { content: htmlContent }
+                    }
+                };
+
+                const response = await fetch('https://api.github.com/gists', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(gistData)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.message || 'API Error');
+                }
+
+                const result = await response.json();
+                const rawUrl = result.files[filename].raw_url;
+                
+                // FIX 1: Use HTTPS to prevent mixed-content blocking
+                const viewUrl = `https://htmlpreview.github.io/?${rawUrl}`;
+
+                // Step 2: Update Gist with README containing the generated link
+                showStatus("Injecting preview link...", true);
+
+                // FIX 2: Rename to '00_README.md' to force it to the top of the Gist (Alphabetical sorting)
+                // FIX 3: Add explicit note about the large file error
+                const readmeContent = `# ${description}\n\n### [🚀 CLICK HERE TO VIEW DOCUMENT](${viewUrl})\n\n> **Note:** You may see a "File truncated" or "File too big" error below for the source HTML file. This is normal. Please use the link above to view the content.\n\nGenerated by PDF-GIST.`;
+                
+                await fetch(result.url, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        files: {
+                            "00_README.md": { content: readmeContent }
+                        }
+                    })
+                });
+
+                hideStatus();
+                successContainer.classList.remove('hidden');
+                gistLink.href = result.html_url;
+                previewLink.href = viewUrl;
+
+            } catch (err) {
+                console.error(err);
+                hideStatus();
+                showError(err.message);
+            }
+        });
+
+        function resetUI() {
+            extractedImages = [];
+            gallery.innerHTML = '';
+            successContainer.classList.add('hidden');
+            errorContainer.classList.add('hidden');
+            statusContainer.classList.add('hidden');
+            previewSection.classList.add('hidden');
+        }
+
+        function showStatus(msg, loading) {
+            statusContainer.classList.remove('hidden');
+            statusText.textContent = msg;
+            if(loading) {
+                statusText.classList.add('loader-dots');
+            } else {
+                statusText.classList.remove('loader-dots');
+            }
+        }
+
+        function hideStatus() {
+            statusContainer.classList.add('hidden');
+        }
+
+        function showError(msg) {
+            errorContainer.classList.remove('hidden');
+            errorText.textContent = msg;
+        }
+
+        function addImageToGallery(url, index) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'border border-gray-200 p-2 hover:border-black transition-colors';
+            
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'w-full h-auto object-contain border border-gray-100 mb-2';
+            
+            const caption = document.createElement('div');
+            caption.className = 'text-[10px] text-muted font-mono uppercase';
+            caption.textContent = `PAGE_${index.toString().padStart(2, '0')}`;
+
+            wrapper.appendChild(img);
+            wrapper.appendChild(caption);
+            gallery.appendChild(wrapper);
+        }
+    </script>
+</body>
+</html>
