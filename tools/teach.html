@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI English Teacher (λ)</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                    },
+                    boxShadow: {
+                        'hard': '4px 4px 0px #000000',
+                        'hard-sm': '2px 2px 0px #000000',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-left: 1px solid #000; }
+        ::-webkit-scrollbar-thumb { background: #000; }
+        ::-webkit-scrollbar-thumb:hover { background: #333; }
+        
+        body { background-image: radial-gradient(#ddd 1px, transparent 1px); background-size: 20px 20px; }
+        
+        .loader {
+            width: 12px; height: 12px;
+            background: #000;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        
+        .input-pulse {
+            animation: inputPulse 0.5s ease-in-out infinite alternate;
+        }
+        @keyframes inputPulse {
+            from { box-shadow: 0 0 0 0 rgba(0,0,0,0.3); }
+            to { box-shadow: 0 0 0 8px rgba(0,0,0,0); }
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Setup Overlay -->
+    <div id="setupOverlay" class="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white border border-black shadow-hard p-6">
+            <h1 class="font-serif text-xl font-bold mb-2">System Access</h1>
+            <p class="text-xs text-muted mb-6">Enter OpenAI API Key to initialize the realtime agent.</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold mb-1 uppercase">API Key</label>
+                    <input type="password" id="apiKeyInput" 
+                        class="w-full bg-gray-50 border border-black p-3 text-xs focus:outline-none focus:shadow-hard-sm transition-all placeholder-gray-400"
+                        placeholder="sk-..." autocomplete="off">
+                </div>
+                <button onclick="app.init()" 
+                    class="w-full bg-black text-white py-3 text-xs font-bold uppercase tracking-wider hover:bg-white hover:text-black border border-black transition-all">
+                    Initialize System
+                </button>
+                <p class="text-[10px] text-muted text-center border-t border-gray-200 pt-3">
+                    Key is stored locally in browser storage.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="w-full max-w-lg bg-white border border-black shadow-hard flex flex-col max-h-[85vh]">
+            <header class="border-b border-black p-4 flex justify-between items-center">
+                <h2 class="font-serif font-bold">Teacher Settings</h2>
+                <button onclick="app.closeSettings()" class="w-8 h-8 border border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">×</button>
+            </header>
+            
+            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                <!-- Voice Selection -->
+                <div>
+                    <label class="block text-xs font-bold mb-2 uppercase">Voice</label>
+                    <select id="voiceSelect" class="w-full bg-gray-50 border border-black p-3 text-xs focus:outline-none">
+                        <option value="shimmer">Shimmer (Warm, friendly)</option>
+                        <option value="alloy">Alloy (Neutral, balanced)</option>
+                        <option value="echo">Echo (Calm, measured)</option>
+                        <option value="fable">Fable (Expressive, British)</option>
+                        <option value="onyx">Onyx (Deep, authoritative)</option>
+                        <option value="nova">Nova (Energetic, bright)</option>
+                    </select>
+                </div>
+
+                <!-- Teacher Name -->
+                <div>
+                    <label class="block text-xs font-bold mb-2 uppercase">Teacher Name</label>
+                    <input type="text" id="teacherName" value="Emma" 
+                        class="w-full bg-gray-50 border border-black p-3 text-xs focus:outline-none"
+                        placeholder="e.g., Emma, David, Sofia">
+                </div>
+
+                <!-- Teaching Style -->
+                <div>
+                    <label class="block text-xs font-bold mb-2 uppercase">Teaching Style</label>
+                    <select id="teachingStyle" class="w-full bg-gray-50 border border-black p-3 text-xs focus:outline-none">
+                        <option value="conversational">Conversational (Natural dialogue)</option>
+                        <option value="structured">Structured (Lesson-based)</option>
+                        <option value="immersive">Immersive (Role-play scenarios)</option>
+                        <option value="socratic">Socratic (Question-driven)</option>
+                    </select>
+                </div>
+
+                <!-- Difficulty Level -->
+                <div>
+                    <label class="block text-xs font-bold mb-2 uppercase">Student Level</label>
+                    <select id="difficultyLevel" class="w-full bg-gray-50 border border-black p-3 text-xs focus:outline-none">
+                        <option value="beginner">Beginner (Simple words, slow pace)</option>
+                        <option value="intermediate" selected>Intermediate (Natural pace)</option>
+                        <option value="advanced">Advanced (Complex topics, idioms)</option>
+                        <option value="native">Native-like (Full speed, slang ok)</option>
+                    </select>
+                </div>
+
+                <!-- Focus Area -->
+                <div>
+                    <label class="block text-xs font-bold mb-2 uppercase">Focus Area</label>
+                    <select id="focusArea" class="w-full bg-gray-50 border border-black p-3 text-xs focus:outline-none">
+                        <option value="general">General Conversation</option>
+                        <option value="pronunciation">Pronunciation & Accent</option>
+                        <option value="grammar">Grammar Correction</option>
+                        <option value="vocabulary">Vocabulary Building</option>
+                        <option value="business">Business English</option>
+                        <option value="travel">Travel & Daily Life</option>
+                        <option value="academic">Academic English</option>
+                    </select>
+                </div>
+
+                <!-- Custom Instructions -->
+                <div>
+                    <label class="block text-xs font-bold mb-2 uppercase">Custom Instructions (Optional)</label>
+                    <textarea id="customInstructions" rows="4"
+                        class="w-full bg-gray-50 border border-black p-3 text-xs focus:outline-none resize-none"
+                        placeholder="Add any specific instructions...&#10;e.g., 'Focus on past tense verbs' or 'I'm preparing for IELTS'"></textarea>
+                </div>
+
+                <!-- Advanced: Full Prompt Override -->
+                <details class="border border-black">
+                    <summary class="p-3 text-xs font-bold uppercase cursor-pointer hover:bg-gray-50">
+                        Advanced: Custom System Prompt
+                    </summary>
+                    <div class="p-3 border-t border-black">
+                        <p class="text-[10px] text-muted mb-2">Override the entire teacher prompt. Leave empty to use generated prompt.</p>
+                        <textarea id="fullPromptOverride" rows="8"
+                            class="w-full bg-gray-50 border border-black p-3 text-xs focus:outline-none resize-none font-mono"
+                            placeholder="Enter full system prompt..."></textarea>
+                    </div>
+                </details>
+            </div>
+
+            <footer class="border-t border-black p-4 flex gap-3">
+                <button onclick="app.closeSettings()" 
+                    class="flex-1 border border-black py-3 text-xs font-bold uppercase hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button onclick="app.saveSettings()" 
+                    class="flex-1 bg-black text-white py-3 text-xs font-bold uppercase hover:bg-gray-800 transition-colors">
+                    Save Settings
+                </button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="w-full max-w-xl bg-white border border-black shadow-hard flex flex-col h-[85vh]">
+        
+        <!-- Header -->
+        <header class="border-b border-black p-4 flex justify-between items-center bg-white">
+            <div class="flex items-center gap-3">
+                <div id="avatarIcon" class="w-8 h-8 border border-black flex items-center justify-center font-serif font-bold text-lg bg-black text-white transition-all">
+                    λ
+                </div>
+                <div>
+                    <h1 class="font-serif font-bold leading-none">English Tutor</h1>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span id="connectionDot" class="w-2 h-2 border border-black bg-white transition-colors"></span>
+                        <span id="connectionStatus" class="text-[10px] uppercase tracking-wide text-muted transition-colors">Disconnected</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="app.openSettings()" class="text-[10px] border border-black px-2 py-1 hover:bg-black hover:text-white transition-colors">
+                    ⚙ SETTINGS
+                </button>
+                <button onclick="app.reset()" class="text-[10px] text-muted hover:text-black px-2 py-1 transition-colors">
+                    RESET
+                </button>
+            </div>
+        </header>
+
+        <!-- Avatar Canvas -->
+        <div class="relative border-b border-black bg-gray-50 flex items-center justify-center py-6 overflow-hidden">
+            <canvas id="avatarCanvas" width="200" height="200" class="relative z-10"></canvas>
+            
+            <div class="absolute inset-0 opacity-10" style="background-image: linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+            <!-- Input indicator (user speaking) -->
+            <div id="inputIndicator" class="absolute bottom-2 left-2 flex items-center gap-2 px-2 py-1 bg-white border border-black opacity-0 transition-opacity duration-200">
+                <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                <span class="text-[10px] font-bold uppercase">You're Speaking</span>
+            </div>
+
+            <!-- Output indicator (AI responding) -->
+            <div id="outputIndicator" class="absolute bottom-2 right-2 flex items-center gap-2 px-2 py-1 bg-white border border-black opacity-0 transition-opacity duration-200">
+                <div class="loader"></div>
+                <span class="text-[10px] font-bold uppercase">Agent Speaking</span>
+            </div>
+        </div>
+
+        <!-- Transcript -->
+        <div id="transcript" class="flex-1 overflow-y-auto p-4 space-y-4 bg-white">
+            <div class="flex flex-col gap-1 items-start max-w-[90%]">
+                <span class="text-[10px] bg-gray-400 text-white px-1">SYSTEM</span>
+                <p class="text-xs border-l-2 border-gray-200 pl-2 py-1 text-muted italic">
+                    Agent ready. Click connect to begin your English lesson.
+                </p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="border-t border-black p-4 bg-gray-50">
+            <div class="flex gap-4 items-center">
+                <button id="actionBtn" onclick="app.toggleConnection()" 
+                    class="flex-1 bg-white border border-black text-black py-4 px-6 text-sm font-bold uppercase tracking-widest hover:shadow-hard transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2">
+                    <span>Connect</span>
+                </button>
+                
+                <!-- Volume Bars -->
+                <div class="h-full w-3 flex flex-col-reverse gap-[2px] h-[52px]">
+                    <div class="vol-bar w-full flex-1 bg-black opacity-10 transition-opacity"></div>
+                    <div class="vol-bar w-full flex-1 bg-black opacity-10 transition-opacity"></div>
+                    <div class="vol-bar w-full flex-1 bg-black opacity-10 transition-opacity"></div>
+                    <div class="vol-bar w-full flex-1 bg-black opacity-10 transition-opacity"></div>
+                    <div class="vol-bar w-full flex-1 bg-black opacity-10 transition-opacity"></div>
+                </div>
+            </div>
+            
+            <div class="mt-3 flex justify-between items-center text-[10px] text-muted">
+                <label class="flex items-center gap-2 cursor-pointer hover:text-black select-none">
+                    <input type="checkbox" checked class="accent-black" id="vadToggle" onchange="app.onVadToggle()">
+                    <span>AUTO-DETECT SPEECH (VAD)</span>
+                </label>
+                <span>PCM16 24kHz</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // CONSTANTS & PROMPT GENERATION
+        // ============================================================
+        
+        const REALTIME_API_URL = 'wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17';
+
+        const DEFAULT_SETTINGS = {
+            voice: 'shimmer',
+            teacherName: 'Emma',
+            teachingStyle: 'conversational',
+            difficultyLevel: 'intermediate',
+            focusArea: 'general',
+            customInstructions: '',
+            fullPromptOverride: ''
+        };
+
+        const TEACHING_STYLES = {
+            conversational: `Have natural, flowing conversations. Let topics evolve organically. Correct errors by naturally rephrasing what the student said correctly.`,
+            structured: `Follow a lesson structure: introduce a concept, practice it, then review. Be more explicit about what you're teaching.`,
+            immersive: `Create role-play scenarios (ordering at a restaurant, job interview, making hotel reservations). Stay in character and guide the student through the situation.`,
+            socratic: `Ask thoughtful questions to guide the student to discover answers themselves. Encourage critical thinking about language patterns.`
+        };
+
+        const DIFFICULTY_LEVELS = {
+            beginner: `Speak slowly and clearly. Use simple vocabulary (1000 most common words). Short sentences. Repeat key phrases. Be extra patient and encouraging.`,
+            intermediate: `Natural speaking pace. Standard vocabulary. Can introduce some idioms with explanation. Balance challenge with support.`,
+            advanced: `Full natural speed. Rich vocabulary, idioms, phrasal verbs. Discuss complex topics. Push the student to express nuanced ideas.`,
+            native: `Speak as you would to a native speaker. Use slang, cultural references, humor. Only correct significant errors.`
+        };
+
+        const FOCUS_AREAS = {
+            general: `Practice everyday conversation on any topic the student is interested in.`,
+            pronunciation: `Pay close attention to pronunciation. When you hear mispronunciations, model the correct sound clearly and have the student repeat. Focus on stress patterns and intonation.`,
+            grammar: `Focus on grammatical accuracy. Gently correct grammar errors by restating the sentence correctly and briefly explaining the rule if helpful.`,
+            vocabulary: `Actively teach new vocabulary. Introduce synonyms, antonyms, and related words. Create contexts to use new words multiple times.`,
+            business: `Practice professional English: meetings, presentations, negotiations, emails, networking. Use formal register appropriately.`,
+            travel: `Practice travel scenarios: airports, hotels, restaurants, directions, emergencies. Focus on practical phrases and cultural tips.`,
+            academic: `Practice academic English: discussions, presentations, explaining complex ideas, formal writing conventions.`
+        };
+
+        function generateTeacherPrompt(settings) {
+            if (settings.fullPromptOverride && settings.fullPromptOverride.trim()) {
+                return settings.fullPromptOverride.trim();
+            }
+
+            const name = settings.teacherName || 'Emma';
+            const style = TEACHING_STYLES[settings.teachingStyle] || TEACHING_STYLES.conversational;
+            const level = DIFFICULTY_LEVELS[settings.difficultyLevel] || DIFFICULTY_LEVELS.intermediate;
+            const focus = FOCUS_AREAS[settings.focusArea] || FOCUS_AREAS.general;
+            const custom = settings.customInstructions ? `\n\nSPECIAL INSTRUCTIONS FROM STUDENT:\n${settings.customInstructions}` : '';
+
+            return `You are ${name}, a warm and experienced English teacher with a gift for making students feel confident.
+
+PERSONALITY:
+- Patient, encouraging, genuinely interested in student progress
+- Use natural conversational English, not textbook language  
+- Celebrate small wins authentically ("That was great!" not excessive praise)
+- Warm but professional
+
+TEACHING STYLE:
+${style}
+
+STUDENT LEVEL:
+${level}
+
+FOCUS AREA:
+${focus}
+
+RESPONSE FORMAT:
+- Keep responses SHORT: 1-3 sentences maximum for natural conversation flow
+- Ask ONE follow-up question to keep the dialogue going
+- When correcting, model the correct form naturally: "Ah, we usually say [correct]. Want to try it?"
+
+IMPORTANT:
+- You're having a real conversation, not giving a lecture
+- Match the student's energy and pace
+- Never say "As an AI" - you are ${name} the teacher
+- If the student seems frustrated, slow down and encourage them${custom}`;
+        }
+
+        // ============================================================
+        // AUDIO WORKLET (Inline)
+        // ============================================================
+        
+        const WORKLET_CODE = `
+            class RecorderProcessor extends AudioWorkletProcessor {
+                process(inputs, outputs, parameters) {
+                    const input = inputs[0];
+                    if (input && input.length > 0 && input[0].length > 0) {
+                        this.port.postMessage(input[0]);
+                    }
+                    return true;
+                }
+            }
+            registerProcessor('recorder-processor', RecorderProcessor);
+        `;
+
+        // ============================================================
+        // AUDIO CONTROLLER
+        // ============================================================
+        
+        class AudioController {
+            constructor() {
+                this.audioContext = null;
+                this.inputStream = null;
+                this.audioQueue = [];
+                this.isPlaying = false;
+                this.analyser = null;
+                this.inputAnalyser = null;
+                this.onAudioData = null;
+                this.onError = null;
+                this.workletLoaded = false;
+                this.recorderNode = null;
+                this.sourceNode = null;
+                this.currentSource = null;
+            }
+
+            async init() {
+                if (this.audioContext) return;
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+                
+                this.analyser = this.audioContext.createAnalyser();
+                this.analyser.fftSize = 256;
+                this.analyser.connect(this.audioContext.destination);
+                
+                this.inputAnalyser = this.audioContext.createAnalyser();
+                this.inputAnalyser.fftSize = 256;
+            }
+
+            async startRecording(onDataCallback) {
+                try {
+                    if (!this.audioContext) await this.init();
+                    if (this.audioContext.state === 'suspended') {
+                        await this.audioContext.resume();
+                    }
+
+                    this.onAudioData = onDataCallback;
+
+                    if (!this.workletLoaded) {
+                        const blob = new Blob([WORKLET_CODE], { type: 'application/javascript' });
+                        const url = URL.createObjectURL(blob);
+                        await this.audioContext.audioWorklet.addModule(url);
+                        URL.revokeObjectURL(url);
+                        this.workletLoaded = true;
+                    }
+
+                    this.inputStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            channelCount: 1,
+                            sampleRate: 24000,
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+
+                    const source = this.audioContext.createMediaStreamSource(this.inputStream);
+                    const processor = new AudioWorkletNode(this.audioContext, 'recorder-processor');
+                    
+                    source.connect(this.inputAnalyser);
+                    
+                    processor.port.onmessage = (e) => {
+                        const float32Data = e.data;
+                        const int16Data = this.float32ToInt16(float32Data);
+                        const base64 = this.arrayBufferToBase64(int16Data.buffer);
+                        if (this.onAudioData) this.onAudioData(base64);
+                    };
+
+                    source.connect(processor);
+                    
+                    this.recorderNode = processor;
+                    this.sourceNode = source;
+                    
+                    return true;
+
+                } catch (err) {
+                    console.error('Microphone error:', err);
+                    
+                    if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                        this.onError?.('microphone_denied', 'Microphone access denied. Please allow microphone access and try again.');
+                    } else if (err.name === 'NotFoundError') {
+                        this.onError?.('microphone_not_found', 'No microphone found. Please connect a microphone.');
+                    } else {
+                        this.onError?.('microphone_error', `Microphone error: ${err.message}`);
+                    }
+                    
+                    return false;
+                }
+            }
+
+            stopRecording() {
+                if (this.inputStream) {
+                    this.inputStream.getTracks().forEach(t => t.stop());
+                    this.inputStream = null;
+                }
+                if (this.recorderNode) {
+                    this.recorderNode.disconnect();
+                    this.recorderNode = null;
+                }
+                if (this.sourceNode) {
+                    this.sourceNode.disconnect();
+                    this.sourceNode = null;
+                }
+            }
+
+            queueAudio(base64Data) {
+                const float32Data = this.base64ToFloat32(base64Data);
+                this.audioQueue.push(float32Data);
+                if (!this.isPlaying) this.playNext();
+            }
+
+            playNext() {
+                if (this.audioQueue.length === 0) {
+                    this.isPlaying = false;
+                    return;
+                }
+                
+                this.isPlaying = true;
+                const audioData = this.audioQueue.shift();
+                
+                const buffer = this.audioContext.createBuffer(1, audioData.length, 24000);
+                buffer.getChannelData(0).set(audioData);
+
+                const source = this.audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(this.analyser);
+                
+                this.currentSource = source;
+                source.onended = () => this.playNext();
+                source.start();
+            }
+
+            interrupt() {
+                if (this.currentSource) {
+                    try { 
+                        this.currentSource.stop(); 
+                    } catch(e) {}
+                    this.currentSource = null;
+                }
+                this.audioQueue = [];
+                this.isPlaying = false;
+            }
+
+            getOutputVolume() {
+                if (!this.analyser) return 0;
+                const dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+                this.analyser.getByteFrequencyData(dataArray);
+                return dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+            }
+
+            getInputVolume() {
+                if (!this.inputAnalyser) return 0;
+                const dataArray = new Uint8Array(this.inputAnalyser.frequencyBinCount);
+                this.inputAnalyser.getByteFrequencyData(dataArray);
+                return dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+            }
+
+            float32ToInt16(float32Array) {
+                const int16Array = new Int16Array(float32Array.length);
+                for (let i = 0; i < float32Array.length; i++) {
+                    const s = Math.max(-1, Math.min(1, float32Array[i]));
+                    int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                return int16Array;
+            }
+
+            arrayBufferToBase64(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.length; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return window.btoa(binary);
+            }
+
+            base64ToFloat32(base64) {
+                const binaryString = window.atob(base64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const int16Data = new Int16Array(bytes.buffer);
+                const float32Data = new Float32Array(int16Data.length);
+                for (let i = 0; i < int16Data.length; i++) {
+                    float32Data[i] = int16Data[i] / 32768.0;
+                }
+                return float32Data;
+            }
+        }
+
+        // ============================================================
+        // REALTIME CLIENT
+        // ============================================================
+        
+        class RealtimeClient {
+            constructor(apiKey, audio, ui, settings) {
+                this.apiKey = apiKey;
+                this.audio = audio;
+                this.ui = ui;
+                this.settings = settings;
+                this.ws = null;
+                this.isConnected = false;
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 3;
+            }
+
+            async connect() {
+                if (this.ws) return;
+                
+                this.ui.setStatus('connecting');
+
+                try {
+                    this.ws = new WebSocket(REALTIME_API_URL, [
+                        "realtime",
+                        "openai-insecure-api-key." + this.apiKey,
+                        "openai-beta.realtime-v1"
+                    ]);
+
+                    this.ws.onopen = () => this.handleOpen();
+                    this.ws.onmessage = (e) => this.handleMessage(JSON.parse(e.data));
+                    this.ws.onerror = (e) => this.handleError(e);
+                    this.ws.onclose = (e) => this.handleClose(e);
+
+                } catch (err) {
+                    console.error('Connection error:', err);
+                    this.ui.addMessage('system', 'Failed to connect. Please try again.');
+                    this.disconnect();
+                }
+            }
+
+            async handleOpen() {
+                console.log('WebSocket connected');
+                this.isConnected = true;
+                this.reconnectAttempts = 0;
+                
+                const micStarted = await this.audio.startRecording(
+                    (base64) => this.send({ type: 'input_audio_buffer.append', audio: base64 })
+                );
+                
+                if (!micStarted) {
+                    this.disconnect();
+                    return;
+                }
+
+                const prompt = generateTeacherPrompt(this.settings);
+                console.log('Using prompt:', prompt.substring(0, 100) + '...');
+                
+                this.send({
+                    type: 'session.update',
+                    session: {
+                        modalities: ['text', 'audio'],
+                        voice: this.settings.voice || 'shimmer',
+                        input_audio_format: 'pcm16',
+                        output_audio_format: 'pcm16',
+                        input_audio_transcription: { model: 'whisper-1' },
+                        turn_detection: this.getVadConfig(),
+                        instructions: prompt
+                    }
+                });
+            }
+
+            handleMessage(event) {
+                // Debug logging
+                if (event.type.includes('transcription') || event.type.includes('transcript')) {
+                    console.log('Transcription event:', event.type, event);
+                }
+
+                switch (event.type) {
+                    case 'session.created':
+                        this.ui.setStatus('connected');
+                        // Trigger initial greeting
+                        this.send({
+                            type: 'conversation.item.create',
+                            item: {
+                                type: 'message',
+                                role: 'user',
+                                content: [{
+                                    type: 'input_text',
+                                    text: '[Session started - greet the student warmly and ask what they would like to practice today]'
+                                }]
+                            }
+                        });
+                        this.send({ type: 'response.create' });
+                        break;
+
+                    case 'session.updated':
+                        console.log('Session updated');
+                        break;
+
+                    case 'response.audio.delta':
+                        if (event.delta) {
+                            this.audio.queueAudio(event.delta);
+                            this.ui.setOutputActive(true);
+                        }
+                        break;
+
+                    case 'response.audio.done':
+                        this.ui.setOutputActive(false);
+                        break;
+
+                    // Agent transcript complete
+                    case 'response.audio_transcript.done':
+                        if (event.transcript) {
+                            this.ui.addMessage('agent', event.transcript);
+                        }
+                        break;
+
+                    // User speech transcription completed
+                    case 'conversation.item.input_audio_transcription.completed':
+                        console.log('User transcription:', event);
+                        if (event.transcript && event.transcript.trim()) {
+                            this.ui.addMessage('user', event.transcript);
+                        }
+                        break;
+
+                    case 'input_audio_buffer.speech_started':
+                        this.audio.interrupt();
+                        this.send({ type: 'response.cancel' });
+                        this.ui.setInputActive(true);
+                        this.ui.setOutputActive(false);
+                        break;
+
+                    case 'input_audio_buffer.speech_stopped':
+                        this.ui.setInputActive(false);
+                        break;
+
+                    case 'input_audio_buffer.committed':
+                        console.log('Audio buffer committed');
+                        break;
+
+                    case 'error':
+                        this.handleApiError(event.error);
+                        break;
+                }
+            }
+
+            handleError(e) {
+                console.error('WebSocket error:', e);
+            }
+
+            handleClose(e) {
+                console.log('WebSocket closed:', e.code, e.reason);
+                this.isConnected = false;
+                this.ws = null;
+                this.audio.stopRecording();
+                this.ui.setStatus('disconnected');
+
+                if (e.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
+                    this.reconnectAttempts++;
+                    const delay = this.reconnectAttempts * 2000;
+                    this.ui.addMessage('system', `Connection lost. Reconnecting in ${delay/1000}s...`);
+                    setTimeout(() => this.connect(), delay);
+                }
+            }
+
+            handleApiError(error) {
+                console.error('API Error:', error);
+                
+                const msg = error?.message || '';
+                const code = error?.code || '';
+
+                if (msg.includes('invalid') || msg.includes('auth') || 
+                    code === 'invalid_api_key' || code === 'authentication_error') {
+                    this.ui.addMessage('system', 'Invalid API key. Please reset and enter a valid key.');
+                    this.disconnect();
+                    setTimeout(() => app.reset(), 2000);
+                } else if (code === 'rate_limit_exceeded') {
+                    this.ui.addMessage('system', 'Rate limit exceeded. Please wait a moment.');
+                } else {
+                    this.ui.addMessage('system', `Error: ${msg || 'Unknown error occurred'}`);
+                }
+            }
+
+            getVadConfig() {
+                const vadEnabled = document.getElementById('vadToggle').checked;
+                if (vadEnabled) {
+                    return {
+                        type: 'server_vad',
+                        threshold: 0.5,
+                        prefix_padding_ms: 300,
+                        silence_duration_ms: 700
+                    };
+                }
+                return null;
+            }
+
+            updateSession() {
+                if (!this.isConnected) return;
+                this.send({
+                    type: 'session.update',
+                    session: {
+                        turn_detection: this.getVadConfig()
+                    }
+                });
+            }
+
+            send(data) {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify(data));
+                }
+            }
+
+            disconnect() {
+                this.reconnectAttempts = this.maxReconnectAttempts;
+                if (this.ws) {
+                    this.ws.close(1000, 'User disconnect');
+                    this.ws = null;
+                }
+                this.isConnected = false;
+                this.audio.stopRecording();
+                this.audio.interrupt();
+                this.ui.setStatus('disconnected');
+            }
+        }
+
+        // ============================================================
+        // UI MANAGER
+        // ============================================================
+        
+        class UIManager {
+            constructor(audioController) {
+                this.audio = audioController;
+                this.elements = {
+                    statusDot: document.getElementById('connectionDot'),
+                    statusText: document.getElementById('connectionStatus'),
+                    avatarIcon: document.getElementById('avatarIcon'),
+                    actionBtn: document.getElementById('actionBtn'),
+                    transcript: document.getElementById('transcript'),
+                    inputIndicator: document.getElementById('inputIndicator'),
+                    outputIndicator: document.getElementById('outputIndicator'),
+                    canvas: document.getElementById('avatarCanvas'),
+                    volBars: document.querySelectorAll('.vol-bar')
+                };
+                
+                this.ctx = this.elements.canvas.getContext('2d');
+                this.mouthOpen = 0;
+                this.targetMouth = 0;
+                this.eyeOffset = { x: 0, y: 0 };
+                
+                this.animate();
+            }
+
+            setStatus(status) {
+                const { statusDot, statusText, actionBtn, avatarIcon } = this.elements;
+                
+                switch (status) {
+                    case 'connecting':
+                        statusDot.className = 'w-2 h-2 border border-black bg-yellow-400';
+                        statusText.textContent = 'CONNECTING...';
+                        statusText.className = 'text-[10px] uppercase tracking-wide text-yellow-600';
+                        actionBtn.innerHTML = '<span>Connecting...</span>';
+                        actionBtn.disabled = true;
+                        break;
+                        
+                    case 'connected':
+                        statusDot.className = 'w-2 h-2 border border-black bg-black';
+                        statusText.textContent = 'LIVE SESSION';
+                        statusText.className = 'text-[10px] uppercase tracking-wide text-black';
+                        actionBtn.innerHTML = '<span>Disconnect</span>';
+                        actionBtn.disabled = false;
+                        actionBtn.classList.add('bg-black', 'text-white');
+                        actionBtn.classList.remove('bg-white', 'text-black');
+                        avatarIcon.classList.add('input-pulse');
+                        break;
+                        
+                    case 'disconnected':
+                        statusDot.className = 'w-2 h-2 border border-black bg-white';
+                        statusText.textContent = 'DISCONNECTED';
+                        statusText.className = 'text-[10px] uppercase tracking-wide text-muted';
+                        actionBtn.innerHTML = '<span>Connect</span>';
+                        actionBtn.disabled = false;
+                        actionBtn.classList.remove('bg-black', 'text-white');
+                        actionBtn.classList.add('bg-white', 'text-black');
+                        avatarIcon.classList.remove('input-pulse');
+                        this.setInputActive(false);
+                        this.setOutputActive(false);
+                        break;
+                }
+            }
+
+            setInputActive(active) {
+                this.elements.inputIndicator.style.opacity = active ? '1' : '0';
+            }
+
+            setOutputActive(active) {
+                this.elements.outputIndicator.style.opacity = active ? '1' : '0';
+            }
+
+            addMessage(role, text) {
+                if (!text || !text.trim()) return;
+                
+                // Skip system prompt injection
+                if (text.includes('[Session started')) return;
+                
+                console.log('Adding message:', role, text);
+                
+                const div = document.createElement('div');
+                const isUser = role === 'user';
+                const isSystem = role === 'system';
+                
+                let labelClass, label;
+                if (isSystem) {
+                    label = 'SYSTEM';
+                    labelClass = 'bg-gray-400 text-white';
+                } else if (isUser) {
+                    label = 'YOU';
+                    labelClass = 'bg-blue-500 text-white';
+                } else {
+                    label = 'EMMA';
+                    labelClass = 'bg-black text-white';
+                }
+
+                div.className = `flex flex-col gap-1 max-w-[90%] ${isUser ? 'self-end items-end' : 'items-start'}`;
+                
+                if (isSystem) {
+                    div.innerHTML = `
+                        <span class="text-[10px] px-1 ${labelClass}">${label}</span>
+                        <p class="text-xs border-l-2 border-gray-200 pl-2 py-1 text-muted italic">${this.escapeHtml(text)}</p>
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <span class="text-[10px] px-1 ${labelClass}">${label}</span>
+                        <p class="text-xs border border-black p-2 bg-white shadow-hard-sm ${isUser ? 'text-right' : 'text-left'}">
+                            ${this.escapeHtml(text)}
+                        </p>
+                    `;
+                }
+                
+                this.elements.transcript.appendChild(div);
+                this.elements.transcript.scrollTop = this.elements.transcript.scrollHeight;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            animate() {
+                const ctx = this.ctx;
+                const w = this.elements.canvas.width;
+                const h = this.elements.canvas.height;
+                const cx = w / 2;
+                const cy = h / 2;
+
+                const outputVol = this.audio ? this.audio.getOutputVolume() : 0;
+                const inputVol = this.audio ? this.audio.getInputVolume() : 0;
+                
+                this.targetMouth = Math.min(1, outputVol / 50);
+                this.mouthOpen += (this.targetMouth - this.mouthOpen) * 0.25;
+
+                const displayVol = Math.max(outputVol, inputVol);
+                const normalizedVol = Math.min(1, displayVol / 60);
+                this.elements.volBars.forEach((bar, i) => {
+                    const threshold = (i + 1) * 0.2;
+                    bar.style.opacity = normalizedVol >= threshold ? '1' : '0.1';
+                });
+
+                if (Math.random() > 0.98) {
+                    this.eyeOffset = {
+                        x: (Math.random() - 0.5) * 4,
+                        y: (Math.random() - 0.5) * 2
+                    };
+                }
+
+                ctx.clearRect(0, 0, w, h);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#000';
+                ctx.fillStyle = '#fff';
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                // Head
+                ctx.beginPath();
+                ctx.arc(cx, cy, 60, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // Hair
+                ctx.beginPath();
+                ctx.moveTo(cx - 40, cy - 50);
+                ctx.quadraticCurveTo(cx, cy - 75, cx + 40, cy - 50);
+                ctx.stroke();
+
+                // Eyes
+                const blink = Math.random() > 0.995;
+                const leftEyeX = cx - 20 + this.eyeOffset.x;
+                const rightEyeX = cx + 20 + this.eyeOffset.x;
+                const eyeY = cy - 10 + this.eyeOffset.y;
+
+                if (blink) {
+                    ctx.beginPath();
+                    ctx.moveTo(leftEyeX - 8, eyeY);
+                    ctx.lineTo(leftEyeX + 8, eyeY);
+                    ctx.moveTo(rightEyeX - 8, eyeY);
+                    ctx.lineTo(rightEyeX + 8, eyeY);
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(leftEyeX, eyeY, 8, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(rightEyeX, eyeY, 8, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#000';
+                    ctx.beginPath();
+                    ctx.arc(leftEyeX + this.eyeOffset.x, eyeY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(rightEyeX + this.eyeOffset.x, eyeY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Eyebrows
+                ctx.beginPath();
+                ctx.moveTo(leftEyeX - 10, eyeY - 15);
+                ctx.lineTo(leftEyeX + 10, eyeY - 13);
+                ctx.moveTo(rightEyeX - 10, eyeY - 13);
+                ctx.lineTo(rightEyeX + 10, eyeY - 15);
+                ctx.stroke();
+
+                // Nose
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(cx - 3, cy + 12);
+                ctx.stroke();
+
+                // Mouth
+                ctx.fillStyle = '#fff';
+                const mouthY = cy + 30;
+                const mouthH = this.mouthOpen * 15;
+                
+                ctx.beginPath();
+                if (mouthH < 2) {
+                    ctx.moveTo(cx - 15, mouthY);
+                    ctx.quadraticCurveTo(cx, mouthY + 5, cx + 15, mouthY);
+                } else {
+                    ctx.moveTo(cx - 15, mouthY);
+                    ctx.quadraticCurveTo(cx, mouthY + mouthH + 5, cx + 15, mouthY);
+                    ctx.quadraticCurveTo(cx, mouthY - mouthH/2, cx - 15, mouthY);
+                }
+                ctx.fill();
+                ctx.stroke();
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // ============================================================
+        // MAIN APP
+        // ============================================================
+        
+        class App {
+            constructor() {
+                this.audio = new AudioController();
+                this.ui = new UIManager(this.audio);
+                this.client = null;
+                this.apiKey = localStorage.getItem('openai_api_key');
+                this.settings = this.loadSettings();
+
+                this.audio.onError = (code, message) => {
+                    this.ui.addMessage('system', message);
+                };
+
+                if (this.apiKey) {
+                    document.getElementById('setupOverlay').classList.add('hidden');
+                }
+
+                document.getElementById('apiKeyInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.init();
+                });
+            }
+
+            loadSettings() {
+                try {
+                    const saved = localStorage.getItem('teacher_settings');
+                    if (saved) {
+                        return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+                    }
+                } catch (e) {
+                    console.error('Failed to load settings:', e);
+                }
+                return { ...DEFAULT_SETTINGS };
+            }
+
+            saveSettingsToStorage() {
+                try {
+                    localStorage.setItem('teacher_settings', JSON.stringify(this.settings));
+                } catch (e) {
+                    console.error('Failed to save settings:', e);
+                }
+            }
+
+            openSettings() {
+                document.getElementById('voiceSelect').value = this.settings.voice;
+                document.getElementById('teacherName').value = this.settings.teacherName;
+                document.getElementById('teachingStyle').value = this.settings.teachingStyle;
+                document.getElementById('difficultyLevel').value = this.settings.difficultyLevel;
+                document.getElementById('focusArea').value = this.settings.focusArea;
+                document.getElementById('customInstructions').value = this.settings.customInstructions;
+                document.getElementById('fullPromptOverride').value = this.settings.fullPromptOverride;
+                
+                document.getElementById('settingsModal').classList.remove('hidden');
+            }
+
+            closeSettings() {
+                document.getElementById('settingsModal').classList.add('hidden');
+            }
+
+            saveSettings() {
+                this.settings = {
+                    voice: document.getElementById('voiceSelect').value,
+                    teacherName: document.getElementById('teacherName').value || 'Emma',
+                    teachingStyle: document.getElementById('teachingStyle').value,
+                    difficultyLevel: document.getElementById('difficultyLevel').value,
+                    focusArea: document.getElementById('focusArea').value,
+                    customInstructions: document.getElementById('customInstructions').value,
+                    fullPromptOverride: document.getElementById('fullPromptOverride').value
+                };
+
+                this.saveSettingsToStorage();
+                this.closeSettings();
+                
+                if (this.client && this.client.isConnected) {
+                    this.ui.addMessage('system', `Settings saved. Reconnect to apply changes with ${this.settings.teacherName}.`);
+                } else {
+                    this.ui.addMessage('system', `Settings saved. ${this.settings.teacherName} is ready to teach!`);
+                }
+            }
+
+            init() {
+                const input = document.getElementById('apiKeyInput');
+                const key = input.value.trim();
+                
+                if (!key) {
+                    input.classList.add('border-red-500');
+                    setTimeout(() => input.classList.remove('border-red-500'), 1000);
+                    return;
+                }
+                
+                if (!key.startsWith('sk-')) {
+                    this.ui.addMessage('system', 'Invalid key format. OpenAI keys start with "sk-"');
+                    return;
+                }
+
+                this.apiKey = key;
+                localStorage.setItem('openai_api_key', key);
+                document.getElementById('setupOverlay').classList.add('hidden');
+            }
+
+            reset() {
+                if (this.client) {
+                    this.client.disconnect();
+                    this.client = null;
+                }
+                localStorage.removeItem('openai_api_key');
+                location.reload();
+            }
+
+            async toggleConnection() {
+                if (this.client && this.client.isConnected) {
+                    this.client.disconnect();
+                    this.client = null;
+                } else {
+                    await this.audio.init();
+                    this.client = new RealtimeClient(this.apiKey, this.audio, this.ui, this.settings);
+                    this.client.connect();
+                }
+            }
+
+            onVadToggle() {
+                if (this.client && this.client.isConnected) {
+                    this.client.updateSession();
+                    const vadEnabled = document.getElementById('vadToggle').checked;
+                    this.ui.addMessage('system', vadEnabled ? 
+                        'Auto-detect enabled. I\'ll respond when you pause.' : 
+                        'Auto-detect disabled. Manual mode active.'
+                    );
+                }
+            }
+        }
+
+        const app = new App();
+    </script>
+</body>
+</html>
