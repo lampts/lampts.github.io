@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Magic Number | Riffle Shuffle Tutorial</title>
+    <meta name="description" content="Interactive tutorial on why 7 riffle shuffles randomize a deck - based on Diaconis-Bayer theorem">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🃏</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .btn-primary {
+            @apply px-5 py-2.5 border border-black text-xs uppercase tracking-wider font-medium transition-all;
+        }
+        .btn-primary:hover:not(:disabled) {
+            @apply bg-black text-white shadow-[3px_3px_0px_#000];
+        }
+        .btn-primary:disabled {
+            @apply opacity-40 cursor-not-allowed;
+        }
+        .btn-secondary {
+            @apply px-5 py-2.5 border border-dashed border-black text-xs uppercase tracking-wider font-medium;
+        }
+        .btn-accent {
+            @apply px-5 py-2.5 border border-black text-xs uppercase tracking-wider font-medium bg-[#FBD45B] shadow-[3px_3px_0px_#000];
+        }
+        .card-box {
+            @apply border border-black shadow-[3px_3px_0px_#000] p-5;
+        }
+        .info-box {
+            @apply p-4 mb-5 text-xs leading-relaxed;
+        }
+        .info-default {
+            @apply bg-[#fafafa] border-l-2 border-black;
+        }
+        .info-accent {
+            @apply bg-[#FBD45B20] border-l-4 border-[#FBD45B];
+        }
+        .info-featured {
+            @apply bg-white border border-black shadow-[3px_3px_0px_#000];
+        }
+    </style>
+</head>
+<body class="bg-white text-black font-mono text-xs antialiased selection:bg-black selection:text-white min-h-screen">
+    
+    <!-- Header -->
+    <header class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <div class="font-serif text-base font-medium">Riffle Shuffle</div>
+        <div class="text-[10px] text-gray-500 uppercase tracking-wider">Interactive Tutorial</div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="max-w-xl mx-auto px-6 py-8">
+        <!-- Progress Bar -->
+        <div id="progress" class="border-b border-black pb-4 mb-8"></div>
+        
+        <!-- Page Content -->
+        <div id="content"></div>
+    </main>
+    
+    <!-- Back Button -->
+    <div id="back-btn" class="fixed bottom-5 left-5 hidden">
+        <button onclick="prevPage()" class="btn-secondary text-[11px] px-3 py-1.5">← Back</button>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="px-6 py-6 border-t border-gray-200 text-center text-[10px] text-gray-500">
+        Based on Diaconis-Bayer (1992)
+    </footer>
+
+<script>
+// ============================================================================
+// DATA & CONSTANTS
+// ============================================================================
+
+const TV_DISTANCE_DATA = [
+    { k: 0, tv: 1.0 }, { k: 1, tv: 1.0 }, { k: 2, tv: 1.0 }, { k: 3, tv: 1.0 },
+    { k: 4, tv: 0.995 }, { k: 5, tv: 0.924 }, { k: 6, tv: 0.614 }, { k: 7, tv: 0.334 },
+    { k: 8, tv: 0.167 }, { k: 9, tv: 0.085 }, { k: 10, tv: 0.043 },
+];
+
+const QUIZ_HINTS = [
+    "Think about what physically happens during a riffle shuffle. Can cards from one half ever end up behind cards that were originally behind them in the same half?",
+    "Consider what 'address' means here. Each shuffle gives information about where a card came from. How many unique addresses do you need for 52 cards?",
+    "TV distance is a statistical measure. What does it tell us about a test's ability to distinguish two distributions?",
+];
+
+const DEEPER_INSIGHT = `The cutoff phenomenon appears everywhere in nature and computation, not just card shuffling.
+
+When you heat a metal rod, temperature doesn't spread gradually—there's a sharp transition. When rumors spread through a network, adoption stays low then suddenly everyone knows. MCMC samplers for Bayesian inference exhibit the same behavior.
+
+The practical implication: if you're building any system that mixes or converges (recommendation algorithms, A/B test traffic allocation, fraud detection feature mixing), don't assume linear convergence. There's likely a sharp threshold—find it, and you can optimize resource allocation dramatically. Casinos learned this the hard way: 6 shuffles looks almost as good as 5, but 7 is categorically different.`;
+
+const QUESTIONS = [
+    { q: "After 1 riffle shuffle, which permutation is IMPOSSIBLE?", options: ["Cards interleaved perfectly (1,27,2,28...)", "Deck completely reversed (52,51,50...1)", "Deck unchanged (1,2,3...52)", "Top and bottom halves swapped"], correct: 1, explanation: "A single riffle can only interleave cards from two halves. Full reversal requires cards to 'jump over' each other—impossible in one riffle." },
+    { q: "Why does 2^7 = 128 matter for a 52-card deck?", options: ["It's the number of possible cuts", "More than 52 → enough 'addresses' for each card", "It's how many shuffles casinos do", "Maximum number of rising sequences"], correct: 1, explanation: "Each card needs a unique 'binary address'. With 7 shuffles = 128 addresses for 52 cards—enough with margin." },
+    { q: "TV distance = 0.334 at 7 shuffles means?", options: ["33.4% of cards in wrong positions", "Statistician can distinguish ~33% of the time", "The deck is 33.4% random", "You need 33.4% more shuffles"], correct: 1, explanation: "TV distance measures distinguishability. At 0.334, even optimal tests detect non-randomness only ~1/3 of the time." },
+];
+
+// ============================================================================
+// STATE
+// ============================================================================
+
+let currentPage = 0;
+const totalPages = 7;
+
+// Page-specific state
+let hookGuess = null;
+let hookRevealed = false;
+
+let gsrDeck = [0,1,2,3,4,5,6,7];
+let gsrStep = 0;
+
+let binaryShuffles = 0;
+
+let quizQ = 0;
+let quizSelected = null;
+let quizRevealed = false;
+let quizScore = 0;
+let quizHintShown = false;
+
+let simRunning = false;
+let simIndex = 0;
+let simCompleted = false;
+let simDeck = Array.from({length: 16}, (_, i) => i);
+let simInterval = null;
+
+let summaryInsightShown = false;
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
+
+function gsrShuffle(deck) {
+    const n = deck.length;
+    let cut = 0;
+    for (let i = 0; i < n; i++) if (Math.random() < 0.5) cut++;
+    
+    const left = deck.slice(0, cut);
+    const right = deck.slice(cut);
+    const result = [];
+    
+    let l = 0, r = 0;
+    while (l < left.length || r < right.length) {
+        const leftRem = left.length - l;
+        const rightRem = right.length - r;
+        const total = leftRem + rightRem;
+        if (total === 0) break;
+        if (rightRem === 0 || (leftRem > 0 && Math.random() < leftRem / total)) {
+            result.push(left[l++]);
+        } else {
+            result.push(right[r++]);
+        }
+    }
+    return result;
+}
+
+function renderDeck(cards, size = 'medium') {
+    const w = size === 'small' ? 'w-5 h-7 text-[8px]' : size === 'large' ? 'w-9 h-12 text-[10px]' : 'w-7 h-10 text-[10px]';
+    return `<div class="flex gap-0.5 justify-center flex-wrap max-w-sm mx-auto">
+        ${cards.map(c => `<div class="bg-black text-white ${w} flex items-center justify-center font-semibold font-mono">${c + 1}</div>`).join('')}
+    </div>`;
+}
+
+// ============================================================================
+// RENDER FUNCTIONS
+// ============================================================================
+
+function renderProgress() {
+    const el = document.getElementById('progress');
+    el.innerHTML = `
+        <div class="flex justify-between items-center gap-1">
+            ${Array.from({length: totalPages}, (_, i) => `
+                <div class="flex-1 flex flex-col items-center gap-2">
+                    <div class="w-full h-0.5 ${i <= currentPage ? 'bg-black' : 'bg-gray-200'} transition-colors"></div>
+                    <div class="w-2 h-2 ${i <= currentPage ? 'bg-black' : 'bg-gray-200'} ${i === currentPage ? 'ring-2 ring-[#FBD45B] ring-offset-1' : ''}"></div>
+                </div>
+            `).join('')}
+        </div>
+        <div class="flex justify-between mt-2 text-[10px] uppercase tracking-wider text-gray-500">
+            <span>Start</span>
+            <span>${currentPage + 1} / ${totalPages}</span>
+            <span>End</span>
+        </div>
+    `;
+}
+
+function renderBackButton() {
+    const btn = document.getElementById('back-btn');
+    btn.classList.toggle('hidden', currentPage === 0 || currentPage === totalPages - 1);
+}
+
+function renderPage() {
+    renderProgress();
+    renderBackButton();
+    const pages = [renderHook, renderGSR, renderBinary, renderTVD, renderQuiz, renderSimulation, renderSummary];
+    pages[currentPage]();
+}
+
+function nextPage() {
+    if (currentPage < totalPages - 1) {
+        currentPage++;
+        renderPage();
+        window.scrollTo(0, 0);
+    }
+}
+
+function prevPage() {
+    if (currentPage > 0) {
+        currentPage--;
+        renderPage();
+        window.scrollTo(0, 0);
+    }
+}
+
+// ============================================================================
+// PAGE: HOOK
+// ============================================================================
+
+function renderHook() {
+    const el = document.getElementById('content');
+    el.innerHTML = `
+        <div class="max-w-md mx-auto">
+            <div class="mb-6">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Interactive Tutorial</div>
+                <h1 class="text-2xl font-serif font-bold border-b border-black pb-2">The Magic Number</h1>
+            </div>
+            
+            <p class="text-sm text-gray-500 mb-8 leading-relaxed">
+                How many riffle shuffles does it take to truly randomize a deck of 52 cards?
+            </p>
+            
+            <div class="grid grid-cols-4 gap-2 mb-6">
+                ${[3, 5, 7, 12].map(n => `
+                    <div onclick="selectHookGuess(${n})" class="py-5 px-4 text-center cursor-pointer transition-all border
+                        ${hookGuess === n ? (hookRevealed ? (n === 7 ? 'bg-[#FBD45B] border-black shadow-[3px_3px_0px_#000]' : 'bg-gray-100 border-gray-300') : 'border-black shadow-[3px_3px_0px_#000]') : 'border-gray-200 hover:border-black'}
+                        ${hookRevealed ? 'pointer-events-none' : ''}">
+                        <div class="text-2xl font-serif font-bold">${n}</div>
+                        <div class="text-[10px] text-gray-500 uppercase">shuffles</div>
+                    </div>
+                `).join('')}
+            </div>
+            
+            ${hookGuess && !hookRevealed ? `
+                <div class="text-center">
+                    <button onclick="revealHook()" class="btn-primary">Check Answer</button>
+                </div>
+            ` : ''}
+            
+            ${hookRevealed ? `
+                <div class="info-box ${hookGuess === 7 ? 'info-accent' : 'info-default'}">
+                    <div class="font-semibold mb-2">${hookGuess === 7 ? '✓ Correct' : 'The answer is 7'}</div>
+                    <div class="text-gray-500">In 1992, mathematician Persi Diaconis proved that exactly 7 riffle shuffles are needed to randomize a deck.</div>
+                </div>
+                <div class="text-center">
+                    <button onclick="nextPage()" class="btn-accent">Continue →</button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function selectHookGuess(n) {
+    if (!hookRevealed) {
+        hookGuess = n;
+        renderHook();
+    }
+}
+
+function revealHook() {
+    hookRevealed = true;
+    renderHook();
+}
+
+// ============================================================================
+// PAGE: GSR MODEL
+// ============================================================================
+
+function renderGSR() {
+    const el = document.getElementById('content');
+    el.innerHTML = `
+        <div class="max-w-md mx-auto">
+            <div class="mb-6">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Concept 1</div>
+                <h1 class="text-2xl font-serif font-bold border-b border-black pb-2">The GSR Shuffle Model</h1>
+            </div>
+            
+            <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+                Gilbert, Shannon, and Reeds mathematically modeled what happens when you riffle shuffle:
+            </p>
+            
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="p-3 border-l-2 border-black">
+                    <div class="font-semibold text-xs mb-1">1. Cut</div>
+                    <div class="text-gray-500 text-[11px]">Split deck at random (binomial distribution)</div>
+                </div>
+                <div class="p-3 border-l-2 border-[#FBD45B]">
+                    <div class="font-semibold text-xs mb-1">2. Interleave</div>
+                    <div class="text-gray-500 text-[11px]">Drop cards proportionally from each half</div>
+                </div>
+            </div>
+            
+            <div class="card-box mb-6">
+                <div class="text-center text-[10px] uppercase tracking-wider text-gray-500 mb-4">Shuffle #${gsrStep}</div>
+                ${renderDeck(gsrDeck, 'large')}
+                <div class="flex gap-2 justify-center mt-5">
+                    <button onclick="doGsrShuffle()" class="btn-primary">Shuffle</button>
+                    <button onclick="resetGsr()" class="btn-secondary">Reset</button>
+                </div>
+            </div>
+            
+            <div class="info-box info-default">
+                <div class="font-semibold mb-1">Key insight</div>
+                <div class="text-gray-500">Each shuffle approximately doubles the "disorder" — but some structure always remains.</div>
+            </div>
+            
+            <div class="text-center">
+                <button onclick="nextPage()" class="btn-primary">Next: Binary Addresses →</button>
+            </div>
+        </div>
+    `;
+}
+
+function doGsrShuffle() {
+    gsrDeck = gsrShuffle(gsrDeck);
+    gsrStep++;
+    renderGSR();
+}
+
+function resetGsr() {
+    gsrDeck = [0,1,2,3,4,5,6,7];
+    gsrStep = 0;
+    renderGSR();
+}
+
+// ============================================================================
+// PAGE: BINARY ADDRESSES
+// ============================================================================
+
+function renderBinary() {
+    const addresses = [
+        ['—','—','—','—','—','—','—','—'],
+        ['L','L','L','L','R','R','R','R'],
+        ['LL','LR','LR','LL','RL','RR','RL','RR'],
+        ['LLL','LLR','LRL','LRR','RLL','RLR','RRL','RRR'],
+    ];
+    
+    const el = document.getElementById('content');
+    el.innerHTML = `
+        <div class="max-w-md mx-auto">
+            <div class="mb-6">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Concept 2</div>
+                <h1 class="text-2xl font-serif font-bold border-b border-black pb-2">Binary Addresses</h1>
+            </div>
+            
+            <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+                Diaconis's key insight: each shuffle gives every card a <strong class="text-black">binary bit</strong> based on which half it came from.
+            </p>
+            
+            <div class="card-box mb-6">
+                <div class="text-center mb-4">
+                    <span class="text-[10px] uppercase tracking-wider text-gray-500">After ${binaryShuffles} shuffle(s):</span>
+                    <span class="bg-[#FBD45B] px-2 py-0.5 ml-2 text-[11px] font-semibold">${binaryShuffles}-bit</span>
+                </div>
+                
+                <div class="flex gap-1.5 justify-center flex-wrap">
+                    ${addresses[Math.min(binaryShuffles, 3)].map((addr, i) => `
+                        <div class="w-12 h-16 bg-black flex flex-col items-center justify-center gap-1">
+                            <div class="text-sm font-bold text-white">${i + 1}</div>
+                            <div class="text-[9px] text-[#FBD45B] font-mono bg-white/10 px-1">${addr}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="flex gap-2 justify-center mt-5">
+                    <button onclick="addBinaryShuffle()" class="btn-primary" ${binaryShuffles >= 3 ? 'disabled' : ''}>Add Shuffle</button>
+                    <button onclick="resetBinary()" class="btn-secondary">Reset</button>
+                </div>
+            </div>
+            
+            <div class="info-box info-accent">
+                <div class="font-semibold mb-2">The Math</div>
+                <div class="text-gray-600 leading-relaxed">
+                    After <strong>k</strong> shuffles = <strong>k-bit address</strong> per card.
+                    <div class="font-mono text-base my-3 text-black font-semibold">2<sup>k</sup> > 52 → k ≥ 6</div>
+                    For uniformity margin: <strong>k = 7</strong> gives 2<sup>7</sup> = 128 addresses for 52 cards.
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button onclick="nextPage()" class="btn-primary">Next: Total Variation Distance →</button>
+            </div>
+        </div>
+    `;
+}
+
+function addBinaryShuffle() {
+    if (binaryShuffles < 3) {
+        binaryShuffles++;
+        renderBinary();
+    }
+}
+
+function resetBinary() {
+    binaryShuffles = 0;
+    renderBinary();
+}
+
+// ============================================================================
+// PAGE: TVD
+// ============================================================================
+
+function renderTVD() {
+    const el = document.getElementById('content');
+    el.innerHTML = `
+        <div class="max-w-md mx-auto">
+            <div class="mb-6">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Concept 3</div>
+                <h1 class="text-2xl font-serif font-bold border-b border-black pb-2">Total Variation Distance</h1>
+            </div>
+            
+            <p class="text-xs text-gray-500 mb-6 leading-relaxed">
+                How do we measure "randomness"? Not by looking at one deck, but by comparing <strong class="text-black">probability distributions</strong>.
+            </p>
+            
+            <div class="p-5 bg-[#fafafa] border border-gray-200 mb-6 text-center">
+                <div class="text-[10px] text-gray-500 uppercase tracking-wider mb-2">The Definition</div>
+                <div class="font-mono text-sm">d<sub>TV</sub> = ½ Σ |P<sub>k</sub>(σ) − 1/52!|</div>
+                <div class="text-gray-500 text-[10px] mt-2">Sum over all 52! ≈ 8×10<sup>67</sup> permutations</div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="p-4 border border-gray-200 text-center">
+                    <div class="text-3xl font-serif font-bold">1.0</div>
+                    <div class="text-[10px] text-gray-500 uppercase">Distinguishable</div>
+                </div>
+                <div class="p-4 border border-gray-200 text-center">
+                    <div class="text-3xl font-serif font-bold">0.0</div>
+                    <div class="text-[10px] text-gray-500 uppercase">Random</div>
+                </div>
+            </div>
+            
+            <div class="info-box info-featured">
+                <div class="font-semibold mb-2">The Cutoff Phenomenon</div>
+                <div class="text-gray-500">TV distance doesn't decrease gradually. It stays near <strong class="text-black">1.0</strong> for several shuffles, then <strong class="text-black">crashes</strong> to near 0 in a narrow window.</div>
+            </div>
+            
+            <div class="text-center">
+                <button onclick="nextPage()" class="btn-primary">Test Your Understanding →</button>
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================================
+// PAGE: QUIZ
+// ============================================================================
+
+function renderQuiz() {
+    const q = QUESTIONS[quizQ];
+    const el = document.getElementById('content');
+    
+    el.innerHTML = `
+        <div class="max-w-md mx-auto">
+            <div class="mb-6">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Quiz</div>
+                <h1 class="text-2xl font-serif font-bold border-b border-black pb-2">Test Your Understanding</h1>
+            </div>
+            
+            <div class="flex justify-between text-[10px] text-gray-500 uppercase tracking-wider mb-5">
+                <span>Question ${quizQ + 1} / ${QUESTIONS.length}</span>
+                <span>Score: ${quizScore}/${quizQ + (quizRevealed ? 1 : 0)}</span>
+            </div>
+            
+            <div class="border border-black p-5 mb-5">
+                <div class="text-sm mb-5 leading-relaxed">${q.q}</div>
+                <div class="flex flex-col gap-2">
+                    ${q.options.map((opt, i) => {
+                        let classes = 'p-3 border text-xs leading-relaxed cursor-pointer transition-all ';
+                        if (quizSelected === i && !quizRevealed) {
+                            classes += 'border-black shadow-[3px_3px_0px_#000]';
+                        } else if (quizRevealed) {
+                            if (i === q.correct) {
+                                classes += 'bg-[#FBD45B] border-black shadow-[3px_3px_0px_#000]';
+                            } else if (quizSelected === i) {
+                                classes += 'bg-gray-100 border-gray-400';
+                            } else {
+                                classes += 'border-gray-200';
+                            }
+                            classes += ' pointer-events-none';
+                        } else {
+                            classes += 'border-gray-200 hover:border-black';
+                        }
+                        return `<div onclick="selectQuizOption(${i})" class="${classes}">${opt}</div>`;
+                    }).join('')}
+                </div>
+            </div>
+            
+            ${!quizRevealed ? `
+                <div class="flex gap-2 justify-center">
+                    <button onclick="checkQuiz()" class="btn-primary" ${quizSelected === null ? 'disabled' : ''}>Check</button>
+                    <button onclick="showQuizHint()" class="btn-secondary" ${quizHintShown ? 'disabled' : ''}>Hint</button>
+                </div>
+            ` : ''}
+            
+            ${quizHintShown && !quizRevealed ? `
+                <div class="info-box info-default mt-4">
+                    <div class="font-semibold mb-1">💡 Hint</div>
+                    <div class="text-gray-500">${QUIZ_HINTS[quizQ]}</div>
+                </div>
+            ` : ''}
+            
+            ${quizRevealed ? `
+                <div class="info-box ${quizSelected === q.correct ? 'info-accent' : 'info-default'}">
+                    <div class="font-semibold mb-1">${quizSelected === q.correct ? '✓ Correct' : '✗ Not quite'}</div>
+                    <div class="text-gray-500">${q.explanation}</div>
+                </div>
+                <div class="text-center">
+                    <button onclick="nextQuizQuestion()" class="btn-primary">
+                        ${quizQ < QUESTIONS.length - 1 ? 'Next Question →' : 'See Simulation →'}
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function selectQuizOption(i) {
+    if (!quizRevealed) {
+        quizSelected = i;
+        renderQuiz();
+    }
+}
+
+function checkQuiz() {
+    quizRevealed = true;
+    if (quizSelected === QUESTIONS[quizQ].correct) quizScore++;
+    renderQuiz();
+}
+
+function showQuizHint() {
+    quizHintShown = true;
+    renderQuiz();
+}
+
+function nextQuizQuestion() {
+    if (quizQ < QUESTIONS.length - 1) {
+        quizQ++;
+        quizSelected = null;
+        quizRevealed = false;
+        quizHintShown = false;
+        renderQuiz();
+    } else {
+        nextPage();
+    }
+}
+
+// ============================================================================
+// PAGE: SIMULATION
+// ============================================================================
+
+function renderSimulation() {
+    const currentTV = TV_DISTANCE_DATA[simIndex]?.tv ?? 1.0;
+    
+    const el = document.getElementById('content');
+    el.innerHTML = `
+        <div class="max-w-md mx-auto">
+            <div class="mb-6">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Live Simulation</div>
+                <h1 class="text-2xl font-serif font-bold border-b border-black pb-2">The Cutoff Emerges</h1>
+            </div>
+            
+            <div class="card-box mb-6">
+                <div id="chart-container" class="mb-4"></div>
+                
+                <div class="text-center mb-4">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider">After ${simIndex} shuffle${simIndex !== 1 ? 's' : ''}</div>
+                    <div class="text-xl font-serif font-bold ${simIndex === 7 ? 'bg-[#FBD45B] inline-block px-3 py-1' : ''}">
+                        TV = ${currentTV.toFixed(3)}
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-wider text-center mb-2">Sample 16-card deck</div>
+                    ${renderDeck(simDeck, 'small')}
+                </div>
+                
+                <div class="flex gap-2 justify-center">
+                    <button onclick="runSimulation()" class="btn-${simCompleted ? 'primary' : 'accent'}" ${simRunning ? 'disabled' : ''}>
+                        ${simRunning ? 'Running...' : simCompleted ? 'Run Again' : 'Start'}
+                    </button>
+                    ${simRunning || simCompleted ? `<button onclick="resetSimulation()" class="btn-secondary" ${simRunning ? 'disabled' : ''}>Reset</button>` : ''}
+                </div>
+            </div>
+            
+            ${simCompleted ? `
+                <div class="info-box info-featured">
+                    <div class="font-semibold mb-1">🎯 The Cutoff</div>
+                    <div class="text-gray-500">Notice: flat near 1.0 until shuffle 5, then <strong class="text-black">drops sharply</strong> through 6-8. Not gradual mixing—a sudden phase transition.</div>
+                </div>
+            ` : ''}
+            
+            <div class="text-center">
+                <button onclick="nextPage()" class="btn-primary">Summary →</button>
+            </div>
+        </div>
+    `;
+    
+    renderChart();
+}
+
+function renderChart() {
+    const container = document.getElementById('chart-container');
+    if (!container) return;
+    
+    const width = 400, height = 200;
+    const padding = { top: 20, right: 20, bottom: 35, left: 45 };
+    const chartW = width - padding.left - padding.right;
+    const chartH = height - padding.top - padding.bottom;
+    
+    const xScale = k => padding.left + (k / 10) * chartW;
+    const yScale = tv => padding.top + (1 - tv) * chartH;
+    
+    const visibleData = TV_DISTANCE_DATA.slice(0, simIndex + 1);
+    const pathD = visibleData.length >= 2
+        ? visibleData.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(d.k)} ${yScale(d.tv)}`).join(' ')
+        : '';
+    
+    container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" class="w-full max-w-md mx-auto block">
+            <rect x="${padding.left}" y="${padding.top}" width="${chartW}" height="${chartH}" fill="#fafafa" stroke="#e5e5e5"/>
+            
+            ${[0, 0.5, 1].map(v => `<line x1="${padding.left}" x2="${width - padding.right}" y1="${yScale(v)}" y2="${yScale(v)}" stroke="#e5e5e5" stroke-dasharray="4,4"/>`).join('')}
+            
+            <line x1="${xScale(7)}" x2="${xScale(7)}" y1="${padding.top}" y2="${height - padding.bottom}" stroke="#FBD45B" stroke-width="2"/>
+            <rect x="${xScale(7) - 8}" y="${padding.top - 14}" width="16" height="12" fill="#FBD45B"/>
+            <text x="${xScale(7)}" y="${padding.top - 5}" fill="black" font-size="9" font-weight="bold" text-anchor="middle">7</text>
+            
+            ${pathD ? `<path d="${pathD}" fill="none" stroke="black" stroke-width="2"/>` : ''}
+            
+            ${visibleData.map((d, i) => `
+                <rect x="${xScale(d.k) - (i === simIndex ? 4 : 2.5)}" y="${yScale(d.tv) - (i === simIndex ? 4 : 2.5)}" 
+                      width="${i === simIndex ? 8 : 5}" height="${i === simIndex ? 8 : 5}" 
+                      fill="${d.k === 7 ? '#FBD45B' : 'black'}"/>
+            `).join('')}
+            
+            <line x1="${padding.left}" x2="${width - padding.right}" y1="${height - padding.bottom}" y2="${height - padding.bottom}" stroke="black"/>
+            
+            ${[0, 2, 4, 6, 8, 10].map(k => `<text x="${xScale(k)}" y="${height - padding.bottom + 15}" fill="#666" font-size="9" text-anchor="middle">${k}</text>`).join('')}
+            
+            <text x="${width / 2}" y="${height - 5}" fill="#666" font-size="9" text-anchor="middle">Shuffles</text>
+            <text x="${padding.left - 8}" y="${yScale(1) + 3}" fill="#666" font-size="9" text-anchor="end">Ordered</text>
+            <text x="${padding.left - 8}" y="${yScale(0) + 3}" fill="#666" font-size="9" text-anchor="end">Random</text>
+        </svg>
+    `;
+}
+
+function runSimulation() {
+    if (simInterval) clearInterval(simInterval);
+    
+    simRunning = true;
+    simIndex = 0;
+    simCompleted = false;
+    simDeck = Array.from({length: 16}, (_, i) => i);
+    renderSimulation();
+    
+    let k = 0;
+    simInterval = setInterval(() => {
+        let deck = Array.from({length: 16}, (_, i) => i);
+        for (let s = 0; s < k; s++) deck = gsrShuffle(deck);
+        
+        simDeck = deck;
+        simIndex = k;
+        renderSimulation();
+        
+        k++;
+        if (k > 10) {
+            clearInterval(simInterval);
+            simInterval = null;
+            simRunning = false;
+            simCompleted = true;
+            renderSimulation();
+        }
+    }, 700);
+}
+
+function resetSimulation() {
+    if (simInterval) {
+        clearInterval(simInterval);
+        simInterval = null;
+    }
+    simRunning = false;
+    simIndex = 0;
+    simCompleted = false;
+    simDeck = Array.from({length: 16}, (_, i) => i);
+    renderSimulation();
+}
+
+// ============================================================================
+// PAGE: SUMMARY
+// ============================================================================
+
+function renderSummary() {
+    const el = document.getElementById('content');
+    el.innerHTML = `
+        <div class="max-w-md mx-auto">
+            <div class="mb-6">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Complete</div>
+                <h1 class="text-2xl font-serif font-bold border-b border-black pb-2">The Magic Number: 7</h1>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-3 mb-8">
+                <div class="p-4 border border-black text-center">
+                    <div class="text-2xl font-serif font-bold">7</div>
+                    <div class="text-[9px] text-gray-500 uppercase">shuffles</div>
+                </div>
+                <div class="p-4 border border-black text-center">
+                    <div class="text-2xl font-serif font-bold">128</div>
+                    <div class="text-[9px] text-gray-500 uppercase">2^7 addresses</div>
+                </div>
+                <div class="p-4 bg-[#FBD45B] text-center">
+                    <div class="text-2xl font-serif font-bold">0.33</div>
+                    <div class="text-[9px] uppercase">TV at k=7</div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="text-xs font-semibold uppercase tracking-wider border-b border-gray-200 pb-2 mb-3">Key Takeaways</h3>
+                <div class="text-xs text-gray-500 leading-loose">
+                    <p><strong class="text-black">Random ≠ disordered:</strong> Randomness is about process, not outcome</p>
+                    <p><strong class="text-black">Binary addresses:</strong> k shuffles = k bits per card</p>
+                    <p><strong class="text-black">Cutoff phenomenon:</strong> Sharp phase transition, not gradual</p>
+                    <p><strong class="text-black">Mixing time ≈ (3/2)log₂(n):</strong> Scales with deck size</p>
+                </div>
+            </div>
+            
+            <div class="text-center mb-6">
+                <button onclick="showInsight()" class="btn-accent" ${summaryInsightShown ? 'disabled' : ''}>→ Deeper Insight</button>
+            </div>
+            
+            ${summaryInsightShown ? `
+                <div class="info-box info-featured">
+                    <div class="font-semibold mb-2">Beyond Cards</div>
+                    <div class="text-gray-500 whitespace-pre-wrap">${DEEPER_INSIGHT}</div>
+                </div>
+            ` : ''}
+            
+            <div class="mt-8 p-4 bg-[#fafafa] border border-gray-200">
+                <div class="text-[10px] uppercase tracking-wider text-gray-500 mb-2">Reference</div>
+                <div class="text-[11px]">Bayer, D. & Diaconis, P. (1992). "Trailing the Dovetail Shuffle to its Lair." <em>The Annals of Applied Probability</em>, 2(2), 294-313.</div>
+            </div>
+        </div>
+    `;
+}
+
+function showInsight() {
+    summaryInsightShown = true;
+    renderSummary();
+}
+
+// ============================================================================
+// INIT
+// ============================================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderPage();
+});
+</script>
+
+</body>
+</html>
