@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logprobs: Teaching LLMs What They Don't Know</title>
+    <meta name="description" content="An interactive tutorial on using log probabilities for uncertainty quantification in LLM applications.">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .choice-btn {
+            transition: all 0.15s ease;
+        }
+        .choice-btn:hover {
+            box-shadow: 5px 5px 0px #000;
+        }
+        .choice-btn.selected {
+            background: #f5f5f5;
+        }
+        .choice-btn.correct {
+            background: #f0fdf4;
+            border-color: #000;
+        }
+        .choice-btn.incorrect {
+            background: #fef2f2;
+        }
+        
+        .slider-track {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: #e5e5e5;
+            outline: none;
+        }
+        .slider-track::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #000;
+            cursor: pointer;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .token-chip {
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .token-chip:hover {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white">
+
+    <div class="p-4 md:p-12 min-h-screen">
+        <div class="w-full max-w-xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <a class="text-xl font-serif font-medium tracking-tight" href="/">
+                    Logprobs Lab
+                </a>
+                <div class="flex gap-2">
+                    <div class="flex gap-1" id="progress-dots">
+                        <div class="w-2 h-2 bg-black progress-dot" data-section="0"></div>
+                        <div class="w-2 h-2 bg-gray-300 progress-dot" data-section="1"></div>
+                        <div class="w-2 h-2 bg-gray-300 progress-dot" data-section="2"></div>
+                        <div class="w-2 h-2 bg-gray-300 progress-dot" data-section="3"></div>
+                        <div class="w-2 h-2 bg-gray-300 progress-dot" data-section="4"></div>
+                        <div class="w-2 h-2 bg-gray-300 progress-dot" data-section="5"></div>
+                        <div class="w-2 h-2 bg-gray-300 progress-dot" data-section="6"></div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Section 0: Introduction -->
+            <section id="section-0" data-section="0">
+                <div class="mb-8">
+                    <h1 class="font-serif text-2xl font-bold mb-4 leading-tight">
+                        Teaching LLMs to Know What They Don't Know
+                    </h1>
+                    <p class="text-muted leading-relaxed">
+                        When an LLM generates text, it assigns a probability to every possible next word. These probabilities are the key to building AI systems that can tell you when they're uncertain.
+                    </p>
+                </div>
+                
+                <div class="border-l-2 border-black pl-4 py-2 mb-6 bg-gray-50">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-2">Consider this</p>
+                    <p class="leading-relaxed">
+                        An LLM says <code class="bg-black text-white px-1 text-xs">"The capital of France is Paris"</code> and also says <code class="bg-black text-white px-1 text-xs">"The best restaurant in Paris is Le Petit Cler"</code>.
+                    </p>
+                    <p class="mt-2 text-muted">Both arrive as plain text. Should you trust them equally?</p>
+                </div>
+                
+                <div class="border border-gray-200 p-4 mb-6">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-4">Which statement should you trust more?</p>
+                    <div class="grid grid-cols-1 gap-3" id="intro-choices">
+                        <button class="choice-btn border border-black p-3 text-left shadow-[3px_3px_0px_#000]" data-choice="capital" onclick="checkIntroChoice(this, 'capital')">
+                            <span class="font-semibold text-xs">"The capital of France is Paris"</span>
+                            <p class="text-xs text-muted mt-1">Factual, verifiable</p>
+                        </button>
+                        <button class="choice-btn border border-black p-3 text-left shadow-[3px_3px_0px_#000]" data-choice="restaurant" onclick="checkIntroChoice(this, 'restaurant')">
+                            <span class="font-semibold text-xs">"The best restaurant is Le Petit Cler"</span>
+                            <p class="text-xs text-muted mt-1">Subjective, time-sensitive</p>
+                        </button>
+                    </div>
+                    <div id="intro-feedback" class="mt-4 text-xs hidden"></div>
+                </div>
+                
+                <div class="border-l-2 border-gray-400 pl-4 py-2 mb-6 hidden" id="intro-reveal">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-2">Key Insight</p>
+                    <p class="text-muted leading-relaxed">
+                        Without access to the model's internal confidence, both statements look equally trustworthy. 
+                        <strong class="text-foreground">Logprobs</strong> expose this hidden uncertainty—they tell you <em>how confident</em> the model was when generating each token.
+                    </p>
+                </div>
+                
+                <button onclick="nextSection(1)" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors text-xs uppercase tracking-wider">
+                    Continue →
+                </button>
+            </section>
+
+            <!-- Section 1: What are Logprobs -->
+            <section id="section-1" class="hidden" data-section="1">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">What is a Logprob?</h2>
+                
+                <p class="text-muted leading-relaxed mb-6">
+                    A <strong class="text-foreground">log probability</strong> (logprob) is the natural logarithm of a probability. Instead of saying "90% confident", the model reports <code class="bg-black text-white px-1 text-xs">-0.105</code>.
+                </p>
+                
+                <div class="border border-black p-4 mb-6 text-center">
+                    <p class="font-serif text-base mb-1">logprob = ln(probability)</p>
+                    <p class="text-muted text-xs">or equivalently</p>
+                    <p class="font-serif text-base mt-1">probability = e<sup>logprob</sup></p>
+                </div>
+                
+                <div class="border-l-2 border-black pl-4 py-2 mb-6 bg-gray-50">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-2">Why logarithms?</p>
+                    <p class="text-muted">Probabilities can be tiny (0.0000001). Logarithms compress this range and make the math easier.</p>
+                </div>
+                
+                <!-- Interactive Slider -->
+                <div class="border border-gray-200 p-4 mb-6">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-4">Interactive: Probability ↔ Logprob</p>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs mb-2">
+                            <span>Probability</span>
+                            <span id="prob-display" class="font-semibold">50%</span>
+                        </div>
+                        <input type="range" id="prob-slider" class="slider-track w-full" min="1" max="99" value="50" oninput="updateProbSlider()">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="border border-gray-200 p-3">
+                            <p class="text-xs text-muted">Probability</p>
+                            <p class="text-xl font-semibold" id="prob-value">0.50</p>
+                        </div>
+                        <div class="border border-gray-200 p-3">
+                            <p class="text-xs text-muted">Logprob</p>
+                            <p class="text-xl font-semibold" id="logprob-value">-0.69</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-2 text-xs">
+                        <div id="confidence-indicator" class="w-2 h-2 bg-gray-400"></div>
+                        <span id="confidence-label" class="text-muted">Uncertain</span>
+                    </div>
+                </div>
+                
+                <!-- Mental Model -->
+                <div class="border border-black p-4 mb-6 shadow-[3px_3px_0px_#000]">
+                    <p class="text-xs uppercase tracking-wider mb-3">Mental Model</p>
+                    <div class="space-y-1 text-xs text-muted">
+                        <p><span class="text-foreground font-semibold">0</span> → 100% confident (never happens)</p>
+                        <p><span class="text-foreground font-semibold">-0.1</span> → ~90% confident (very high)</p>
+                        <p><span class="text-foreground font-semibold">-0.7</span> → ~50% confident (coin flip)</p>
+                        <p><span class="text-foreground font-semibold">-2.3</span> → ~10% confident (low)</p>
+                    </div>
+                    <p class="mt-3 text-xs font-semibold">Closer to 0 = more confident</p>
+                </div>
+                
+                <!-- Quiz -->
+                <div class="border-l-2 border-black pl-4 py-2 mb-6 bg-gray-50">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-3">Quick Check</p>
+                    <p class="mb-4">If logprob = <code class="bg-black text-white px-1 text-xs">-0.22</code>, approximately how confident is it?</p>
+                    <div class="grid grid-cols-4 gap-2" id="logprob-quiz">
+                        <button class="choice-btn border border-black p-2 text-xs" onclick="checkLogprobQuiz(this, '20')">~20%</button>
+                        <button class="choice-btn border border-black p-2 text-xs" onclick="checkLogprobQuiz(this, '50')">~50%</button>
+                        <button class="choice-btn border border-black p-2 text-xs" onclick="checkLogprobQuiz(this, '80')">~80%</button>
+                        <button class="choice-btn border border-black p-2 text-xs" onclick="checkLogprobQuiz(this, '95')">~95%</button>
+                    </div>
+                    <div id="logprob-quiz-feedback" class="mt-3 text-xs hidden"></div>
+                </div>
+                
+                <button onclick="nextSection(2)" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors text-xs uppercase tracking-wider">
+                    Apply This →
+                </button>
+            </section>
+
+            <!-- Section 2: Confidence Filtering -->
+            <section id="section-2" class="hidden" data-section="2">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Use Case: Confidence Filtering</h2>
+                
+                <p class="text-muted leading-relaxed mb-6">
+                    You're building a customer service bot. Use logprobs to auto-respond when confident, escalate when uncertain.
+                </p>
+                
+                <div class="border border-gray-200 p-4 mb-6">
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs mb-2">
+                            <span>Confidence threshold</span>
+                            <span id="threshold-display" class="font-semibold">80%</span>
+                        </div>
+                        <input type="range" id="threshold-slider" class="slider-track w-full" min="50" max="95" value="80" oninput="updateThreshold()">
+                    </div>
+                    
+                    <div class="space-y-3" id="response-cards">
+                        <div class="border border-gray-200 p-3 flex items-center justify-between response-card" data-confidence="95">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold truncate">"Your current balance is $1,234.56"</p>
+                                <p class="text-xs text-muted">95% confidence</p>
+                            </div>
+                            <div class="response-status text-xs px-2 py-1 border border-black ml-2 shrink-0">
+                                ✓ Auto
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 p-3 flex items-center justify-between response-card" data-confidence="72">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold truncate">"Refinancing could save ~$200/month"</p>
+                                <p class="text-xs text-muted">72% confidence</p>
+                            </div>
+                            <div class="response-status text-xs px-2 py-1 border border-gray-400 text-muted ml-2 shrink-0">
+                                → Review
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 p-3 flex items-center justify-between response-card" data-confidence="88">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold truncate">"Next payment due January 15th"</p>
+                                <p class="text-xs text-muted">88% confidence</p>
+                            </div>
+                            <div class="response-status text-xs px-2 py-1 border border-black ml-2 shrink-0">
+                                ✓ Auto
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 p-3 flex items-center justify-between response-card" data-confidence="45">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold truncate">"I recommend investing in index funds"</p>
+                                <p class="text-xs text-muted">45% confidence</p>
+                            </div>
+                            <div class="response-status text-xs px-2 py-1 bg-gray-100 text-muted ml-2 shrink-0">
+                                ✗ Reject
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between text-xs text-muted">
+                        <span>Auto: <strong class="text-foreground" id="auto-count">2</strong></span>
+                        <span>Review: <strong class="text-foreground" id="review-count">1</strong></span>
+                        <span>Reject: <strong class="text-foreground" id="reject-count">1</strong></span>
+                    </div>
+                </div>
+                
+                <div class="border-l-2 border-gray-400 pl-4 py-2 mb-6">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-2">Production Insight</p>
+                    <p class="text-xs text-muted">Don't guess thresholds. Collect data, plot distributions, find natural cutoffs. Different tasks have different confidence profiles.</p>
+                </div>
+                
+                <button onclick="nextSection(3)" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors text-xs uppercase tracking-wider">
+                    Next: Ambiguity →
+                </button>
+            </section>
+
+            <!-- Section 3: Ambiguity Detection -->
+            <section id="section-3" class="hidden" data-section="3">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Use Case: Ambiguity Detection</h2>
+                
+                <p class="text-muted leading-relaxed mb-4">
+                    What if the model is 52% spam, 48% not spam? That's a coin flip, not a classification.
+                </p>
+                
+                <div class="border-l-2 border-black pl-4 py-2 mb-6 bg-gray-50">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-2">Key Insight</p>
+                    <p class="text-muted text-xs">It's not just the top choice's confidence. It's the <strong class="text-foreground">margin</strong> between top two choices.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <!-- Clear -->
+                    <div class="border border-black p-4">
+                        <p class="text-xs uppercase tracking-wider text-muted mb-3">Clear Classification</p>
+                        <div class="space-y-2 mb-3">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span>not_spam</span>
+                                    <span>95%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200">
+                                    <div class="h-full bg-black" style="width: 95%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span>spam</span>
+                                    <span>5%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200">
+                                    <div class="h-full bg-gray-400" style="width: 5%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-xs">
+                            <p><strong>Margin: 90%</strong></p>
+                            <p class="text-muted">✓ Auto-classify</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Ambiguous -->
+                    <div class="border border-gray-400 p-4">
+                        <p class="text-xs uppercase tracking-wider text-muted mb-3">Ambiguous</p>
+                        <div class="space-y-2 mb-3">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span>spam</span>
+                                    <span>52%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200">
+                                    <div class="h-full bg-gray-400" style="width: 52%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span>not_spam</span>
+                                    <span>48%</span>
+                                </div>
+                                <div class="h-2 bg-gray-200">
+                                    <div class="h-full bg-gray-400" style="width: 48%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-xs">
+                            <p><strong>Margin: 4%</strong></p>
+                            <p class="text-muted">⚠ Human review</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border border-gray-200 p-4 mb-6">
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs mb-2">
+                            <span>Flag as ambiguous if margin &lt;</span>
+                            <span id="margin-display" class="font-semibold">20%</span>
+                        </div>
+                        <input type="range" id="margin-slider" class="slider-track w-full" min="5" max="50" value="20" oninput="updateMarginDemo()">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 text-center" id="margin-examples">
+                        <div class="border border-black p-2">
+                            <p class="text-lg font-semibold">90%</p>
+                            <p class="text-xs text-muted">Clear ✓</p>
+                        </div>
+                        <div class="border border-gray-400 p-2">
+                            <p class="text-lg font-semibold">15%</p>
+                            <p class="text-xs text-muted">Ambiguous ⚠</p>
+                        </div>
+                        <div class="border border-gray-400 p-2">
+                            <p class="text-lg font-semibold">4%</p>
+                            <p class="text-xs text-muted">Coin flip ⚠</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="nextSection(4)" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors text-xs uppercase tracking-wider">
+                    Next: RAG Evaluation →
+                </button>
+            </section>
+
+            <!-- Section 4: RAG Evaluation -->
+            <section id="section-4" class="hidden" data-section="4">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Use Case: RAG Evaluation</h2>
+                
+                <p class="text-muted leading-relaxed mb-6">
+                    How do you know if RAG retrieved the <em>right</em> documents? Compare confidence with and without context.
+                </p>
+                
+                <div class="border border-black p-4 mb-4 shadow-[3px_3px_0px_#000]">
+                    <p class="text-xs text-muted mb-2">Query</p>
+                    <p class="font-semibold">"What is the company's parental leave policy?"</p>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <!-- Good Retrieval -->
+                    <div class="border border-black p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-xs px-2 py-0.5 bg-black text-white">GOOD</span>
+                            <span class="text-xs text-muted">Retrieved: HR Policy Document</span>
+                        </div>
+                        <p class="text-xs text-muted mb-3 italic">"The company offers 16 weeks paid parental leave."</p>
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div class="border border-gray-200 p-2 text-center">
+                                <p class="text-xs text-muted">WITH context</p>
+                                <p class="text-xl font-semibold">86%</p>
+                            </div>
+                            <div class="border border-gray-200 p-2 text-center">
+                                <p class="text-xs text-muted">WITHOUT</p>
+                                <p class="text-xl font-semibold text-muted">20%</p>
+                            </div>
+                        </div>
+                        <div class="text-center text-xs font-semibold">
+                            Grounding Score: +66% ✓
+                        </div>
+                    </div>
+                    
+                    <!-- Poor Retrieval -->
+                    <div class="border border-gray-400 p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-xs px-2 py-0.5 border border-gray-400 text-muted">POOR</span>
+                            <span class="text-xs text-muted">Retrieved: Office Supplies Policy</span>
+                        </div>
+                        <p class="text-xs text-muted mb-3 italic">"Standard parental leave per regulations."</p>
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div class="border border-gray-200 p-2 text-center">
+                                <p class="text-xs text-muted">WITH context</p>
+                                <p class="text-xl font-semibold text-muted">30%</p>
+                            </div>
+                            <div class="border border-gray-200 p-2 text-center">
+                                <p class="text-xs text-muted">WITHOUT</p>
+                                <p class="text-xl font-semibold text-muted">25%</p>
+                            </div>
+                        </div>
+                        <div class="text-center text-xs text-muted">
+                            Grounding Score: +5% ⚠
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border border-black p-4 mb-6 shadow-[3px_3px_0px_#000]">
+                    <p class="text-xs uppercase tracking-wider mb-2">The Pattern</p>
+                    <code class="text-xs">grounding = conf_with_context - conf_without</code>
+                    <div class="mt-3 text-xs text-muted space-y-1">
+                        <p><strong class="text-foreground">High score</strong> → Context helped (good retrieval)</p>
+                        <p><strong class="text-foreground">Low score</strong> → Wrong document or hallucinating</p>
+                        <p><strong class="text-foreground">Negative</strong> → Context confused the model</p>
+                    </div>
+                </div>
+                
+                <button onclick="nextSection(5)" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors text-xs uppercase tracking-wider">
+                    Next: Hallucinations →
+                </button>
+            </section>
+
+            <!-- Section 5: Hallucination Detection -->
+            <section id="section-5" class="hidden" data-section="5">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Use Case: Hallucination Detection</h2>
+                
+                <p class="text-muted leading-relaxed mb-4">
+                    LLMs hallucinate. But token-level logprobs often reveal the lie.
+                </p>
+                
+                <div class="border-l-2 border-black pl-4 py-2 mb-6 bg-gray-50">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-2">The Pattern</p>
+                    <p class="text-muted text-xs"><strong class="text-foreground">"Confident structure, uncertain content"</strong> — confident on "The CEO of X is" but uncertain on the actual name.</p>
+                </div>
+                
+                <div class="border border-gray-200 p-4 mb-4">
+                    <p class="text-xs text-muted mb-3">Example 1: Known entity (click tokens)</p>
+                    <div class="flex flex-wrap gap-1 mb-3" id="tokens-real">
+                        <span class="token-chip px-2 py-1 text-xs border border-gray-200 bg-gray-50" data-confidence="95">The</span>
+                        <span class="token-chip px-2 py-1 text-xs border border-gray-200 bg-gray-50" data-confidence="92">CEO</span>
+                        <span class="token-chip px-2 py-1 text-xs border border-gray-200 bg-gray-50" data-confidence="97">of</span>
+                        <span class="token-chip px-2 py-1 text-xs border border-black" data-confidence="82">Anthropic</span>
+                        <span class="token-chip px-2 py-1 text-xs border border-gray-200 bg-gray-50" data-confidence="95">is</span>
+                        <span class="token-chip px-2 py-1 text-xs border border-black" data-confidence="78">Dario</span>
+                        <span class="token-chip px-2 py-1 text-xs border border-black" data-confidence="85">Amodei</span>
+                    </div>
+                    <p class="text-xs text-muted">✓ All tokens have reasonable confidence</p>
+                </div>
+                
+                <div class="border border-gray-400 p-4 mb-4">
+                    <p class="text-xs text-muted mb-3">Example 2: Potential hallucination</p>
+                    <div class="flex flex-wrap gap-1 mb-3" id="tokens-hallucinated">
+                        <span class="token-chip px-2 py-1 text-xs border border-gray-200 bg-gray-50" data-confidence="95">The</span>
+                        <span class="token-chip px-2 py-1 text-xs border border-gray-200 bg-gray-50" data-confidence="92">CEO</span>
+                        <span class="token-chip px-2 py-1 text-xs border border-gray-200 bg-gray-50" data-confidence="97">of</span>
+                        <span class="token-chip px-2 py-1 text-xs bg-gray-200 border-2 border-gray-500" data-confidence="18">Acme</span>
+                        <span class="token-chip px-2 py-1 text-xs bg-gray-200 border-2 border-gray-500" data-confidence="22">Corp</span>
+                        <span class="token-chip px-2 py-1 text-xs border border-gray-200 bg-gray-50" data-confidence="95">is</span>
+                        <span class="token-chip px-2 py-1 text-xs bg-gray-300 border-2 border-gray-600" data-confidence="8">John</span>
+                        <span class="token-chip px-2 py-1 text-xs bg-gray-200 border-2 border-gray-500" data-confidence="15">Smith</span>
+                    </div>
+                    <p class="text-xs text-muted">⚠ Entity tokens have low confidence — likely hallucination</p>
+                </div>
+                
+                <div class="border border-gray-200 p-4 mb-6">
+                    <p class="text-xs text-muted mb-2">Token clicked:</p>
+                    <div id="token-detail" class="text-center p-3 border border-gray-200">
+                        <p class="text-muted text-xs">Click a token to see details</p>
+                    </div>
+                </div>
+                
+                <div class="border-l-2 border-gray-400 pl-4 py-2 mb-6">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-2">Detection Rule</p>
+                    <code class="text-xs">if is_entity(token) and logprob < -1.5: flag()</code>
+                </div>
+                
+                <button onclick="nextSection(6)" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors text-xs uppercase tracking-wider">
+                    Next: Agent Apps →
+                </button>
+            </section>
+
+            <!-- Section 6: Agent Applications -->
+            <section id="section-6" class="hidden" data-section="6">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Agent Applications</h2>
+                
+                <p class="text-muted leading-relaxed mb-6">
+                    In agentic systems, logprobs become critical. An agent that confidently uses the wrong tool is worse than one that asks for clarification.
+                </p>
+                
+                <!-- Tool Selection -->
+                <div class="border border-black p-4 mb-6 shadow-[3px_3px_0px_#000]">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-3">Tool Selection Confidence</p>
+                    
+                    <div class="border border-gray-200 p-2 mb-4">
+                        <p class="text-xs text-muted">User query:</p>
+                        <p class="font-semibold text-sm">"Look up the latest on Apple"</p>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center justify-between p-2 border border-gray-200">
+                            <span class="text-xs">🔍 web_search</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 h-1 bg-gray-200"><div class="h-full bg-black" style="width: 45%"></div></div>
+                                <span class="text-xs font-semibold">45%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-2 border border-gray-200">
+                            <span class="text-xs">📈 stock_price</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 h-1 bg-gray-200"><div class="h-full bg-black" style="width: 41%"></div></div>
+                                <span class="text-xs font-semibold">41%</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-2 border border-gray-200">
+                            <span class="text-xs">📖 wikipedia</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 h-1 bg-gray-200"><div class="h-full bg-black" style="width: 14%"></div></div>
+                                <span class="text-xs font-semibold">14%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-l-2 border-gray-400 pl-3 py-2 bg-gray-50">
+                        <p class="text-xs"><strong>Margin: 4%</strong> — too small</p>
+                        <p class="text-xs text-muted mt-1">Agent should ask: "Search news or check stock price?"</p>
+                    </div>
+                </div>
+                
+                <!-- Cascade Routing -->
+                <div class="border border-gray-200 p-4 mb-6">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-3">Cascade Routing: Cost Optimization</p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4 text-center">
+                        <div class="border border-gray-200 p-2">
+                            <p class="text-xs text-muted">Cheap (Flash)</p>
+                            <p class="font-semibold">$0.001</p>
+                        </div>
+                        <div class="border border-gray-200 p-2">
+                            <p class="text-xs text-muted">Expensive (Pro)</p>
+                            <p class="font-semibold">$0.03</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs mb-2">
+                            <span>Escalation threshold</span>
+                            <span id="cascade-threshold" class="font-semibold">80%</span>
+                        </div>
+                        <input type="range" id="cascade-slider" class="slider-track w-full" min="50" max="95" value="80" oninput="updateCascade()">
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div>
+                            <p class="text-lg font-semibold" id="cheap-handled">680</p>
+                            <p class="text-muted">Cheap handled</p>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold" id="escalated">320</p>
+                            <p class="text-muted">Escalated</p>
+                        </div>
+                        <div>
+                            <p class="text-lg font-semibold" id="savings">65%</p>
+                            <p class="text-muted">Savings</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Self-Correction -->
+                <div class="border border-gray-200 p-4 mb-6">
+                    <p class="text-xs uppercase tracking-wider text-muted mb-3">Self-Correction Triggers</p>
+                    <p class="text-xs text-muted mb-4">Monitor confidence. If it drops, stop and reconsider.</p>
+                    
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="w-4 text-center">1</span>
+                            <span class="flex-1">parse_request</span>
+                            <div class="w-12 h-1 bg-gray-200"><div class="h-full bg-black" style="width: 74%"></div></div>
+                            <span class="w-8 text-right">74%</span>
+                            <span>✓</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="w-4 text-center">2</span>
+                            <span class="flex-1">select_db</span>
+                            <div class="w-12 h-1 bg-gray-200"><div class="h-full bg-black" style="width: 67%"></div></div>
+                            <span class="w-8 text-right">67%</span>
+                            <span>✓</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-muted">
+                            <span class="w-4 text-center">3</span>
+                            <span class="flex-1">construct_query</span>
+                            <div class="w-12 h-1 bg-gray-200"><div class="h-full bg-gray-400" style="width: 45%"></div></div>
+                            <span class="w-8 text-right">45%</span>
+                            <span>⚠</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="w-4 text-center">4</span>
+                            <span class="flex-1">execute</span>
+                            <div class="w-12 h-1 bg-gray-200"><div class="h-full bg-black" style="width: 61%"></div></div>
+                            <span class="w-8 text-right">61%</span>
+                            <span>✓</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-muted">
+                            <span class="w-4 text-center">5</span>
+                            <span class="flex-1">format_results</span>
+                            <div class="w-12 h-1 bg-gray-200"><div class="h-full bg-gray-300" style="width: 6%"></div></div>
+                            <span class="w-8 text-right">6%</span>
+                            <span>🛑</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 border-l-2 border-gray-400 pl-3 py-2">
+                        <p class="text-xs"><strong>Aborted at step 5.</strong> Confidence too low.</p>
+                    </div>
+                </div>
+                
+                <!-- Summary -->
+                <div class="border border-black p-6 mb-8 shadow-[3px_3px_0px_#000]">
+                    <h3 class="font-serif text-base font-bold mb-4">The Meta-Pattern</h3>
+                    <p class="text-center font-serif text-lg mb-4">P(trust | evidence) ∝ e<sup>logprob</sup></p>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-xs">
+                        <div>
+                            <p class="font-semibold mb-2">When to use:</p>
+                            <ul class="text-muted space-y-1">
+                                <li>✓ Confidence filtering</li>
+                                <li>✓ Ambiguity detection</li>
+                                <li>✓ RAG evaluation</li>
+                                <li>✓ Hallucination detection</li>
+                                <li>✓ Cost optimization</li>
+                                <li>✓ Agent self-correction</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="font-semibold mb-2">The alternative:</p>
+                            <p class="text-muted">Treating all outputs as equally trustworthy.</p>
+                            <p class="mt-2 font-semibold">That's how production AI fails.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-xs text-muted mb-4">Tutorial complete.</p>
+                    <button onclick="location.reload()" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors text-xs uppercase tracking-wider">
+                        Start Over
+                    </button>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
+                <p class="font-serif text-sm text-black">Logprobs Lab (λ)</p>
+                <div class="flex gap-4">
+                    <a href="https://www.lampt.org" class="underline underline-offset-4 hover:text-black">lampt.org</a>
+                    <span>&copy; 2025</span>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 0;
+        
+        function nextSection(n) {
+            document.getElementById(`section-${currentSection}`).classList.add('hidden');
+            document.getElementById(`section-${n}`).classList.remove('hidden');
+            document.getElementById(`section-${n}`).classList.add('fade-in');
+            
+            document.querySelector(`.progress-dot[data-section="${currentSection}"]`).classList.remove('bg-black');
+            document.querySelector(`.progress-dot[data-section="${currentSection}"]`).classList.add('bg-gray-500');
+            document.querySelector(`.progress-dot[data-section="${n}"]`).classList.remove('bg-gray-300');
+            document.querySelector(`.progress-dot[data-section="${n}"]`).classList.add('bg-black');
+            
+            currentSection = n;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function checkIntroChoice(btn, choice) {
+            document.querySelectorAll('#intro-choices .choice-btn').forEach(b => {
+                b.classList.remove('selected', 'correct', 'incorrect');
+            });
+            btn.classList.add('selected');
+            btn.classList.add(choice === 'capital' ? 'correct' : 'incorrect');
+            
+            const feedback = document.getElementById('intro-feedback');
+            feedback.innerHTML = choice === 'capital' 
+                ? '<p class="text-foreground">✓ Correct. Capital is verifiable fact. Restaurant is subjective and time-sensitive.</p>'
+                : '<p class="text-muted">Not quite. Capital is factual. Restaurant is subjective and may be outdated.</p>';
+            feedback.classList.remove('hidden');
+            document.getElementById('intro-reveal').classList.remove('hidden');
+        }
+        
+        function updateProbSlider() {
+            const prob = document.getElementById('prob-slider').value / 100;
+            const logprob = Math.log(prob);
+            
+            document.getElementById('prob-display').textContent = `${Math.round(prob * 100)}%`;
+            document.getElementById('prob-value').textContent = prob.toFixed(2);
+            document.getElementById('logprob-value').textContent = logprob.toFixed(2);
+            
+            const indicator = document.getElementById('confidence-indicator');
+            const label = document.getElementById('confidence-label');
+            
+            if (prob >= 0.9) {
+                indicator.className = 'w-2 h-2 bg-black';
+                label.textContent = 'Very Confident';
+                label.className = 'text-foreground';
+            } else if (prob >= 0.7) {
+                indicator.className = 'w-2 h-2 bg-gray-600';
+                label.textContent = 'Confident';
+                label.className = 'text-muted';
+            } else if (prob >= 0.5) {
+                indicator.className = 'w-2 h-2 bg-gray-400';
+                label.textContent = 'Uncertain';
+                label.className = 'text-muted';
+            } else {
+                indicator.className = 'w-2 h-2 bg-gray-300';
+                label.textContent = 'Low Confidence';
+                label.className = 'text-muted';
+            }
+        }
+        
+        function checkLogprobQuiz(btn, answer) {
+            document.querySelectorAll('#logprob-quiz .choice-btn').forEach(b => {
+                b.classList.remove('selected', 'correct', 'incorrect');
+            });
+            btn.classList.add('selected');
+            const isCorrect = answer === '80';
+            btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+            
+            if (!isCorrect) {
+                document.querySelectorAll('#logprob-quiz .choice-btn').forEach(b => {
+                    if (b.textContent.includes('80')) b.classList.add('correct');
+                });
+            }
+            
+            const feedback = document.getElementById('logprob-quiz-feedback');
+            feedback.innerHTML = isCorrect
+                ? '<p class="text-foreground">✓ Correct. e^(-0.22) ≈ 0.80</p>'
+                : '<p class="text-muted">e^(-0.22) ≈ 0.80. Closer to 0 = more confident.</p>';
+            feedback.classList.remove('hidden');
+        }
+        
+        function updateThreshold() {
+            const threshold = parseInt(document.getElementById('threshold-slider').value);
+            document.getElementById('threshold-display').textContent = `${threshold}%`;
+            
+            let autoCount = 0, reviewCount = 0, rejectCount = 0;
+            
+            document.querySelectorAll('.response-card').forEach(card => {
+                const conf = parseInt(card.dataset.confidence);
+                const status = card.querySelector('.response-status');
+                
+                if (conf >= threshold) {
+                    status.className = 'response-status text-xs px-2 py-1 border border-black ml-2 shrink-0';
+                    status.textContent = '✓ Auto';
+                    autoCount++;
+                } else if (conf >= threshold - 30) {
+                    status.className = 'response-status text-xs px-2 py-1 border border-gray-400 text-muted ml-2 shrink-0';
+                    status.textContent = '→ Review';
+                    reviewCount++;
+                } else {
+                    status.className = 'response-status text-xs px-2 py-1 bg-gray-100 text-muted ml-2 shrink-0';
+                    status.textContent = '✗ Reject';
+                    rejectCount++;
+                }
+            });
+            
+            document.getElementById('auto-count').textContent = autoCount;
+            document.getElementById('review-count').textContent = reviewCount;
+            document.getElementById('reject-count').textContent = rejectCount;
+        }
+        
+        function updateMarginDemo() {
+            const threshold = parseInt(document.getElementById('margin-slider').value);
+            document.getElementById('margin-display').textContent = `${threshold}%`;
+            
+            const margins = [90, 15, 4];
+            const examples = document.querySelectorAll('#margin-examples > div');
+            
+            examples.forEach((ex, i) => {
+                const status = ex.querySelector('p:last-child');
+                if (margins[i] >= threshold) {
+                    ex.className = 'border border-black p-2';
+                    status.textContent = 'Clear ✓';
+                } else {
+                    ex.className = 'border border-gray-400 p-2';
+                    status.textContent = 'Ambiguous ⚠';
+                }
+            });
+        }
+        
+        function updateCascade() {
+            const threshold = parseInt(document.getElementById('cascade-slider').value);
+            document.getElementById('cascade-threshold').textContent = `${threshold}%`;
+            
+            const cheapHandled = Math.round(1000 * (1 - Math.pow(threshold / 100, 2)));
+            const escalated = 1000 - cheapHandled;
+            const totalCost = cheapHandled * 0.001 + escalated * 0.031;
+            const savings = Math.round((1 - totalCost / 30) * 100);
+            
+            document.getElementById('cheap-handled').textContent = cheapHandled;
+            document.getElementById('escalated').textContent = escalated;
+            document.getElementById('savings').textContent = `${Math.max(0, savings)}%`;
+        }
+        
+        document.querySelectorAll('.token-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                const token = this.textContent;
+                const conf = this.dataset.confidence;
+                const logprob = Math.log(conf / 100).toFixed(2);
+                const isRisky = parseInt(conf) < 30;
+                
+                document.getElementById('token-detail').innerHTML = `
+                    <p class="font-semibold">"${token}"</p>
+                    <p class="text-xs mt-1">Confidence: <strong>${conf}%</strong> | Logprob: <strong>${logprob}</strong></p>
+                    <p class="text-xs mt-1 ${isRisky ? 'text-muted' : ''}">${isRisky ? '⚠ Low confidence — potential hallucination' : '✓ Reasonable confidence'}</p>
+                `;
+            });
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            updateProbSlider();
+            updateThreshold();
+            updateMarginDemo();
+            updateCascade();
+        });
+    </script>
+</body>
+</html>
