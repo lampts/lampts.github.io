@@ -547,7 +547,7 @@
     .btn-check { background: #dcfce7; }
     .btn-call { background: #dbeafe; }
     .btn-raise { background: var(--accent); }
-    .btn-allin { background: #fee2e2; grid-column: span 2; }
+    .btn-allin { background: #fee2e2; }
     .btn-deal { background: var(--fg); color: var(--bg); grid-column: span 2; }
     .btn-deal:hover { background: #333; }
     
@@ -1505,6 +1505,7 @@
       },
       
       allIn() {
+        if (this.playerStack <= 0) return;
         this.pot += this.playerStack;
         this.playerBet += this.playerStack;
         this.playerStack = 0;
@@ -1581,39 +1582,42 @@
         const facingBet = this.currentBet > this.opponentBet;
         
         if (v.name === 'TAG') {
-          if (handRank >= HAND_RANKS.TWO_PAIR) Math.random() < 0.7 ? this.villainRaise() : this.villainBet();
-          else if (handRank >= HAND_RANKS.PAIR) {
-            if (facingBet) Math.random() < 0.5 ? this.villainCall() : this.villainFold();
-            else Math.random() < 0.6 ? this.villainBet() : this.villainCheck();
+          if (facingBet) {
+            if (handRank >= HAND_RANKS.TWO_PAIR) Math.random() < 0.7 ? this.villainRaise() : this.villainCall();
+            else if (handRank >= HAND_RANKS.PAIR) Math.random() < 0.5 ? this.villainCall() : this.villainFold();
+            else Math.random() < 0.2 ? this.villainCall() : this.villainFold();
           } else {
-            if (facingBet) Math.random() < 0.2 ? this.villainCall() : this.villainFold();
+            if (handRank >= HAND_RANKS.TWO_PAIR) this.villainBet();
+            else if (handRank >= HAND_RANKS.PAIR) Math.random() < 0.6 ? this.villainBet() : this.villainCheck();
             else Math.random() < 0.3 ? this.villainBet() : this.villainCheck();
           }
         }
         else if (v.name === 'LAG') {
-          if (handRank >= HAND_RANKS.PAIR) Math.random() < 0.8 ? this.villainRaise() : this.villainBet();
-          else {
-            if (facingBet) Math.random() < 0.4 ? this.villainRaise() : (Math.random() < 0.3 ? this.villainCall() : this.villainFold());
+          if (facingBet) {
+            if (handRank >= HAND_RANKS.PAIR) Math.random() < 0.6 ? this.villainRaise() : this.villainCall();
+            else Math.random() < 0.4 ? this.villainRaise() : (Math.random() < 0.4 ? this.villainCall() : this.villainFold());
+          } else {
+            if (handRank >= HAND_RANKS.PAIR) Math.random() < 0.8 ? this.villainBet() : this.villainCheck();
             else Math.random() < 0.6 ? this.villainBet() : this.villainCheck();
           }
         }
         else if (v.name === 'LAP') {
-          if (handRank >= HAND_RANKS.TWO_PAIR) this.villainBet();
-          else if (handRank >= HAND_RANKS.PAIR || Math.random() < 0.3) {
-            if (facingBet) this.villainCall();
-            else this.villainCheck();
+          if (facingBet) {
+            if (handRank >= HAND_RANKS.TWO_PAIR) this.villainCall();
+            else if (handRank >= HAND_RANKS.PAIR || Math.random() < 0.3) this.villainCall();
+            else Math.random() < 0.5 ? this.villainCall() : this.villainFold();
           } else {
-            if (facingBet) Math.random() < 0.5 ? this.villainCall() : this.villainFold();
+            if (handRank >= HAND_RANKS.TWO_PAIR) this.villainBet();
             else this.villainCheck();
           }
         }
         else if (v.name === 'TAP') {
-          if (handRank >= HAND_RANKS.TWO_PAIR) this.villainBet();
-          else if (handRank >= HAND_RANKS.PAIR) {
-            if (facingBet) Math.random() < 0.4 ? this.villainCall() : this.villainFold();
-            else this.villainCheck();
+          if (facingBet) {
+            if (handRank >= HAND_RANKS.TWO_PAIR) this.villainCall();
+            else if (handRank >= HAND_RANKS.PAIR) Math.random() < 0.4 ? this.villainCall() : this.villainFold();
+            else this.villainFold();
           } else {
-            if (facingBet) this.villainFold();
+            if (handRank >= HAND_RANKS.TWO_PAIR) this.villainBet();
             else this.villainCheck();
           }
         }
@@ -2055,19 +2059,32 @@
           return pattern.test(rec) ? '<span class="rec-badge">REC</span>' : '';
         };
         
-        let html = `<button class="action-btn btn-fold" onclick="game.fold()">Fold${recBadge('FOLD')}</button>`;
+        let html = '';
         
-        if (toCall === 0) html += `<button class="action-btn btn-check" onclick="game.check()">Check${recBadge('CHECK')}</button>`;
-        else if (toCall < this.playerStack) html += `<button class="action-btn btn-call" onclick="game.call()">Call ${toCall}${recBadge('CALL')}</button>`;
-        
-        if (this.playerStack > toCall) {
+        // Case 1: toCall >= playerStack (call = all-in, only 2 buttons)
+        if (toCall >= this.playerStack && this.playerStack > 0) {
+          html = `<button class="action-btn btn-fold" onclick="game.fold()">Fold${recBadge('FOLD')}</button>`;
+          html += `<button class="action-btn btn-allin" onclick="game.allIn()">Call All-In ${this.playerStack}${recBadge('CALL')}${recBadge('PUSH')}</button>`;
+        }
+        // Case 2: Normal play (4 buttons: Fold, Check/Call, Raise, All-In)
+        else {
+          // Row 1: Fold | Check/Call
+          html = `<button class="action-btn btn-fold" onclick="game.fold()">Fold${recBadge('FOLD')}</button>`;
+          
+          if (toCall === 0) {
+            html += `<button class="action-btn btn-check" onclick="game.check()">Check${recBadge('CHECK')}</button>`;
+          } else {
+            html += `<button class="action-btn btn-call" onclick="game.call()">Call ${toCall}${recBadge('CALL')}</button>`;
+          }
+          
+          // Row 2: Raise | All-In
           const potRaise = this.pot + toCall * 2;
           const raiseAmt = Math.min(potRaise, this.playerStack + this.playerBet);
           const raiseRec = recBadge('RAISE') || recBadge('BET') || recBadge('BLUFF');
           html += `<button class="action-btn btn-raise" onclick="game.raise(${raiseAmt})">Raise ${raiseAmt}${raiseRec}</button>`;
+          html += `<button class="action-btn btn-allin" onclick="game.allIn()">All-In ${this.playerStack}${recBadge('PUSH')}</button>`;
         }
         
-        html += `<button class="action-btn btn-allin" onclick="game.allIn()">All-In ${this.playerStack}${recBadge('PUSH')}</button>`;
         actionsEl.innerHTML = html;
       }
     };
