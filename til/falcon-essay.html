@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hunting with Falcon, Working with Agents</title>
+    <meta name="description" content="The state of agentic AI is like hunting with a falcon.">
+    <meta name="author" content="Pham Thanh Lam">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>🦅</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .content-en, .content-vi { display: none; }
+        .content-en.active, .content-vi.active { display: block; }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white">
+
+    <div class="p-4 md:p-12 overflow-hidden min-h-screen">
+        <div class="w-full max-w-xl mx-auto">
+            
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <a class="text-xl font-serif font-medium tracking-tight flex items-center gap-2" href="https://www.lampt.org">
+                    <span>← lampt.org</span>
+                </a>
+                <div class="flex gap-2 text-xs uppercase tracking-wider">
+                    <button id="btn-en" onclick="setLang('en')" class="px-3 py-1 border border-black bg-black text-white transition-colors">English</button>
+                    <button id="btn-vi" onclick="setLang('vi')" class="px-3 py-1 border border-black hover:bg-black hover:text-white transition-colors">Tiếng Việt</button>
+                </div>
+            </header>
+
+            <div class="mt-8 mb-8">
+                <div class="border border-black p-1 shadow-[3px_3px_0px_#000] mb-8">
+                    <img src="coverart.png" alt="Falconer with AI" class="w-full object-cover">
+                </div>
+
+                <h1 class="font-serif text-2xl md:text-3xl font-bold mb-2 content-en active">Hunting with Falcon, Working with Agents</h1>
+                <h1 class="font-serif text-2xl md:text-3xl font-bold mb-2 content-vi">Săn Mồi Cùng Chim Ưng, Làm Việc Cùng AI Agent</h1>
+                
+                <p class="text-xs text-muted mb-8">January 2025 · Pham Thanh Lam</p>
+            </div>
+
+            <article class="content-en active">
+                <div class="flex flex-col gap-6 leading-relaxed text-muted">
+                    <p>
+                        In UAE, master falconers earn millions. They spend months building trust with a bird that could fly away forever. Two GPS trackers on every falcon—not because the bird is malicious, but because it follows instinct, not intent.
+                    </p>
+                    <p class="text-foreground font-medium">
+                        Sound familiar?
+                    </p>
+                    <p>
+                        You have a tool of terrifying capability. 300km/h dives. Genius-level pattern matching. Also: easily fooled by decoys, attacks wrong targets, zero clue why you want what you want. We spent billions building this. Now we babysit it like a very expensive bird.
+                    </p>
+                    <p>
+                        Here's what falconers figured out centuries ago: you don't say "go hunt." You choose terrain. Read wind. Pick target type. Time the release. This is context engineering—just with feathers.
+                    </p>
+                    <p>
+                        And you never reward mid-flight. The falcon returns. You check: Right prey? Actually caught? Not someone's pet? Only then: reward. RLVR works the same way. Math has right answers. Code runs or crashes. Verifiable.
+                    </p>
+                    <p class="text-foreground font-medium">
+                        After the hunt, falcon rests. Eats. Recovers. Your GPU doesn't rest. Maybe it should?
+                    </p>
+                    <p>
+                        The falcon doesn't hunt <em>for</em> you. It hunts <em>with</em> you. You bring judgment it'll never have. It brings speed you'll never have. Current AI agents are falcons, not dogs. Dogs understand intent. Falcons follow training.
+                    </p>
+                    <p class="border-l-2 border-black pl-4 text-foreground">
+                        The best falconers aren't those with fastest birds. They're those who know when to release, when to recall—and honest enough to check if the catch was actually what they asked for.
+                    </p>
+                </div>
+            </article>
+
+            <article class="content-vi">
+                <div class="flex flex-col gap-6 leading-relaxed text-muted">
+                    <p>
+                        Ở UAE, ưng thủ bậc thầy kiếm hàng triệu đô. Họ mất nhiều tháng xây dựng niềm tin với một con chim có thể bay đi mãi mãi. Hai thiết bị GPS trên mỗi con ưng—không phải vì chim có ác ý, mà vì nó theo bản năng, không theo ý định.
+                    </p>
+                    <p class="text-foreground font-medium">
+                        Nghe quen không?
+                    </p>
+                    <p>
+                        Bạn có công cụ với khả năng đáng sợ. Bổ nhào 300km/h. Nhận diện mẫu cấp thiên tài. Nhưng cũng: dễ bị lừa bởi mồi giả, tấn công nhầm mục tiêu, không hiểu tại sao bạn muốn điều bạn muốn. Chúng ta đốt hàng tỷ đô để xây thứ này. Giờ phải trông nó như trông một con chim rất đắt tiền.
+                    </p>
+                    <p>
+                        Đây là điều ưng thủ đã hiểu từ nhiều thế kỷ trước: không ai nói "đi săn đi." Chọn địa hình. Đọc gió. Xác định loại mồi. Tính thời điểm thả. Đây là context engineering—chỉ có thêm lông vũ.
+                    </p>
+                    <p>
+                        Và không bao giờ thưởng giữa chừng. Chim về. Kiểm tra: Đúng con mồi? Thực sự bắt được? Không phải thú cưng nhà ai? Chỉ khi đó: thưởng. RLVR hoạt động y vậy. Toán có đáp án đúng. Code chạy hoặc crash. Kiểm chứng được.
+                    </p>
+                    <p class="text-foreground font-medium">
+                        Sau cuộc săn, chim nghỉ. Ăn. Phục hồi. GPU của bạn không nghỉ. Có lẽ nên?
+                    </p>
+                    <p>
+                        Chim ưng không săn <em>thay</em> bạn. Nó săn <em>cùng</em> bạn. Bạn mang phán đoán nó không bao giờ có. Nó mang tốc độ bạn không bao giờ có. AI agent hiện tại là chim ưng, không phải chó. Chó hiểu ý chủ. Chim ưng theo huấn luyện.
+                    </p>
+                    <p class="border-l-2 border-black pl-4 text-foreground">
+                        Ưng thủ giỏi nhất không phải người có chim nhanh nhất. Mà là người biết khi nào thả, khi nào gọi về—và đủ thành thật để kiểm tra xem thành quả có đúng thứ mình yêu cầu không.
+                    </p>
+                </div>
+            </article>
+
+            <div class="mt-12 pt-6 border-t border-gray-200">
+                <h2 class="font-serif text-lg font-bold mb-4">References</h2>
+                <div class="flex flex-col gap-2 text-xs text-muted">
+                    <a href="https://karpathy.bearblog.dev/year-in-review-2025/" target="_blank" class="underline underline-offset-4 hover:text-foreground">Andrej Karpathy — LLMs in 2025</a>
+                    <a href="https://simonwillison.net/2024/Dec/31/llms-in-2024/" target="_blank" class="underline underline-offset-4 hover:text-foreground">Simon Willison — LLMs in 2024</a>
+                </div>
+            </div>
+
+            <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
+                <p class="font-serif text-sm text-black">Pham Thanh Lam (λ)</p>
+                <div class="flex gap-4">
+                    <span>© 2025</span>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        function setLang(lang) {
+            document.querySelectorAll('.content-en, .content-vi').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.content-' + lang).forEach(el => el.classList.add('active'));
+            
+            document.getElementById('btn-en').classList.remove('bg-black', 'text-white');
+            document.getElementById('btn-vi').classList.remove('bg-black', 'text-white');
+            document.getElementById('btn-' + lang).classList.add('bg-black', 'text-white');
+            
+            document.documentElement.lang = lang === 'vi' ? 'vi' : 'en';
+        }
+    </script>
+</body>
+</html>
