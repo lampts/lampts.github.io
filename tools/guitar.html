@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar Lead Trainer (λ)</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎸</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'IBM Plex Mono', monospace; }
+        .brutalist-card { 
+            border: 1px solid #000; 
+            box-shadow: 3px 3px 0px #000; 
+            transition: all 0.1s ease;
+        }
+        .brutalist-card:hover { box-shadow: 5px 5px 0px #000; }
+        .brutalist-btn {
+            border: 1px solid #000;
+            padding: 4px 12px;
+            font-size: 12px;
+            transition: all 0.1s;
+        }
+        .brutalist-btn:hover { background: #000; color: #fff; }
+        .btn-active { background: #000; color: #fff; }
+        
+        input[type=range] { -webkit-appearance: none; background: transparent; cursor: pointer; }
+        input[type=range]::-webkit-slider-runnable-track { border: 1px solid #000; height: 8px; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px; width: 8px;
+            background: #000;
+            margin-top: -5px;
+        }
+        #waveform ::part(region) { background-color: rgba(0, 0, 0, 0.05) !important; border: 1px dashed #000 !important; }
+    </style>
+</head>
+<body class="bg-background text-foreground text-sm antialiased p-4 md:p-12">
+    <div class="max-w-xl mx-auto">
+        <header class="mb-12 border-b border-black pb-4">
+            <h1 class="text-3xl font-serif font-medium tracking-tight">Guitar Lead Trainer (λ)</h1>
+            <p class="text-xs text-muted uppercase tracking-widest mt-2">Digital Signal Processing & Practice Tool</p>
+        </header>
+
+        <div id="dropZone" class="brutalist-card p-12 text-center cursor-pointer mb-8">
+            <div class="text-xs uppercase tracking-wider mb-2 font-bold">Input Source Required</div>
+            <p class="text-muted text-xs">Drop .mp3 / .wav file to initialize buffers</p>
+            <input type="file" id="fileInput" class="hidden" accept="audio/*">
+        </div>
+
+        <div id="playerUI" class="hidden space-y-8">
+            <div class="brutalist-card p-2 bg-white">
+                <div id="waveform"></div>
+                <div class="flex justify-between text-[10px] uppercase font-bold mt-2 px-1">
+                    <span id="curTime">00:00</span>
+                    <span id="durTime">00:00</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6">
+                <section>
+                    <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-1">01. Physics</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-[10px] font-bold uppercase mb-1">Speed: <span id="speedDisplay">100%</span></div>
+                                <input type="range" id="speedSlider" min="0.5" max="1.5" step="0.05" value="1" class="w-full">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-[10px] font-bold uppercase mb-1">Pitch: <span id="pitchDisplay">0</span> ST</div>
+                                <input type="range" id="pitchSlider" min="-12" max="12" step="1" value="0" class="w-full">
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-center justify-center brutalist-card bg-gray-50 p-4">
+                            <button id="playBtn" class="text-2xl hover:scale-110 transition-transform">▶</button>
+                            <span class="text-[9px] uppercase mt-2 font-bold">Transport</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-1">02. Temporal Loop</h2>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button id="setA" class="brutalist-btn uppercase font-bold">Mark A</button>
+                        <button id="setB" class="brutalist-btn uppercase font-bold">Mark B</button>
+                        <button id="clearLoop" class="brutalist-btn uppercase font-bold text-muted border-gray-300">Reset</button>
+                    </div>
+                </section>
+
+                <section>
+                    <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-1">03. Metronome Logic</h2>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1 brutalist-card p-3 flex items-center justify-between">
+                            <input type="number" id="bpmInput" value="120" class="w-16 bg-transparent outline-none font-bold text-lg">
+                            <span class="text-[10px] uppercase font-bold text-muted">BPM</span>
+                        </div>
+                        <button id="tapBtn" class="brutalist-btn h-full px-6 font-bold">TAP</button>
+                        <button id="metroToggle" class="brutalist-btn h-full px-4 font-bold">OFF</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted uppercase tracking-widest">
+            <p class="font-serif text-sm text-black lowercase tracking-normal">guitar_trainer.sh</p>
+            <span>&copy; 2026</span>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/wavesurfer.js@7"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
+    <script>
+        class GuitarTrainer {
+            constructor() {
+                this.ws = null;
+                this.pitchShift = null;
+                this.metroSynth = null;
+                this.isMetroOn = false;
+                this.currentBPM = 120;
+                this.currentSpeed = 1;
+                this.tapTimes = [];
+                this.lastTap = 0;
+
+                this.initDOM();
+                this.initEventListeners();
+            }
+
+            initDOM() {
+                this.dom = {
+                    dropZone: document.getElementById('dropZone'),
+                    fileInput: document.getElementById('fileInput'),
+                    playerUI: document.getElementById('playerUI'),
+                    playBtn: document.getElementById('playBtn'),
+                    speedSlider: document.getElementById('speedSlider'),
+                    pitchSlider: document.getElementById('pitchSlider'),
+                    speedDisplay: document.getElementById('speedDisplay'),
+                    pitchDisplay: document.getElementById('pitchDisplay'),
+                    bpmInput: document.getElementById('bpmInput'),
+                    tapBtn: document.getElementById('tapBtn'),
+                    metroToggle: document.getElementById('metroToggle'),
+                    curTime: document.getElementById('curTime'),
+                    durTime: document.getElementById('durTime')
+                };
+            }
+
+            initEventListeners() {
+                this.dom.dropZone.onclick = () => this.dom.fileInput.click();
+                this.dom.fileInput.onchange = (e) => this.handleFile(e.target.files[0]);
+                this.dom.playBtn.onclick = () => this.togglePlay();
+                this.dom.speedSlider.oninput = (e) => this.updateSpeed(e.target.value);
+                this.dom.pitchSlider.oninput = (e) => this.updatePitch(e.target.value);
+                this.dom.bpmInput.onchange = (e) => this.updateBPM(e.target.value);
+                this.dom.metroToggle.onclick = () => this.toggleMetronome();
+                this.dom.tapBtn.onclick = () => this.handleTap();
+
+                document.getElementById('setA').onclick = () => this.setLoopPoint('start');
+                document.getElementById('setB').onclick = () => this.setLoopPoint('end');
+                document.getElementById('clearLoop').onclick = () => this.regions.clearRegions();
+
+                window.onkeydown = (e) => {
+                    if (!this.ws) return;
+                    if (e.code === 'Space') { e.preventDefault(); this.togglePlay(); }
+                };
+            }
+
+            async initAudioEngine(file) {
+                this.ws = WaveSurfer.create({
+                    container: '#waveform',
+                    waveColor: '#cccccc',
+                    progressColor: '#000000',
+                    cursorColor: '#000000',
+                    height: 80,
+                    barWidth: 1,
+                    normalize: true
+                });
+
+                this.regions = this.ws.registerPlugin(WaveSurfer.Regions.create());
+                await Tone.start();
+
+                this.pitchShift = new Tone.PitchShift(0).toDestination();
+                this.metroSynth = new Tone.MembraneSynth({
+                    pitchDecay: 0.02,
+                    envelope: { attack: 0.001, decay: 0.1, sustain: 0 }
+                }).toDestination();
+
+                this.ws.on('ready', () => {
+                    const source = Tone.context.createMediaElementSource(this.ws.getMediaElement());
+                    Tone.connect(source, this.pitchShift);
+                    this.dom.durTime.innerText = this.formatTime(this.ws.getDuration());
+                    this.updateBPM(this.dom.bpmInput.value);
+                    this.dom.playerUI.classList.remove('hidden');
+                    this.dom.dropZone.classList.add('hidden');
+                });
+
+                this.ws.on('play', () => {
+                    this.dom.playBtn.innerText = '⏸';
+                    if(this.isMetroOn) Tone.Transport.start();
+                });
+
+                this.ws.on('pause', () => {
+                    this.dom.playBtn.innerText = '▶';
+                    Tone.Transport.pause();
+                });
+
+                this.ws.on('audioprocess', (t) => this.dom.curTime.innerText = this.formatTime(t));
+                this.regions.on('region-out', (reg) => this.ws.setTime(reg.start));
+                this.ws.loadBlob(file);
+            }
+
+            handleTap() {
+                const now = Date.now();
+                if (now - this.lastTap > 2000) this.tapTimes = [];
+                this.tapTimes.push(now);
+                this.lastTap = now;
+                if (this.tapTimes.length > 1) {
+                    const intervals = this.tapTimes.slice(-4).map((t, i, arr) => i > 0 ? t - arr[i-1] : null).filter(t => t);
+                    const avg = intervals.reduce((a, b) => a + b) / intervals.length;
+                    const bpm = Math.round(60000 / avg);
+                    this.dom.bpmInput.value = bpm;
+                    this.updateBPM(bpm);
+                }
+            }
+
+            updateSpeed(val) {
+                this.currentSpeed = parseFloat(val);
+                this.ws.setPlaybackRate(this.currentSpeed);
+                this.dom.speedDisplay.innerText = Math.round(this.currentSpeed * 100) + '%';
+                this.syncTransport();
+            }
+
+            updateBPM(val) {
+                this.currentBPM = parseFloat(val);
+                this.syncTransport();
+            }
+
+            syncTransport() {
+                Tone.Transport.bpm.value = this.currentBPM * this.currentSpeed;
+                Tone.Transport.cancel();
+                Tone.Transport.scheduleRepeat((time) => {
+                    this.metroSynth.triggerAttackRelease("C4", "32n", time, 0.3);
+                }, "4n");
+            }
+
+            toggleMetronome() {
+                this.isMetroOn = !this.isMetroOn;
+                this.dom.metroToggle.innerText = this.isMetroOn ? "ON" : "OFF";
+                this.dom.metroToggle.classList.toggle('btn-active', this.isMetroOn);
+                if (this.isMetroOn && this.ws.isPlaying()) Tone.Transport.start();
+                else Tone.Transport.stop();
+            }
+
+            handleFile(file) { if (file) this.initAudioEngine(file); }
+            togglePlay() { this.ws.isPlaying() ? this.ws.pause() : this.ws.play(); }
+            updatePitch(val) { if (this.pitchShift) { this.pitchShift.pitch = parseFloat(val); this.dom.pitchDisplay.innerText = val; } }
+            formatTime(s) { return new Date(s * 1000).toISOString().substr(14, 5); }
+            setLoopPoint(type) {
+                const cur = this.ws.getCurrentTime();
+                let reg = this.regions.getRegions()[0];
+                if (!reg) reg = this.regions.addRegion({ start: cur, end: cur + 4 });
+                else reg.update({ [type]: cur });
+            }
+        }
+
+        new GuitarTrainer();
+    </script>
+</body>
+</html>
