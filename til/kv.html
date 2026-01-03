@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KV Caching: Why Cached Tokens Are 10x Cheaper</title>
+    <meta name="description" content="Interactive tutorial on KV caching in LLMs">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .section { display: none; }
+        .section.active { display: block; }
+        
+        .option { transition: all 0.2s; }
+        .option:hover { box-shadow: 5px 5px 0px #000; }
+        .option.correct { background-color: #d1fae5; border-color: #000; }
+        .option.incorrect { background-color: #fee2e2; border-color: #000; }
+        
+        .feedback { display: none; }
+        .feedback.show { display: block; }
+        
+        .matrix-cell { transition: all 0.3s; }
+        .matrix-cell.computed { background-color: #FBD45B; border-color: #000; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .token.new-token { background-color: #FBD45B; animation: pulse 1s infinite; }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white">
+
+    <div class="p-4 md:p-12 overflow-hidden min-h-screen">
+        <div class="w-full max-w-xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <a class="text-2xl font-serif font-bold tracking-tight" href="/">KV Caching</a>
+                <div class="flex gap-4 text-xs uppercase tracking-wider">
+                    <span class="text-muted">Interactive Tutorial</span>
+                </div>
+            </header>
+            
+            <!-- Progress -->
+            <div class="mb-8">
+                <div class="flex justify-between text-xs text-muted mb-2">
+                    <span>Progress</span>
+                    <span id="progress-text">1 / 9</span>
+                </div>
+                <div class="w-full h-1 bg-gray-200 border border-black">
+                    <div class="h-full bg-black transition-all duration-300" id="progress-bar" style="width: 11%"></div>
+                </div>
+            </div>
+
+            <!-- Section 1: Hook -->
+            <div class="section active" id="section1">
+                <div class="border border-black p-6 shadow-[3px_3px_0px_#000] mb-6">
+                    <p class="text-muted leading-relaxed italic mb-4">
+                        Late nights fueled by code,<br>
+                        A technical ballet unfolds,<br>
+                        Heart and work in one ode.
+                    </p>
+                    
+                    <div class="border-t border-gray-200 pt-4 mt-4">
+                        <p class="text-xs font-semibold mb-3">Do you think this haiku was written by a human or a language model?</p>
+                        <div class="flex flex-col gap-2">
+                            <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, true, 'q1')">Human</button>
+                            <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, true, 'q1')">Language Model</button>
+                        </div>
+                        <div class="feedback border-l-4 border-black bg-gray-50 p-3 mt-4 text-xs" id="q1-feedback">
+                            <p class="font-semibold">That's right.</p>
+                            <p class="text-muted mt-1">It could be either! But here's the real question: when an LLM generates this response, <span class="font-semibold text-foreground">why do cached tokens cost 10x less?</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="text-xs text-muted leading-relaxed mb-6">
+                    As of 2024, both OpenAI and Anthropic charge <span class="font-semibold text-foreground">10x less</span> for cached input tokens. Anthropic claims caching can reduce latency by up to 85%.
+                </p>
+                
+                <p class="text-xs text-muted leading-relaxed mb-6">But what exactly gets cached? Let's find out.</p>
+                
+                <button class="border border-black px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_#000]" onclick="nextSection(2)">Continue →</button>
+            </div>
+
+            <!-- Section 2: How LLMs Generate Text -->
+            <div class="section" id="section2">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">How LLMs Generate Text</h2>
+                
+                <p class="text-xs text-muted leading-relaxed mb-4">LLMs predict the next word in a sequence. Try it yourself:</p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-6">
+                    <div class="text-xs text-muted uppercase tracking-wider mb-2">Prompt</div>
+                    <div class="font-mono text-sm mb-4">
+                        Mary had a little <span id="generated-word" class="bg-accent px-1 border border-black">___</span>
+                    </div>
+                    <button class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors" onclick="generateWord()">Generate</button>
+                </div>
+                
+                <div class="border border-black p-4 mb-6">
+                    <p class="text-xs font-semibold mb-3">How many times does the LLM need to run to generate "lamb"?</p>
+                    <div class="flex flex-col gap-2">
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, true, 'q2')">Once — it produces one token at a time</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, false, 'q2')">It runs once and outputs everything</button>
+                    </div>
+                    <div class="feedback border-l-4 border-black bg-gray-50 p-3 mt-4 text-xs" id="q2-feedback-correct">
+                        <p class="font-semibold">Exactly!</p>
+                        <p class="text-muted mt-1">LLMs are <span class="font-semibold text-foreground">autoregressive</span> — they generate one token, append it to the input, and run again.</p>
+                    </div>
+                    <div class="feedback border-l-4 border-red-400 bg-red-50 p-3 mt-4 text-xs" id="q2-feedback-incorrect">
+                        <p class="font-semibold">Not quite.</p>
+                        <p class="text-muted mt-1">LLMs generate <strong>one token at a time</strong>, then use that output as input for the next token.</p>
+                    </div>
+                </div>
+                
+                <button class="border border-black px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_#000]" onclick="nextSection(3)">Continue →</button>
+            </div>
+
+            <!-- Section 3: The Attention Problem -->
+            <div class="section" id="section3">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">The Expensive Part: Attention</h2>
+                
+                <p class="text-xs text-muted leading-relaxed mb-4">
+                    Inside the LLM, the <span class="font-semibold text-foreground">attention mechanism</span> determines how much each token should influence the next prediction.
+                </p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-6">
+                    <div class="text-xs text-muted uppercase tracking-wider mb-4">Attention Weights</div>
+                    
+                    <div class="overflow-x-auto">
+                        <div class="inline-block">
+                            <!-- Column headers aligned with matrix -->
+                            <div class="flex">
+                                <div class="w-14 shrink-0"></div>
+                                <div class="flex">
+                                    <div class="w-14 text-center text-[10px] pb-1 border border-transparent">Mary</div>
+                                    <div class="w-14 text-center text-[10px] pb-1 border border-transparent">had</div>
+                                    <div class="w-14 text-center text-[10px] pb-1 border border-transparent">a</div>
+                                    <div class="w-14 text-center text-[10px] pb-1 border border-transparent">little</div>
+                                    <div class="w-14 text-center text-[10px] pb-1 border border-black bg-accent">?</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Matrix rows -->
+                            <div class="flex items-center" id="row-0">
+                                <div class="w-14 shrink-0 text-[10px] text-right pr-2 font-medium">Mary</div>
+                                <div class="flex">
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-0-0"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-0-1"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-0-2"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-0-3"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-0-4"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center" id="row-1">
+                                <div class="w-14 shrink-0 text-[10px] text-right pr-2 font-medium">had</div>
+                                <div class="flex">
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-1-0"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-1-1"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-1-2"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-1-3"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-1-4"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center" id="row-2">
+                                <div class="w-14 shrink-0 text-[10px] text-right pr-2 font-medium">a</div>
+                                <div class="flex">
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-2-0"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-2-1"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-2-2"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-2-3"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-2-4"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center" id="row-3">
+                                <div class="w-14 shrink-0 text-[10px] text-right pr-2 font-medium">little</div>
+                                <div class="flex">
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-3-0"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-3-1"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-3-2"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-3-3"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-3-4"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center" id="row-4">
+                                <div class="w-14 shrink-0 text-[10px] text-right pr-2 font-medium bg-accent border-l border-y border-black">?</div>
+                                <div class="flex">
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-4-0"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-4-1"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-4-2"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-4-3"></div>
+                                    <div class="matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono" id="cell-4-4"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-center gap-6 text-xs text-muted mt-4 mb-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-accent border border-black"></div>
+                            <span>Computed</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-gray-100 border border-gray-300"></div>
+                            <span>Masked (future)</span>
+                        </div>
+                    </div>
+                    
+                    <button class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors" onclick="animateAttention()">Show Attention Computation</button>
+                </div>
+                
+                <div class="border border-black p-4 mb-6">
+                    <p class="text-xs font-semibold mb-3">To predict the next word after "little", how many attention scores must we compute?</p>
+                    <div class="flex flex-col gap-2">
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, false, 'q3')">4 (one per input word)</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, true, 'q3')">16 (4×4 matrix)</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, false, 'q3')">1 (just the last word)</button>
+                    </div>
+                    <div class="feedback border-l-4 border-black bg-gray-50 p-3 mt-4 text-xs" id="q3-feedback-correct">
+                        <p class="font-semibold">That's right!</p>
+                        <p class="text-muted mt-1">Standard attention computes an <span class="font-semibold text-foreground">L × L matrix</span>. This is computed <strong>every single time</strong> we generate a token!</p>
+                    </div>
+                    <div class="feedback border-l-4 border-red-400 bg-red-50 p-3 mt-4 text-xs" id="q3-feedback-incorrect">
+                        <p class="font-semibold">Not quite.</p>
+                        <p class="text-muted mt-1">Standard attention computes scores for <strong>every pair of tokens</strong> — that's L × L scores!</p>
+                    </div>
+                </div>
+                
+                <button class="border border-black px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_#000]" onclick="nextSection(4)">Continue →</button>
+            </div>
+
+            <!-- Section 4: Q, K, V Explained -->
+            <div class="section" id="section4">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Inside Attention: Q, K, V</h2>
+                
+                <p class="text-xs text-muted leading-relaxed mb-4">Attention uses three matrices derived from your input:</p>
+                
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="border border-black p-3 text-center shadow-[3px_3px_0px_#000]">
+                        <div class="font-serif text-2xl font-bold">Q</div>
+                        <div class="text-xs text-muted mt-1">Query</div>
+                        <div class="text-[10px] text-muted">"What am I looking for?"</div>
+                    </div>
+                    <div class="border border-black p-3 text-center shadow-[3px_3px_0px_#000]">
+                        <div class="font-serif text-2xl font-bold">K</div>
+                        <div class="text-xs text-muted mt-1">Key</div>
+                        <div class="text-[10px] text-muted">"What do I contain?"</div>
+                    </div>
+                    <div class="border border-black p-3 text-center shadow-[3px_3px_0px_#000]">
+                        <div class="font-serif text-2xl font-bold">V</div>
+                        <div class="text-xs text-muted mt-1">Value</div>
+                        <div class="text-[10px] text-muted">"What info do I carry?"</div>
+                    </div>
+                </div>
+                
+                <div class="border border-black p-4 bg-gray-50 mb-6 font-mono text-xs">
+                    <div class="text-muted"># For each token, compute Q, K, V</div>
+                    <div>Q = embeddings @ W_Q</div>
+                    <div>K = embeddings @ W_K</div>
+                    <div>V = embeddings @ W_V</div>
+                    <div class="mt-2 text-muted"># Attention scores</div>
+                    <div>scores = Q @ K.T</div>
+                    <div>output = softmax(scores) @ V</div>
+                </div>
+                
+                <div class="border border-black p-4 mb-6">
+                    <p class="text-xs font-semibold mb-3">When we add a NEW token to the sequence, which matrices change?</p>
+                    <div class="flex flex-col gap-2">
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, false, 'q4')">All of Q, K, V completely change</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, true, 'q4')">Q, K, V each get ONE new row</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, false, 'q4')">Only Q changes</button>
+                    </div>
+                    <div class="feedback border-l-4 border-black bg-gray-50 p-3 mt-4 text-xs" id="q4-feedback-correct">
+                        <p class="font-semibold">Exactly!</p>
+                        <p class="text-muted mt-1">The old rows <span class="font-semibold text-foreground">don't change!</span> K and V for "Mary" stay the same. This is the key insight.</p>
+                    </div>
+                    <div class="feedback border-l-4 border-red-400 bg-red-50 p-3 mt-4 text-xs" id="q4-feedback-incorrect">
+                        <p class="font-semibold">Think about it:</p>
+                        <p class="text-muted mt-1">K = embeddings @ W_K. If old embeddings don't change, their K values don't either!</p>
+                    </div>
+                </div>
+                
+                <button class="border border-black px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_#000]" onclick="nextSection(5)">Continue →</button>
+            </div>
+
+            <!-- Section 5: KV Cache Visualization -->
+            <div class="section" id="section5">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">The KV Cache</h2>
+                
+                <p class="text-xs text-muted leading-relaxed mb-4">Since K and V for old tokens <span class="font-semibold text-foreground">never change</span>, we can cache them!</p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-6">
+                    <div class="text-xs text-muted uppercase tracking-wider mb-3">Token Generation with Cache</div>
+                    
+                    <div class="flex flex-wrap gap-2 mb-4" id="cache-tokens">
+                        <span class="border border-black px-2 py-1 text-xs">Mary</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="border border-green-600 bg-green-50 p-3">
+                            <div class="text-xs font-semibold text-green-800 mb-2">K Cache</div>
+                            <div class="flex flex-col gap-1" id="k-cache">
+                                <div class="text-xs font-mono bg-white border border-green-600 px-2 py-1">K[Mary]</div>
+                            </div>
+                        </div>
+                        <div class="border border-green-600 bg-green-50 p-3">
+                            <div class="text-xs font-semibold text-green-800 mb-2">V Cache</div>
+                            <div class="flex flex-col gap-1" id="v-cache">
+                                <div class="text-xs font-mono bg-white border border-green-600 px-2 py-1">V[Mary]</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="border border-black p-3 text-center">
+                            <div class="font-serif text-xl font-bold" id="cache-size">1</div>
+                            <div class="text-xs text-muted">Cache entries</div>
+                        </div>
+                        <div class="border border-black p-3 text-center">
+                            <div class="font-serif text-xl font-bold" id="compute-saved">0%</div>
+                            <div class="text-xs text-muted">Compute saved</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors" onclick="addTokenToCache()">Add Next Token</button>
+                        <button class="border border-black px-3 py-1 text-xs hover:bg-gray-100 transition-colors" onclick="resetCache()">Reset</button>
+                    </div>
+                </div>
+                
+                <div class="border-l-4 border-accent bg-yellow-50 p-4 mb-6">
+                    <p class="text-xs font-semibold">💡 Key Insight</p>
+                    <p class="text-xs text-muted mt-1">With KV caching, we only compute K and V for the <strong>new token</strong>, then append to the cache.</p>
+                </div>
+                
+                <button class="border border-black px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_#000]" onclick="nextSection(6)">Continue →</button>
+            </div>
+
+            <!-- Section 6: Compute Savings -->
+            <div class="section" id="section6">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">The Math: Why 10x Cheaper</h2>
+                
+                <p class="text-xs text-muted leading-relaxed mb-4">Let's compare compute costs. Adjust sequence length:</p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs text-muted uppercase tracking-wider">Sequence Length</span>
+                        <span class="font-mono text-sm border border-black px-2 py-1" id="seq-value">1000</span>
+                    </div>
+                    
+                    <input type="range" class="w-full mb-4 accent-black" id="seq-slider" min="100" max="10000" value="1000" oninput="updateComputeStats()">
+                    
+                    <table class="w-full text-xs mb-4">
+                        <thead>
+                            <tr class="border-b border-black">
+                                <th class="text-left py-2"></th>
+                                <th class="text-left py-2">Without Cache</th>
+                                <th class="text-left py-2">With KV Cache</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-200">
+                                <td class="py-2 text-muted">FLOPs per token</td>
+                                <td class="py-2 font-mono" id="flops-no-cache">8.2B</td>
+                                <td class="py-2 font-mono" id="flops-cache">8.2M</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 text-muted">Growth Rate</td>
+                                <td class="py-2 font-mono">O(L²)</td>
+                                <td class="py-2 font-mono">O(L)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="border border-black p-4 text-center bg-accent">
+                        <div class="font-serif text-2xl font-bold" id="savings-ratio">1000x</div>
+                        <div class="text-xs">Compute Savings</div>
+                    </div>
+                </div>
+                
+                <div class="border border-black p-4 mb-6">
+                    <p class="text-xs font-semibold mb-3">Why do providers charge ~10x less (not 1000x less)?</p>
+                    <div class="flex flex-col gap-2">
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, true, 'q5')">Cache storage has costs; attention isn't the only operation</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkAnswer(this, false, 'q5')">They're being greedy</button>
+                    </div>
+                    <div class="feedback border-l-4 border-black bg-gray-50 p-3 mt-4 text-xs" id="q5-feedback-correct">
+                        <p class="font-semibold">Exactly!</p>
+                        <p class="text-muted mt-1">KV cache requires <span class="font-semibold text-foreground">memory</span> (10+ GB for long contexts). 10x is the practical savings.</p>
+                    </div>
+                    <div class="feedback border-l-4 border-red-400 bg-red-50 p-3 mt-4 text-xs" id="q5-feedback-incorrect">
+                        <p class="font-semibold">Not quite.</p>
+                        <p class="text-muted mt-1">Memory costs and other operations affect pricing.</p>
+                    </div>
+                </div>
+                
+                <button class="border border-black px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_#000]" onclick="nextSection(7)">Continue →</button>
+            </div>
+
+            <!-- Section 7: Cross-Request Caching -->
+            <div class="section" id="section7">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Prompt Caching Across Requests</h2>
+                
+                <p class="text-xs text-muted leading-relaxed mb-4">Providers also cache <span class="font-semibold text-foreground">across requests</span>!</p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-6">
+                    <div class="text-xs text-muted uppercase tracking-wider mb-3">Multiple Users, Same System Prompt</div>
+                    
+                    <div class="border border-gray-300 bg-gray-50 p-3 mb-3">
+                        <div class="text-xs font-semibold">System Prompt (4000 tokens)</div>
+                        <div class="text-xs text-muted">"You are a helpful assistant..."</div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2 mb-4" id="user-requests">
+                        <div class="border border-black px-3 py-2 text-xs">
+                            <span class="font-semibold bg-accent px-1">User 1:</span> "What is 2+2?"
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="border border-black p-2 text-center">
+                            <div class="font-serif text-lg font-bold" id="total-tokens">4010</div>
+                            <div class="text-[10px] text-muted">Total</div>
+                        </div>
+                        <div class="border border-black p-2 text-center">
+                            <div class="font-serif text-lg font-bold" id="cached-tokens">0</div>
+                            <div class="text-[10px] text-muted">Cached</div>
+                        </div>
+                        <div class="border border-black p-2 text-center bg-accent">
+                            <div class="font-serif text-lg font-bold" id="cost-savings">0%</div>
+                            <div class="text-[10px]">Savings</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors" onclick="addUserRequest()">Add User Request</button>
+                        <button class="border border-black px-3 py-1 text-xs hover:bg-gray-100 transition-colors" onclick="resetRequests()">Reset</button>
+                    </div>
+                </div>
+                
+                <div class="border-l-4 border-accent bg-yellow-50 p-4 mb-6">
+                    <p class="text-xs font-semibold">💡 This is why prompt caching matters!</p>
+                    <p class="text-xs text-muted mt-1">100 users sharing the same prompt = pay full price <strong>once</strong>, then 10x cheaper for 99.</p>
+                </div>
+                
+                <button class="border border-black px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_#000]" onclick="nextSection(8)">Continue →</button>
+            </div>
+
+            <!-- Section 8: Quick Test -->
+            <div class="section" id="section8">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">🧪 Quick Test</h2>
+                
+                <p class="text-xs text-muted leading-relaxed mb-4">Let's check your understanding with 3 key questions.</p>
+                
+                <div class="border border-black p-3 mb-6 text-center">
+                    <span class="text-xs text-muted">Score:</span>
+                    <span class="font-serif text-xl font-bold ml-2" id="test-score">0</span>
+                    <span class="text-xs text-muted">/ 3</span>
+                </div>
+                
+                <!-- Test Q1 -->
+                <div class="border border-black p-4 mb-4" id="test-q1">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-3">QUESTION 1 OF 3</div>
+                    <p class="text-xs font-semibold mb-3">What exactly gets cached in "KV caching"?</p>
+                    <div class="flex flex-col gap-2">
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, false, 'test1')">The entire model weights</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, false, 'test1')">The Q (Query) matrix and final output</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, true, 'test1')">The K (Key) and V (Value) matrices from attention</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, false, 'test1')">The token embeddings only</button>
+                    </div>
+                    <div class="feedback border-l-4 border-black bg-gray-50 p-3 mt-4 text-xs" id="test1-feedback-correct">
+                        <p class="font-semibold">✓ Correct!</p>
+                        <p class="text-muted mt-1">KV caching stores <span class="font-semibold text-foreground">K = embeddings @ W_K</span> and <span class="font-semibold text-foreground">V = embeddings @ W_V</span>.</p>
+                    </div>
+                    <div class="feedback border-l-4 border-red-400 bg-red-50 p-3 mt-4 text-xs" id="test1-feedback-incorrect">
+                        <p class="font-semibold">✗ Not quite.</p>
+                        <p class="text-muted mt-1">The cached data is the <strong>K and V matrices</strong> from attention.</p>
+                    </div>
+                </div>
+                
+                <!-- Test Q2 -->
+                <div class="border border-black p-4 mb-4 hidden" id="test-q2">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-3">QUESTION 2 OF 3</div>
+                    <p class="text-xs font-semibold mb-3">Why is it valid to cache K and V for previous tokens?</p>
+                    <div class="flex flex-col gap-2">
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, false, 'test2')">Because the model randomly decides to reuse them</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, true, 'test2')">Because K and V only depend on that token's embedding, not future tokens</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, false, 'test2')">Because the attention mechanism ignores old tokens</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, false, 'test2')">Because K and V are always zero for past tokens</button>
+                    </div>
+                    <div class="feedback border-l-4 border-black bg-gray-50 p-3 mt-4 text-xs" id="test2-feedback-correct">
+                        <p class="font-semibold">✓ Correct!</p>
+                        <p class="text-muted mt-1">K[i] only depends on token i's embedding. Adding future tokens <span class="font-semibold text-foreground">doesn't change</span> K[i].</p>
+                    </div>
+                    <div class="feedback border-l-4 border-red-400 bg-red-50 p-3 mt-4 text-xs" id="test2-feedback-incorrect">
+                        <p class="font-semibold">✗ Not quite.</p>
+                        <p class="text-muted mt-1">K and V are <strong>deterministic functions</strong> of each token's embedding.</p>
+                    </div>
+                </div>
+                
+                <!-- Test Q3 -->
+                <div class="border border-black p-4 mb-4 hidden" id="test-q3">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-3">QUESTION 3 OF 3</div>
+                    <p class="text-xs font-semibold mb-3">A 1000-token prompt is sent by 10 users. With prompt caching, approximately how much do you save?</p>
+                    <div class="flex flex-col gap-2">
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, false, 'test3')">No savings — each user needs fresh computation</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, false, 'test3')">~50% — half the tokens are cached</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, true, 'test3')">~90% — the prompt is computed once, cached for 9 users</button>
+                        <button class="option border border-black px-4 py-2 text-left text-xs hover:bg-gray-50 shadow-[3px_3px_0px_#000]" onclick="checkTestAnswer(this, false, 'test3')">100% — everything is free after first request</button>
+                    </div>
+                    <div class="feedback border-l-4 border-black bg-gray-50 p-3 mt-4 text-xs" id="test3-feedback-correct">
+                        <p class="font-semibold">✓ Correct!</p>
+                        <p class="text-muted mt-1">First user pays full price. Next 9 use the cache at ~10x cheaper. <span class="font-semibold text-foreground">~90% savings</span>!</p>
+                    </div>
+                    <div class="feedback border-l-4 border-red-400 bg-red-50 p-3 mt-4 text-xs" id="test3-feedback-incorrect">
+                        <p class="font-semibold">✗ Not quite.</p>
+                        <p class="text-muted mt-1">9000 out of 10000 tokens are cached → <strong>~90% savings</strong>.</p>
+                    </div>
+                </div>
+                
+                <!-- Test Results -->
+                <div class="hidden" id="test-results">
+                    <div class="border border-black p-4 shadow-[3px_3px_0px_#000]" id="results-box">
+                        <p class="font-serif text-lg font-bold" id="results-title">🎯 Test Complete!</p>
+                        <p class="text-xs text-muted mt-2" id="results-message"></p>
+                    </div>
+                    <button class="border border-black px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_#000] mt-4" onclick="nextSection(9)">View Summary →</button>
+                </div>
+            </div>
+
+            <!-- Section 9: Summary -->
+            <div class="section" id="section9">
+                <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">🎉 Summary</h2>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-4">
+                    <p class="text-xs font-semibold mb-2">What exactly gets cached?</p>
+                    <p class="text-xs text-muted mb-3">The <strong>K and V matrices</strong> from the attention mechanism.</p>
+                    <div class="bg-gray-50 p-3 font-mono text-xs border border-gray-200">
+                        K = embeddings @ W_K  <span class="text-muted"># Cached!</span><br>
+                        V = embeddings @ W_V  <span class="text-muted"># Cached!</span>
+                    </div>
+                </div>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-4">
+                    <p class="text-xs font-semibold mb-2">Why does it work?</p>
+                    <p class="text-xs text-muted">K and V for a token <strong>only depend on that token's position</strong>, not future tokens.</p>
+                </div>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-4">
+                    <p class="text-xs font-semibold mb-2">Where do the savings come from?</p>
+                    <ol class="text-xs text-muted list-decimal list-inside">
+                        <li><strong>Within generation:</strong> Don't recompute K, V for past tokens</li>
+                        <li><strong>Across requests:</strong> Share cache for same prompt prefix</li>
+                    </ol>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="border border-black p-3 text-center shadow-[3px_3px_0px_#000]">
+                        <div class="font-serif text-xl font-bold">10x</div>
+                        <div class="text-[10px] text-muted">Cheaper</div>
+                    </div>
+                    <div class="border border-black p-3 text-center shadow-[3px_3px_0px_#000]">
+                        <div class="font-serif text-xl font-bold">85%</div>
+                        <div class="text-[10px] text-muted">Faster</div>
+                    </div>
+                    <div class="border border-black p-3 text-center shadow-[3px_3px_0px_#000]">
+                        <div class="font-serif text-xl font-bold">O(L)</div>
+                        <div class="text-[10px] text-muted">vs O(L²)</div>
+                    </div>
+                </div>
+                
+                <div class="border-l-4 border-accent bg-yellow-50 p-4 mb-6">
+                    <p class="text-xs font-semibold">💡 Bonus: Temperature doesn't invalidate the cache!</p>
+                    <p class="text-xs text-muted mt-1">Temperature only affects the <strong>final token selection</strong>. The KV cache is computed before that step.</p>
+                </div>
+                
+                <div class="text-center">
+                    <p class="text-xs text-muted mb-4">🎓 You've completed the KV Caching tutorial!</p>
+                    <button class="border border-black px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors shadow-[3px_3px_0px_#000]" onclick="location.reload()">Start Over</button>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
+                <p class="font-serif text-sm text-black">KV Caching (λ)</p>
+                <span>Interactive Learning</span>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 1;
+        const totalSections = 9;
+        let testScore = 0;
+        let questionsAnswered = 0;
+        
+        function updateProgress() {
+            document.getElementById('progress-bar').style.width = (currentSection / totalSections * 100) + '%';
+            document.getElementById('progress-text').textContent = currentSection + ' / ' + totalSections;
+        }
+        
+        function nextSection(n) {
+            document.getElementById('section' + currentSection).classList.remove('active');
+            document.getElementById('section' + n).classList.add('active');
+            currentSection = n;
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function checkAnswer(el, correct, qid) {
+            el.parentElement.querySelectorAll('.option').forEach(o => {
+                o.style.pointerEvents = 'none';
+                if (o === el) o.classList.add(correct ? 'correct' : 'incorrect');
+            });
+            const fb = document.getElementById(qid + '-feedback') || document.getElementById(qid + '-feedback-' + (correct ? 'correct' : 'incorrect'));
+            if (fb) fb.classList.add('show');
+        }
+        
+        function checkTestAnswer(el, correct, qid) {
+            el.parentElement.querySelectorAll('.option').forEach(o => {
+                o.style.pointerEvents = 'none';
+                if (o === el) o.classList.add(correct ? 'correct' : 'incorrect');
+            });
+            document.getElementById(qid + '-feedback-' + (correct ? 'correct' : 'incorrect')).classList.add('show');
+            if (correct) testScore++;
+            questionsAnswered++;
+            document.getElementById('test-score').textContent = testScore;
+            
+            setTimeout(() => {
+                if (questionsAnswered === 1) { document.getElementById('test-q2').classList.remove('hidden'); document.getElementById('test-q2').scrollIntoView({ behavior: 'smooth' }); }
+                else if (questionsAnswered === 2) { document.getElementById('test-q3').classList.remove('hidden'); document.getElementById('test-q3').scrollIntoView({ behavior: 'smooth' }); }
+                else if (questionsAnswered === 3) showTestResults();
+            }, 1500);
+        }
+        
+        function showTestResults() {
+            document.getElementById('test-results').classList.remove('hidden');
+            document.getElementById('test-results').scrollIntoView({ behavior: 'smooth' });
+            const t = document.getElementById('results-title'), m = document.getElementById('results-message'), b = document.getElementById('results-box');
+            if (testScore === 3) { t.textContent = '🎯 Perfect Score!'; m.innerHTML = 'You\'ve mastered KV caching.'; b.classList.add('bg-green-50'); }
+            else if (testScore === 2) { t.textContent = '👍 Good Job!'; m.innerHTML = testScore + '/3. Review the summary.'; b.classList.add('bg-yellow-50'); }
+            else { t.textContent = '📚 Keep Learning!'; m.innerHTML = testScore + '/3. The summary will help.'; }
+        }
+        
+        const words = ['lamb', 'dog', 'cat', 'star', 'bird'];
+        function generateWord() { document.getElementById('generated-word').textContent = words[Math.floor(Math.random() * words.length)]; }
+        
+        function animateAttention() {
+            // Reset all cells first
+            for (let i = 0; i < 5; i++) {
+                for (let j = 0; j < 5; j++) {
+                    const c = document.getElementById(`cell-${i}-${j}`);
+                    c.className = 'matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono';
+                    c.textContent = '';
+                }
+            }
+            
+            const w = [[1,0,0,0,0],[.79,.21,0,0,0],[.81,.13,.06,0,0],[.63,.16,.12,.09,0],[.58,.12,.10,.08,.12]];
+            let row = 0;
+            const interval = setInterval(() => {
+                if (row >= 5) { clearInterval(interval); return; }
+                for (let j = 0; j < 5; j++) {
+                    const c = document.getElementById(`cell-${row}-${j}`);
+                    if (j <= row) {
+                        // Visible attention weight (causal mask allows)
+                        c.className = 'matrix-cell w-14 h-9 border border-black flex items-center justify-center text-[10px] font-mono bg-accent';
+                        c.textContent = w[row][j].toFixed(2);
+                    } else {
+                        // Masked (future token - can't attend)
+                        c.className = 'matrix-cell w-14 h-9 border border-gray-200 flex items-center justify-center text-[10px] font-mono bg-gray-100 text-gray-400';
+                        c.textContent = '—';
+                    }
+                }
+                row++;
+            }, 500);
+        }
+        
+        const cacheTokens = ['Mary', 'had', 'a', 'little', 'lamb'];
+        let cacheIndex = 1;
+        function addTokenToCache() {
+            if (cacheIndex >= cacheTokens.length) return;
+            const t = cacheTokens[cacheIndex];
+            const tl = document.getElementById('cache-tokens');
+            const nt = document.createElement('span');
+            nt.className = 'border border-black px-2 py-1 text-xs token new-token';
+            nt.textContent = t;
+            tl.appendChild(nt);
+            setTimeout(() => nt.classList.remove('new-token'), 1000);
+            
+            ['k', 'v'].forEach(x => {
+                const e = document.createElement('div');
+                e.className = 'text-xs font-mono bg-white border border-green-600 px-2 py-1';
+                e.textContent = x.toUpperCase() + '[' + t + ']';
+                document.getElementById(x + '-cache').appendChild(e);
+            });
+            cacheIndex++;
+            document.getElementById('cache-size').textContent = cacheIndex;
+            document.getElementById('compute-saved').textContent = Math.round((1 - 1/cacheIndex) * 100) + '%';
+        }
+        function resetCache() {
+            cacheIndex = 1;
+            document.getElementById('cache-tokens').innerHTML = '<span class="border border-black px-2 py-1 text-xs">Mary</span>';
+            document.getElementById('k-cache').innerHTML = '<div class="text-xs font-mono bg-white border border-green-600 px-2 py-1">K[Mary]</div>';
+            document.getElementById('v-cache').innerHTML = '<div class="text-xs font-mono bg-white border border-green-600 px-2 py-1">V[Mary]</div>';
+            document.getElementById('cache-size').textContent = '1';
+            document.getElementById('compute-saved').textContent = '0%';
+        }
+        
+        function updateComputeStats() {
+            const L = parseInt(document.getElementById('seq-slider').value);
+            document.getElementById('seq-value').textContent = L;
+            const d = 4096, fn = 2*L*L*d, fc = 2*1*L*d;
+            const fmt = n => n >= 1e12 ? (n/1e12).toFixed(1)+'T' : n >= 1e9 ? (n/1e9).toFixed(1)+'B' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : n;
+            document.getElementById('flops-no-cache').textContent = fmt(fn);
+            document.getElementById('flops-cache').textContent = fmt(fc);
+            document.getElementById('savings-ratio').textContent = L + 'x';
+        }
+        
+        let userCount = 1;
+        const uq = ["What is 2+2?", "Explain photosynthesis", "Write a haiku", "Translate: Hello", "What's the weather?"];
+        function addUserRequest() {
+            if (userCount >= 5) return;
+            userCount++;
+            const r = document.getElementById('user-requests');
+            const nr = document.createElement('div');
+            nr.className = 'border border-black px-3 py-2 text-xs';
+            nr.innerHTML = '<span class="font-semibold bg-accent px-1">User ' + userCount + ':</span> "' + uq[userCount-1] + '"';
+            r.appendChild(nr);
+            const tt = 4000 + userCount * 10, ct = 4000 * (userCount - 1), s = Math.round(ct / (tt * userCount) * 100);
+            document.getElementById('total-tokens').textContent = tt * userCount;
+            document.getElementById('cached-tokens').textContent = ct;
+            document.getElementById('cost-savings').textContent = s + '%';
+        }
+        function resetRequests() {
+            userCount = 1;
+            document.getElementById('user-requests').innerHTML = '<div class="border border-black px-3 py-2 text-xs"><span class="font-semibold bg-accent px-1">User 1:</span> "What is 2+2?"</div>';
+            document.getElementById('total-tokens').textContent = '4010';
+            document.getElementById('cached-tokens').textContent = '0';
+            document.getElementById('cost-savings').textContent = '0%';
+        }
+        
+        updateProgress();
+        updateComputeStats();
+    </script>
+</body>
+</html>
