@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bayesian Thinking | Interactive Tutorial</title>
+    <meta name="description" content="Learn the most powerful framework for reasoning under uncertainty.">
+    <meta name="author" content="Pham Thanh Lam">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .box-shadow { box-shadow: 3px 3px 0px #000; }
+        .box-shadow-hover:hover { box-shadow: 5px 5px 0px #000; }
+        
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: #e5e5e5;
+            outline: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #000;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #000;
+        }
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #000;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #000;
+        }
+
+        .screen { display: none; }
+        .screen.active { display: flex; animation: fadeIn 0.3s ease; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white">
+
+    <div class="p-4 md:p-12 min-h-screen">
+        <div class="w-full max-w-xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <a class="text-xl font-serif font-bold tracking-tight" href="/">
+                    Bayesian Thinking
+                </a>
+                <a class="text-xs uppercase tracking-wider underline underline-offset-4 hover:decoration-2 decoration-1" href="/">← Back to Home</a>
+            </header>
+
+            <!-- Progress -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-[10px] uppercase tracking-wider text-muted">Interactive Tutorial</span>
+                    <span class="text-[10px] text-muted" id="progress-count">1 / 13</span>
+                </div>
+                <div class="h-[2px] bg-gray-200">
+                    <div class="h-full bg-black transition-all duration-400" id="progress-fill" style="width: 7.7%"></div>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="min-h-[500px] flex flex-col">
+
+                <!-- Screen 0: Intro -->
+                <div class="screen active flex-col" id="screen-0">
+                    <div class="text-center mb-8">
+                        <div class="text-5xl font-serif mb-4">λ</div>
+                        <h1 class="text-2xl font-serif font-bold mb-2">Bayesian Thinking</h1>
+                        <p class="text-muted text-xs">The most powerful framework for reasoning under uncertainty</p>
+                    </div>
+                    
+                    <div class="border-l border-gray-300 pl-4 space-y-4 mb-8">
+                        <div class="flex items-center gap-3">
+                            <div class="w-5 h-5 bg-black text-white text-[10px] flex items-center justify-center font-bold">1</div>
+                            <span class="text-xs">Start with a real problem</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-5 h-5 bg-black text-white text-[10px] flex items-center justify-center font-bold">2</div>
+                            <span class="text-xs">Build intuition through visualization</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-5 h-5 bg-black text-white text-[10px] flex items-center justify-center font-bold">3</div>
+                            <span class="text-xs">Discover the formula yourself</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-5 h-5 bg-black text-white text-[10px] flex items-center justify-center font-bold">4</div>
+                            <span class="text-xs">Apply it to machine learning</span>
+                        </div>
+                    </div>
+                    
+                    <p class="text-center text-[10px] uppercase tracking-wider text-muted">~10 minutes • Interactive</p>
+                </div>
+
+                <!-- Screen 1: Problem -->
+                <div class="screen flex-col" id="screen-1">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">THE CHALLENGE</div>
+                    <h2 class="text-xl font-serif font-bold mb-4">The Doctor's Dilemma</h2>
+                    
+                    <div class="border border-black p-4 box-shadow mb-6">
+                        <p class="text-xs mb-2">A disease affects <span class="bg-accent px-1 font-semibold">10%</span> of the population.</p>
+                        <p class="text-xs mb-2">A test has <span class="bg-accent px-1 font-semibold">90% accuracy</span> (for both positive and negative).</p>
+                        <p class="text-xs text-muted italic mt-3">You test positive. What's the probability you're actually sick?</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <p class="text-[10px] uppercase tracking-wider text-muted mb-3">Drag to make your guess:</p>
+                        <input type="range" class="slider w-full" id="guess-slider" min="0" max="100" value="50">
+                        <div class="text-center text-3xl font-bold my-4" id="guess-value">50%</div>
+                        <div class="flex justify-between text-[10px] text-muted">
+                            <span>0%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+
+                    <div class="border-l-2 border-accent pl-3 text-xs text-muted">
+                        Most people guess around 80-90%. Let's see why they're wrong...
+                    </div>
+                </div>
+
+                <!-- Screen 2: Visualization -->
+                <div class="screen flex-col" id="screen-2">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">KEY INSIGHT</div>
+                    <h2 class="text-xl font-serif font-bold mb-2">Think in Areas</h2>
+                    <p class="text-xs text-muted mb-4">Imagine 1000 people. Let's sort them:</p>
+
+                    <div class="grid grid-cols-10 gap-1 p-3 border border-gray-200 mb-4" id="viz-grid"></div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="border border-gray-200 p-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-3 h-3 bg-gray-200"></div>
+                                <span class="text-xs font-semibold">Healthy (900)</span>
+                            </div>
+                            <p class="text-[10px] text-green-600">810 test negative ✓</p>
+                            <p class="text-[10px] text-red-500">90 false positives ✗</p>
+                        </div>
+                        <div class="border border-gray-200 p-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-3 h-3 bg-black"></div>
+                                <span class="text-xs font-semibold">Sick (100)</span>
+                            </div>
+                            <p class="text-[10px] text-green-600">90 true positives ✓</p>
+                            <p class="text-[10px] text-muted">10 false negatives ✗</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 text-[10px] text-muted mb-4 justify-center">
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 inline-block"></span> False positive</span>
+                        <span class="flex items-center gap-1"><span class="w-3 h-3 bg-black inline-block"></span> True positive</span>
+                    </div>
+
+                    <div class="bg-accent border border-black p-4 box-shadow text-center">
+                        <p class="text-xs font-semibold mb-2">Who tests positive?</p>
+                        <p class="text-xs">90 sick + 90 healthy = <span class="font-bold">180 total</span></p>
+                        <p class="text-xs">Of these, only <span class="font-bold">90 are actually sick</span></p>
+                        <p class="text-base font-bold mt-3">P(sick | positive) = 90/180 = <span class="bg-black text-white px-2">50%</span></p>
+                    </div>
+                </div>
+
+                <!-- Screen 3: Quiz 1 -->
+                <div class="screen flex-col" id="screen-3">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">CHECK UNDERSTANDING</div>
+                    <h2 class="text-xl font-serif font-bold mb-2">Why did most people guess wrong?</h2>
+                    <p class="text-xs text-muted mb-6">What crucial information did they ignore?</p>
+
+                    <div class="space-y-2 mb-6" id="quiz1-options">
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black hover:box-shadow transition-all flex justify-between items-center" data-correct="false" onclick="checkQuiz('quiz1', this, false)">
+                            <span class="text-xs">The test accuracy (90%)</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black hover:box-shadow transition-all flex justify-between items-center" data-correct="true" onclick="checkQuiz('quiz1', this, true)">
+                            <span class="text-xs">The base rate of disease (10%)</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black hover:box-shadow transition-all flex justify-between items-center" data-correct="false" onclick="checkQuiz('quiz1', this, false)">
+                            <span class="text-xs">The number of people tested</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black hover:box-shadow transition-all flex justify-between items-center" data-correct="false" onclick="checkQuiz('quiz1', this, false)">
+                            <span class="text-xs">The age of patients</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                    </div>
+
+                    <div class="hidden border-l-2 border-green-500 pl-3 text-xs" id="quiz1-feedback">
+                        <p class="font-semibold mb-1" id="quiz1-title"></p>
+                        <p class="text-muted">The <span class="bg-accent px-1 font-semibold text-black">base rate</span> (prior probability) dramatically affects the result. With only 10% disease prevalence, even a 90% accurate test produces many false positives.</p>
+                    </div>
+                </div>
+
+                <!-- Screen 4: Bayes' Theorem -->
+                <div class="screen flex-col" id="screen-4">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">THE FORMULA</div>
+                    <h2 class="text-xl font-serif font-bold mb-6">Bayes' Theorem</h2>
+
+                    <div class="border border-black p-6 box-shadow text-center mb-6">
+                        <div class="text-lg font-bold mb-4">
+                            P(A|B) = <span class="bg-accent px-1">P(B|A)</span> × <span class="bg-accent px-1">P(A)</span> / P(B)
+                        </div>
+                        <div class="grid grid-cols-3 gap-4 border-t border-gray-200 pt-4">
+                            <div>
+                                <div class="text-xs font-bold">P(B|A)</div>
+                                <div class="text-[10px] text-muted uppercase tracking-wider">Likelihood</div>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold">P(A)</div>
+                                <div class="text-[10px] text-muted uppercase tracking-wider">Prior</div>
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold">P(A|B)</div>
+                                <div class="text-[10px] text-muted uppercase tracking-wider">Posterior</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 p-4 mb-6">
+                        <p class="text-xs font-semibold mb-2">In our medical example:</p>
+                        <div class="text-[11px] space-y-1">
+                            <p>P(sick | test+) = P(test+ | sick) × P(sick) / P(test+)</p>
+                            <p class="text-muted">= 0.9 × 0.1 / 0.18</p>
+                            <p class="font-bold">= 0.5</p>
+                        </div>
+                    </div>
+
+                    <div class="border-l-2 border-black pl-3 text-xs">
+                        <strong>Core insight:</strong> Your prior belief matters just as much as the evidence.
+                    </div>
+                </div>
+
+                <!-- Screen 5: Coin Flip -->
+                <div class="screen flex-col" id="screen-5">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">INTERACTIVE</div>
+                    <h2 class="text-xl font-serif font-bold mb-2">MLE vs MAP: The Coin Flip</h2>
+                    <p class="text-xs text-muted mb-4">This coin is biased (70% heads). Watch how estimators behave.</p>
+
+                    <div class="flex gap-2 mb-4">
+                        <button class="flex-1 bg-black text-white py-2 px-4 text-xs font-semibold hover:bg-white hover:text-black border border-black transition-all" onclick="flipCoin()">Flip Coin</button>
+                        <button class="py-2 px-4 text-xs border border-black hover:box-shadow transition-all" onclick="resetCoins()">Reset</button>
+                    </div>
+
+                    <div class="flex justify-between text-[10px] text-muted mb-2">
+                        <span>Flips: <span id="flip-count">0</span></span>
+                        <span>Heads: <span id="heads-count">0</span> | Tails: <span id="tails-count">0</span></span>
+                    </div>
+
+                    <div class="flex flex-wrap gap-1 min-h-[32px] p-2 border border-gray-200 mb-4" id="coins-display"></div>
+
+                    <div class="space-y-3 mb-4">
+                        <div>
+                            <div class="flex justify-between text-[10px] mb-1">
+                                <span>True θ = 0.70</span>
+                                <span class="text-green-600">●</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 relative">
+                                <div class="absolute top-[-2px] w-3 h-3 bg-green-600" style="left: 70%; transform: translateX(-50%);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] mb-1">
+                                <span>MLE = <span id="mle-value">0.50</span></span>
+                                <span class="text-blue-600">●</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 relative">
+                                <div class="absolute top-[-2px] w-3 h-3 bg-blue-600 transition-all" id="mle-marker" style="left: 50%; transform: translateX(-50%);"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[10px] mb-1">
+                                <span>MAP (α=<span id="alpha-display">2</span>, β=<span id="beta-display">2</span>) = <span id="map-value">0.50</span></span>
+                                <span>●</span>
+                            </div>
+                            <div class="h-2 bg-gray-100 relative">
+                                <div class="absolute top-[-2px] w-3 h-3 bg-black transition-all" id="map-marker" style="left: 50%; transform: translateX(-50%);"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 p-3 mb-4">
+                        <p class="text-[10px] uppercase tracking-wider text-muted mb-2">Adjust prior (Beta distribution):</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] block mb-1">α: <span id="alpha-val">2</span></label>
+                                <input type="range" class="slider w-full" id="alpha-slider" min="1" max="10" value="2" oninput="updatePrior()">
+                            </div>
+                            <div>
+                                <label class="text-[10px] block mb-1">β: <span id="beta-val">2</span></label>
+                                <input type="range" class="slider w-full" id="beta-slider" min="1" max="10" value="2" oninput="updatePrior()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-l-2 border-accent pl-3 text-xs text-muted">
+                        MLE can jump to 0 or 1 with few flips. MAP stays closer to the prior.
+                    </div>
+                </div>
+
+                <!-- Screen 6: Quiz 2 -->
+                <div class="screen flex-col" id="screen-6">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">CHECK UNDERSTANDING</div>
+                    <h2 class="text-xl font-serif font-bold mb-2">What's the key difference?</h2>
+                    <p class="text-xs text-muted mb-6">Between MLE and MAP?</p>
+
+                    <div class="space-y-2 mb-6" id="quiz2-options">
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black transition-all flex justify-between items-center" onclick="checkQuiz('quiz2', this, false)">
+                            <span class="text-xs">MLE incorporates prior knowledge, MAP doesn't</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black transition-all flex justify-between items-center" onclick="checkQuiz('quiz2', this, true)">
+                            <span class="text-xs">MAP adds prior knowledge to prevent overfitting</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black transition-all flex justify-between items-center" onclick="checkQuiz('quiz2', this, false)">
+                            <span class="text-xs">They always give the same answer</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black transition-all flex justify-between items-center" onclick="checkQuiz('quiz2', this, false)">
+                            <span class="text-xs">MLE is always better with more data</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                    </div>
+
+                    <div class="hidden border-l-2 border-green-500 pl-3 text-xs" id="quiz2-feedback">
+                        <p class="font-semibold mb-2" id="quiz2-title"></p>
+                        <div class="bg-gray-100 p-3 text-[11px]">
+                            <p>MLE: argmax P(data | θ)</p>
+                            <p>MAP: argmax P(data | θ) × <span class="bg-accent px-1 font-semibold">P(θ)</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screen 7: Regularization = Prior -->
+                <div class="screen flex-col" id="screen-7">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">KEY REVELATION</div>
+                    <h2 class="text-xl font-serif font-bold mb-6">Regularization = Prior</h2>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="border border-black p-4 box-shadow text-center">
+                            <div class="text-sm font-bold mb-2">L2 Regularization</div>
+                            <div class="text-xs text-muted mb-2">loss + λ||w||²</div>
+                            <div class="text-muted my-2">↕</div>
+                            <div class="text-xs font-semibold">Gaussian prior</div>
+                        </div>
+                        <div class="border border-black p-4 box-shadow text-center">
+                            <div class="text-sm font-bold mb-2">L1 Regularization</div>
+                            <div class="text-xs text-muted mb-2">loss + λ|w|</div>
+                            <div class="text-muted my-2">↕</div>
+                            <div class="text-xs font-semibold">Laplace prior</div>
+                        </div>
+                    </div>
+
+                    <div class="border-l-2 border-accent pl-3 text-xs">
+                        <strong>Practical:</strong> When you add regularization, you're saying "I believe weights should be small." That's a Bayesian prior.
+                    </div>
+                </div>
+
+                <!-- Screen 8: Regularization Interactive -->
+                <div class="screen flex-col" id="screen-8">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">INTERACTIVE</div>
+                    <h2 class="text-xl font-serif font-bold mb-4">Regularization Strength</h2>
+
+                    <div class="border border-gray-200 p-3 mb-4">
+                        <svg id="reg-svg" viewBox="0 0 400 160" class="w-full h-40">
+                            <line x1="40" y1="140" x2="380" y2="140" stroke="#e5e5e5" stroke-width="1"/>
+                            <line x1="40" y1="140" x2="40" y2="20" stroke="#e5e5e5" stroke-width="1"/>
+                            <line x1="50" y1="125" x2="370" y2="35" stroke="#22c55e" stroke-width="2" stroke-dasharray="6,4"/>
+                            <path id="fitted-curve" d="" fill="none" stroke="#ef4444" stroke-width="2"/>
+                            <circle cx="70" cy="118" r="4" fill="#000"/>
+                            <circle cx="110" cy="105" r="4" fill="#000"/>
+                            <circle cx="150" cy="95" r="4" fill="#000"/>
+                            <circle cx="190" cy="82" r="4" fill="#000"/>
+                            <circle cx="230" cy="72" r="4" fill="#000"/>
+                            <circle cx="270" cy="58" r="4" fill="#000"/>
+                            <circle cx="310" cy="48" r="4" fill="#000"/>
+                            <circle cx="350" cy="38" r="4" fill="#000"/>
+                            <text x="50" y="15" fill="#22c55e" font-size="10" font-family="IBM Plex Mono">— True</text>
+                            <text x="110" y="15" fill="#ef4444" font-size="10" font-family="IBM Plex Mono" id="fitted-label">— Fitted</text>
+                        </svg>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2 text-xs">
+                            <span>Regularization (λ)</span>
+                            <span class="font-bold" id="reg-value">0.10</span>
+                        </div>
+                        <input type="range" class="slider w-full" id="reg-slider" min="0" max="200" value="10" oninput="updateRegularization()">
+                        <div class="flex justify-between text-[10px] text-muted mt-1">
+                            <span>No prior (overfit)</span>
+                            <span>Strong prior (underfit)</span>
+                        </div>
+                    </div>
+
+                    <div class="border-l-2 pl-3 text-xs" id="reg-feedback">Low λ → model fits noise (overfitting)</div>
+                </div>
+
+                <!-- Screen 9: Quiz 3 -->
+                <div class="screen flex-col" id="screen-9">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">SYNTHESIS</div>
+                    <h2 class="text-xl font-serif font-bold mb-6">At its core, Bayesian thinking is:</h2>
+
+                    <div class="space-y-2 mb-6" id="quiz3-options">
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black transition-all flex justify-between items-center" onclick="checkQuiz('quiz3', this, false)">
+                            <span class="text-xs">A way to compute exact probabilities</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black transition-all flex justify-between items-center" onclick="checkQuiz('quiz3', this, true)">
+                            <span class="text-xs">A framework for updating beliefs with evidence</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black transition-all flex justify-between items-center" onclick="checkQuiz('quiz3', this, false)">
+                            <span class="text-xs">A replacement for neural networks</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                        <div class="quiz-option border border-gray-200 p-3 cursor-pointer hover:border-black transition-all flex justify-between items-center" onclick="checkQuiz('quiz3', this, false)">
+                            <span class="text-xs">Only useful for medical diagnosis</span>
+                            <span class="icon text-xs"></span>
+                        </div>
+                    </div>
+
+                    <div class="hidden border-l-2 border-green-500 pl-3" id="quiz3-feedback">
+                        <p class="font-semibold mb-2 text-xs" id="quiz3-title"></p>
+                        <p class="text-base font-bold">posterior = likelihood × prior</p>
+                    </div>
+                </div>
+
+                <!-- Screen 10: Summary -->
+                <div class="screen flex-col" id="screen-10">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">SUMMARY</div>
+                    <h2 class="text-xl font-serif font-bold mb-6">What You've Learned</h2>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="border-l-2 border-black pl-3 py-1">
+                            <p class="text-xs font-semibold">1. Base Rate Matters</p>
+                            <p class="text-xs text-muted">Prior probability dramatically affects posteriors.</p>
+                        </div>
+                        <div class="border-l-2 border-accent pl-3 py-1">
+                            <p class="text-xs font-semibold">2. MLE Overfits, MAP Regularizes</p>
+                            <p class="text-xs text-muted">MAP adds prior knowledge as a regularizer.</p>
+                        </div>
+                        <div class="border-l-2 border-blue-500 pl-3 py-1">
+                            <p class="text-xs font-semibold">3. Regularization = Prior</p>
+                            <p class="text-xs text-muted">L2 = Gaussian prior. L1 = Laplace prior.</p>
+                        </div>
+                        <div class="border-l-2 border-green-500 pl-3 py-1">
+                            <p class="text-xs font-semibold">4. Update Beliefs Correctly</p>
+                            <p class="text-xs text-muted">Bayes' theorem is the correct way to incorporate evidence.</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center border border-gray-200 p-4">
+                        <p class="text-xs font-semibold">Ready for the skill check?</p>
+                        <p class="text-[10px] text-muted">3 questions to test your understanding</p>
+                    </div>
+                </div>
+
+                <!-- Screen 11: Skill Check -->
+                <div class="screen flex-col" id="screen-11">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">SKILL CHECK</div>
+                    <h2 class="text-xl font-serif font-bold mb-6">Test Your Understanding</h2>
+
+                    <div class="border border-gray-200 p-4 mb-3">
+                        <p class="text-xs mb-3"><span class="font-bold">1.</span> Spam filter: 95% accurate, 2% spam. If flagged, P(actually spam)?</p>
+                        <div class="grid grid-cols-2 gap-2" id="skill1-options">
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill1', this, false)">~95%</button>
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill1', this, false)">~50%</button>
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill1', this, true)">~28%</button>
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill1', this, false)">~5%</button>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 p-4 mb-3">
+                        <p class="text-xs mb-3"><span class="font-bold">2.</span> 3 flips, 3 heads. MLE estimate for P(heads)?</p>
+                        <div class="grid grid-cols-2 gap-2" id="skill2-options">
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill2', this, false)">0.5</button>
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill2', this, false)">0.75</button>
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill2', this, true)">1.0</button>
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill2', this, false)">0.9</button>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 p-4">
+                        <p class="text-xs mb-3"><span class="font-bold">3.</span> Weight decay (L2) is equivalent to:</p>
+                        <div class="grid grid-cols-2 gap-2" id="skill3-options">
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill3', this, false)">Uniform prior</button>
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill3', this, true)">Gaussian prior</button>
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill3', this, false)">No prior</button>
+                            <button class="skill-option border border-gray-200 py-2 text-xs hover:border-black transition-all" onclick="checkSkill('skill3', this, false)">Equal weights</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screen 12: Results -->
+                <div class="screen flex-col" id="screen-12">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black inline-block mb-4 w-fit">COMPLETE</div>
+                    
+                    <div class="text-center mb-6">
+                        <div class="text-5xl font-serif mb-2" id="results-emoji">λ</div>
+                        <div class="text-2xl font-serif font-bold" id="results-score">3 / 3 Correct</div>
+                    </div>
+
+                    <div class="border border-black p-4 box-shadow mb-6">
+                        <p class="text-xs font-semibold mb-4 text-center uppercase tracking-wider">Key Formulas</p>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wider">Bayes</span>
+                                <span class="text-xs">P(A|B) = P(B|A) × P(A) / P(B)</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-gray-200 pb-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wider">MAP</span>
+                                <span class="text-xs">θ = argmax P(D|θ) × P(θ)</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-[10px] font-bold uppercase tracking-wider">L2</span>
+                                <span class="text-xs">loss + λ||w||² ↔ Gaussian</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-l-2 border-green-500 pl-3 text-xs text-center">
+                        <strong>Next:</strong> Apply these to your ML models. Every regularization is a prior.
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-8 pt-6 border-t border-gray-200">
+                <button class="text-xs uppercase tracking-wider border border-gray-200 px-4 py-2 hover:border-black transition-all disabled:opacity-30 disabled:cursor-not-allowed" id="btn-back" onclick="prevScreen()" disabled>← Back</button>
+                <button class="text-xs uppercase tracking-wider bg-black text-white px-4 py-2 hover:bg-white hover:text-black border border-black transition-all" id="btn-continue" onclick="nextScreen()">Continue →</button>
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-16 border-t border-black pt-6 pb-8 flex justify-between items-baseline text-xs text-muted">
+                <p class="font-serif text-sm text-black">Pham Thanh Lam (λ)</p>
+                <span>© 2026</span>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 0;
+        const totalScreens = 13;
+        let coinFlips = [];
+        let skillScores = { skill1: null, skill2: null, skill3: null };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initVizGrid();
+            updateRegularization();
+            document.getElementById('guess-slider').addEventListener('input', e => {
+                document.getElementById('guess-value').textContent = e.target.value + '%';
+            });
+        });
+
+        function nextScreen() {
+            if (currentScreen < totalScreens - 1) {
+                if (currentScreen === 11) calculateResults();
+                document.getElementById(`screen-${currentScreen}`).classList.remove('active');
+                currentScreen++;
+                document.getElementById(`screen-${currentScreen}`).classList.add('active');
+                updateProgress();
+                updateNavButtons();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function prevScreen() {
+            if (currentScreen > 0) {
+                document.getElementById(`screen-${currentScreen}`).classList.remove('active');
+                currentScreen--;
+                document.getElementById(`screen-${currentScreen}`).classList.add('active');
+                updateProgress();
+                updateNavButtons();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentScreen + 1) / totalScreens) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('progress-count').textContent = `${currentScreen + 1} / ${totalScreens}`;
+        }
+
+        function updateNavButtons() {
+            document.getElementById('btn-back').disabled = currentScreen === 0;
+            document.getElementById('btn-continue').style.display = currentScreen === totalScreens - 1 ? 'none' : 'block';
+        }
+
+        function initVizGrid() {
+            const grid = document.getElementById('viz-grid');
+            grid.innerHTML = '';
+            // 100 cells: 90 healthy (81 true neg, 9 false pos) + 10 sick (9 true pos, 1 false neg)
+            // Scaled down for visualization: showing ratios
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'aspect-square transition-transform cursor-pointer';
+                if (i < 90) {
+                    // Healthy people
+                    if (i < 9) {
+                        // False positives (test positive but healthy) - red
+                        cell.style.background = '#ef4444';
+                    } else {
+                        // True negatives (test negative and healthy) - light gray
+                        cell.style.background = '#e5e5e5';
+                    }
+                } else {
+                    // Sick people
+                    if (i < 99) {
+                        // True positives (test positive and sick) - black
+                        cell.style.background = '#000';
+                    } else {
+                        // False negatives (test negative but sick) - dark gray
+                        cell.style.background = '#888';
+                    }
+                }
+                cell.addEventListener('mouseenter', () => cell.style.transform = 'scale(1.3)');
+                cell.addEventListener('mouseleave', () => cell.style.transform = 'scale(1)');
+                grid.appendChild(cell);
+            }
+        }
+
+        function checkQuiz(quizId, element, isCorrect) {
+            const options = document.querySelectorAll(`#${quizId}-options .quiz-option`);
+            const feedback = document.getElementById(`${quizId}-feedback`);
+            const title = document.getElementById(`${quizId}-title`);
+            
+            options.forEach(opt => {
+                opt.classList.add('pointer-events-none');
+                if (opt.dataset.correct === 'true' || (opt === element && isCorrect)) {
+                    opt.classList.remove('border-gray-200');
+                    opt.classList.add('border-green-500', 'bg-green-50');
+                    opt.querySelector('.icon').textContent = '✓';
+                } else if (opt === element && !isCorrect) {
+                    opt.classList.remove('border-gray-200');
+                    opt.classList.add('border-red-500', 'bg-red-50');
+                    opt.querySelector('.icon').textContent = '✗';
+                }
+            });
+            
+            feedback.classList.remove('hidden');
+            feedback.classList.add(isCorrect ? 'border-green-500' : 'border-accent');
+            title.textContent = isCorrect ? '✓ Correct' : '→ Key insight:';
+        }
+
+        function flipCoin() {
+            coinFlips.push(Math.random() < 0.7 ? 1 : 0);
+            updateCoinDisplay();
+        }
+
+        function resetCoins() {
+            coinFlips = [];
+            updateCoinDisplay();
+        }
+
+        function updateCoinDisplay() {
+            const heads = coinFlips.filter(x => x === 1).length;
+            const tails = coinFlips.length - heads;
+            document.getElementById('flip-count').textContent = coinFlips.length;
+            document.getElementById('heads-count').textContent = heads;
+            document.getElementById('tails-count').textContent = tails;
+            document.getElementById('coins-display').innerHTML = coinFlips.slice(-20).map(f => 
+                `<div class="w-5 h-5 flex items-center justify-center text-[9px] font-bold ${f ? 'bg-black text-white' : 'bg-gray-200 text-gray-500'}">${f ? 'H' : 'T'}</div>`
+            ).join('');
+
+            const alpha = parseInt(document.getElementById('alpha-slider').value);
+            const beta = parseInt(document.getElementById('beta-slider').value);
+            
+            // MLE: k/n (simple frequency)
+            let mle = coinFlips.length > 0 ? heads / coinFlips.length : 0.5;
+            
+            // MAP: mode of Beta(α + k, β + n - k)
+            // Mode = (a-1)/(a+b-2), only valid when a,b > 1
+            let map;
+            if (coinFlips.length === 0) {
+                // No data: use prior
+                const priorDenom = alpha + beta - 2;
+                map = priorDenom > 0 ? (alpha - 1) / priorDenom : alpha / (alpha + beta);
+            } else {
+                const posteriorAlpha = heads + alpha;
+                const posteriorBeta = (coinFlips.length - heads) + beta;
+                const denom = posteriorAlpha + posteriorBeta - 2;
+                if (denom <= 0) {
+                    // Mode undefined (uniform-ish posterior), use mean instead
+                    map = posteriorAlpha / (posteriorAlpha + posteriorBeta);
+                } else {
+                    map = (posteriorAlpha - 1) / denom;
+                }
+            }
+
+            document.getElementById('mle-value').textContent = mle.toFixed(2);
+            document.getElementById('map-value').textContent = map.toFixed(2);
+            document.getElementById('mle-marker').style.left = (mle * 100) + '%';
+            document.getElementById('map-marker').style.left = (map * 100) + '%';
+        }
+
+        function updatePrior() {
+            const alpha = document.getElementById('alpha-slider').value;
+            const beta = document.getElementById('beta-slider').value;
+            document.getElementById('alpha-val').textContent = alpha;
+            document.getElementById('beta-val').textContent = beta;
+            document.getElementById('alpha-display').textContent = alpha;
+            document.getElementById('beta-display').textContent = beta;
+            updateCoinDisplay();
+        }
+
+        function updateRegularization() {
+            const val = document.getElementById('reg-slider').value / 100;
+            document.getElementById('reg-value').textContent = val.toFixed(2);
+            const curve = document.getElementById('fitted-curve');
+            const label = document.getElementById('fitted-label');
+            const feedback = document.getElementById('reg-feedback');
+
+            let path, color, feedbackText, borderColor;
+            if (val < 0.15) {
+                path = 'M50,115 Q80,60 110,125 Q140,25 170,100 Q200,35 230,80 Q260,20 290,60 Q320,30 350,38';
+                color = '#ef4444';
+                feedbackText = '⚠ Low λ → overfitting';
+                borderColor = 'border-red-500';
+            } else if (val < 0.8) {
+                path = 'M50,118 Q120,95 190,75 Q260,52 350,35';
+                color = '#000';
+                feedbackText = '✓ Balanced → good fit';
+                borderColor = 'border-green-500';
+            } else {
+                path = 'M50,118 L350,35';
+                color = '#666';
+                feedbackText = '○ High λ → underfitting';
+                borderColor = 'border-gray-400';
+            }
+            curve.setAttribute('d', path);
+            curve.setAttribute('stroke', color);
+            label.setAttribute('fill', color);
+            feedback.textContent = feedbackText;
+            feedback.className = `border-l-2 ${borderColor} pl-3 text-xs`;
+        }
+
+        function checkSkill(skillId, element, isCorrect) {
+            const options = document.querySelectorAll(`#${skillId}-options .skill-option`);
+            options.forEach(opt => {
+                opt.classList.add('pointer-events-none');
+                opt.classList.remove('hover:border-black');
+            });
+            if (isCorrect) {
+                element.classList.remove('border-gray-200');
+                element.classList.add('border-green-500', 'bg-green-50');
+                skillScores[skillId] = true;
+            } else {
+                element.classList.remove('border-gray-200');
+                element.classList.add('border-red-500', 'bg-red-50');
+                skillScores[skillId] = false;
+            }
+        }
+
+        function calculateResults() {
+            const correct = Object.values(skillScores).filter(x => x === true).length;
+            document.getElementById('results-score').textContent = `${correct} / 3 Correct`;
+            document.getElementById('results-emoji').textContent = correct === 3 ? '✓' : correct >= 1 ? '○' : '×';
+        }
+    </script>
+</body>
+</html>
