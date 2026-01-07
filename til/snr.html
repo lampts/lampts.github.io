@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNR Tutorial - Signal-to-Noise Ratio</title>
+    <meta name="description" content="Learn Signal-to-Noise Ratio in 10 minutes. Interactive tutorial.">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>📊</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom styles for interactive elements */
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #e5e5e5;
+            border: 1px solid #000;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #000;
+            cursor: pointer;
+            border: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #333;
+        }
+        
+        canvas {
+            border: 1px solid #000;
+            background: #fafafa;
+        }
+        
+        .step {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .quiz-option {
+            transition: all 0.15s ease;
+        }
+        
+        .quiz-option:hover {
+            background: #f5f5f5;
+        }
+        
+        .quiz-option.selected {
+            background: #f0f0f0;
+            border-width: 2px;
+        }
+        
+        .quiz-option.correct {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+        
+        .quiz-option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+        
+        .quiz-option:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 0.125rem 0.375rem;
+            font-size: 0.75rem;
+            border: 1px solid #e5e5e5;
+        }
+        
+        pre {
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.75rem;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white">
+
+    <!-- Progress Bar -->
+    <div class="fixed top-0 left-0 right-0 h-1 bg-gray-200 z-50">
+        <div class="h-full bg-black transition-all duration-300" id="progressBar" style="width: 0%"></div>
+    </div>
+
+    <div class="p-4 md:p-12 overflow-hidden min-h-screen">
+        <div class="w-full max-w-xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 pt-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📊</span>
+                    <span class="font-serif text-xl font-bold">SNR Tutorial</span>
+                </div>
+                <div class="text-xs text-muted" id="stepIndicator">Step 1 of 10</div>
+            </header>
+
+            <!-- Step 0: Welcome -->
+            <section class="step active" id="step0">
+                <h1 class="font-serif text-2xl font-bold mb-4">Signal-to-Noise Ratio</h1>
+                <p class="text-muted mb-6">Learn to measure audio quality in <span class="text-foreground font-semibold">10 minutes</span>.</p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-6">
+                    <div class="text-xs uppercase tracking-wider mb-3 font-semibold">What you'll learn</div>
+                    <div class="space-y-2 text-xs text-muted">
+                        <p>→ What SNR actually measures</p>
+                        <p>→ The math behind decibels</p>
+                        <p>→ A critical bug in common implementations</p>
+                        <p>→ How to estimate SNR from real audio</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="nextStep()" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors shadow-[2px_2px_0px_#000] hover:shadow-[3px_3px_0px_#000]">
+                        Start Learning →
+                    </button>
+                </div>
+            </section>
+
+            <!-- Step 1: Signal -->
+            <section class="step" id="step1">
+                <h2 class="font-serif text-xl font-bold mb-2">What is a Signal?</h2>
+                <p class="text-muted text-xs mb-4">A <span class="text-foreground font-semibold">signal</span> is what you want to hear. Let's create a 440 Hz tone (musical note A).</p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-4">
+                    <canvas id="signalCanvas" width="500" height="120" class="w-full"></canvas>
+                    <div class="flex justify-between text-[10px] text-muted mt-2">
+                        <span>Time →</span>
+                        <span class="text-blue-600">Pure Signal (440 Hz)</span>
+                    </div>
+                    <button onclick="playSignal()" class="mt-3 border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white transition-colors">
+                        ▶ Play Signal
+                    </button>
+                </div>
+                
+                <div class="border-l-2 border-black pl-3 text-xs text-muted mb-6">
+                    <span class="font-semibold text-foreground">💡</span> Notice the clean, regular wave pattern. This is a pure tone with no interference.
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="prevStep()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">← Back</button>
+                    <button onclick="nextStep()" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors">Continue →</button>
+                </div>
+            </section>
+
+            <!-- Step 2: Noise -->
+            <section class="step" id="step2">
+                <h2 class="font-serif text-xl font-bold mb-2">What is Noise?</h2>
+                <p class="text-muted text-xs mb-4"><span class="text-foreground font-semibold">Noise</span> is what you don't want to hear. It's random—no pattern, unpredictable.</p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-4">
+                    <canvas id="noiseCanvas" width="500" height="120" class="w-full"></canvas>
+                    <div class="flex justify-between text-[10px] text-muted mt-2">
+                        <span>Time →</span>
+                        <span class="text-red-600">Random Noise</span>
+                    </div>
+                    <button onclick="playNoise()" class="mt-3 border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white transition-colors">
+                        ▶ Play Noise
+                    </button>
+                </div>
+                
+                <div class="border-l-2 border-black pl-3 text-xs text-muted mb-6">
+                    <span class="font-semibold text-foreground">💡</span> Noise has no repeating pattern. It sounds like static or hiss.
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="prevStep()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">← Back</button>
+                    <button onclick="nextStep()" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors">Continue →</button>
+                </div>
+            </section>
+
+            <!-- Step 3: Mixed -->
+            <section class="step" id="step3">
+                <h2 class="font-serif text-xl font-bold mb-2">The Reality: Mixed Audio</h2>
+                <p class="text-muted text-xs mb-4">In the real world, you hear <span class="text-foreground font-semibold">signal + noise</span> combined. Use the slider to see how noise affects the signal.</p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-4">
+                    <canvas id="mixedCanvas" width="500" height="150" class="w-full"></canvas>
+                    
+                    <div class="mt-4">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>Noise Level</span>
+                            <span class="font-semibold" id="noiseLevelValue">30%</span>
+                        </div>
+                        <input type="range" id="noiseSlider" min="0" max="100" value="30" oninput="updateMixedWaveform()" class="w-full">
+                    </div>
+                    
+                    <button onclick="playMixed()" class="mt-3 border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white transition-colors">
+                        ▶ Play Mixed
+                    </button>
+                </div>
+                
+                <div class="border-l-2 border-black pl-3 text-xs text-muted mb-6">
+                    <span class="font-semibold text-foreground">⚡ Key insight:</span> You only observe the mixed signal. The challenge is figuring out how much is signal vs noise!
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="prevStep()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">← Back</button>
+                    <button onclick="nextStep()" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors">Continue →</button>
+                </div>
+            </section>
+
+            <!-- Step 4: The Math -->
+            <section class="step" id="step4">
+                <h2 class="font-serif text-xl font-bold mb-2">The Math: Power & Decibels</h2>
+                <p class="text-muted text-xs mb-4">SNR measures the <span class="text-foreground font-semibold">ratio</span> of signal power to noise power.</p>
+                
+                <div class="bg-gray-100 border border-black p-4 text-center mb-4 font-mono">
+                    <span class="text-sm">SNR = 10 × log₁₀(P<sub>signal</sub> / P<sub>noise</sub>) dB</span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="border border-black p-3">
+                        <div class="text-xs font-semibold mb-1">What is Power?</div>
+                        <p class="text-[10px] text-muted">Power = average of squared values</p>
+                        <code class="text-[10px] mt-1 inline-block">P = mean(x²)</code>
+                    </div>
+                    <div class="border border-black p-3">
+                        <div class="text-xs font-semibold mb-1">Why Decibels?</div>
+                        <p class="text-[10px] text-muted">Ratios can be huge (10x, 100x, 1000x). dB compresses the scale.</p>
+                    </div>
+                </div>
+                
+                <div class="border border-black p-3 mb-4">
+                    <div class="text-xs font-semibold mb-2">Quick Reference</div>
+                    <table class="w-full text-xs">
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1 font-semibold">30 dB</td>
+                            <td class="py-1 text-muted">1000×</td>
+                            <td class="py-1 text-green-600">Excellent</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1 font-semibold">20 dB</td>
+                            <td class="py-1 text-muted">100×</td>
+                            <td class="py-1 text-green-600">Good</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1 font-semibold">10 dB</td>
+                            <td class="py-1 text-muted">10×</td>
+                            <td class="py-1 text-yellow-600">Poor</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1 font-semibold">0 dB</td>
+                            <td class="py-1 text-muted">1×</td>
+                            <td class="py-1 text-red-600">Signal = Noise</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="prevStep()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">← Back</button>
+                    <button onclick="nextStep()" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors">Continue →</button>
+                </div>
+            </section>
+
+            <!-- Step 5: Interactive Calculator -->
+            <section class="step" id="step5">
+                <h2 class="font-serif text-xl font-bold mb-2">Interactive SNR Calculator</h2>
+                <p class="text-muted text-xs mb-4">Adjust the signal and noise levels to see how SNR changes.</p>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-4">
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>Signal Amplitude</span>
+                            <span class="font-semibold" id="signalAmpValue">1.0</span>
+                        </div>
+                        <input type="range" id="signalAmpSlider" min="10" max="100" value="100" oninput="updateSNRCalculator()" class="w-full">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span>Noise Amplitude</span>
+                            <span class="font-semibold" id="noiseAmpValue">0.3</span>
+                        </div>
+                        <input type="range" id="noiseAmpSlider" min="1" max="100" value="30" oninput="updateSNRCalculator()" class="w-full">
+                    </div>
+                    
+                    <div class="text-center text-[10px] text-muted">
+                        P<sub>signal</sub> = <span id="pSignal">0.500</span> · 
+                        P<sub>noise</sub> = <span id="pNoise">0.045</span> · 
+                        Ratio = <span id="pRatio">11.1×</span>
+                    </div>
+                </div>
+                
+                <div class="border border-black p-6 text-center mb-4 bg-gray-50">
+                    <div class="text-3xl font-bold font-mono" id="snrResult">10.5 dB</div>
+                    <div class="text-xs text-muted mt-1">Signal-to-Noise Ratio</div>
+                    <div class="mt-2">
+                        <span id="qualityBadge" class="inline-block px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border border-black bg-yellow-100">POOR</span>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="prevStep()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">← Back</button>
+                    <button onclick="nextStep()" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors">Continue →</button>
+                </div>
+            </section>
+
+            <!-- Step 6: The Bug -->
+            <section class="step" id="step6">
+                <h2 class="font-serif text-xl font-bold mb-2">🐛 The Critical Bug</h2>
+                <p class="text-muted text-xs mb-4">Here's code found in production systems. <span class="text-foreground font-semibold">Can you spot the bug?</span></p>
+                
+                <pre class="mb-4"><span style="color: #ff7b72;">def</span> <span style="color: #d2a8ff;">calculate_snr</span>(audio, noise):
+    signal_power = mean(audio ** 2)  <span style="color: #8b949e;"># ← THE BUG</span>
+    noise_power = mean(noise ** 2)
+    <span style="color: #ff7b72;">return</span> 10 * log10(signal_power / noise_power)</pre>
+                
+                <button onclick="revealBug()" id="revealBtn" class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white transition-colors mb-4">
+                    Reveal the Bug
+                </button>
+                
+                <div id="bugExplanation" class="hidden border-l-2 border-red-500 pl-3 text-xs mb-4 bg-red-50 py-2">
+                    <span class="font-semibold text-red-600">⚠️ The bug:</span> <code>audio</code> contains BOTH signal AND noise!<br><br>
+                    <span class="text-muted">Wrong: (Signal + Noise) / Noise = 1 + Signal/Noise</span><br>
+                    <span class="text-muted">Correct: Signal / Noise</span><br><br>
+                    <span class="text-foreground">This bug <em>always</em> overestimates SNR.</span>
+                </div>
+                
+                <div id="bugDemo" class="hidden border border-black p-3 mb-4">
+                    <div class="text-xs font-semibold mb-2">Error Demonstration</div>
+                    <table class="w-full text-xs">
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1">True SNR</td>
+                            <td class="py-1">Buggy Result</td>
+                            <td class="py-1">Error</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1 font-mono">-10 dB</td>
+                            <td class="py-1 font-mono text-red-600">+0.4 dB</td>
+                            <td class="py-1 font-mono">+10.4 dB!</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1 font-mono">0 dB</td>
+                            <td class="py-1 font-mono text-red-600">+3.0 dB</td>
+                            <td class="py-1 font-mono">+3.0 dB</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1 font-mono">10 dB</td>
+                            <td class="py-1 font-mono text-yellow-600">+10.4 dB</td>
+                            <td class="py-1 font-mono">+0.4 dB</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1 font-mono">20 dB</td>
+                            <td class="py-1 font-mono text-green-600">+20.0 dB</td>
+                            <td class="py-1 font-mono">~0 dB</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="prevStep()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">← Back</button>
+                    <button onclick="nextStep()" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors">Continue →</button>
+                </div>
+            </section>
+
+            <!-- Step 7: Estimation -->
+            <section class="step" id="step7">
+                <h2 class="font-serif text-xl font-bold mb-2">Real-World Estimation</h2>
+                <p class="text-muted text-xs mb-4">In practice, you only have the mixed audio. How do you estimate SNR?</p>
+                
+                <div class="border border-black p-4 mb-4 bg-gray-50">
+                    <div class="text-xs font-semibold mb-2">💡 The Key Insight</div>
+                    <p class="text-xs text-muted">Speech has pauses. Music has quiet moments. <span class="text-foreground font-semibold">During silence, you only hear noise!</span></p>
+                </div>
+                
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000] mb-4">
+                    <canvas id="estimationCanvas" width="500" height="120" class="w-full"></canvas>
+                    <div class="flex justify-between text-[10px] text-muted mt-2">
+                        <span class="text-red-500">■ Red = noise only</span>
+                        <span class="text-blue-600">■ Blue = signal + noise</span>
+                    </div>
+                </div>
+                
+                <div class="border border-black p-3 mb-4">
+                    <div class="text-xs font-semibold mb-2">The Percentile Method</div>
+                    <ol class="text-[10px] text-muted space-y-1 list-decimal list-inside">
+                        <li>Split audio into short frames (25ms each)</li>
+                        <li>Calculate energy of each frame</li>
+                        <li>Find frames with <strong class="text-foreground">lowest energy</strong> (bottom 10%)</li>
+                        <li>These are your "noise frames"</li>
+                        <li>Estimate noise power from these frames</li>
+                    </ol>
+                </div>
+                
+                <div class="border-l-2 border-yellow-500 pl-3 text-xs text-muted mb-6 bg-yellow-50 py-2">
+                    <span class="font-semibold text-yellow-700">⚠️ Limitation:</span> This fails for continuous signals with no pauses!
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="prevStep()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">← Back</button>
+                    <button onclick="nextStep()" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors">Continue →</button>
+                </div>
+            </section>
+
+            <!-- Step 8: Quiz -->
+            <section class="step" id="step8">
+                <h2 class="font-serif text-xl font-bold mb-2">Quick Quiz</h2>
+                <p class="text-muted text-xs mb-4">Test your understanding with 3 questions.</p>
+                
+                <!-- Question 1 -->
+                <div class="border border-black p-4 mb-4" id="quiz1">
+                    <div class="px-1.5 py-0.5 bg-black text-white text-[10px] font-medium inline-block mb-2">Q1 OF 3</div>
+                    <p class="text-xs mb-3">Signal power = 0.5, Noise power = 0.005. What is the SNR?</p>
+                    
+                    <div class="space-y-2">
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(1, 'A')">A) 10 dB</button>
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(1, 'B')">B) 20 dB</button>
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(1, 'C')">C) 100 dB</button>
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(1, 'D')">D) 2 dB</button>
+                    </div>
+                    
+                    <div id="quiz1Feedback" class="hidden mt-3 text-xs p-2 border-l-2"></div>
+                </div>
+                
+                <!-- Question 2 -->
+                <div class="border border-black p-4 mb-4 hidden" id="quiz2">
+                    <div class="px-1.5 py-0.5 bg-black text-white text-[10px] font-medium inline-block mb-2">Q2 OF 3</div>
+                    <p class="text-xs mb-3">A function computes <code>mean(audio²) / mean(noise²)</code> where audio = signal + noise. This:</p>
+                    
+                    <div class="space-y-2">
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(2, 'A')">A) Is correct</button>
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(2, 'B')">B) Always underestimates SNR</button>
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(2, 'C')">C) Always overestimates SNR</button>
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(2, 'D')">D) Only works for speech</button>
+                    </div>
+                    
+                    <div id="quiz2Feedback" class="hidden mt-3 text-xs p-2 border-l-2"></div>
+                </div>
+                
+                <!-- Question 3 -->
+                <div class="border border-black p-4 mb-4 hidden" id="quiz3">
+                    <div class="px-1.5 py-0.5 bg-black text-white text-[10px] font-medium inline-block mb-2">Q3 OF 3</div>
+                    <p class="text-xs mb-3">The percentile method for SNR estimation will FAIL for:</p>
+                    
+                    <div class="space-y-2">
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(3, 'A')">A) Phone calls with background noise</button>
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(3, 'B')">B) A continuous test tone</button>
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(3, 'C')">C) Music with quiet passages</button>
+                        <button class="quiz-option w-full text-left border border-gray-300 px-3 py-2 text-xs" onclick="checkQuiz(3, 'D')">D) Speech with natural pauses</button>
+                    </div>
+                    
+                    <div id="quiz3Feedback" class="hidden mt-3 text-xs p-2 border-l-2"></div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="prevStep()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">← Back</button>
+                    <button onclick="nextStep()" id="quizNextBtn" disabled class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider opacity-50 cursor-not-allowed">Complete Quiz</button>
+                </div>
+            </section>
+
+            <!-- Step 9: Summary -->
+            <section class="step" id="step9">
+                <h2 class="font-serif text-xl font-bold mb-4">📋 Quick Reference</h2>
+                
+                <div class="bg-gray-100 border border-black p-4 text-center mb-4">
+                    <div class="text-xs text-muted mb-1">THE FORMULA</div>
+                    <div class="font-mono text-sm">SNR = 10 × log₁₀( (P<sub>total</sub> - P<sub>noise</sub>) / P<sub>noise</sub> )</div>
+                    <div class="text-[10px] text-muted mt-1">⚠️ Use (total - noise), not just total</div>
+                </div>
+                
+                <div class="border border-black p-3 mb-4">
+                    <div class="text-xs font-semibold mb-2">Quality Thresholds</div>
+                    <table class="w-full text-xs">
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1.5">≥ 30 dB</td>
+                            <td class="py-1.5"><span class="px-1.5 py-0.5 bg-green-100 border border-green-600 text-green-700 text-[10px]">EXCELLENT</span></td>
+                            <td class="py-1.5 text-muted">Studio recording</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1.5">≥ 20 dB</td>
+                            <td class="py-1.5"><span class="px-1.5 py-0.5 bg-green-50 border border-green-500 text-green-600 text-[10px]">GOOD</span></td>
+                            <td class="py-1.5 text-muted">Clear phone call</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1.5">≥ 15 dB</td>
+                            <td class="py-1.5"><span class="px-1.5 py-0.5 bg-yellow-50 border border-yellow-500 text-yellow-600 text-[10px]">ACCEPTABLE</span></td>
+                            <td class="py-1.5 text-muted">Office background</td>
+                        </tr>
+                        <tr class="border-b border-gray-200">
+                            <td class="py-1.5">≥ 10 dB</td>
+                            <td class="py-1.5"><span class="px-1.5 py-0.5 bg-orange-50 border border-orange-500 text-orange-600 text-[10px]">POOR</span></td>
+                            <td class="py-1.5 text-muted">Noisy environment</td>
+                        </tr>
+                        <tr>
+                            <td class="py-1.5">< 10 dB</td>
+                            <td class="py-1.5"><span class="px-1.5 py-0.5 bg-red-50 border border-red-500 text-red-600 text-[10px]">VERY POOR</span></td>
+                            <td class="py-1.5 text-muted">Hard to understand</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="border border-black p-3 mb-6">
+                    <div class="text-xs font-semibold mb-2">Key Takeaways</div>
+                    <div class="space-y-1 text-xs text-muted">
+                        <p>→ SNR = ratio of signal power to noise power (in dB)</p>
+                        <p>→ Every +10 dB = 10× more signal power</p>
+                        <p>→ Common bug: using (S+N)/N instead of S/N</p>
+                        <p>→ Estimate noise from quiet frames (percentile method)</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="prevStep()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">← Back</button>
+                    <button onclick="nextStep()" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors">Finish →</button>
+                </div>
+            </section>
+
+            <!-- Step 10: Complete -->
+            <section class="step" id="step10">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4">🎉</div>
+                    <h1 class="font-serif text-2xl font-bold mb-2">Tutorial Complete!</h1>
+                    <p class="text-muted text-xs">You've mastered the fundamentals of SNR.</p>
+                </div>
+                
+                <div class="border border-black p-6 text-center mb-6 shadow-[3px_3px_0px_#000]">
+                    <div class="text-3xl font-bold font-mono" id="finalScore">3/3</div>
+                    <div class="text-xs text-muted mt-1">Quiz Score</div>
+                </div>
+                
+                <div class="border border-black p-4 mb-6">
+                    <div class="text-xs font-semibold mb-2">You now understand:</div>
+                    <div class="space-y-1 text-xs text-muted">
+                        <p>✓ What SNR measures and why it matters</p>
+                        <p>✓ The math behind power and decibels</p>
+                        <p>✓ The critical bug in common implementations</p>
+                        <p>✓ How to estimate SNR without ground truth</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="restartTutorial()" class="border border-gray-300 px-4 py-2 text-xs uppercase tracking-wider hover:border-black transition-colors">↺ Restart</button>
+                    <a href="/" class="border border-black px-4 py-2 text-xs uppercase tracking-wider hover:bg-black hover:text-white transition-colors">Done</a>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
+                <p class="font-serif text-sm text-black">SNR Tutorial</p>
+                <span>~10 min</span>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        // =================================================================
+        // STATE
+        // =================================================================
+        let currentStep = 0;
+        const totalSteps = 11;
+        let quizAnswered = [false, false, false];
+        let quizScore = 0;
+        let audioCtx = null;
+        
+        const sampleRate = 16000;
+        const duration = 1.0;
+        const samples = sampleRate * duration;
+        let signalData = [];
+        let noiseData = [];
+        
+        // =================================================================
+        // INIT
+        // =================================================================
+        function init() {
+            for (let i = 0; i < samples; i++) {
+                const t = i / sampleRate;
+                signalData.push(Math.sin(2 * Math.PI * 440 * t));
+                noiseData.push((Math.random() * 2 - 1) * 0.5);
+            }
+            updateProgress();
+        }
+        
+        // =================================================================
+        // NAVIGATION
+        // =================================================================
+        function nextStep() {
+            if (currentStep < totalSteps - 1) {
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                currentStep++;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                updateProgress();
+                onStepEnter(currentStep);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 0) {
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                currentStep--;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                updateProgress();
+                onStepEnter(currentStep);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        
+        function updateProgress() {
+            const progress = (currentStep / (totalSteps - 1)) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('stepIndicator').textContent = `Step ${currentStep + 1} of ${totalSteps}`;
+        }
+        
+        function onStepEnter(step) {
+            setTimeout(() => {
+                switch(step) {
+                    case 1: drawSignalWaveform(); break;
+                    case 2: drawNoiseWaveform(); break;
+                    case 3: updateMixedWaveform(); break;
+                    case 5: updateSNRCalculator(); break;
+                    case 7: drawEstimationDemo(); break;
+                    case 10: document.getElementById('finalScore').textContent = `${quizScore}/3`; break;
+                }
+            }, 100);
+        }
+        
+        function restartTutorial() {
+            location.reload();
+        }
+        
+        // =================================================================
+        // WAVEFORMS
+        // =================================================================
+        function drawWaveform(canvasId, data, color, startIdx = 0, endIdx = 400) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Grid
+            ctx.strokeStyle = '#e5e5e5';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+            
+            // Waveform
+            const subset = data.slice(startIdx, endIdx);
+            const step = width / subset.length;
+            
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            
+            for (let i = 0; i < subset.length; i++) {
+                const x = i * step;
+                const y = height / 2 - subset[i] * (height / 2.5);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+        
+        function drawSignalWaveform() {
+            drawWaveform('signalCanvas', signalData, '#2563eb', 0, 400);
+        }
+        
+        function drawNoiseWaveform() {
+            drawWaveform('noiseCanvas', noiseData, '#dc2626', 0, 400);
+        }
+        
+        function updateMixedWaveform() {
+            const noiseLevel = document.getElementById('noiseSlider').value / 100;
+            document.getElementById('noiseLevelValue').textContent = `${Math.round(noiseLevel * 100)}%`;
+            
+            const canvas = document.getElementById('mixedCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(0, 0, width, height);
+            
+            ctx.strokeStyle = '#e5e5e5';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+            
+            const endIdx = 400;
+            const step = width / endIdx;
+            
+            // Signal (faded)
+            ctx.strokeStyle = 'rgba(37, 99, 235, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let i = 0; i < endIdx; i++) {
+                const x = i * step;
+                const y = height / 2 - signalData[i] * (height / 3);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Mixed
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            for (let i = 0; i < endIdx; i++) {
+                const x = i * step;
+                const mixed = signalData[i] + noiseData[i] * noiseLevel * 2;
+                const y = height / 2 - mixed * (height / 3);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+        
+        function drawEstimationDemo() {
+            const canvas = document.getElementById('estimationCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#fafafa';
+            ctx.fillRect(0, 0, width, height);
+            
+            const segments = 8;
+            const segWidth = width / segments;
+            
+            for (let s = 0; s < segments; s++) {
+                if (s % 2 !== 0) {
+                    ctx.fillStyle = 'rgba(220, 38, 38, 0.1)';
+                    ctx.fillRect(s * segWidth, 0, segWidth, height);
+                }
+            }
+            
+            ctx.strokeStyle = '#e5e5e5';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, height / 2);
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+            
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            
+            for (let i = 0; i < 1600; i++) {
+                const x = (i / 1600) * width;
+                const segmentIdx = Math.floor((i / 1600) * segments);
+                const isSignal = segmentIdx % 2 === 0;
+                
+                let value;
+                if (isSignal) {
+                    value = signalData[i % samples] + noiseData[i % samples] * 0.3;
+                } else {
+                    value = noiseData[i % samples] * 0.3;
+                }
+                
+                const y = height / 2 - value * (height / 3);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+        
+        // =================================================================
+        // SNR CALCULATOR
+        // =================================================================
+        function updateSNRCalculator() {
+            const signalAmp = document.getElementById('signalAmpSlider').value / 100;
+            const noiseAmp = document.getElementById('noiseAmpSlider').value / 100;
+            
+            document.getElementById('signalAmpValue').textContent = signalAmp.toFixed(1);
+            document.getElementById('noiseAmpValue').textContent = noiseAmp.toFixed(1);
+            
+            const pSignal = (signalAmp * signalAmp) / 2;
+            const pNoise = (noiseAmp * noiseAmp) / 2;
+            const ratio = pSignal / pNoise;
+            const snrDb = 10 * Math.log10(ratio);
+            
+            document.getElementById('pSignal').textContent = pSignal.toFixed(3);
+            document.getElementById('pNoise').textContent = pNoise.toFixed(3);
+            document.getElementById('pRatio').textContent = ratio.toFixed(1) + '×';
+            document.getElementById('snrResult').textContent = snrDb.toFixed(1) + ' dB';
+            
+            const badge = document.getElementById('qualityBadge');
+            badge.className = 'inline-block px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border';
+            
+            if (snrDb >= 30) {
+                badge.textContent = 'EXCELLENT';
+                badge.classList.add('bg-green-100', 'border-green-600', 'text-green-700');
+            } else if (snrDb >= 20) {
+                badge.textContent = 'GOOD';
+                badge.classList.add('bg-green-50', 'border-green-500', 'text-green-600');
+            } else if (snrDb >= 15) {
+                badge.textContent = 'ACCEPTABLE';
+                badge.classList.add('bg-yellow-50', 'border-yellow-500', 'text-yellow-600');
+            } else if (snrDb >= 10) {
+                badge.textContent = 'POOR';
+                badge.classList.add('bg-orange-50', 'border-orange-500', 'text-orange-600');
+            } else {
+                badge.textContent = 'VERY POOR';
+                badge.classList.add('bg-red-50', 'border-red-500', 'text-red-600');
+            }
+        }
+        
+        // =================================================================
+        // AUDIO
+        // =================================================================
+        function getAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+        
+        function playTone(freq, dur, gain = 0.3, addNoise = false, noiseLevel = 0) {
+            const ctx = getAudioContext();
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gainNode.gain.value = gain;
+            
+            osc.connect(gainNode);
+            
+            if (addNoise && noiseLevel > 0) {
+                const bufferSize = ctx.sampleRate * dur;
+                const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const output = noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = (Math.random() * 2 - 1) * noiseLevel;
+                }
+                const noiseSource = ctx.createBufferSource();
+                noiseSource.buffer = noiseBuffer;
+                noiseSource.connect(gainNode);
+                noiseSource.start();
+                noiseSource.stop(ctx.currentTime + dur);
+            }
+            
+            gainNode.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + dur);
+        }
+        
+        function playNoiseTone(dur, gain = 0.2) {
+            const ctx = getAudioContext();
+            const bufferSize = ctx.sampleRate * dur;
+            const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = (Math.random() * 2 - 1);
+            }
+            const noiseSource = ctx.createBufferSource();
+            noiseSource.buffer = noiseBuffer;
+            const gainNode = ctx.createGain();
+            gainNode.gain.value = gain;
+            noiseSource.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            noiseSource.start();
+            noiseSource.stop(ctx.currentTime + dur);
+        }
+        
+        function playSignal() { playTone(440, 0.5, 0.3); }
+        function playNoise() { playNoiseTone(0.5, 0.15); }
+        function playMixed() {
+            const noiseLevel = document.getElementById('noiseSlider').value / 100;
+            playTone(440, 0.5, 0.3, true, noiseLevel * 0.4);
+        }
+        
+        // =================================================================
+        // BUG REVEAL
+        // =================================================================
+        function revealBug() {
+            document.getElementById('bugExplanation').classList.remove('hidden');
+            document.getElementById('bugDemo').classList.remove('hidden');
+            document.getElementById('revealBtn').classList.add('hidden');
+        }
+        
+        // =================================================================
+        // QUIZ
+        // =================================================================
+        const quizAnswers = { 1: 'B', 2: 'C', 3: 'B' };
+        const quizExplanations = {
+            1: { correct: '✓ Correct! 10 × log₁₀(100) = 20 dB', incorrect: '✗ Answer: B. 10 × log₁₀(0.5/0.005) = 20 dB' },
+            2: { correct: '✓ Correct! (S+N)/N is always > S/N', incorrect: '✗ Answer: C. Using audio² gives (S+N)², always overestimates.' },
+            3: { correct: '✓ Correct! No quiet frames to estimate noise.', incorrect: '✗ Answer: B. Continuous signals have no pauses.' }
+        };
+        
+        function checkQuiz(q, answer) {
+            if (quizAnswered[q - 1]) return;
+            quizAnswered[q - 1] = true;
+            
+            const isCorrect = answer === quizAnswers[q];
+            if (isCorrect) quizScore++;
+            
+            const options = document.querySelectorAll(`#quiz${q} .quiz-option`);
+            options.forEach(opt => {
+                opt.disabled = true;
+                const optAnswer = opt.textContent.charAt(0);
+                if (optAnswer === quizAnswers[q]) opt.classList.add('correct');
+                else if (optAnswer === answer && !isCorrect) opt.classList.add('incorrect');
+            });
+            
+            const feedback = document.getElementById(`quiz${q}Feedback`);
+            feedback.classList.remove('hidden');
+            feedback.textContent = isCorrect ? quizExplanations[q].correct : quizExplanations[q].incorrect;
+            feedback.classList.add(isCorrect ? 'border-green-500' : 'border-red-500');
+            feedback.classList.add(isCorrect ? 'bg-green-50' : 'bg-red-50');
+            
+            setTimeout(() => {
+                if (q < 3) {
+                    document.getElementById(`quiz${q + 1}`).classList.remove('hidden');
+                }
+                if (quizAnswered.every(a => a)) {
+                    const btn = document.getElementById('quizNextBtn');
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed', 'border-gray-300');
+                    btn.classList.add('border-black', 'hover:bg-black', 'hover:text-white');
+                    btn.textContent = 'Continue →';
+                }
+            }, 300);
+        }
+        
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
