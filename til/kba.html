@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KB Agent System Design — arxiv-sanity Style</title>
+    <meta name="description" content="Zero-infrastructure KB Agent for Banking Voice Agents">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .mermaid { display: flex; justify-content: center; overflow-x: auto; }
+        .mermaid svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body class="bg-white text-black font-mono text-sm antialiased selection:bg-black selection:text-white">
+
+    <div class="p-4 md:p-12 overflow-hidden min-h-screen">
+        <div class="w-full max-w-4xl mx-auto">
+            
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <a class="text-2xl font-serif font-medium tracking-tight" href="/">
+                    KB Agent — arxiv-sanity Style
+                </a>
+                <div class="flex gap-4 text-xs uppercase tracking-wider">
+                    <a class="underline underline-offset-4 hover:decoration-2 decoration-1" href="https://github.com/karpathy/arxiv-sanity-preserver" target="_blank">Original</a>
+                    <a class="underline underline-offset-4 hover:decoration-2 decoration-1" href="https://www.lampt.org" target="_blank">Home</a>
+                </div>
+            </header>
+
+            <div class="mt-8 mb-12">
+                <p class="mb-4 leading-relaxed font-semibold text-base">
+                    Zero-infrastructure KB Agent for Banking Voice Agents
+                </p>
+                <p class="mb-4 leading-relaxed text-gray-600">
+                    Pickle everything at build time. Load into memory at startup. Stateless workers for K8s/Docker scale-out. No Redis, no MongoDB, no vector DB.
+                </p>
+            </div>
+
+            <!-- Design Comparison -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Design Mapping</h2>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8 text-xs">
+                <div class="border border-black p-3">
+                    <div class="font-semibold mb-2">arxiv-sanity</div>
+                    <div class="text-gray-600 space-y-1">
+                        <div>db.p (papers)</div>
+                        <div>tfidf.p, tfidf_meta.p</div>
+                        <div>sim_dict.p</div>
+                        <div>SEARCH_DICT</div>
+                        <div>SQLite (users)</div>
+                        <div>MongoDB (comments)</div>
+                    </div>
+                </div>
+                <div class="border border-black p-3 shadow-[3px_3px_0px_#000]">
+                    <div class="font-semibold mb-2">KB Agent</div>
+                    <div class="text-gray-600 space-y-1">
+                        <div>kb.p (structured KB)</div>
+                        <div>bm25.p, meta.p</div>
+                        <div>sim.p</div>
+                        <div>BM25_INDEX (inverted)</div>
+                        <div>SQLite (sessions, ephemeral)</div>
+                        <div>— (dropped)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Build Pipeline -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">1. Build Pipeline (Once)</h2>
+            
+            <div class="border border-black p-4 mb-8 shadow-[3px_3px_0px_#000] bg-white overflow-x-auto">
+                <div class="mermaid">
+flowchart LR
+    subgraph Input["Input"]
+        MD[KB Markdown Files]
+    end
+    
+    subgraph Build["build_kb.py"]
+        Parse[parse_kb_files]
+        Embed[build_embeddings]
+        BM25[build_bm25_index]
+        Sim[build_similarities]
+    end
+    
+    subgraph Output["Pickles"]
+        KBP[kb.p]
+        CP[chunks.p]
+        EP[embeddings.npy]
+        BP[bm25.p]
+        SP[sim.p]
+        MP[meta.p]
+    end
+    
+    MD --> Parse
+    Parse --> KBP
+    Parse --> CP
+    CP --> Embed --> EP
+    CP --> BM25 --> BP
+    EP --> Sim --> SP
+    BM25 --> MP
+                </div>
+            </div>
+            
+            <div class="border border-black p-4 mb-8 font-mono text-xs bg-white">
+                <pre>
+# Like arxiv-sanity pipeline:
+# fetch_papers.py  → parse_kb.py
+# analyze.py       → build_bm25_index()
+# make_cache.py    → build_all()
+
+python build_kb.py --kb-dir ./kb_files --output ./data
+
+# Output:
+# data/kb.p           ← Structured KB (product:field → value)
+# data/chunks.p       ← KB chunks for RAG
+# data/embeddings.npy ← Precomputed vectors
+# data/bm25.p         ← BM25 inverted index
+# data/sim.p          ← Precomputed similarities
+# data/meta.p         ← Vocab, IDF, config</pre>
+            </div>
+
+            <!-- Runtime Architecture -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">2. Runtime Architecture</h2>
+            
+            <div class="border border-black p-4 mb-8 shadow-[3px_3px_0px_#000] bg-white overflow-x-auto">
+                <div class="mermaid">
+flowchart TB
+    subgraph Docker["Docker Container / K8s Pod"]
+        subgraph Startup["Startup"]
+            Load["load_data()<br/>KB = pickle.load()<br/>BM25_INDEX = pickle.load()"]
+        end
+        
+        subgraph Runtime["Runtime"]
+            Query[Query]
+            Router["QueryRouter"]
+            
+            H1["CRITICAL<br/>KB dict O(1)"]
+            H2["ESCALATE<br/>Template"]
+            H3["PROCEDURAL<br/>BM25 search"]
+            
+            Resp[Response]
+        end
+        
+        subgraph Storage["Ephemeral"]
+            SQL["/tmp/sessions.db"]
+        end
+        
+        Load --> Router
+        Query --> Router
+        Router --> H1 --> Resp
+        Router --> H2 --> Resp
+        Router --> H3 --> Resp
+        Resp --> SQL
+    end
+    
+    subgraph Scale["K8s Scale-Out"]
+        Pod1["Pod 1"]
+        Pod2["Pod 2"]
+        Pod3["Pod N"]
+    end
+    
+    Docker -.-> Pod1
+    Docker -.-> Pod2
+    Docker -.-> Pod3
+                </div>
+            </div>
+
+            <!-- Query Flow Sequence -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">3. Query Flow Sequence</h2>
+            
+            <div class="border border-black p-4 mb-8 shadow-[3px_3px_0px_#000] bg-white overflow-x-auto">
+                <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant F as Flask
+    participant R as Router
+    participant KB as KB Dict
+    participant BM as BM25_INDEX
+    participant SQL as SQLite
+    
+    Note over F: Startup: load_data()
+    F->>KB: pickle.load(kb.p)
+    F->>BM: pickle.load(bm25.p)
+    Note over F: All in memory
+    
+    U->>F: POST /query
+    F->>R: route(query)
+    R->>R: Pattern match
+    
+    alt CRITICAL + product
+        R->>KB: KB["be_cake:interest_rate"]
+        KB-->>R: KBEntry("44%/năm")
+        R-->>F: Template response
+        Note over R,KB: O(1) dict lookup
+    end
+    
+    alt CRITICAL no product
+        R-->>F: "Thẻ nào ạ?"
+    end
+    
+    alt ESCALATE
+        R-->>F: "Chuyển chuyên viên?"
+    end
+    
+    alt PROCEDURAL
+        R->>BM: search_bm25(query)
+        Note over BM: Inverted index<br/>O(terms)
+        BM-->>R: chunks[]
+        R->>R: verify_numbers()
+        R-->>F: RAG response
+    end
+    
+    F->>SQL: log_query()
+    F-->>U: JSON response
+                </div>
+            </div>
+
+            <!-- Memory Layout -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">4. Memory Layout (Per Worker)</h2>
+            
+            <div class="border border-black p-4 mb-8 font-mono text-xs bg-white">
+                <pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                     Python Process Memory                        │
+├─────────────────────────────────────────────────────────────────┤
+│  GLOBALS (loaded once at startup)                                │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  KB: dict[str, KBEntry]           ~1 KB                  │   │
+│  │      "be_cake:interest_rate" → KBEntry(display="44%/năm")│   │
+│  └──────────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  CHUNKS: list[Chunk]              ~10-100 KB             │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  EMBEDDINGS: np.ndarray           ~10-50 MB              │   │
+│  │      shape: (num_chunks, 384 or 1536)                    │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  BM25_INDEX: dict[str, list]      ~1-5 MB                │   │
+│  │      "lãi" → [(idx=0, score=2.3), ...]                   │   │
+│  │      (inverted index, like SEARCH_DICT but inverted)     │   │
+│  └──────────────────────────────────────────────────────────┘   │
+├─────────────────────────────────────────────────────────────────┤
+│  Total: ~50-100 MB per worker                                   │
+│  ✓ Fits in memory    ✓ No DB calls    ✓ Workers independent    │
+└─────────────────────────────────────────────────────────────────┘</pre>
+            </div>
+
+            <!-- BM25 vs Linear Search -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">5. BM25 Inverted Index</h2>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8 text-xs">
+                <div class="border border-black p-3">
+                    <div class="font-semibold mb-2 text-red-600">❌ arxiv-sanity (linear)</div>
+                    <pre class="text-gray-600">
+def papers_search(qraw):
+  for pid,p in db.items():
+    score = sum(
+      SEARCH_DICT[pid].get(q,0)
+      for q in qparts
+    )
+# O(num_docs) per query</pre>
+                </div>
+                <div class="border border-black p-3 shadow-[3px_3px_0px_#000]">
+                    <div class="font-semibold mb-2 text-green-600">✓ KB Agent (inverted)</div>
+                    <pre class="text-gray-600">
+def search_bm25(query):
+  for token in tokens:
+    for idx, score in BM25_INDEX[token]:
+      scores[idx] += score
+
+# O(terms × posting_len)</pre>
+                </div>
+            </div>
+
+            <!-- Deployment -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">6. Deployment</h2>
+            
+            <div class="border border-black p-4 mb-8 shadow-[3px_3px_0px_#000] bg-white overflow-x-auto">
+                <div class="mermaid">
+flowchart TB
+    subgraph Build["Build Stage"]
+        KB[kb_files/*.md]
+        BP[build_kb.py]
+        Data[data/*.p]
+        KB --> BP --> Data
+    end
+    
+    subgraph Image["Docker Image"]
+        Data2["/app/data/*.p"]
+        Server[server.py]
+        Gun["gunicorn --workers 4"]
+    end
+    
+    subgraph K8s["Kubernetes"]
+        HPA["HPA 2-20"]
+        Deploy["Deployment"]
+        Svc["Service"]
+        Ing["Ingress"]
+        HPA --> Deploy --> Svc --> Ing
+    end
+    
+    Data --> Data2 --> Server --> Gun --> Deploy
+                </div>
+            </div>
+            
+            <div class="border border-black p-4 mb-8 font-mono text-xs bg-white">
+                <pre>
+# Build & Deploy
+docker build -t kb-agent .
+kubectl apply -f deployment.yaml
+kubectl scale deployment kb-agent --replicas=10
+
+# Each pod independent:
+# - Same pickles from image
+# - No shared state
+# - SQLite ephemeral
+# - Scale by replicas</pre>
+            </div>
+
+            <!-- Latency -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">7. Latency</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="border border-black p-4 shadow-[3px_3px_0px_#000]">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-3 h-3 bg-green-600"></div>
+                        <div class="font-semibold text-xs">CRITICAL</div>
+                    </div>
+                    <div class="text-2xl font-bold mb-1">0.2ms</div>
+                    <div class="text-xs text-gray-600">Dict lookup O(1)</div>
+                </div>
+                <div class="border border-black p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-3 h-3 bg-red-600"></div>
+                        <div class="font-semibold text-xs">ESCALATE</div>
+                    </div>
+                    <div class="text-2xl font-bold mb-1">0.05ms</div>
+                    <div class="text-xs text-gray-600">Template only</div>
+                </div>
+                <div class="border border-black p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-3 h-3 bg-blue-600"></div>
+                        <div class="font-semibold text-xs">PROCEDURAL</div>
+                    </div>
+                    <div class="text-2xl font-bold mb-1">1-5ms</div>
+                    <div class="text-xs text-gray-600">BM25 + verify</div>
+                </div>
+            </div>
+
+            <!-- Key Insight -->
+            <h2 class="font-serif text-lg font-bold mb-4 border-b border-black pb-2">Key Insight</h2>
+            
+            <div class="border border-black p-6 mb-12 shadow-[3px_3px_0px_#000] bg-white">
+                <p class="text-gray-600 leading-relaxed mb-4">
+                    Karpathy's arxiv-sanity works because he accepted constraints: single server, papers fit in memory, batch updates daily. Same philosophy adapted for stateless scale-out.
+                </p>
+                <div class="font-mono text-xs bg-gray-50 p-4 border border-gray-200">
+                    <div class="mb-2"><strong>Constraints accepted:</strong></div>
+                    <div class="text-gray-600 mb-4">
+                    Single server → Stateless workers<br/>
+                    MongoDB comments → Dropped<br/>
+                    In-memory rate limits → Accept reset
+                    </div>
+                    <div class="text-black">
+                    P(works) = P(fits_memory) × P(stateless) × P(no_deps) = <strong>97%</strong>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-gray-600">
+                <p class="font-serif text-sm text-black">Pham Thanh Lam (λ)</p>
+                <div class="flex gap-4">
+                    <a class="underline underline-offset-4 hover:decoration-2" href="https://www.lampt.org">lampt.org</a>
+                    <span>© 2025</span>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                background: '#ffffff',
+                primaryColor: '#f5f5f5',
+                primaryTextColor: '#000000',
+                primaryBorderColor: '#000000',
+                lineColor: '#666666',
+                secondaryColor: '#f5f5f5',
+                tertiaryColor: '#f5f5f5',
+                fontFamily: 'IBM Plex Mono, monospace',
+                fontSize: '11px'
+            },
+            flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis', padding: 15 },
+            sequence: { useMaxWidth: true, showSequenceNumbers: true, actorMargin: 40 }
+        });
+    </script>
+</body>
+</html>
