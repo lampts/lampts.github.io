@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-VC31GENS6S');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Draw Simulator // LamLabs</title>
+    <meta name="description" content="Simulate any probability event. See the true cost.">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎲</text></svg>">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: #ffffff;
+            font-family: 'IBM Plex Mono', monospace;
+            margin: 0;
+            padding: 16px;
+            min-height: 100vh;
+            color: #000000;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        ::selection {
+            background: #000;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .header h1 {
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-links {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .header-links a {
+            color: #000;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+        .header-links a:hover {
+            text-decoration-thickness: 2px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 32px;
+        }
+
+        /* Section Headers */
+        h2 {
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 32px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #000;
+        }
+
+        /* Config Panel */
+        .config-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .config-item label {
+            color: #666;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .config-item input {
+            background: #fff;
+            border: 1px solid #000;
+            color: #000;
+            padding: 8px 10px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        .config-item input:focus {
+            outline: none;
+            box-shadow: 3px 3px 0px #000;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .stat-box {
+            background: #fff;
+            padding: 12px;
+            border: 1px solid #000;
+        }
+        .stat-box .label {
+            color: #666;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        .stat-box .value {
+            color: #000;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        .stat-box .value.highlight {
+            background: #FBD45B;
+            padding: 2px 6px;
+            display: inline-block;
+        }
+        .stat-box .value.success {
+            color: #16a34a;
+        }
+
+        /* Dice Display */
+        .dice-area {
+            border: 1px solid #000;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 3px 3px 0px #000;
+            background: #fff;
+        }
+        .win-condition {
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .win-label {
+            color: #666;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .win-rule {
+            display: block;
+            margin-top: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .die {
+            font-size: 2.2em;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            border: 1px solid #000;
+            position: relative;
+        }
+        .die::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -16px;
+            font-size: 9px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .die.rolling {
+            animation: shake 0.1s infinite;
+        }
+        .die.winner {
+            background: #FBD45B;
+            box-shadow: 3px 3px 0px #000;
+        }
+        @keyframes shake {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(3deg); }
+        }
+        .roll-result {
+            text-align: center;
+            font-size: 13px;
+            min-height: 20px;
+            margin-top: 8px;
+        }
+        .roll-result.win {
+            font-weight: 600;
+            background: #FBD45B;
+            padding: 4px 8px;
+            display: inline-block;
+        }
+        .roll-result.lose {
+            color: #666;
+        }
+
+        /* Buttons */
+        .button-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #fff;
+            color: #000;
+            border: 1px solid #000;
+            padding: 10px 20px;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.15s;
+        }
+        button:hover:not(:disabled) {
+            background: #000;
+            color: #fff;
+        }
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        button.primary {
+            background: #FBD45B;
+            box-shadow: 3px 3px 0px #000;
+        }
+        button.primary:hover:not(:disabled) {
+            box-shadow: 5px 5px 0px #000;
+            background: #FBD45B;
+            color: #000;
+        }
+
+        /* Histogram */
+        .histogram-section {
+            border: 1px solid #000;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .histogram-section h3 {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 12px 0;
+            color: #666;
+        }
+        .histogram {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 80px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        .histogram-bar {
+            flex: 1;
+            background: #000;
+            min-width: 6px;
+            max-width: 24px;
+            position: relative;
+            transition: height 0.3s;
+        }
+        .histogram-bar:hover {
+            background: #FBD45B;
+        }
+        .histogram-bar:hover::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+        .histogram-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .sim-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e5e5;
+        }
+        .sim-stat {
+            text-align: center;
+        }
+        .sim-stat .label {
+            color: #666;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .sim-stat .value {
+            color: #000;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Log */
+        .log-section {
+            border: 1px solid #e5e5e5;
+            padding: 12px;
+            max-height: 160px;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+        .log-section h3 {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0 0 8px 0;
+            color: #666;
+        }
+        .log-entry {
+            color: #666;
+            margin-bottom: 2px;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        .log-entry.win {
+            color: #000;
+            font-weight: 600;
+        }
+        .log-entry .prompt {
+            color: #000;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 48px;
+            padding-top: 16px;
+            border-top: 1px solid #000;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 12px;
+            color: #666;
+        }
+        footer .logo {
+            font-family: 'IBM Plex Serif', serif;
+            color: #000;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.98);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .overlay-content {
+            text-align: center;
+            padding: 32px;
+            border: 1px solid #000;
+            background: #fff;
+            box-shadow: 6px 6px 0px #000;
+            max-width: 400px;
+        }
+        .overlay-content h2 {
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 1.5rem;
+            margin: 0 0 16px 0;
+            border: none;
+            padding: 0;
+        }
+        .overlay-content .cost {
+            font-size: 2rem;
+            font-weight: 600;
+            background: #FBD45B;
+            padding: 4px 12px;
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+        .overlay-content .comparison {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎲 Lucky Draw Simulator</h1>
+            <div class="header-links">
+                <a href="https://www.lampt.org">Home</a>
+                <a href="https://github.com/lampts">GitHub</a>
+            </div>
+        </header>
+
+        <p class="subtitle">Simulate any probability event. See the true cost of luck.</p>
+
+        <h2>Configuration</h2>
+        <div class="config-panel">
+            <div class="config-item">
+                <label>Game Name</label>
+                <input type="text" id="gameName" value="YEP Lucky Draw">
+            </div>
+            <div class="config-item">
+                <label>Win Probability (1/N)</label>
+                <input type="number" id="probDenom" value="300" min="1">
+            </div>
+            <div class="config-item">
+                <label>Cost per Roll ($)</label>
+                <input type="number" id="costPerRoll" value="1" min="0.01" step="0.01">
+            </div>
+            <div class="config-item">
+                <label>Simulation Runs</label>
+                <input type="number" id="simRuns" value="1000" min="100" max="10000">
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="label">Rolls</div>
+                <div class="value" id="rollCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Spent</div>
+                <div class="value" id="sessionCost">$0.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Expected</div>
+                <div class="value highlight" id="expectedCost">$300.00</div>
+            </div>
+            <div class="stat-box">
+                <div class="label">Won?</div>
+                <div class="value" id="winStatus">—</div>
+            </div>
+        </div>
+
+        <div class="dice-area">
+            <div class="win-condition">
+                <span class="win-label">Win Condition</span>
+                <span class="win-rule" id="winRule">All four dice show ⚅</span>
+            </div>
+            <div class="dice-container" id="diceContainer">
+                <div class="die">⚀</div>
+                <div class="die">⚀</div>
+                <div class="die">⚀</div>
+                <div class="die">⚀</div>
+            </div>
+            <div class="roll-result" id="rollResult">Click ROLL to play</div>
+        </div>
+
+        <div class="button-row">
+            <button id="rollBtn" class="primary">Roll ($<span id="rollCostLabel">1.00</span>)</button>
+            <button id="roll10Btn">×10</button>
+            <button id="roll100Btn">×100</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+
+        <h2>Cost Distribution</h2>
+        <div class="histogram-section">
+            <h3>Monte Carlo Simulation (<span id="simRunsLabel">1000</span> runs)</h3>
+            <div class="histogram" id="histogram"></div>
+            <div class="histogram-labels">
+                <span id="histMin">$0</span>
+                <span id="histMax">$0</span>
+            </div>
+            <div class="sim-stats">
+                <div class="sim-stat">
+                    <div class="label">Mean</div>
+                    <div class="value" id="simMean">—</div>
+                </div>
+                <div class="sim-stat">
+                    <div class="label">Median</div>
+                    <div class="value" id="simMedian">—</div>
+                </div>
+                <div class="sim-stat">
+                    <div class="label">P95</div>
+                    <div class="value" id="simP95">—</div>
+                </div>
+                <div class="sim-stat">
+                    <div class="label">Max</div>
+                    <div class="value" id="simMax">—</div>
+                </div>
+            </div>
+            <div style="margin-top: 12px; text-align: center;">
+                <button id="simBtn">Run Simulation</button>
+            </div>
+        </div>
+
+        <div class="log-section">
+            <h3>Roll Log</h3>
+            <div id="log">
+                <div class="log-entry"><span class="prompt">></span> Ready. Configure and roll.</div>
+            </div>
+        </div>
+
+        <footer>
+            <span class="logo">LamLabs (λ)</span>
+            <span>© 2025 • Educational simulation</span>
+        </footer>
+    </div>
+
+    <div class="overlay" id="winOverlay">
+        <div class="overlay-content">
+            <h2>🎉 You Won!</h2>
+            <div class="cost" id="winCost">$0.00</div>
+            <div class="comparison" id="winComparison"></div>
+            <button id="continueBtn">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // DICE RULE ENGINE
+        // ═══════════════════════════════════════════════════════════════
+        
+        const DiceRules = {
+            findRule(targetDenom, maxDice = 6) {
+                let bestRule = null;
+                let bestError = Infinity;
+                
+                for (let n = 1; n <= maxDice; n++) {
+                    const totalOutcomes = Math.pow(6, n);
+                    const targetFavorable = totalOutcomes / targetDenom;
+                    
+                    const factors = this.findBestFactors(targetFavorable, n);
+                    if (!factors) continue;
+                    
+                    const product = factors.reduce((a, b) => a * b, 1);
+                    const actualProb = product / totalOutcomes;
+                    const actualDenom = Math.round(1 / actualProb);
+                    const error = Math.abs(actualDenom - targetDenom) / targetDenom;
+                    
+                    if (error < bestError) {
+                        bestError = error;
+                        bestRule = {
+                            numDice: n,
+                            factors: factors.sort((a, b) => a - b),
+                            probability: actualProb,
+                            denom: actualDenom,
+                            error: error
+                        };
+                    }
+                    
+                    if (error === 0) break;
+                }
+                
+                return bestRule;
+            },
+            
+            findBestFactors(target, n) {
+                if (n === 1) {
+                    const clamped = Math.max(1, Math.min(6, Math.round(target)));
+                    return [clamped];
+                }
+                
+                let best = null;
+                let bestDiff = Infinity;
+                
+                const search = (remaining, factors, minVal) => {
+                    if (factors.length === n) {
+                        const product = factors.reduce((a, b) => a * b, 1);
+                        const diff = Math.abs(product - target);
+                        if (diff < bestDiff) {
+                            bestDiff = diff;
+                            best = [...factors];
+                        }
+                        return;
+                    }
+                    
+                    const slotsLeft = n - factors.length;
+                    for (let f = minVal; f <= 6; f++) {
+                        const currentProduct = factors.reduce((a, b) => a * b, 1) * f;
+                        const maxPossible = currentProduct * Math.pow(6, slotsLeft - 1);
+                        const minPossible = currentProduct * Math.pow(1, slotsLeft - 1);
+                        
+                        if (minPossible > target * 2) break;
+                        if (maxPossible < target / 2) continue;
+                        
+                        search(remaining, [...factors, f], f);
+                    }
+                };
+                
+                search(target, [], 1);
+                return best;
+            },
+            
+            factorToConstraint(factor) {
+                switch (factor) {
+                    case 1: return { set: [6], label: '= 6', emoji: '⚅' };
+                    case 2: return { set: [5, 6], label: '≥ 5', emoji: '⚄⚅' };
+                    case 3: return { set: [2, 4, 6], label: 'even', emoji: '⚁⚃⚅' };
+                    case 4: return { set: [3, 4, 5, 6], label: '≥ 3', emoji: '⚂⚃⚄⚅' };
+                    case 5: return { set: [2, 3, 4, 5, 6], label: '≥ 2', emoji: '⚁⚂⚃⚄⚅' };
+                    case 6: return { set: [1, 2, 3, 4, 5, 6], label: 'any', emoji: '⚀-⚅' };
+                    default: return { set: [6], label: '= 6', emoji: '⚅' };
+                }
+            },
+            
+            describeRule(rule) {
+                const parts = rule.factors.map((f, i) => {
+                    const c = this.factorToConstraint(f);
+                    return `D${i + 1} ${c.label}`;
+                });
+                return parts.join(', ');
+            }
+        };
+
+        let activeRule = null;
+
+        // ═══════════════════════════════════════════════════════════════
+        // CORE ENGINE
+        // ═══════════════════════════════════════════════════════════════
+        
+        const Engine = {
+            roll(probability) {
+                return Math.random() < probability;
+            },
+            
+            simulate(probability, costPerRoll, runs = 1000) {
+                const costs = [];
+                for (let i = 0; i < runs; i++) {
+                    let rolls = 1;
+                    while (!this.roll(probability)) rolls++;
+                    costs.push(rolls * costPerRoll);
+                }
+                return costs.sort((a, b) => a - b);
+            },
+            
+            stats(costs) {
+                const n = costs.length;
+                const sum = costs.reduce((a, b) => a + b, 0);
+                return {
+                    mean: sum / n,
+                    median: costs[Math.floor(n / 2)],
+                    p95: costs[Math.floor(n * 0.95)],
+                    min: costs[0],
+                    max: costs[n - 1]
+                };
+            },
+            
+            histogram(costs, buckets = 20) {
+                const min = costs[0];
+                const max = costs[costs.length - 1];
+                const range = max - min || 1;
+                const bucketSize = range / buckets;
+                
+                const hist = new Array(buckets).fill(0);
+                costs.forEach(c => {
+                    const idx = Math.min(Math.floor((c - min) / bucketSize), buckets - 1);
+                    hist[idx]++;
+                });
+                
+                const maxCount = Math.max(...hist);
+                return { counts: hist, maxCount, min, max, bucketSize };
+            }
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════════
+        
+        const State = { rollCount: 0, sessionCost: 0, hasWon: false };
+        const diceEmoji = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+
+        // ═══════════════════════════════════════════════════════════════
+        // DOM
+        // ═══════════════════════════════════════════════════════════════
+        
+        const $ = id => document.getElementById(id);
+        const DOM = {
+            gameName: $('gameName'),
+            probDenom: $('probDenom'),
+            costPerRoll: $('costPerRoll'),
+            simRuns: $('simRuns'),
+            simRunsLabel: $('simRunsLabel'),
+            rollCount: $('rollCount'),
+            sessionCost: $('sessionCost'),
+            expectedCost: $('expectedCost'),
+            winStatus: $('winStatus'),
+            diceContainer: $('diceContainer'),
+            rollResult: $('rollResult'),
+            rollBtn: $('rollBtn'),
+            roll10Btn: $('roll10Btn'),
+            roll100Btn: $('roll100Btn'),
+            resetBtn: $('resetBtn'),
+            simBtn: $('simBtn'),
+            histogram: $('histogram'),
+            histMin: $('histMin'),
+            histMax: $('histMax'),
+            simMean: $('simMean'),
+            simMedian: $('simMedian'),
+            simP95: $('simP95'),
+            simMax: $('simMax'),
+            log: $('log'),
+            winOverlay: $('winOverlay'),
+            winCost: $('winCost'),
+            winComparison: $('winComparison'),
+            continueBtn: $('continueBtn'),
+            rollCostLabel: $('rollCostLabel'),
+            winRule: $('winRule')
+        };
+
+        // ═══════════════════════════════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════════════════════════════
+        
+        function getConfig() {
+            return {
+                probability: 1 / parseFloat(DOM.probDenom.value),
+                costPerRoll: parseFloat(DOM.costPerRoll.value),
+                simRuns: parseInt(DOM.simRuns.value),
+                gameName: DOM.gameName.value
+            };
+        }
+
+        function updateExpectedCost() {
+            const cfg = getConfig();
+            const expected = cfg.costPerRoll / cfg.probability;
+            DOM.expectedCost.textContent = formatCurrency(expected);
+            DOM.rollCostLabel.textContent = cfg.costPerRoll.toFixed(2);
+            DOM.simRunsLabel.textContent = cfg.simRuns;
+            
+            const targetDenom = Math.round(1 / cfg.probability);
+            activeRule = DiceRules.findRule(targetDenom);
+            
+            updateDiceDisplay();
+            updateWinCondition();
+        }
+        
+        function updateDiceDisplay() {
+            if (!activeRule) return;
+            
+            DOM.diceContainer.innerHTML = '';
+            for (let i = 0; i < activeRule.numDice; i++) {
+                const die = document.createElement('div');
+                die.className = 'die';
+                die.textContent = '⚀';
+                
+                const constraint = DiceRules.factorToConstraint(activeRule.factors[i]);
+                die.setAttribute('data-label', constraint.label);
+                
+                DOM.diceContainer.appendChild(die);
+            }
+        }
+        
+        function updateWinCondition() {
+            if (!activeRule) return;
+            
+            const cfg = getConfig();
+            const targetDenom = Math.round(1 / cfg.probability);
+            
+            let ruleText = DiceRules.describeRule(activeRule);
+            
+            if (activeRule.denom !== targetDenom) {
+                ruleText += ` (≈1/${activeRule.denom}, target: 1/${targetDenom})`;
+            } else {
+                ruleText += ` = 1/${activeRule.denom}`;
+            }
+            
+            DOM.winRule.textContent = ruleText;
+        }
+
+        function formatCurrency(n) {
+            return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // DICE ANIMATION
+        // ═══════════════════════════════════════════════════════════════
+        
+        function getLosingDice() {
+            if (!activeRule) return [0, 0, 0, 0];
+            
+            let dice;
+            let attempts = 0;
+            do {
+                dice = activeRule.factors.map(() => Math.floor(Math.random() * 6));
+                attempts++;
+            } while (checkDiceWin(dice) && attempts < 100);
+            
+            if (checkDiceWin(dice) && dice.length > 0) {
+                const constraint = DiceRules.factorToConstraint(activeRule.factors[0]);
+                const badValues = [0,1,2,3,4,5].filter(v => !constraint.set.includes(v + 1));
+                if (badValues.length > 0) {
+                    dice[0] = badValues[Math.floor(Math.random() * badValues.length)];
+                }
+            }
+            
+            return dice;
+        }
+
+        function getWinningDice() {
+            if (!activeRule) return [5, 5, 5, 5];
+            
+            return activeRule.factors.map(factor => {
+                const constraint = DiceRules.factorToConstraint(factor);
+                const validValue = constraint.set[Math.floor(Math.random() * constraint.set.length)];
+                return validValue - 1;
+            });
+        }
+        
+        function checkDiceWin(dice) {
+            if (!activeRule) return false;
+            return dice.every((d, i) => {
+                const constraint = DiceRules.factorToConstraint(activeRule.factors[i]);
+                return constraint.set.includes(d + 1);
+            });
+        }
+        
+        function animateDice(duration = 300, won = false) {
+            const dice = DOM.diceContainer.querySelectorAll('.die');
+            dice.forEach(d => d.classList.add('rolling'));
+            
+            const interval = setInterval(() => {
+                dice.forEach(d => {
+                    d.textContent = diceEmoji[Math.floor(Math.random() * 6)];
+                });
+            }, 50);
+            
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    clearInterval(interval);
+                    
+                    const finalDice = won ? getWinningDice() : getLosingDice();
+                    dice.forEach((d, i) => {
+                        d.classList.remove('rolling');
+                        d.classList.toggle('winner', won);
+                        d.textContent = diceEmoji[finalDice[i]];
+                    });
+                    resolve();
+                }, duration);
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // ROLL LOGIC
+        // ═══════════════════════════════════════════════════════════════
+        
+        async function doRoll(animate = true) {
+            const cfg = getConfig();
+            
+            State.rollCount++;
+            State.sessionCost += cfg.costPerRoll;
+            
+            const won = Engine.roll(cfg.probability);
+            
+            if (animate) await animateDice(200, won);
+            
+            updateStats();
+            addLog(State.rollCount, won);
+            
+            if (won) {
+                State.hasWon = true;
+                showWin();
+            }
+            
+            return won;
+        }
+
+        async function doMultiRoll(count) {
+            DOM.rollBtn.disabled = true;
+            DOM.roll10Btn.disabled = true;
+            DOM.roll100Btn.disabled = true;
+            
+            let lastWon = false;
+            for (let i = 0; i < count; i++) {
+                const won = await doRoll(i < 10 || (i === count - 1));
+                lastWon = won;
+                if (won) break;
+                if (i >= 10) await new Promise(r => setTimeout(r, 5));
+            }
+            
+            if (!lastWon && count > 10) {
+                const dice = DOM.diceContainer.querySelectorAll('.die');
+                const finalDice = getLosingDice();
+                dice.forEach((d, i) => {
+                    if (i < finalDice.length) {
+                        d.textContent = diceEmoji[finalDice[i]];
+                    }
+                });
+            }
+            
+            DOM.rollBtn.disabled = false;
+            DOM.roll10Btn.disabled = false;
+            DOM.roll100Btn.disabled = false;
+        }
+
+        function updateStats() {
+            DOM.rollCount.textContent = State.rollCount;
+            DOM.sessionCost.textContent = formatCurrency(State.sessionCost);
+            DOM.winStatus.textContent = State.hasWon ? 'YES ✓' : '—';
+            DOM.winStatus.className = 'value' + (State.hasWon ? ' success' : '');
+            
+            DOM.rollResult.textContent = State.hasWon ? '🎉 WINNER!' : `Roll #${State.rollCount} — miss`;
+            DOM.rollResult.className = 'roll-result ' + (State.hasWon ? 'win' : 'lose');
+        }
+
+        function addLog(roll, won) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry' + (won ? ' win' : '');
+            entry.innerHTML = `<span class="prompt">></span> #${String(roll).padStart(4, '0')} ${won ? '✨ WIN' : 'miss'} (${formatCurrency(State.sessionCost)})`;
+            DOM.log.appendChild(entry);
+            DOM.log.scrollTop = DOM.log.scrollHeight;
+        }
+
+        function showWin() {
+            const cfg = getConfig();
+            const expected = cfg.costPerRoll / cfg.probability;
+            const ratio = State.sessionCost / expected;
+            
+            DOM.winCost.textContent = formatCurrency(State.sessionCost);
+            
+            let comparison;
+            if (ratio < 0.5) comparison = `🍀 Very lucky! ${(ratio * 100).toFixed(0)}% of expected.`;
+            else if (ratio < 1) comparison = `Lucky! Below expected ${formatCurrency(expected)}.`;
+            else if (ratio < 2) comparison = `About average. Expected: ${formatCurrency(expected)}.`;
+            else comparison = `😬 Unlucky. ${ratio.toFixed(1)}× expected cost.`;
+            
+            DOM.winComparison.textContent = comparison;
+            DOM.winOverlay.classList.add('active');
+        }
+
+        function resetSession() {
+            State.rollCount = 0;
+            State.sessionCost = 0;
+            State.hasWon = false;
+            
+            DOM.log.innerHTML = '<div class="log-entry"><span class="prompt">></span> Session reset.</div>';
+            DOM.rollResult.textContent = 'Click ROLL to play';
+            DOM.rollResult.className = 'roll-result';
+            
+            const dice = DOM.diceContainer.querySelectorAll('.die');
+            dice.forEach(d => {
+                d.classList.remove('winner');
+                d.textContent = '⚀';
+            });
+            
+            updateStats();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SIMULATION
+        // ═══════════════════════════════════════════════════════════════
+        
+        function runSimulation() {
+            const cfg = getConfig();
+            const costs = Engine.simulate(cfg.probability, cfg.costPerRoll, cfg.simRuns);
+            const stats = Engine.stats(costs);
+            const hist = Engine.histogram(costs, 25);
+            
+            DOM.simMean.textContent = formatCurrency(stats.mean);
+            DOM.simMedian.textContent = formatCurrency(stats.median);
+            DOM.simP95.textContent = formatCurrency(stats.p95);
+            DOM.simMax.textContent = formatCurrency(stats.max);
+            
+            DOM.histogram.innerHTML = '';
+            hist.counts.forEach((count, i) => {
+                const bar = document.createElement('div');
+                bar.className = 'histogram-bar';
+                bar.style.height = (count / hist.maxCount * 100) + '%';
+                const rangeStart = hist.min + i * hist.bucketSize;
+                const rangeEnd = rangeStart + hist.bucketSize;
+                bar.setAttribute('data-label', `${formatCurrency(rangeStart)}–${formatCurrency(rangeEnd)}: ${count}`);
+                DOM.histogram.appendChild(bar);
+            });
+            
+            DOM.histMin.textContent = formatCurrency(hist.min);
+            DOM.histMax.textContent = formatCurrency(hist.max);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // EVENTS
+        // ═══════════════════════════════════════════════════════════════
+        
+        DOM.rollBtn.addEventListener('click', () => doRoll());
+        DOM.roll10Btn.addEventListener('click', () => doMultiRoll(10));
+        DOM.roll100Btn.addEventListener('click', () => doMultiRoll(100));
+        DOM.resetBtn.addEventListener('click', resetSession);
+        DOM.simBtn.addEventListener('click', runSimulation);
+        DOM.continueBtn.addEventListener('click', () => {
+            DOM.winOverlay.classList.remove('active');
+            resetSession();
+        });
+        
+        [DOM.probDenom, DOM.costPerRoll, DOM.simRuns].forEach(el => {
+            el.addEventListener('change', () => {
+                updateExpectedCost();
+                runSimulation();
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════════════════════
+        
+        updateExpectedCost();
+        runSimulation();
+    </script>
+</body>
+</html>
