@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-VC31GENS6S');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Skills Mastery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                        positive: '#16a34a',
+                        negative: '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .shadow-brutal { box-shadow: 3px 3px 0px #000; }
+        .result-panel { display: none; }
+        .result-panel.show { display: block; }
+    </style>
+</head>
+<body class="bg-background text-foreground font-sans text-sm leading-relaxed">
+    <div class="max-w-xl mx-auto px-4 py-8">
+        
+        <!-- Progress Dots -->
+        <div class="flex justify-center gap-2 mb-8">
+            <button class="nav-dot w-3 h-3 border border-black bg-black" onclick="navigateModule(0)"></button>
+            <button class="nav-dot w-3 h-3 border border-black bg-white" onclick="navigateModule(1)"></button>
+            <button class="nav-dot w-3 h-3 border border-black bg-white" onclick="navigateModule(2)"></button>
+            <button class="nav-dot w-3 h-3 border border-black bg-white" onclick="navigateModule(3)"></button>
+            <button class="nav-dot w-3 h-3 border border-black bg-white" onclick="navigateModule(4)"></button>
+            <button class="nav-dot w-3 h-3 border border-black bg-white" onclick="navigateModule(5)"></button>
+            <button class="nav-dot w-3 h-3 border border-black bg-white" onclick="navigateModule(6)"></button>
+        </div>
+
+        <!-- Module 0: Landing -->
+        <div id="module0" class="module-section">
+            <div class="text-center mb-8">
+                <h1 class="font-serif text-3xl font-semibold mb-2">Agent Skills Mastery</h1>
+                <p class="text-muted text-xs">Build Skills that Claude actually uses well</p>
+            </div>
+
+            <div class="border border-black p-6 mb-6 shadow-brutal bg-gray-50">
+                <p class="text-xs mb-4">Skills are reusable instructions that extend Claude's capabilities. But most Skills fail because they're too verbose, poorly structured, or untested.</p>
+                <p class="text-xs text-muted">This course teaches you the mental models behind effective Skill authoring through interactive simulations.</p>
+            </div>
+
+            <div class="space-y-3 mb-8">
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="w-6 h-6 border border-black flex items-center justify-center bg-accent font-semibold">1</span>
+                    <span>Context Window Economics</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="w-6 h-6 border border-black flex items-center justify-center bg-accent font-semibold">2</span>
+                    <span>Degrees of Freedom</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="w-6 h-6 border border-black flex items-center justify-center bg-accent font-semibold">3</span>
+                    <span>Progressive Disclosure</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="w-6 h-6 border border-black flex items-center justify-center bg-accent font-semibold">4</span>
+                    <span>Feedback Loops</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                    <span class="w-6 h-6 border border-black flex items-center justify-center bg-accent font-semibold">5</span>
+                    <span>Discovery & Description</span>
+                </div>
+            </div>
+
+            <button onclick="navigateModule(1)" class="w-full border border-black px-4 py-3 text-xs font-semibold hover:bg-black hover:text-white shadow-brutal">
+                Start Learning →
+            </button>
+        </div>
+
+        <!-- Module 1: Context Window Economics -->
+        <div id="module1" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 1 / 5</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Context Window Economics</h2>
+            <p class="text-xs text-muted mb-6 italic">"The context window is a public good."</p>
+
+            <div class="mb-6">
+                <p class="text-xs mb-3">❌ <span class="font-semibold">Wrong approach:</span> Write detailed explanations assuming Claude knows nothing.</p>
+                <p class="text-xs">✅ <span class="font-semibold">Right way:</span> Challenge each token: "Does Claude really need this?"</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Key Insight</div>
+                <code class="text-xs bg-white border border-gray-300 px-2 py-1 block mb-2">Token Cost = f(relevance × necessity)</code>
+                <p class="text-xs text-muted">Your Skill competes with: system prompt, conversation history, other Skills, and the actual request. Every unnecessary token degrades Claude's performance.</p>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Token Budget Simulator</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Compare verbose vs concise instructions. See how token usage affects available context.</p>
+                
+                <div class="mb-4">
+                    <label class="text-[10px] text-muted block mb-1">VERBOSE VERSION (~150 tokens)</label>
+                    <div class="text-[10px] bg-gray-100 p-2 border border-gray-300 mb-3">
+                        "PDF (Portable Document Format) files are a common file format that contains text, images, and other content. To extract text from a PDF, you'll need to use a library. There are many libraries available..."
+                    </div>
+                    
+                    <label class="text-[10px] text-muted block mb-1">CONCISE VERSION (~50 tokens)</label>
+                    <div class="text-[10px] bg-gray-100 p-2 border border-gray-300">
+                        "Use pdfplumber for text extraction:<br>
+                        <code>with pdfplumber.open("file.pdf") as pdf:</code>"
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Context Window (tokens)</label>
+                        <input type="number" id="m1-context" value="8000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Number of Skills</label>
+                        <input type="number" id="m1-skills" value="5" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                </div>
+                
+                <button onclick="calculateTokenBudget()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Calculate Impact</button>
+                
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="m1-results"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">CLAUDE IS SMART. ONLY ADD CONTEXT IT DOESN'T HAVE.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(0)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(2)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </div>
+
+        <!-- Module 2: Degrees of Freedom -->
+        <div id="module2" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 2 / 5</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Degrees of Freedom</h2>
+            <p class="text-xs text-muted mb-6 italic">"Match specificity to task fragility."</p>
+
+            <div class="mb-6">
+                <p class="text-xs mb-3">❌ <span class="font-semibold">Wrong approach:</span> Use same level of detail for all instructions.</p>
+                <p class="text-xs">✅ <span class="font-semibold">Right way:</span> Tight guardrails for fragile ops, loose guidance for creative tasks.</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">The Bridge Analogy</div>
+                <div class="text-xs mb-2">
+                    <span class="font-semibold">Narrow bridge + cliffs:</span> One safe path. Exact instructions. (DB migrations)
+                </div>
+                <div class="text-xs">
+                    <span class="font-semibold">Open field:</span> Many paths work. General direction. (Code reviews)
+                </div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Freedom Calibrator</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">PRACTICE</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Classify each task by appropriate freedom level.</p>
+                
+                <div class="space-y-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <select id="task1" class="border border-gray-300 px-2 py-1 text-xs">
+                            <option value="">Select...</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <span class="text-xs">Database migration script</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="task2" class="border border-gray-300 px-2 py-1 text-xs">
+                            <option value="">Select...</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <span class="text-xs">Code review feedback</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="task3" class="border border-gray-300 px-2 py-1 text-xs">
+                            <option value="">Select...</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <span class="text-xs">Report generation with template</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="task4" class="border border-gray-300 px-2 py-1 text-xs">
+                            <option value="">Select...</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <span class="text-xs">API key rotation</span>
+                    </div>
+                </div>
+                
+                <button onclick="checkFreedom()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Check Answers</button>
+                
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="m2-results"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">FRAGILE OPERATIONS NEED TIGHT RAILS. CREATIVE TASKS NEED SPACE.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(1)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(3)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </div>
+
+        <!-- Module 3: Progressive Disclosure -->
+        <div id="module3" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 3 / 5</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Progressive Disclosure</h2>
+            <p class="text-xs text-muted mb-6 italic">"SKILL.md is a table of contents, not the book."</p>
+
+            <div class="mb-6">
+                <p class="text-xs mb-3">❌ <span class="font-semibold">Wrong approach:</span> Dump everything into SKILL.md.</p>
+                <p class="text-xs">✅ <span class="font-semibold">Right way:</span> Overview in SKILL.md, details in referenced files loaded on-demand.</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">How Claude Loads Skills</div>
+                <div class="text-xs space-y-1">
+                    <div>1. <span class="font-semibold">Startup:</span> Only name + description loaded</div>
+                    <div>2. <span class="font-semibold">Triggered:</span> SKILL.md body loaded</div>
+                    <div>3. <span class="font-semibold">As needed:</span> Reference files loaded</div>
+                </div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">File Structure Simulator</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Design a BigQuery Skill structure. See how different architectures affect token usage.</p>
+                
+                <div class="mb-4">
+                    <label class="text-[10px] text-muted block mb-1">Architecture Choice</label>
+                    <select id="m3-arch" class="w-full border border-gray-300 px-2 py-1 text-xs mb-2">
+                        <option value="monolith">Monolith: Everything in SKILL.md (2000 tokens)</option>
+                        <option value="flat">Flat: SKILL.md + 4 domain files (200 + 400×4 tokens)</option>
+                        <option value="nested">Nested: 3 levels deep (200 + 200 + 400×4 tokens)</option>
+                    </select>
+                    
+                    <label class="text-[10px] text-muted block mb-1">User Query Type</label>
+                    <select id="m3-query" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        <option value="single">Single domain (e.g., "revenue metrics")</option>
+                        <option value="cross">Cross-domain (e.g., "revenue vs pipeline")</option>
+                        <option value="overview">Overview (e.g., "what data is available?")</option>
+                    </select>
+                </div>
+                
+                <button onclick="simulateDisclosure()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Simulate Load</button>
+                
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="m3-results"></div>
+            </div>
+
+            <div class="border border-negative/30 bg-negative/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-negative">⚠️ Anti-Pattern</div>
+                <p class="text-xs text-muted">Deeply nested references (3+ levels) cause partial reads. Keep references one level deep from SKILL.md.</p>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">BUNDLE COMPREHENSIVE RESOURCES. NO CONTEXT PENALTY UNTIL ACCESSED.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(2)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(4)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </div>
+
+        <!-- Module 4: Feedback Loops -->
+        <div id="module4" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 4 / 5</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Feedback Loops</h2>
+            <p class="text-xs text-muted mb-6 italic">"Run validator → fix errors → repeat."</p>
+
+            <div class="mb-6">
+                <p class="text-xs mb-3">❌ <span class="font-semibold">Wrong approach:</span> Execute complex operations in one shot.</p>
+                <p class="text-xs">✅ <span class="font-semibold">Right way:</span> Plan → Validate → Execute → Verify</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Why Loops Matter</div>
+                <code class="text-xs bg-white border border-gray-300 px-2 py-1 block mb-2">P(success) = P(plan_correct) × P(execute_correct)</code>
+                <p class="text-xs text-muted">Without validation: 0.8 × 0.8 = 0.64</p>
+                <p class="text-xs text-muted">With validation loop: 0.95 × 0.95 = 0.90</p>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Workflow Designer</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">MASTERY</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Design a form-filling workflow. Drag steps into optimal order.</p>
+                
+                <div class="mb-4">
+                    <div class="text-[10px] text-muted mb-2">Available Steps (select order 1-5):</div>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <select id="step-analyze" class="border border-gray-300 px-2 py-1 text-xs w-12">
+                                <option value="">-</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                            <span class="text-xs">Analyze form fields</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="step-validate" class="border border-gray-300 px-2 py-1 text-xs w-12">
+                                <option value="">-</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                            <span class="text-xs">Validate field mapping</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="step-fill" class="border border-gray-300 px-2 py-1 text-xs w-12">
+                                <option value="">-</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                            <span class="text-xs">Fill the form</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="step-map" class="border border-gray-300 px-2 py-1 text-xs w-12">
+                                <option value="">-</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                            <span class="text-xs">Create field mapping</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="step-verify" class="border border-gray-300 px-2 py-1 text-xs w-12">
+                                <option value="">-</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                            <span class="text-xs">Verify output</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="checkWorkflow()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Check Workflow</button>
+                
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="m4-results"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">VALIDATION CATCHES ERRORS EARLY. SCRIPTS SOLVE, DON'T PUNT.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(3)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(5)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </div>
+
+        <!-- Module 5: Discovery & Description -->
+        <div id="module5" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 5 / 5</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Discovery & Description</h2>
+            <p class="text-xs text-muted mb-6 italic">"The description enables Skill selection from 100+ options."</p>
+
+            <div class="mb-6">
+                <p class="text-xs mb-3">❌ <span class="font-semibold">Wrong approach:</span> "Helps with documents"</p>
+                <p class="text-xs">✅ <span class="font-semibold">Right way:</span> "Extract text and tables from PDF files. Use when working with PDFs or document extraction."</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Description Formula</div>
+                <code class="text-xs bg-white border border-gray-300 px-2 py-1 block mb-2">[What it does] + [Trigger keywords] + [When to use]</code>
+                <p class="text-xs text-muted">Always third person. Max 1024 chars. No XML tags.</p>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Description Scorer</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">FINAL</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Write a description for an Excel analysis Skill. Get scored on discoverability.</p>
+                
+                <div class="mb-4">
+                    <label class="text-[10px] text-muted block mb-1">Your Description</label>
+                    <textarea id="m5-desc" rows="3" class="w-full border border-gray-300 px-2 py-1 text-xs" placeholder="Analyze Excel spreadsheets..."></textarea>
+                </div>
+                
+                <button onclick="scoreDescription()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Score Description</button>
+                
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="m5-results"></div>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Naming Convention</div>
+                <p class="text-xs mb-2">Use gerund form: <code class="bg-white px-1">processing-pdfs</code>, <code class="bg-white px-1">analyzing-spreadsheets</code></p>
+                <p class="text-xs text-muted">Lowercase, numbers, hyphens only. Max 64 chars.</p>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">SPECIFIC DESCRIPTIONS WIN. VAGUE DESCRIPTIONS LOSE.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(4)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(6)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Take Quiz →</button>
+            </div>
+        </div>
+
+        <!-- Module 6: Final Quiz -->
+        <div id="module6" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Final Quiz</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Test Your Knowledge</h2>
+            <p class="text-xs text-muted mb-6 italic">"One question per module. No partial credit."</p>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">5 Questions • All Modules</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">FINAL EXAM</span>
+                </div>
+
+                <!-- Q1: Context Window -->
+                <div class="mb-6 pb-4 border-b border-gray-200">
+                    <div class="text-[10px] text-muted mb-1">Q1: Context Window Economics</div>
+                    <p class="text-xs mb-3">Why should Skills be concise?</p>
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q1" value="a" class="mt-0.5">
+                            <span>Claude can't read long files</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q1" value="b" class="mt-0.5">
+                            <span>Skills share context with system prompt, history, and user request</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q1" value="c" class="mt-0.5">
+                            <span>Anthropic charges per token in Skills</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q1" value="d" class="mt-0.5">
+                            <span>Long Skills take longer to load</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Q2: Degrees of Freedom -->
+                <div class="mb-6 pb-4 border-b border-gray-200">
+                    <div class="text-[10px] text-muted mb-1">Q2: Degrees of Freedom</div>
+                    <p class="text-xs mb-3">Which task needs LOW freedom (exact instructions)?</p>
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q2" value="a" class="mt-0.5">
+                            <span>Writing a blog post summary</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q2" value="b" class="mt-0.5">
+                            <span>Code review feedback</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q2" value="c" class="mt-0.5">
+                            <span>Production database migration</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q2" value="d" class="mt-0.5">
+                            <span>Researching a topic</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Q3: Progressive Disclosure -->
+                <div class="mb-6 pb-4 border-b border-gray-200">
+                    <div class="text-[10px] text-muted mb-1">Q3: Progressive Disclosure</div>
+                    <p class="text-xs mb-3">What's wrong with 3+ levels of nested file references?</p>
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q3" value="a" class="mt-0.5">
+                            <span>Claude refuses to read nested files</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q3" value="b" class="mt-0.5">
+                            <span>Claude may do partial reads (head -100) causing incomplete info</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q3" value="c" class="mt-0.5">
+                            <span>Nested files are slower to load</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q3" value="d" class="mt-0.5">
+                            <span>The file system doesn't support nesting</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Q4: Feedback Loops -->
+                <div class="mb-6 pb-4 border-b border-gray-200">
+                    <div class="text-[10px] text-muted mb-1">Q4: Feedback Loops</div>
+                    <p class="text-xs mb-3">In "Plan → Validate → Execute → Verify", why does Validate come BEFORE Execute?</p>
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q4" value="a" class="mt-0.5">
+                            <span>It's faster to validate first</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q4" value="b" class="mt-0.5">
+                            <span>Catches errors before irreversible changes</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q4" value="c" class="mt-0.5">
+                            <span>Claude requires validation to proceed</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q4" value="d" class="mt-0.5">
+                            <span>Validation scripts only work on plans</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Q5: Discovery -->
+                <div class="mb-6">
+                    <div class="text-[10px] text-muted mb-1">Q5: Discovery & Description</div>
+                    <p class="text-xs mb-3">What makes a Skill description discoverable?</p>
+                    <div class="space-y-2">
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q5" value="a" class="mt-0.5">
+                            <span>Keep it under 50 characters</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q5" value="b" class="mt-0.5">
+                            <span>Use first person ("I can help you...")</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q5" value="c" class="mt-0.5">
+                            <span>Include what it does + trigger keywords + when to use</span>
+                        </label>
+                        <label class="flex items-start gap-2 text-xs cursor-pointer">
+                            <input type="radio" name="q5" value="d" class="mt-0.5">
+                            <span>List every feature the Skill supports</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="submitQuiz()" class="w-full border border-black px-3 py-2 text-xs font-semibold hover:bg-black hover:text-white">Submit Quiz</button>
+                
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="quiz-results"></div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(5)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(0)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Restart Course</button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-12 pt-4 border-t border-gray-200 text-center text-[10px] text-muted">
+            Built with <a href="https://lampt.org" class="underline">lampt.org</a> aesthetic
+        </div>
+    </div>
+
+    <script>
+        function navigateModule(idx) {
+            document.querySelectorAll('.module-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`module${idx}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-dot').forEach((d, i) => {
+                d.classList.toggle('bg-black', i <= idx);
+                d.classList.toggle('bg-white', i > idx);
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function calculateTokenBudget() {
+            const context = parseInt(document.getElementById('m1-context').value) || 8000;
+            const skills = parseInt(document.getElementById('m1-skills').value) || 5;
+            
+            const systemPrompt = 1500;
+            const conversationHistory = 2000;
+            const verbosePerSkill = 150;
+            const concisePerSkill = 50;
+            
+            const verboseTotal = systemPrompt + conversationHistory + (skills * verbosePerSkill);
+            const conciseTotal = systemPrompt + conversationHistory + (skills * concisePerSkill);
+            
+            const verboseRemaining = context - verboseTotal;
+            const conciseRemaining = context - conciseTotal;
+            const tokensSaved = (skills * verbosePerSkill) - (skills * concisePerSkill);
+            
+            const html = `
+                <div class="space-y-3">
+                    <div class="text-xs font-semibold">Token Budget Analysis</div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="w-24 text-muted">Verbose</span>
+                        <div class="flex-1 h-4 bg-gray-100 border border-gray-200">
+                            <div class="h-full bg-negative" style="width: ${Math.min(100, (verboseTotal/context)*100)}%"></div>
+                        </div>
+                        <span class="w-20 text-right">${verboseRemaining} left</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="w-24 text-muted">Concise</span>
+                        <div class="flex-1 h-4 bg-gray-100 border border-gray-200">
+                            <div class="h-full bg-positive" style="width: ${Math.min(100, (conciseTotal/context)*100)}%"></div>
+                        </div>
+                        <span class="w-20 text-right">${conciseRemaining} left</span>
+                    </div>
+                    <div class="text-xs text-positive font-semibold">
+                        Concise saves ${tokensSaved} tokens → ${Math.round((tokensSaved/context)*100)}% more context for your request
+                    </div>
+                </div>
+            `;
+            document.getElementById('m1-results').innerHTML = html;
+            document.getElementById('m1-results').classList.add('show');
+        }
+
+        function checkFreedom() {
+            const answers = {
+                task1: 'low',    // DB migration
+                task2: 'high',  // Code review
+                task3: 'medium', // Report template
+                task4: 'low'    // API key rotation
+            };
+            
+            const explanations = {
+                task1: 'Database migrations are fragile—exact sequence matters',
+                task2: 'Code review benefits from contextual judgment',
+                task3: 'Templates provide structure with room for adaptation',
+                task4: 'Security operations need precise, auditable steps'
+            };
+            
+            let correct = 0;
+            let html = '<div class="space-y-2">';
+            
+            for (let i = 1; i <= 4; i++) {
+                const userAnswer = document.getElementById(`task${i}`).value;
+                const correctAnswer = answers[`task${i}`];
+                const isCorrect = userAnswer === correctAnswer;
+                if (isCorrect) correct++;
+                
+                html += `
+                    <div class="text-xs ${isCorrect ? 'text-positive' : 'text-negative'}">
+                        ${isCorrect ? '✓' : '✗'} Task ${i}: ${isCorrect ? 'Correct' : `Should be ${correctAnswer.toUpperCase()}`}
+                        <span class="text-muted block text-[10px]">${explanations[`task${i}`]}</span>
+                    </div>
+                `;
+            }
+            
+            html += `<div class="text-xs font-semibold mt-3">${correct}/4 correct</div></div>`;
+            document.getElementById('m2-results').innerHTML = html;
+            document.getElementById('m2-results').classList.add('show');
+        }
+
+        function simulateDisclosure() {
+            const arch = document.getElementById('m3-arch').value;
+            const query = document.getElementById('m3-query').value;
+            
+            const loads = {
+                monolith: { single: 2000, cross: 2000, overview: 2000 },
+                flat: { single: 600, cross: 1000, overview: 200 },
+                nested: { single: 800, cross: 1200, overview: 400 }
+            };
+            
+            const tokensLoaded = loads[arch][query];
+            const optimal = loads.flat[query];
+            
+            let verdict, verdictClass;
+            if (arch === 'flat') {
+                verdict = 'Optimal architecture for this query';
+                verdictClass = 'text-positive';
+            } else if (arch === 'monolith') {
+                verdict = 'Monolith loads everything regardless of query';
+                verdictClass = 'text-negative';
+            } else {
+                verdict = 'Nested structure causes partial reads';
+                verdictClass = 'text-negative';
+            }
+            
+            const html = `
+                <div class="space-y-3">
+                    <div class="text-xs">
+                        <span class="font-semibold">Tokens loaded:</span> ${tokensLoaded}
+                        <span class="text-muted">(optimal: ${optimal})</span>
+                    </div>
+                    <div class="text-xs ${verdictClass}">${verdict}</div>
+                    <div class="text-[10px] text-muted">
+                        ${arch === 'flat' ? 'Claude reads SKILL.md (200) + only needed domain file (400)' : 
+                          arch === 'monolith' ? 'All 2000 tokens loaded even for single-domain query' :
+                          'Nested references may cause head -100 partial reads'}
+                    </div>
+                </div>
+            `;
+            document.getElementById('m3-results').innerHTML = html;
+            document.getElementById('m3-results').classList.add('show');
+        }
+
+        function checkWorkflow() {
+            const steps = {
+                analyze: document.getElementById('step-analyze').value,
+                map: document.getElementById('step-map').value,
+                validate: document.getElementById('step-validate').value,
+                fill: document.getElementById('step-fill').value,
+                verify: document.getElementById('step-verify').value
+            };
+            
+            const correct = { analyze: '1', map: '2', validate: '3', fill: '4', verify: '5' };
+            
+            const allFilled = Object.values(steps).every(v => v !== '');
+            if (!allFilled) {
+                document.getElementById('m4-results').innerHTML = '<div class="text-xs text-negative">Please assign all steps</div>';
+                document.getElementById('m4-results').classList.add('show');
+                return;
+            }
+            
+            const isCorrect = JSON.stringify(steps) === JSON.stringify(correct);
+            
+            const html = `
+                <div class="space-y-3">
+                    <div class="text-xs ${isCorrect ? 'text-positive' : 'text-negative'} font-semibold">
+                        ${isCorrect ? '✓ Perfect workflow!' : '✗ Not quite right'}
+                    </div>
+                    <div class="text-xs">
+                        <div class="font-semibold mb-1">Correct order:</div>
+                        <div class="text-muted space-y-1">
+                            <div>1. Analyze form fields <span class="text-[10px]">→ understand structure</span></div>
+                            <div>2. Create field mapping <span class="text-[10px]">→ plan changes</span></div>
+                            <div>3. Validate mapping <span class="text-[10px]">→ catch errors BEFORE execution</span></div>
+                            <div>4. Fill the form <span class="text-[10px]">→ execute only after validation</span></div>
+                            <div>5. Verify output <span class="text-[10px]">→ confirm success</span></div>
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-muted">Key insight: Validation (step 3) happens BEFORE execution (step 4)</div>
+                </div>
+            `;
+            document.getElementById('m4-results').innerHTML = html;
+            document.getElementById('m4-results').classList.add('show');
+        }
+
+        function scoreDescription() {
+            const desc = document.getElementById('m5-desc').value.toLowerCase();
+            
+            let score = 0;
+            const checks = [];
+            
+            // Check for action verbs
+            const actions = ['analyze', 'create', 'generate', 'extract', 'process'];
+            if (actions.some(a => desc.includes(a))) {
+                score += 20;
+                checks.push({ pass: true, text: 'Has action verb' });
+            } else {
+                checks.push({ pass: false, text: 'Missing action verb (analyze, create, etc.)' });
+            }
+            
+            // Check for specific triggers
+            const triggers = ['excel', 'spreadsheet', 'xlsx', '.xls', 'tabular'];
+            if (triggers.some(t => desc.includes(t))) {
+                score += 25;
+                checks.push({ pass: true, text: 'Has specific triggers' });
+            } else {
+                checks.push({ pass: false, text: 'Missing file type triggers (excel, xlsx, spreadsheet)' });
+            }
+            
+            // Check for "when to use"
+            if (desc.includes('when') || desc.includes('use for') || desc.includes('use when')) {
+                score += 25;
+                checks.push({ pass: true, text: 'Includes "when to use"' });
+            } else {
+                checks.push({ pass: false, text: 'Missing "when to use" clause' });
+            }
+            
+            // Check for features
+            const features = ['pivot', 'chart', 'formula', 'table', 'data'];
+            const featureCount = features.filter(f => desc.includes(f)).length;
+            if (featureCount >= 2) {
+                score += 20;
+                checks.push({ pass: true, text: 'Lists specific features' });
+            } else {
+                checks.push({ pass: false, text: 'Add specific features (pivot tables, charts, etc.)' });
+            }
+            
+            // Check length
+            if (desc.length > 50 && desc.length < 200) {
+                score += 10;
+                checks.push({ pass: true, text: 'Good length' });
+            } else if (desc.length <= 50) {
+                checks.push({ pass: false, text: 'Too short—add more detail' });
+            } else {
+                checks.push({ pass: false, text: 'Consider trimming' });
+            }
+            
+            const html = `
+                <div class="space-y-3">
+                    <div class="text-xs font-semibold">Discoverability Score: ${score}/100</div>
+                    <div class="space-y-1">
+                        ${checks.map(c => `
+                            <div class="text-xs ${c.pass ? 'text-positive' : 'text-negative'}">
+                                ${c.pass ? '✓' : '✗'} ${c.text}
+                            </div>
+                        `).join('')}
+                    </div>
+                    ${score < 70 ? `
+                        <div class="text-[10px] text-muted mt-2">
+                            <div class="font-semibold mb-1">Example high-scoring description:</div>
+                            "Analyze Excel spreadsheets, create pivot tables, generate charts. Use when analyzing .xlsx files, spreadsheet data, or tabular information."
+                        </div>
+                    ` : '<div class="text-xs text-positive font-semibold mt-2">Great description! Claude will find this Skill reliably.</div>'}
+                </div>
+            `;
+            document.getElementById('m5-results').innerHTML = html;
+            document.getElementById('m5-results').classList.add('show');
+        }
+
+        function submitQuiz() {
+            const answers = { q1: 'b', q2: 'c', q3: 'b', q4: 'b', q5: 'c' };
+            const explanations = {
+                q1: { 
+                    correct: 'Context window is shared—every Skill token competes with conversation history and your request.',
+                    module: 'Context Window Economics'
+                },
+                q2: { 
+                    correct: 'Database migrations are fragile—exact sequence matters. One wrong step = data loss.',
+                    module: 'Degrees of Freedom'
+                },
+                q3: { 
+                    correct: 'Claude may use head -100 to preview deeply nested files, missing critical information.',
+                    module: 'Progressive Disclosure'
+                },
+                q4: { 
+                    correct: 'Validation catches errors in the plan BEFORE irreversible execution happens.',
+                    module: 'Feedback Loops'
+                },
+                q5: { 
+                    correct: 'Formula: [What it does] + [Trigger keywords] + [When to use]. Third person. Max 1024 chars.',
+                    module: 'Discovery & Description'
+                }
+            };
+
+            let score = 0;
+            let html = '<div class="space-y-3">';
+            
+            for (let i = 1; i <= 5; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                const userAnswer = selected ? selected.value : null;
+                const isCorrect = userAnswer === answers[`q${i}`];
+                if (isCorrect) score++;
+                
+                const exp = explanations[`q${i}`];
+                html += `
+                    <div class="pb-2 ${i < 5 ? 'border-b border-gray-100' : ''}">
+                        <div class="text-xs ${isCorrect ? 'text-positive' : 'text-negative'} font-semibold">
+                            ${isCorrect ? '✓' : '✗'} Q${i}: ${exp.module}
+                        </div>
+                        <div class="text-[10px] text-muted mt-1">${exp.correct}</div>
+                    </div>
+                `;
+            }
+            
+            const percentage = (score / 5) * 100;
+            let verdict, verdictClass;
+            if (percentage === 100) {
+                verdict = 'PERFECT. You understand Agent Skills deeply.';
+                verdictClass = 'text-positive';
+            } else if (percentage >= 80) {
+                verdict = 'STRONG. Minor gaps to review.';
+                verdictClass = 'text-positive';
+            } else if (percentage >= 60) {
+                verdict = 'PASSING. Review missed modules.';
+                verdictClass = 'text-accent';
+            } else {
+                verdict = 'NEEDS WORK. Revisit the course.';
+                verdictClass = 'text-negative';
+            }
+            
+            html += `
+                <div class="border-t border-gray-200 pt-3 mt-3">
+                    <div class="text-lg font-serif font-semibold">${score}/5</div>
+                    <div class="text-xs ${verdictClass} font-semibold">${verdict}</div>
+                </div>
+            `;
+            
+            html += '</div>';
+            document.getElementById('quiz-results').innerHTML = html;
+            document.getElementById('quiz-results').classList.add('show');
+        }
+    </script>
+</body>
+</html>
