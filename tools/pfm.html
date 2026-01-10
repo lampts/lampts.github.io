@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-VC31GENS6S');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PFM from Scratch | lampt.org</title>
+    <meta name="description" content="Personal Financial Management from Scratch - Interactive Course with PCA">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                        positive: '#16a34a',
+                        negative: '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .shadow-brutal { box-shadow: 3px 3px 0px #000; }
+        .shadow-brutal-hover:hover { box-shadow: 5px 5px 0px #000; }
+        .result-panel { display: none; }
+        .result-panel.show { display: block; }
+        input:focus, select:focus { outline: none; border-color: #000; }
+        .bar-fill { transition: width 0.5s ease; }
+        .eigenbar { height: 16px; background: #e5e5e5; border: 1px solid #ccc; }
+        .eigenbar-fill { height: 100%; transition: width 0.3s; }
+    </style>
+</head>
+<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white">
+
+    <div class="p-4 md:p-12 overflow-hidden min-h-screen">
+        <div class="w-full max-w-xl mx-auto">
+            
+            <!-- Header -->
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <a class="text-xl font-serif font-medium tracking-tight flex items-center gap-2" href="https://lampt.org">
+                    <span>λ PFM</span>
+                </a>
+                <div class="flex gap-2" id="moduleNav">
+                    <button class="nav-dot w-3 h-3 border border-black bg-black" data-module="0"></button>
+                    <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="1"></button>
+                    <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="2"></button>
+                    <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="3"></button>
+                    <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="4"></button>
+                    <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="5"></button>
+                    <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="6"></button>
+                    <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="7"></button>
+                </div>
+            </header>
+
+            <!-- Landing -->
+            <section class="module-section" id="module0">
+                <div class="min-h-[70vh] flex flex-col justify-center">
+                    <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black w-fit mb-4">INTERACTIVE COURSE</div>
+                    
+                    <h1 class="font-serif text-2xl md:text-3xl font-bold mb-4 leading-tight">
+                        Personal Financial Management from Scratch
+                    </h1>
+                    
+                    <p class="text-muted mb-6 leading-relaxed">
+                        You don't truly understand money until you can simulate it in code. Now with PCA-based portfolio analysis from MIT.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-4 text-xs text-muted mb-8">
+                        <span><strong class="text-foreground">7</strong> modules</span>
+                        <span><strong class="text-foreground">~120</strong> minutes</span>
+                        <span><strong class="text-foreground">PCA</strong> simulation</span>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="navigateModule(1)" class="border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors w-fit text-xs font-medium">
+                            Begin Course →
+                        </button>
+                        <button onclick="navigateModule(7)" class="border border-gray-300 px-4 py-2 hover:border-black transition-colors w-fit text-xs text-muted">
+                            Skip to PCA Module
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Module 1: Wealth Equation -->
+            <section class="module-section hidden" id="module1">
+                <div class="mb-8 pb-4 border-b border-black">
+                    <div class="text-[10px] text-muted uppercase tracking-wider mb-2">Module 1 / 7</div>
+                    <h2 class="font-serif text-lg font-bold">The Fundamental Equation of Wealth</h2>
+                    <p class="text-xs text-muted mt-1">"All of personal finance is just this equation, iterated."</p>
+                </div>
+
+                <div class="mb-6">
+                    <p class="text-muted mb-3">Most people think about money wrong. They focus on:</p>
+                    <p class="text-negative text-xs mb-2">❌ "How much do I make?" (income)<br>❌ "How much did I spend?" (expenses)</p>
+                    <p class="text-muted mb-2">The correct question:</p>
+                    <p class="text-positive text-xs">✅ "What is my NET WORTH and how is it changing?"</p>
+                </div>
+
+                <!-- Insight Box -->
+                <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">The Fundamental Equation</div>
+                    <code class="text-xs bg-white border border-gray-300 px-2 py-1 block mb-2">Wealth(t+1) = Wealth(t) + Income(t) - Expenses(t) + Returns(t)</code>
+                    <p class="text-xs text-muted">This is the ONLY equation you need. Everything else is optimization.</p>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-semibold text-xs mb-2">Stocks vs Flows</h3>
+                    <p class="text-xs text-muted mb-1"><strong class="text-foreground">STOCKS</strong> (point in time): Net worth, Debt, Assets</p>
+                    <p class="text-xs text-muted"><strong class="text-foreground">FLOWS</strong> (over a period): Income, Expenses, Savings rate</p>
+                </div>
+
+                <!-- Exercise -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-semibold text-xs">Exercise 1.1: Savings Rate Showdown</span>
+                        <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-gray-300">PRACTICE</span>
+                    </div>
+                    <p class="text-xs text-muted mb-4">Compare two people over 12 months:</p>
+                    
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <div class="border border-gray-200 p-2 text-center">
+                            <div class="font-semibold mb-1">Person A</div>
+                            <div class="text-[10px] text-muted mb-2">High Income</div>
+                            <p class="text-[10px] text-muted">$10k/mo income<br>$9.5k/mo expenses<br>$500/mo saved</p>
+                        </div>
+                        <div class="border border-black p-2 text-center shadow-brutal">
+                            <div class="font-semibold mb-1">Person B</div>
+                            <div class="text-[10px] text-muted mb-2">Moderate Income</div>
+                            <p class="text-[10px] text-muted">$5k/mo income<br>$3k/mo expenses<br>$2k/mo saved</p>
+                        </div>
+                        <div class="border border-gray-200 p-2 text-center">
+                            <div class="font-semibold mb-1">After 12mo</div>
+                            <p class="text-[10px] text-muted">A: $6,000<br>B: $24,000</p>
+                            <div class="text-positive font-bold mt-1">B wins 4×</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                    <p class="text-xs font-semibold">INCOME IS VANITY. SAVINGS RATE IS SANITY.</p>
+                </div>
+
+                <!-- Exercise 1.2 -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-semibold text-xs">Exercise 1.2: Compound Growth Simulator</span>
+                        <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                    </div>
+                    <p class="text-xs text-muted mb-4">Add investment returns. What happens over 20 years?</p>
+                    
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Monthly Savings ($)</label>
+                            <input type="number" id="monthlySavings" value="2000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Annual Return (%)</label>
+                            <input type="number" id="annualReturn" value="8" step="0.5" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Years</label>
+                            <input type="number" id="years" value="20" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                    </div>
+                    <button onclick="simulateCompound()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">
+                        Simulate
+                    </button>
+                    
+                    <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="compoundResult">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-muted">Total Contributed</span>
+                            <span id="totalContrib">-</span>
+                        </div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-muted">Final With Returns</span>
+                            <span class="text-positive font-semibold" id="finalWithReturns">-</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-muted">FREE MONEY from Compounding</span>
+                            <span class="text-positive font-semibold" id="freeMoney">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border border-black p-4 mb-8 shadow-brutal bg-gray-50">
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">The Eighth Wonder</div>
+                    <p class="text-xs text-muted">Compounding is the only free lunch in finance. The earlier you start, the more free lunch you get.</p>
+                </div>
+
+                <div class="flex justify-between pt-4 border-t border-gray-200">
+                    <button onclick="navigateModule(0)" class="text-xs text-muted hover:text-foreground">← Back</button>
+                    <button onclick="navigateModule(2)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">Module 2 →</button>
+                </div>
+            </section>
+
+            <!-- Module 2: Credit Card Float -->
+            <section class="module-section hidden" id="module2">
+                <div class="mb-8 pb-4 border-b border-black">
+                    <div class="text-[10px] text-muted uppercase tracking-wider mb-2">Module 2 / 7</div>
+                    <h2 class="font-serif text-lg font-bold">The Credit Card Float</h2>
+                    <p class="text-xs text-muted mt-1">"Use other people's money for free, legally."</p>
+                </div>
+
+                <div class="mb-6 text-xs text-muted">
+                    <p class="mb-2">When you pay with a credit card:</p>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>You spend money you don't have (yet)</li>
+                        <li>The bank pays the merchant</li>
+                        <li>You have up to 45 days before paying the bank</li>
+                        <li>Your cash earns interest during those 45 days</li>
+                    </ol>
+                    <p class="mt-2">This is called the <strong class="text-positive">FLOAT</strong>.</p>
+                </div>
+
+                <!-- Float Table -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="font-semibold text-xs mb-3">Float Days by Purchase Date</div>
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="border-b border-gray-300">
+                                <th class="text-left py-1 text-[10px] text-muted uppercase">Date</th>
+                                <th class="text-left py-1 text-[10px] text-muted uppercase">Float</th>
+                                <th class="text-left py-1 text-[10px] text-muted uppercase">Note</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-muted">
+                            <tr class="border-b border-gray-100"><td class="py-1">Jan 1</td><td>44</td><td>After statement</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-1">Jan 15</td><td>30</td><td>Mid-cycle</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-1">Jan 24</td><td>21</td><td>Before statement</td></tr>
+                            <tr class="bg-accent/30"><td class="py-1 font-semibold text-foreground">Jan 26</td><td class="text-positive font-bold">50</td><td class="text-positive">🎯 OPTIMAL</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="border-l-2 border-black pl-4 mb-6 py-2">
+                    <p class="text-xs"><strong>Timing is Everything:</strong> Buy RIGHT AFTER statement closes = MAX FLOAT (55 days). Strategic timing can <strong>TRIPLE</strong> your float benefit.</p>
+                </div>
+
+                <!-- Float Calculator -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-semibold text-xs">Annual Float Calculator</span>
+                        <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Monthly Spend (VND)</label>
+                            <input type="number" id="floatSpending" value="30000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Savings Rate (%)</label>
+                            <input type="number" id="floatRate" value="5" step="0.5" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Avg Float Days</label>
+                            <input type="number" id="floatDays" value="30" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                    </div>
+                    <button onclick="calculateFloat()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">
+                        Calculate
+                    </button>
+                    
+                    <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="floatResult">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-muted">Average Float Balance</span>
+                            <span id="floatBalance">-</span>
+                        </div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-muted">Annual Float Benefit</span>
+                            <span class="text-positive font-semibold" id="annualFloat">-</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-muted">Equivalent Cashback</span>
+                            <span class="text-positive font-semibold" id="cashbackRate">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border border-negative/30 bg-negative/5 p-4 mb-8">
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-negative">⚠️ Warning</div>
+                    <p class="text-xs text-muted">ONE late payment at 20% APR wipes out <strong class="text-negative">YEARS</strong> of float benefit.</p>
+                    <p class="text-xs font-semibold mt-2">ALWAYS PAY IN FULL. ALWAYS ON TIME.</p>
+                </div>
+
+                <div class="flex justify-between pt-4 border-t border-gray-200">
+                    <button onclick="navigateModule(1)" class="text-xs text-muted hover:text-foreground">← Module 1</button>
+                    <button onclick="navigateModule(3)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">Module 3 →</button>
+                </div>
+            </section>
+
+            <!-- Module 3: Portfolio Allocation -->
+            <section class="module-section hidden" id="module3">
+                <div class="mb-8 pb-4 border-b border-black">
+                    <div class="text-[10px] text-muted uppercase tracking-wider mb-2">Module 3 / 7</div>
+                    <h2 class="font-serif text-lg font-bold">Portfolio Allocation</h2>
+                    <p class="text-xs text-muted mt-1">"Don't put all eggs in one basket. But how many baskets?"</p>
+                </div>
+
+                <div class="mb-6 text-xs text-muted">
+                    <p>The goal isn't maximum return. It's maximum <strong class="text-foreground">RISK-ADJUSTED</strong> return.</p>
+                    <p class="mt-2">The magic: Combining assets can <span class="text-positive">REDUCE risk</span> without reducing return.</p>
+                </div>
+
+                <!-- Asset Table -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="font-semibold text-xs mb-3">Asset Classes</div>
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="border-b border-gray-300">
+                                <th class="text-left py-1 text-[10px] text-muted uppercase">Asset</th>
+                                <th class="text-left py-1 text-[10px] text-muted uppercase">Return</th>
+                                <th class="text-left py-1 text-[10px] text-muted uppercase">Volatility</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-muted">
+                            <tr class="border-b border-gray-100"><td class="py-1">VN Stocks</td><td class="text-positive">12%</td><td class="text-negative">25%</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-1">VN Bonds</td><td>5.5%</td><td>5%</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-1">Gold</td><td>5%</td><td>15%</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-1">Bank Deposit</td><td>4.5%</td><td>0.1%</td></tr>
+                            <tr><td class="py-1">US Stocks (S&P)</td><td class="text-positive">10%</td><td>18%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Portfolio Comparison -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-semibold text-xs">Portfolio Showdown (20 Years, 100M VND)</span>
+                        <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-2 text-xs mb-4">
+                        <div class="border border-gray-200 p-2 text-center">
+                            <div class="font-semibold mb-1">Aggressive</div>
+                            <div class="text-[10px] text-muted">100% VN Stocks</div>
+                            <div class="text-[10px] text-muted">Exp: 12% | Risk: 25%</div>
+                            <div class="text-positive font-bold mt-2" id="aggResult">-</div>
+                        </div>
+                        <div class="border border-black p-2 text-center shadow-brutal">
+                            <div class="font-semibold mb-1">Balanced</div>
+                            <div class="text-[10px] text-muted">50/30/10/10</div>
+                            <div class="text-[10px] text-muted">Exp: 8.2% | Risk: 13%</div>
+                            <div class="text-positive font-bold mt-2" id="balResult">-</div>
+                        </div>
+                        <div class="border border-gray-200 p-2 text-center">
+                            <div class="font-semibold mb-1">Conservative</div>
+                            <div class="text-[10px] text-muted">20/50/15/15</div>
+                            <div class="text-[10px] text-muted">Exp: 5.9% | Risk: 7%</div>
+                            <div class="text-positive font-bold mt-2" id="conResult">-</div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="simulatePortfolios()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">
+                        Run Simulation
+                    </button>
+                    
+                    <div class="result-panel mt-4 border-t border-gray-200 pt-3 space-y-2" id="portfolioResult"></div>
+                </div>
+
+                <div class="border border-black p-4 mb-8 shadow-brutal bg-gray-50">
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Risk-Return Tradeoff</div>
+                    <p class="text-xs text-muted">Your choice depends on: <strong class="text-foreground">Time horizon</strong> (longer → aggressive OK), <strong class="text-foreground">Liquidity needs</strong>, <strong class="text-foreground">Sleep quality</strong>.</p>
+                </div>
+
+                <div class="flex justify-between pt-4 border-t border-gray-200">
+                    <button onclick="navigateModule(2)" class="text-xs text-muted hover:text-foreground">← Module 2</button>
+                    <button onclick="navigateModule(4)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">Module 4 →</button>
+                </div>
+            </section>
+
+            <!-- Module 4: DCA -->
+            <section class="module-section hidden" id="module4">
+                <div class="mb-8 pb-4 border-b border-black">
+                    <div class="text-[10px] text-muted uppercase tracking-wider mb-2">Module 4 / 7</div>
+                    <h2 class="font-serif text-lg font-bold">Dollar Cost Averaging</h2>
+                    <p class="text-xs text-muted mt-1">"Time in market beats timing the market."</p>
+                </div>
+
+                <div class="mb-6 text-xs text-muted">
+                    <p class="mb-2"><strong class="text-foreground">DCA</strong> = Invest fixed amount at fixed intervals, regardless of price.</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>When prices are <span class="text-positive">LOW</span>, you buy <strong>MORE</strong> shares</li>
+                        <li>When prices are <span class="text-negative">HIGH</span>, you buy <strong>FEWER</strong> shares</li>
+                        <li>Result: Average cost &lt; Average price</li>
+                    </ul>
+                </div>
+
+                <!-- DCA Simulator -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-semibold text-xs">DCA vs Lump Sum Simulator</span>
+                        <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Total Investment (VND)</label>
+                            <input type="number" id="dcaTotal" value="120000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Market Scenario</label>
+                            <select id="dcaScenario" class="w-full border border-gray-300 px-2 py-1 text-xs bg-white">
+                                <option value="bull">Bull (+20%/yr)</option>
+                                <option value="bear">Bear (-15%/yr)</option>
+                                <option value="volatile">Volatile Flat</option>
+                                <option value="steady">Steady (+10%/yr)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button onclick="simulateDCA()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">
+                        Simulate
+                    </button>
+                    
+                    <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="dcaResult">
+                        <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                            <div class="border border-gray-200 p-2 text-center">
+                                <div class="font-semibold">DCA</div>
+                                <div class="text-[10px] text-muted">10M × 12 months</div>
+                                <div class="font-bold mt-1" id="dcaReturn">-</div>
+                            </div>
+                            <div class="border border-gray-200 p-2 text-center">
+                                <div class="font-semibold">Lump Sum</div>
+                                <div class="text-[10px] text-muted">All on Day 1</div>
+                                <div class="font-bold mt-1" id="lumpReturn">-</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-muted">Winner</span>
+                            <span class="font-semibold" id="dcaWinner">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Harmonic Mean Example -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="font-semibold text-xs mb-3">The Math: Harmonic Mean</div>
+                    <table class="w-full text-xs mb-3">
+                        <thead>
+                            <tr class="border-b border-gray-300">
+                                <th class="text-left py-1 text-[10px] text-muted">Month</th>
+                                <th class="text-left py-1 text-[10px] text-muted">Price</th>
+                                <th class="text-left py-1 text-[10px] text-muted">Invest</th>
+                                <th class="text-left py-1 text-[10px] text-muted">Shares</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-muted">
+                            <tr class="border-b border-gray-100"><td class="py-1">1</td><td>$100</td><td>$1,000</td><td>10</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-1">2</td><td>$50</td><td>$1,000</td><td>20</td></tr>
+                            <tr class="border-b border-gray-100"><td class="py-1">3</td><td>$100</td><td>$1,000</td><td>10</td></tr>
+                            <tr class="bg-accent/30 font-semibold text-foreground"><td class="py-1" colspan="2">Total</td><td>$3,000</td><td>40</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="text-xs text-muted"><strong class="text-foreground">Your avg cost:</strong> <span class="text-positive">$75/share</span> | <strong class="text-foreground">Avg price:</strong> $83.33</p>
+                    <p class="text-xs text-positive font-semibold mt-1">You paid LESS than the average price.</p>
+                </div>
+
+                <div class="border border-black p-4 mb-8 shadow-brutal bg-gray-50">
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">When DCA Wins</div>
+                    <p class="text-xs text-muted">DCA wins in: Bear markets, Volatile markets. Lump Sum wins in: Steady bull markets. Since we <strong class="text-foreground">CAN'T PREDICT</strong> markets, DCA is the safer default.</p>
+                </div>
+
+                <div class="flex justify-between pt-4 border-t border-gray-200">
+                    <button onclick="navigateModule(3)" class="text-xs text-muted hover:text-foreground">← Module 3</button>
+                    <button onclick="navigateModule(5)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">Module 5 →</button>
+                </div>
+            </section>
+
+            <!-- Module 5: Cash Flow -->
+            <section class="module-section hidden" id="module5">
+                <div class="mb-8 pb-4 border-b border-black">
+                    <div class="text-[10px] text-muted uppercase tracking-wider mb-2">Module 5 / 7</div>
+                    <h2 class="font-serif text-lg font-bold">Cash Flow Optimization</h2>
+                    <p class="text-xs text-muted mt-1">"Every VND should have a job."</p>
+                </div>
+
+                <!-- Bucket Strategy Diagram -->
+                <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Bucket Strategy</div>
+                    <pre class="text-xs text-muted overflow-x-auto">Income ─┬─→ [BUCKET 1: Emergency] ──→ 3-6 mo
+        ├─→ [BUCKET 2: Short-term] ──→ 1-3 yr
+        ├─→ [BUCKET 3: Long-term] ───→ 10+ yr
+        └─→ [BUCKET 4: Expenses] ────→ Float</pre>
+                </div>
+
+                <!-- Bucket Simulator -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-semibold text-xs">Bucket System Simulator</span>
+                        <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">MASTERY</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Monthly Income (VND)</label>
+                            <input type="number" id="bucketIncome" value="50000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Monthly Expenses (VND)</label>
+                            <input type="number" id="bucketExpenses" value="30000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Current Emergency (VND)</label>
+                            <input type="number" id="bucketEmergency" value="50000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Current Investments (VND)</label>
+                            <input type="number" id="bucketInvest" value="200000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                    </div>
+                    <button onclick="simulateBuckets()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">
+                        Simulate 24 Months
+                    </button>
+                    
+                    <div class="result-panel mt-4 border-t border-gray-200 pt-3 space-y-2" id="bucketResult"></div>
+                </div>
+
+                <div class="border-l-2 border-black pl-4 mb-8 py-2">
+                    <p class="text-xs"><strong>Bucket Strategy Power:</strong> 1. Emergency fills FIRST (peace of mind) 2. Short-term goals SECOND 3. Long-term gets ALL remaining. This is "pay yourself first" automated.</p>
+                </div>
+
+                <div class="flex justify-between pt-4 border-t border-gray-200">
+                    <button onclick="navigateModule(4)" class="text-xs text-muted hover:text-foreground">← Module 4</button>
+                    <button onclick="navigateModule(6)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">Module 6 →</button>
+                </div>
+            </section>
+
+            <!-- Module 6: Final -->
+            <section class="module-section hidden" id="module6">
+                <div class="mb-8 pb-4 border-b border-black">
+                    <div class="text-[10px] text-muted uppercase tracking-wider mb-2">Module 6 / 7</div>
+                    <h2 class="font-serif text-lg font-bold">Your Financial OS</h2>
+                    <p class="text-xs text-muted mt-1">"Build your personal finance operating system."</p>
+                </div>
+
+                <div class="mb-6 text-xs text-muted">
+                    <p class="mb-2">You now have all the building blocks:</p>
+                    <ul class="text-positive space-y-1">
+                        <li>✓ Wealth equation & compounding</li>
+                        <li>✓ Credit card float optimization</li>
+                        <li>✓ Portfolio allocation</li>
+                        <li>✓ DCA strategy</li>
+                        <li>✓ Cash flow buckets</li>
+                    </ul>
+                </div>
+
+                <!-- Dashboard Generator -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-semibold text-xs">Your Financial Dashboard</span>
+                        <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">FINAL</span>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label class="text-[10px] text-muted block mb-1">Your Name</label>
+                        <input type="text" id="userName" value="Investor" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Monthly Income (VND)</label>
+                            <input type="number" id="finalIncome" value="50000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Monthly Expenses (VND)</label>
+                            <input type="number" id="finalExpenses" value="30000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Cash (VND)</label>
+                            <input type="number" id="finalCash" value="100000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Investments (VND)</label>
+                            <input type="number" id="finalInvestments" value="500000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Debt (VND)</label>
+                            <input type="number" id="finalDebt" value="0" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                    </div>
+                    <button onclick="generateDashboard()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">
+                        Generate Dashboard
+                    </button>
+                </div>
+
+                <!-- Generated Dashboard -->
+                <div class="hidden border border-black shadow-brutal mb-6" id="financialDashboard">
+                    <div class="bg-black text-white px-4 py-2 flex justify-between text-xs">
+                        <span class="font-semibold">λ FINANCIAL DASHBOARD</span>
+                        <span id="dashboardName"></span>
+                    </div>
+                    <div class="p-4 border-b border-gray-200">
+                        <div class="text-[10px] text-muted uppercase tracking-wider mb-2">Net Worth</div>
+                        <div class="grid grid-cols-4 gap-2 text-xs">
+                            <div><div class="text-[10px] text-muted">Cash</div><div id="dashCash">-</div></div>
+                            <div><div class="text-[10px] text-muted">Investments</div><div id="dashInvest">-</div></div>
+                            <div><div class="text-[10px] text-muted">Debt</div><div class="text-negative" id="dashDebt">-</div></div>
+                            <div><div class="text-[10px] text-muted">NET WORTH</div><div class="text-positive font-bold" id="dashNetWorth">-</div></div>
+                        </div>
+                    </div>
+                    <div class="p-4 border-b border-gray-200">
+                        <div class="text-[10px] text-muted uppercase tracking-wider mb-2">Cash Flow</div>
+                        <div class="grid grid-cols-4 gap-2 text-xs">
+                            <div><div class="text-[10px] text-muted">Income</div><div id="dashIncome">-</div></div>
+                            <div><div class="text-[10px] text-muted">Expenses</div><div id="dashExpenses">-</div></div>
+                            <div><div class="text-[10px] text-muted">Surplus</div><div class="text-positive" id="dashSurplus">-</div></div>
+                            <div><div class="text-[10px] text-muted">Savings Rate</div><div class="text-positive font-bold" id="dashSavingsRate">-</div></div>
+                        </div>
+                    </div>
+                    <div class="p-4 border-b border-gray-200">
+                        <div class="text-[10px] text-muted uppercase tracking-wider mb-2">FIRE Progress</div>
+                        <div class="h-4 bg-gray-100 border border-gray-200 mb-2">
+                            <div class="h-full bg-positive transition-all" id="fireProgress" style="width: 0%"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div><div class="text-[10px] text-muted">FIRE Number</div><div id="dashFire">-</div></div>
+                            <div><div class="text-[10px] text-muted">Years to FIRE</div><div id="dashYearsToFire">-</div></div>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <div class="text-[10px] text-muted uppercase tracking-wider mb-2">Monthly Checklist</div>
+                        <ul class="text-xs space-y-1" id="dashChecklist"></ul>
+                    </div>
+                </div>
+
+                <!-- Final Summary -->
+                <div class="border border-black p-4 mb-8 shadow-brutal bg-accent/20">
+                    <div class="font-serif font-bold mb-3">The Whole Course in 4 Lines</div>
+                    <ol class="text-xs space-y-1 list-decimal list-inside">
+                        <li><strong>Spend less than you earn</strong></li>
+                        <li><strong>Invest the difference</strong></li>
+                        <li><strong>Don't do anything stupid</strong></li>
+                        <li><strong>Wait</strong></li>
+                    </ol>
+                    <p class="text-xs text-muted mt-3">Everything else is optimization.</p>
+                </div>
+
+                <div class="flex justify-between pt-4 border-t border-gray-200">
+                    <button onclick="navigateModule(5)" class="text-xs text-muted hover:text-foreground">← Module 5</button>
+                    <button onclick="navigateModule(7)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">Module 7: PCA →</button>
+                </div>
+            </section>
+
+            <!-- MODULE 7: PCA Portfolio Analysis -->
+            <section class="module-section hidden" id="module7">
+                <div class="mb-8 pb-4 border-b border-black">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="text-[10px] text-muted uppercase tracking-wider">Module 7 / 7</div>
+                        <div class="px-1.5 py-0.5 bg-accent text-black text-[10px] font-medium border border-black">MIT PCA</div>
+                    </div>
+                    <h2 class="font-serif text-lg font-bold">PCA Portfolio Analysis</h2>
+                    <p class="text-xs text-muted mt-1">"Your 4-asset portfolio is really X independent bets."</p>
+                </div>
+
+                <!-- Stefan's Key Insight -->
+                <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Stefan Andreev's Key Insight</div>
+                    <p class="text-xs text-muted mb-2">"PCA always gives you something. But if eigenvalues are similar, you're finding noise, not structure."</p>
+                    <p class="text-xs"><strong>Rule:</strong> Each PC should explain 10× more variance than the next. If not, your "diversification" is an illusion.</p>
+                </div>
+
+                <!-- The Problem -->
+                <div class="mb-6">
+                    <h3 class="font-semibold text-xs mb-2">The Problem with Simple Diversification</h3>
+                    <p class="text-xs text-muted mb-2">You think you have 4 independent bets (stocks, bonds, gold, cash).</p>
+                    <p class="text-xs text-muted mb-2">Reality: In crisis, correlations spike to 0.9+. Your "4 assets" become <strong>1 bet</strong>.</p>
+                    <table class="w-full text-xs mt-3">
+                        <thead>
+                            <tr class="border-b border-gray-300">
+                                <th class="text-left py-1 text-[10px] text-muted">Regime</th>
+                                <th class="text-left py-1 text-[10px] text-muted">Stock-Bond Corr</th>
+                                <th class="text-left py-1 text-[10px] text-muted">Volatility</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-muted">
+                            <tr class="border-b border-gray-100"><td class="py-1">Normal (70%)</td><td>0.2</td><td>Base</td></tr>
+                            <tr class="border-b border-gray-100 bg-negative/10"><td class="py-1 text-negative">Crisis (15%)</td><td class="text-negative">0.8</td><td class="text-negative">2.5×</td></tr>
+                            <tr><td class="py-1">Euphoria (15%)</td><td>-0.2</td><td>0.7×</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Target Goal Simulator -->
+                <div class="border border-black p-4 mb-6 shadow-brutal">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="font-semibold text-xs">$5M Target Simulator</span>
+                        <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">PCA + MONTE CARLO</span>
+                    </div>
+                    
+                    <div class="text-xs text-muted mb-4">Enter your current state and target. We'll run 10,000 regime-switching simulations.</div>
+                    
+                    <!-- Current State -->
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-muted">Current State</div>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Net Worth (USD)</label>
+                            <input type="number" id="pcaNetWorth" value="25000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Monthly Savings (USD)</label>
+                            <input type="number" id="pcaMonthlySavings" value="800" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Target -->
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-muted">Target</div>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Target Amount (USD)</label>
+                            <input type="number" id="pcaTarget" value="5000000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Years</label>
+                            <input type="number" id="pcaYears" value="5" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Allocation -->
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-muted">Portfolio Allocation (%)</div>
+                    <div class="grid grid-cols-4 gap-2 mb-4">
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Stocks</label>
+                            <input type="number" id="pcaStocks" value="60" min="0" max="100" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Bonds</label>
+                            <input type="number" id="pcaBonds" value="25" min="0" max="100" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Gold</label>
+                            <input type="number" id="pcaGold" value="10" min="0" max="100" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-muted block mb-1">Cash</label>
+                            <input type="number" id="pcaCash" value="5" min="0" max="100" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                        </div>
+                    </div>
+
+                    <button onclick="runPCASimulation()" class="border border-black px-3 py-2 text-xs hover:bg-black hover:text-white transition-colors w-full font-medium">
+                        Run 10,000 Simulations
+                    </button>
+                </div>
+
+                <!-- Results Panel -->
+                <div class="result-panel" id="pcaResults">
+                    
+                    <!-- Reality Check -->
+                    <div class="border border-negative/50 bg-negative/5 p-4 mb-4">
+                        <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-negative">⚠️ Reality Check</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                                <span class="text-muted">Required growth:</span>
+                                <span class="font-semibold" id="requiredGrowth">-</span>
+                            </div>
+                            <div>
+                                <span class="text-muted">Required CAGR:</span>
+                                <span class="font-semibold" id="requiredCAGR">-</span>
+                            </div>
+                            <div>
+                                <span class="text-muted">Historical max:</span>
+                                <span class="text-muted">~25%/year</span>
+                            </div>
+                            <div>
+                                <span class="text-muted">Verdict:</span>
+                                <span class="font-semibold" id="verdict">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Eigenvalue Analysis -->
+                    <div class="border border-black p-4 mb-4 shadow-brutal">
+                        <div class="text-[10px] font-medium uppercase tracking-wider mb-3">Eigenvalue Decomposition</div>
+                        <p class="text-xs text-muted mb-3">Your "4 assets" decompose into these independent risk factors:</p>
+                        
+                        <div class="space-y-2 mb-3">
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="w-20">PC1 (Market)</span>
+                                <div class="flex-1 eigenbar"><div class="eigenbar-fill bg-black" id="pc1Bar" style="width:0%"></div></div>
+                                <span class="w-12 text-right" id="pc1Var">-</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="w-20">PC2 (S/B)</span>
+                                <div class="flex-1 eigenbar"><div class="eigenbar-fill bg-gray-600" id="pc2Bar" style="width:0%"></div></div>
+                                <span class="w-12 text-right" id="pc2Var">-</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="w-20">PC3 (Gold)</span>
+                                <div class="flex-1 eigenbar"><div class="eigenbar-fill bg-yellow-500" id="pc3Bar" style="width:0%"></div></div>
+                                <span class="w-12 text-right" id="pc3Var">-</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="w-20">PC4 (Idio)</span>
+                                <div class="flex-1 eigenbar"><div class="eigenbar-fill bg-gray-300" id="pc4Bar" style="width:0%"></div></div>
+                                <span class="w-12 text-right" id="pc4Var">-</span>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 pt-2">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-muted">Effective # of bets:</span>
+                                <span class="font-bold" id="effectiveBets">-</span>
+                            </div>
+                            <div class="flex justify-between text-xs mt-1">
+                                <span class="text-muted">Eigenvalue separation:</span>
+                                <span id="eigenSeparation">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monte Carlo Results -->
+                    <div class="border border-black p-4 mb-4 shadow-brutal">
+                        <div class="text-[10px] font-medium uppercase tracking-wider mb-3">Simulation Results (10,000 paths)</div>
+                        
+                        <div class="grid grid-cols-3 gap-2 mb-4">
+                            <div class="border border-gray-200 p-2 text-center">
+                                <div class="text-[10px] text-muted">P(Success)</div>
+                                <div class="text-lg font-bold" id="pSuccess">-</div>
+                            </div>
+                            <div class="border border-gray-200 p-2 text-center">
+                                <div class="text-[10px] text-muted">Median Outcome</div>
+                                <div class="text-sm font-semibold" id="medianOutcome">-</div>
+                            </div>
+                            <div class="border border-gray-200 p-2 text-center">
+                                <div class="text-[10px] text-muted">95th Percentile</div>
+                                <div class="text-sm font-semibold text-positive" id="p95Outcome">-</div>
+                            </div>
+                        </div>
+
+                        <!-- Distribution -->
+                        <div class="text-[10px] text-muted mb-2">Outcome Distribution:</div>
+                        <div class="space-y-1 mb-3" id="distributionBars"></div>
+
+                        <!-- Regime Impact -->
+                        <div class="border-t border-gray-200 pt-3 mt-3">
+                            <div class="text-[10px] text-muted mb-2">Regime Impact on Paths:</div>
+                            <div class="grid grid-cols-3 gap-2 text-xs">
+                                <div><span class="text-muted">Normal:</span> <span id="normalPaths">-</span></div>
+                                <div><span class="text-negative">Crisis:</span> <span id="crisisPaths">-</span></div>
+                                <div><span class="text-positive">Euphoria:</span> <span id="euphoriaPaths">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bayesian Confidence -->
+                    <div class="border border-black p-4 mb-4 shadow-brutal bg-gray-50">
+                        <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Bayesian Confidence Score</div>
+                        <div class="text-xs mb-3">
+                            <code class="bg-white border border-gray-300 px-1">P(reach target | you) = P(market) × P(behavior) × P(no_shocks)</code>
+                        </div>
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-muted">P(market returns ≥ required)</span>
+                                <span id="pMarket">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted">P(stick to plan for 5 years)</span>
+                                <span>~80%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted">P(no liquidation events)</span>
+                                <span>~70%</span>
+                            </div>
+                            <div class="flex justify-between border-t border-gray-300 pt-1 mt-1">
+                                <span class="font-semibold">Final Confidence</span>
+                                <span class="font-bold" id="finalConfidence">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Achievable Alternatives -->
+                    <div class="border border-black p-4 mb-4 shadow-brutal">
+                        <div class="text-[10px] font-medium uppercase tracking-wider mb-3">Achievable Alternatives</div>
+                        
+                        <div class="text-xs text-muted mb-3">What you CAN achieve with 80% confidence:</div>
+                        
+                        <div class="space-y-2 text-xs">
+                            <div class="flex justify-between">
+                                <span>In <span id="altYears1">5</span> years:</span>
+                                <span class="font-semibold text-positive" id="achievable5">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>In 10 years:</span>
+                                <span class="font-semibold text-positive" id="achievable10">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>In 20 years:</span>
+                                <span class="font-semibold text-positive" id="achievable20">-</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-200 pt-3 mt-3">
+                            <div class="text-[10px] text-muted mb-2">To reach your target with 50% probability:</div>
+                            <div class="space-y-1 text-xs">
+                                <div class="flex justify-between">
+                                    <span>Option A: Save monthly</span>
+                                    <span class="font-semibold" id="optionA">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Option B: Years needed</span>
+                                    <span class="font-semibold" id="optionB">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Option C: Start with</span>
+                                    <span class="font-semibold" id="optionC">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PC2/PC3 Tilts -->
+                    <div class="border border-black p-4 mb-4 shadow-brutal">
+                        <div class="text-[10px] font-medium uppercase tracking-wider mb-3">Orthogonal Bet Suggestions</div>
+                        <p class="text-xs text-muted mb-3">Stefan's insight: Create uncorrelated bets by tilting toward PC2/PC3.</p>
+                        
+                        <div class="space-y-3 text-xs">
+                            <div class="border border-gray-200 p-2">
+                                <div class="font-semibold mb-1">PC2 Tilt: Stock-Bond Spread</div>
+                                <div class="text-muted">Overweight stocks vs bonds when: yield curve steep, Fed dovish</div>
+                                <div class="text-positive mt-1">Current suggestion: <span id="pc2Suggestion">-</span></div>
+                            </div>
+                            <div class="border border-gray-200 p-2">
+                                <div class="font-semibold mb-1">PC3 Tilt: Gold Hedge</div>
+                                <div class="text-muted">Overweight gold when: real rates negative, USD weak</div>
+                                <div class="text-positive mt-1">Current suggestion: <span id="pc3Suggestion">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Key Takeaways -->
+                <div class="border border-black p-4 mb-6 shadow-brutal bg-accent/20">
+                    <div class="font-serif font-bold mb-3">Key Takeaways from MIT PCA</div>
+                    <ul class="text-xs space-y-2">
+                        <li><strong>1.</strong> Check eigenvalue separation BEFORE trusting any factor</li>
+                        <li><strong>2.</strong> In crisis, correlations spike → diversification fails when needed most</li>
+                        <li><strong>3.</strong> Savings rate dominates for most people → contributions > returns</li>
+                        <li><strong>4.</strong> Construct orthogonal bets (PC2/PC3) for true diversification</li>
+                    </ul>
+                </div>
+
+                <div class="flex justify-between pt-4 border-t border-gray-200">
+                    <button onclick="navigateModule(6)" class="text-xs text-muted hover:text-foreground">← Module 6</button>
+                    <button onclick="navigateModule(0)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors">Restart Course</button>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
+                <a href="https://lampt.org" class="font-serif text-sm text-black hover:underline">Pham Thanh Lam (λ)</a>
+                <span>© 2025</span>
+            </footer>
+
+        </div>
+    </div>
+
+    <script>
+        function formatCurrency(num, currency = 'VND') {
+            if (currency === 'VND') {
+                return new Intl.NumberFormat('vi-VN').format(Math.round(num)) + ' đ';
+            }
+            return '$' + new Intl.NumberFormat('en-US').format(Math.round(num));
+        }
+
+        function formatPercent(num) {
+            return num.toFixed(1) + '%';
+        }
+
+        function navigateModule(moduleIndex) {
+            document.querySelectorAll('.module-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`module${moduleIndex}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                dot.classList.remove('bg-black');
+                dot.classList.add('bg-white');
+                if (i <= moduleIndex) {
+                    dot.classList.remove('bg-white');
+                    dot.classList.add('bg-black');
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.querySelectorAll('.nav-dot').forEach(dot => {
+            dot.addEventListener('click', () => navigateModule(parseInt(dot.dataset.module)));
+        });
+
+        // Module 1: Compound Growth
+        function simulateCompound() {
+            const monthly = parseFloat(document.getElementById('monthlySavings').value);
+            const rate = parseFloat(document.getElementById('annualReturn').value) / 100;
+            const years = parseInt(document.getElementById('years').value);
+            let wealth = 0;
+            for (let m = 0; m < years * 12; m++) {
+                wealth += monthly;
+                wealth *= (1 + rate / 12);
+            }
+            const total = monthly * years * 12;
+            document.getElementById('totalContrib').textContent = formatCurrency(total, 'USD');
+            document.getElementById('finalWithReturns').textContent = formatCurrency(wealth, 'USD');
+            document.getElementById('freeMoney').textContent = '+' + formatCurrency(wealth - total, 'USD');
+            document.getElementById('compoundResult').classList.add('show');
+        }
+
+        // Module 2: Float Calculator
+        function calculateFloat() {
+            const spending = parseFloat(document.getElementById('floatSpending').value);
+            const rate = parseFloat(document.getElementById('floatRate').value) / 100;
+            const days = parseFloat(document.getElementById('floatDays').value);
+            const balance = spending * (days / 30);
+            const annual = balance * rate;
+            const cashback = (annual / (spending * 12)) * 100;
+            document.getElementById('floatBalance').textContent = formatCurrency(balance);
+            document.getElementById('annualFloat').textContent = formatCurrency(annual);
+            document.getElementById('cashbackRate').textContent = formatPercent(cashback);
+            document.getElementById('floatResult').classList.add('show');
+        }
+
+        // Module 3: Portfolio Simulation
+        function simulatePortfolios() {
+            const initial = 100000000;
+            const portfolios = {
+                aggressive: { ret: 0.12, vol: 0.25 },
+                balanced: { ret: 0.082, vol: 0.13 },
+                conservative: { ret: 0.059, vol: 0.07 }
+            };
+            const results = {};
+            Object.keys(portfolios).forEach(name => {
+                const p = portfolios[name];
+                let total = 0;
+                for (let s = 0; s < 5; s++) {
+                    let val = initial;
+                    for (let y = 0; y < 20; y++) {
+                        val *= (1 + p.ret + (Math.random() - 0.5) * p.vol * 2);
+                    }
+                    total += val;
+                }
+                results[name] = total / 5;
+            });
+            document.getElementById('aggResult').textContent = formatCurrency(results.aggressive);
+            document.getElementById('balResult').textContent = formatCurrency(results.balanced);
+            document.getElementById('conResult').textContent = formatCurrency(results.conservative);
+            const pc = document.getElementById('portfolioResult');
+            const max = Math.max(...Object.values(results));
+            const labels = { aggressive: 'Aggressive', balanced: 'Balanced', conservative: 'Conservative' };
+            pc.innerHTML = Object.keys(results).map(n => `
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="w-20 text-muted">${labels[n]}</span>
+                    <div class="flex-1 h-4 bg-gray-100 border border-gray-200">
+                        <div class="h-full bg-black" style="width: ${(results[n]/max)*100}%"></div>
+                    </div>
+                    <span class="w-28 text-right">${formatCurrency(results[n])}</span>
+                </div>
+            `).join('');
+            pc.classList.add('show');
+        }
+
+        // Module 4: DCA Simulation
+        function simulateDCA() {
+            const total = parseFloat(document.getElementById('dcaTotal').value);
+            const scenario = document.getElementById('dcaScenario').value;
+            const params = { bull: { r: 0.2, v: 0.15 }, bear: { r: -0.15, v: 0.25 }, volatile: { r: 0, v: 0.3 }, steady: { r: 0.1, v: 0.1 } }[scenario];
+            let prices = [100];
+            for (let i = 0; i < 12; i++) {
+                prices.push(Math.max(1, prices[prices.length - 1] * (1 + params.r / 12 + (Math.random() - 0.5) * params.v / Math.sqrt(12) * 2)));
+            }
+            const monthly = total / 12;
+            let shares = 0;
+            for (let i = 0; i < 12; i++) shares += monthly / prices[i];
+            const dcaFinal = shares * prices[12];
+            const dcaRet = ((dcaFinal / total) - 1) * 100;
+            const lumpShares = total / prices[0];
+            const lumpFinal = lumpShares * prices[12];
+            const lumpRet = ((lumpFinal / total) - 1) * 100;
+            const dcaEl = document.getElementById('dcaReturn');
+            const lumpEl = document.getElementById('lumpReturn');
+            dcaEl.textContent = formatPercent(dcaRet);
+            dcaEl.className = dcaRet >= 0 ? 'font-bold mt-1 text-positive' : 'font-bold mt-1 text-negative';
+            lumpEl.textContent = formatPercent(lumpRet);
+            lumpEl.className = lumpRet >= 0 ? 'font-bold mt-1 text-positive' : 'font-bold mt-1 text-negative';
+            document.getElementById('dcaWinner').textContent = dcaRet > lumpRet ? 'DCA Wins' : 'Lump Sum Wins';
+            document.getElementById('dcaResult').classList.add('show');
+        }
+
+        // Module 5: Bucket Simulation
+        function simulateBuckets() {
+            const income = parseFloat(document.getElementById('bucketIncome').value);
+            const expenses = parseFloat(document.getElementById('bucketExpenses').value);
+            let emergency = parseFloat(document.getElementById('bucketEmergency').value);
+            let invest = parseFloat(document.getElementById('bucketInvest').value);
+            const emergencyTarget = expenses * 6;
+            const carTarget = 500000000;
+            let car = 0;
+            const surplus = income - expenses;
+            for (let m = 1; m <= 24; m++) {
+                invest *= 1.00833;
+                emergency *= 1.00375;
+                let rem = surplus;
+                if (emergency < emergencyTarget) {
+                    const add = Math.min(rem, emergencyTarget - emergency);
+                    emergency += add;
+                    rem -= add;
+                }
+                if (car < carTarget && rem > 0) {
+                    const add = Math.min(rem, carTarget - car);
+                    car += add;
+                    rem -= add;
+                }
+                invest += rem;
+            }
+            const pc = document.getElementById('bucketResult');
+            pc.innerHTML = `
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="w-20 text-muted">Emergency</span>
+                    <div class="flex-1 h-4 bg-gray-100 border border-gray-200">
+                        <div class="h-full bg-yellow-400" style="width: ${Math.min(100, (emergency/emergencyTarget)*100)}%"></div>
+                    </div>
+                    <span class="w-12 text-right">${Math.round((emergency/emergencyTarget)*100)}%</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="w-20 text-muted">Car Fund</span>
+                    <div class="flex-1 h-4 bg-gray-100 border border-gray-200">
+                        <div class="h-full bg-blue-400" style="width: ${Math.min(100, (car/carTarget)*100)}%"></div>
+                    </div>
+                    <span class="w-12 text-right">${Math.round((car/carTarget)*100)}%</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="w-20 text-muted">Investments</span>
+                    <div class="flex-1 h-4 bg-gray-100 border border-gray-200">
+                        <div class="h-full bg-black" style="width: 100%"></div>
+                    </div>
+                    <span class="w-28 text-right">${formatCurrency(invest)}</span>
+                </div>
+                <div class="mt-2 pt-2 border-t border-gray-200 flex justify-between text-xs">
+                    <span class="text-muted">Total (24mo):</span>
+                    <span class="text-positive font-semibold">${formatCurrency(emergency + car + invest)}</span>
+                </div>
+            `;
+            pc.classList.add('show');
+        }
+
+        // Module 6: Dashboard Generator
+        function generateDashboard() {
+            const name = document.getElementById('userName').value;
+            const income = parseFloat(document.getElementById('finalIncome').value);
+            const expenses = parseFloat(document.getElementById('finalExpenses').value);
+            const cash = parseFloat(document.getElementById('finalCash').value);
+            const investments = parseFloat(document.getElementById('finalInvestments').value);
+            const debt = parseFloat(document.getElementById('finalDebt').value);
+            const netWorth = cash + investments - debt;
+            const surplus = income - expenses;
+            const savingsRate = ((income - expenses) / income) * 100;
+            const fireNumber = expenses * 12 * 25;
+            const fireProgress = Math.min(100, (netWorth / fireNumber) * 100);
+            let yearsToFire = 'Never';
+            if (surplus > 0 && netWorth < fireNumber) {
+                yearsToFire = ((fireNumber - netWorth) / surplus / 12).toFixed(1) + ' yrs';
+            } else if (netWorth >= fireNumber) {
+                yearsToFire = '🎉 Done!';
+            }
+            document.getElementById('dashboardName').textContent = name;
+            document.getElementById('dashCash').textContent = formatCurrency(cash);
+            document.getElementById('dashInvest').textContent = formatCurrency(investments);
+            document.getElementById('dashDebt').textContent = formatCurrency(debt);
+            document.getElementById('dashNetWorth').textContent = formatCurrency(netWorth);
+            document.getElementById('dashIncome').textContent = formatCurrency(income);
+            document.getElementById('dashExpenses').textContent = formatCurrency(expenses);
+            document.getElementById('dashSurplus').textContent = formatCurrency(surplus);
+            document.getElementById('dashSavingsRate').textContent = formatPercent(savingsRate);
+            document.getElementById('dashFire').textContent = formatCurrency(fireNumber);
+            document.getElementById('dashYearsToFire').textContent = yearsToFire;
+            document.getElementById('fireProgress').style.width = fireProgress + '%';
+            const emergencyTarget = expenses * 6;
+            document.getElementById('dashChecklist').innerHTML = `
+                <li>${cash >= emergencyTarget ? '✓' : '⚠'} Emergency: ${formatPercent((cash/emergencyTarget)*100)} of target</li>
+                <li>→ DCA this month: ${formatCurrency(income * 0.2)}</li>
+                <li>${savingsRate >= 20 ? '✓' : '⚠'} Savings rate: ${formatPercent(savingsRate)}</li>
+                <li>→ Pay credit card IN FULL</li>
+            `;
+            document.getElementById('financialDashboard').classList.remove('hidden');
+            document.getElementById('financialDashboard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // =====================
+        // MODULE 7: PCA SIMULATION
+        // =====================
+
+        // Format helpers for USD
+        function formatUSD(num) {
+            if (num >= 1000000) return '$' + (num / 1000000).toFixed(2) + 'M';
+            if (num >= 1000) return '$' + (num / 1000).toFixed(0) + 'K';
+            return '$' + num.toFixed(0);
+        }
+
+        function formatPct(num) {
+            return num.toFixed(2) + '%';
+        }
+
+        // Asset parameters (historical estimates)
+        const assetParams = {
+            stocks: { ret: 0.10, vol: 0.18 },
+            bonds: { ret: 0.04, vol: 0.06 },
+            gold: { ret: 0.05, vol: 0.15 },
+            cash: { ret: 0.03, vol: 0.01 }
+        };
+
+        // Correlation matrices by regime
+        const correlations = {
+            normal: { stocks_bonds: 0.2, stocks_gold: 0.1, stocks_cash: 0.0, bonds_gold: 0.1, bonds_cash: 0.3, gold_cash: 0.0 },
+            crisis: { stocks_bonds: 0.8, stocks_gold: 0.5, stocks_cash: 0.3, bonds_gold: 0.4, bonds_cash: 0.5, gold_cash: 0.2 },
+            euphoria: { stocks_bonds: -0.2, stocks_gold: -0.3, stocks_cash: -0.1, bonds_gold: 0.2, bonds_cash: 0.4, gold_cash: 0.1 }
+        };
+
+        // Regime probabilities and vol multipliers
+        const regimes = {
+            normal: { prob: 0.70, volMult: 1.0 },
+            crisis: { prob: 0.15, volMult: 2.5 },
+            euphoria: { prob: 0.15, volMult: 0.7 }
+        };
+
+        // Box-Muller for normal random
+        function randn() {
+            let u = 0, v = 0;
+            while (u === 0) u = Math.random();
+            while (v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        // Generate correlated returns
+        function generateCorrelatedReturns(weights, regime, monthlyParams) {
+            const corrMatrix = correlations[regime];
+            const volMult = regimes[regime].volMult;
+            const z = [randn(), randn(), randn(), randn()];
+            
+            const stockRet = monthlyParams.stocks.ret + monthlyParams.stocks.vol * volMult * z[0];
+            const bondRet = monthlyParams.bonds.ret + monthlyParams.bonds.vol * volMult * (
+                corrMatrix.stocks_bonds * z[0] + Math.sqrt(1 - corrMatrix.stocks_bonds**2) * z[1]
+            );
+            const goldRet = monthlyParams.gold.ret + monthlyParams.gold.vol * volMult * (
+                corrMatrix.stocks_gold * z[0] + Math.sqrt(1 - corrMatrix.stocks_gold**2) * z[2]
+            );
+            const cashRet = monthlyParams.cash.ret + monthlyParams.cash.vol * z[3];
+
+            return weights.stocks * stockRet + weights.bonds * bondRet + weights.gold * goldRet + weights.cash * cashRet;
+        }
+
+        // Select regime
+        function selectRegime() {
+            const r = Math.random();
+            if (r < regimes.normal.prob) return 'normal';
+            if (r < regimes.normal.prob + regimes.crisis.prob) return 'crisis';
+            return 'euphoria';
+        }
+
+        // Compute eigenvalues (simplified)
+        function computeEigenvalues(weights, regime) {
+            const pc1 = 0.55 + 0.15 * weights.stocks;
+            const pc2 = 0.25 - 0.05 * weights.stocks;
+            const pc3 = 0.12 + 0.05 * weights.gold;
+            const pc4 = 1 - pc1 - pc2 - pc3;
+            return { pc1, pc2, pc3, pc4: Math.max(0.02, pc4) };
+        }
+
+        // Main PCA simulation
+        function runPCASimulation() {
+            const netWorth = parseFloat(document.getElementById('pcaNetWorth').value);
+            const monthlySavings = parseFloat(document.getElementById('pcaMonthlySavings').value);
+            const target = parseFloat(document.getElementById('pcaTarget').value);
+            const years = parseInt(document.getElementById('pcaYears').value);
+            
+            const stocks = parseFloat(document.getElementById('pcaStocks').value) / 100;
+            const bonds = parseFloat(document.getElementById('pcaBonds').value) / 100;
+            const gold = parseFloat(document.getElementById('pcaGold').value) / 100;
+            const cash = parseFloat(document.getElementById('pcaCash').value) / 100;
+            
+            const weights = { stocks, bonds, gold, cash };
+            const months = years * 12;
+            const N = 10000;
+
+            const monthlyParams = {
+                stocks: { ret: assetParams.stocks.ret / 12, vol: assetParams.stocks.vol / Math.sqrt(12) },
+                bonds: { ret: assetParams.bonds.ret / 12, vol: assetParams.bonds.vol / Math.sqrt(12) },
+                gold: { ret: assetParams.gold.ret / 12, vol: assetParams.gold.vol / Math.sqrt(12) },
+                cash: { ret: assetParams.cash.ret / 12, vol: assetParams.cash.vol / Math.sqrt(12) }
+            };
+
+            // Reality check
+            const requiredGrowth = target / netWorth;
+            const requiredCAGR = (Math.pow(requiredGrowth, 1/years) - 1) * 100;
+            
+            document.getElementById('requiredGrowth').textContent = requiredGrowth.toFixed(0) + '×';
+            document.getElementById('requiredCAGR').textContent = requiredCAGR.toFixed(1) + '%/yr';
+            
+            let verdictText, verdictClass;
+            if (requiredCAGR > 50) { verdictText = 'Impossible'; verdictClass = 'text-negative'; }
+            else if (requiredCAGR > 25) { verdictText = 'Extremely unlikely'; verdictClass = 'text-negative'; }
+            else if (requiredCAGR > 15) { verdictText = 'Very difficult'; verdictClass = 'text-yellow-600'; }
+            else { verdictText = 'Challenging but possible'; verdictClass = 'text-positive'; }
+            document.getElementById('verdict').textContent = verdictText;
+            document.getElementById('verdict').className = 'font-semibold ' + verdictClass;
+
+            // Eigenvalue analysis
+            const eigenvals = computeEigenvalues(weights, 'normal');
+            document.getElementById('pc1Bar').style.width = (eigenvals.pc1 * 100) + '%';
+            document.getElementById('pc2Bar').style.width = (eigenvals.pc2 * 100) + '%';
+            document.getElementById('pc3Bar').style.width = (eigenvals.pc3 * 100) + '%';
+            document.getElementById('pc4Bar').style.width = (eigenvals.pc4 * 100) + '%';
+            document.getElementById('pc1Var').textContent = formatPct(eigenvals.pc1 * 100);
+            document.getElementById('pc2Var').textContent = formatPct(eigenvals.pc2 * 100);
+            document.getElementById('pc3Var').textContent = formatPct(eigenvals.pc3 * 100);
+            document.getElementById('pc4Var').textContent = formatPct(eigenvals.pc4 * 100);
+
+            const e = [eigenvals.pc1, eigenvals.pc2, eigenvals.pc3, eigenvals.pc4];
+            const entropy = -e.reduce((s, p) => s + (p > 0 ? p * Math.log(p) : 0), 0);
+            const effectiveBets = Math.exp(entropy);
+            document.getElementById('effectiveBets').textContent = effectiveBets.toFixed(1);
+
+            const separation = eigenvals.pc1 / eigenvals.pc2;
+            let sepText, sepClass;
+            if (separation > 3) { sepText = 'Good (' + separation.toFixed(1) + '×)'; sepClass = 'text-positive'; }
+            else if (separation > 1.5) { sepText = 'Moderate (' + separation.toFixed(1) + '×)'; sepClass = 'text-yellow-600'; }
+            else { sepText = 'Poor (' + separation.toFixed(1) + '×)'; sepClass = 'text-negative'; }
+            document.getElementById('eigenSeparation').textContent = sepText;
+            document.getElementById('eigenSeparation').className = sepClass;
+
+            // Monte Carlo
+            const outcomes = [];
+            let successes = 0;
+            let regimeCounts = { normal: 0, crisis: 0, euphoria: 0 };
+
+            for (let i = 0; i < N; i++) {
+                let wealth = netWorth;
+                for (let m = 0; m < months; m++) {
+                    const regime = selectRegime();
+                    regimeCounts[regime]++;
+                    const ret = generateCorrelatedReturns(weights, regime, monthlyParams);
+                    wealth = wealth * (1 + ret) + monthlySavings;
+                }
+                outcomes.push(wealth);
+                if (wealth >= target) successes++;
+            }
+
+            outcomes.sort((a, b) => a - b);
+            const median = outcomes[Math.floor(N * 0.5)];
+            const p5 = outcomes[Math.floor(N * 0.05)];
+            const p20 = outcomes[Math.floor(N * 0.20)];
+            const p80 = outcomes[Math.floor(N * 0.80)];
+            const p95 = outcomes[Math.floor(N * 0.95)];
+
+            const pSuccess = (successes / N) * 100;
+            document.getElementById('pSuccess').textContent = pSuccess < 0.01 ? '<0.01%' : formatPct(pSuccess);
+            document.getElementById('pSuccess').className = 'text-lg font-bold ' + (pSuccess > 5 ? 'text-positive' : 'text-negative');
+            document.getElementById('medianOutcome').textContent = formatUSD(median);
+            document.getElementById('p95Outcome').textContent = formatUSD(p95);
+
+            const buckets = [
+                { label: '5th %ile', value: p5, max: p95 },
+                { label: '20th %ile', value: p20, max: p95 },
+                { label: 'Median', value: median, max: p95 },
+                { label: '80th %ile', value: p80, max: p95 },
+                { label: '95th %ile', value: p95, max: p95 }
+            ];
+            document.getElementById('distributionBars').innerHTML = buckets.map(b => `
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="w-16 text-muted">${b.label}</span>
+                    <div class="flex-1 h-3 bg-gray-100 border border-gray-200">
+                        <div class="h-full bg-black bar-fill" style="width: ${(b.value/b.max)*100}%"></div>
+                    </div>
+                    <span class="w-16 text-right">${formatUSD(b.value)}</span>
+                </div>
+            `).join('');
+
+            const totalMonths = N * months;
+            document.getElementById('normalPaths').textContent = formatPct((regimeCounts.normal / totalMonths) * 100);
+            document.getElementById('crisisPaths').textContent = formatPct((regimeCounts.crisis / totalMonths) * 100);
+            document.getElementById('euphoriaPaths').textContent = formatPct((regimeCounts.euphoria / totalMonths) * 100);
+
+            const pMarket = pSuccess;
+            document.getElementById('pMarket').textContent = pMarket < 0.01 ? '<0.01%' : formatPct(pMarket);
+            const finalConf = (pMarket / 100) * 0.8 * 0.7 * 100;
+            document.getElementById('finalConfidence').textContent = finalConf < 0.001 ? '<0.001%' : formatPct(finalConf);
+
+            document.getElementById('altYears1').textContent = years;
+            document.getElementById('achievable5').textContent = formatUSD(p20);
+            
+            const sim10 = simulateYears(10, netWorth, monthlySavings, weights, monthlyParams);
+            const sim20 = simulateYears(20, netWorth, monthlySavings, weights, monthlyParams);
+            document.getElementById('achievable10').textContent = formatUSD(sim10.p20);
+            document.getElementById('achievable20').textContent = formatUSD(sim20.p20);
+
+            const requiredMonthlySavings = calculateRequiredSavings(target, netWorth, years, weights, monthlyParams);
+            document.getElementById('optionA').textContent = formatUSD(requiredMonthlySavings) + '/mo';
+
+            const requiredYears = calculateRequiredYears(target, netWorth, monthlySavings, weights, monthlyParams);
+            document.getElementById('optionB').textContent = requiredYears + ' years';
+
+            const requiredStart = calculateRequiredStart(target, monthlySavings, years, weights, monthlyParams);
+            document.getElementById('optionC').textContent = formatUSD(requiredStart);
+
+            document.getElementById('pc2Suggestion').textContent = stocks > 0.5 ? 'Maintain stock tilt' : 'Consider +10% stocks, -10% bonds';
+            document.getElementById('pc3Suggestion').textContent = gold < 0.15 ? 'Consider +5% gold allocation' : 'Gold allocation adequate';
+
+            document.getElementById('pcaResults').classList.add('show');
+            document.getElementById('pcaResults').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function simulateYears(years, netWorth, monthlySavings, weights, monthlyParams) {
+            const months = years * 12;
+            const N = 2000;
+            const outcomes = [];
+            
+            for (let i = 0; i < N; i++) {
+                let wealth = netWorth;
+                for (let m = 0; m < months; m++) {
+                    const regime = selectRegime();
+                    const ret = generateCorrelatedReturns(weights, regime, monthlyParams);
+                    wealth = wealth * (1 + ret) + monthlySavings;
+                }
+                outcomes.push(wealth);
+            }
+            outcomes.sort((a, b) => a - b);
+            return { p20: outcomes[Math.floor(N * 0.20)], median: outcomes[Math.floor(N * 0.5)] };
+        }
+
+        function calculateRequiredSavings(target, netWorth, years, weights, monthlyParams) {
+            let low = 0, high = 1000000;
+            for (let iter = 0; iter < 20; iter++) {
+                const mid = (low + high) / 2;
+                const sim = simulateYears(years, netWorth, mid, weights, monthlyParams);
+                if (sim.median < target) low = mid;
+                else high = mid;
+            }
+            return Math.ceil(high);
+        }
+
+        function calculateRequiredYears(target, netWorth, monthlySavings, weights, monthlyParams) {
+            for (let y = 1; y <= 100; y++) {
+                const sim = simulateYears(y, netWorth, monthlySavings, weights, monthlyParams);
+                if (sim.median >= target) return y;
+            }
+            return '>100';
+        }
+
+        function calculateRequiredStart(target, monthlySavings, years, weights, monthlyParams) {
+            let low = 0, high = target;
+            for (let iter = 0; iter < 20; iter++) {
+                const mid = (low + high) / 2;
+                const sim = simulateYears(years, mid, monthlySavings, weights, monthlyParams);
+                if (sim.median < target) low = mid;
+                else high = mid;
+            }
+            return Math.ceil(high);
+        }
+    </script>
+</body>
+</html>
