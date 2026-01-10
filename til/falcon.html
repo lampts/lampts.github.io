@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hunting with Falcon, Working with Agents</title>
-    <meta name="description" content="The state of agentic AI is like hunting with a falcon.">
+    <title>How to Deploy AI Agents in Production: The Falconer's Framework</title>
+    <meta name="description" content="A practical framework for deploying AI agents at scale, based on running 150+ voice agents at Vietnam's largest digital bank. Context engineering, verification patterns, and failure modes.">
     <meta name="author" content="Pham Thanh Lam">
+    <meta name="keywords" content="AI agents, voice agents, context engineering, agent deployment, agentic AI, production AI">
+    
+    <link rel="canonical" href="https://www.lampt.org/writing/falcon-agents.html">
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>🦅</text></svg>">
     
@@ -13,7 +16,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
@@ -55,77 +58,248 @@
 
             <div class="mt-8 mb-8">
                 <div class="border border-black p-1 shadow-[3px_3px_0px_#000] mb-8">
-                    <img src="coverart.png" alt="Falconer with AI" class="w-full object-cover">
+                    <img src="coverart.png" alt="Falconer with AI Agent" class="w-full object-cover">
                 </div>
 
-                <h1 class="font-serif text-2xl md:text-3xl font-bold mb-2 content-en active">Hunting with Falcon, Working with Agents</h1>
-                <h1 class="font-serif text-2xl md:text-3xl font-bold mb-2 content-vi">Săn Mồi Cùng Chim Ưng, Làm Việc Cùng AI Agent</h1>
+                <h1 class="font-serif text-2xl md:text-3xl font-bold mb-2 content-en active">How to Deploy AI Agents in Production: The Falconer's Framework</h1>
+                <h1 class="font-serif text-2xl md:text-3xl font-bold mb-2 content-vi">Triển Khai AI Agent Trong Production: Khung Tư Duy Ưng Thủ</h1>
                 
-                <p class="text-xs text-muted mb-8">January 2026 · Pham Thanh Lam</p>
+                <p class="text-xs text-muted mb-8">January 2026 · Pham Thanh Lam · Chief Data Science & AI Officer, Cake by VPBank</p>
             </div>
 
             <article class="content-en active">
-                <div class="flex flex-col gap-6 leading-relaxed text-muted">
+                <div class="flex flex-col gap-6 leading-relaxed text-muted font-serif">
+                    
+                    <p class="text-foreground text-base">
+                        AI agents fail for the same reason untrained falcons fail: they follow instinct, not intent. After deploying 150+ voice agents handling millions of banking calls at Cake, I've found the fix isn't better models—it's better context engineering. Here's the framework.
+                    </p>
+
                     <p>
-                        In UAE, master falconers earn millions. They spend months building trust with a bird that could fly away forever. Two GPS trackers on every falcon—not because the bird is malicious, but because it follows instinct, not intent.
+                        In UAE, master falconers earn millions. They spend months building trust with a bird that could fly away forever. Two GPS trackers on every falcon—not because the bird is malicious, but because it follows instinct, not intent. You have a tool of terrifying capability. 300km/h dives. Genius-level pattern matching. Also: easily fooled by decoys, attacks wrong targets, zero clue why you want what you want.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Why AI Agents Attack Wrong Targets</h2>
+                    
+                    <p>
+                        The most common agent failure isn't capability—it's context. A generalist agent seeing everything attempts everything. At Cake, our early voice agents had a 34% misrouting rate. They'd hear "transfer" and initiate wire transfers when customers meant "transfer me to a human."
                     </p>
                     <p class="text-foreground font-medium">
-                        Sound familiar?
+                        Falconers figured this out centuries ago: you don't say "go hunt." You choose terrain. Read wind. Pick target type. Time the release.
                     </p>
                     <p>
-                        You have a tool of terrifying capability. 300km/h dives. Genius-level pattern matching. Also: easily fooled by decoys, attacks wrong targets, zero clue why you want what you want. We spent billions building this. Now we babysit it like a very expensive bird.
+                        The fix was domain isolation. We route intents to specialized agents, not one general agent. A balance-inquiry agent never sees wire-transfer tools. A complaint agent never sees transaction APIs. Narrowing context from "everything" to "exactly what's needed" dropped our misrouting rate to 8%.
+                    </p>
+                    <p class="border-l-2 border-black pl-4 text-foreground italic">
+                        Context engineering isn't prompt engineering. It's choosing what the agent sees before it acts—routing logic, tool access, memory scope. Agents with narrower context outperform generalist agents on resolution rate.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Context Engineering: Choosing the Terrain</h2>
+                    
+                    <p>
+                        Every agent deployment requires three context decisions:
                     </p>
                     <p>
-                        Here's what falconers figured out centuries ago: you don't say "go hunt." You choose terrain. Read wind. Pick target type. Time the release. This is context engineering—just with feathers.
+                        <strong class="text-foreground">1. Intent routing.</strong> Which agent handles which query? We use a lightweight classifier (not the main LLM) to route before the expensive model runs. Misclassification here cascades into everything else.
                     </p>
                     <p>
-                        And you never reward mid-flight. The falcon returns. You check: Right prey? Actually caught? Not someone's pet? Only then: reward. RLVR works the same way. Math has right answers. Code runs or crashes. Verifiable.
+                        <strong class="text-foreground">2. Tool scoping.</strong> What can this agent touch? Our payment-dispute agent can read transactions but not modify them. It escalates to a human for reversals. Fewer tools = fewer attack surfaces = fewer hallucinated actions.
                     </p>
-                    <p class="text-foreground font-medium">
-                        After the hunt, falcon rests. Eats. Recovers. Your GPU doesn't rest. Maybe it should?
+                    <p>
+                        <strong class="text-foreground">3. Memory boundaries.</strong> How much conversation history? We cap at 4 turns for transactional queries, unlimited for complex disputes. Long memory invites confusion. Short memory loses context. Match memory to task complexity.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Verification Before Reward: The RLVR Pattern</h2>
+                    
+                    <p>
+                        Falconers never reward mid-flight. The falcon returns. You check: Right prey? Actually caught? Not someone's pet? Only then: reward.
+                    </p>
+                    <p>
+                        This is RLVR—Reinforcement Learning with Verifiable Rewards. Math has right answers. Code runs or crashes. Banking transactions either reconcile or they don't.
+                    </p>
+                    <p>
+                        At Cake, every voice agent call gets scored after completion: Did the customer's stated intent get resolved? Did any compliance flags trigger? Did the customer call back within 24 hours? We weight resolution (40%), compliance (35%), and repeat-call rate (25%). Agents that score below threshold get their prompts reviewed, not retrained blindly.
+                    </p>
+                    <p class="border-l-2 border-black pl-4 text-foreground italic">
+                        Never optimize agent behavior on intermediate outputs. Verify the final outcome. A confident-sounding wrong answer is worse than an uncertain right one.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Monitoring: Two GPS Trackers</h2>
+                    
+                    <p>
+                        Every falcon wears two GPS trackers. Redundancy. Our agent monitoring follows the same principle:
+                    </p>
+                    <p>
+                        <strong class="text-foreground">Runtime logging:</strong> Every call captures intent classification confidence, tool calls made, tokens consumed, and latency. This catches drift before customers complain.
+                    </p>
+                    <p>
+                        <strong class="text-foreground">Outcome tracking:</strong> Resolution rate, escalation rate, customer satisfaction, repeat contacts. This catches whether the agent actually helped.
+                    </p>
+                    <p>
+                        The gap between runtime metrics (agent did things) and outcome metrics (things worked) is where failures hide. An agent can execute perfectly and still fail the customer.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">When Humans Take Over</h2>
+                    
+                    <p>
+                        Our human override rate sits at 23%. That's not a failure metric—it's a design choice. Agents handle volume. Humans handle edge cases, emotional situations, and anything involving regulatory judgment.
                     </p>
                     <p>
                         The falcon doesn't hunt <em>for</em> you. It hunts <em>with</em> you. You bring judgment it'll never have. It brings speed you'll never have. Current AI agents are falcons, not dogs. Dogs understand intent. Falcons follow training.
                     </p>
-                    <p class="border-l-2 border-black pl-4 text-foreground">
+                    <p>
+                        We explicitly train agents to recognize their limits: "I'm not confident I can help with this. Let me connect you with a specialist." A graceful handoff beats a botched resolution.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">The Framework Summary</h2>
+                    
+                    <p>
+                        Deploying AI agents at scale requires four things:
+                    </p>
+                    <p>
+                        <strong class="text-foreground">1. Context engineering:</strong> Route to specialized agents. Scope tools narrowly. Bound memory appropriately.
+                    </p>
+                    <p>
+                        <strong class="text-foreground">2. Verified rewards:</strong> Score on outcomes, not outputs. Resolution rate > confidence score.
+                    </p>
+                    <p>
+                        <strong class="text-foreground">3. Dual monitoring:</strong> Track both what agents do and whether it worked.
+                    </p>
+                    <p>
+                        <strong class="text-foreground">4. Designed handoffs:</strong> Know when humans take over. Build the escalation path first.
+                    </p>
+                    
+                    <p class="border-l-2 border-black pl-4 text-foreground italic mt-6">
                         The best falconers aren't those with fastest birds. They're those who know when to release, when to recall—and honest enough to check if the catch was actually what they asked for.
+                    </p>
+
+                    <p class="text-xs text-muted mt-8 font-mono">
+                        Pham Thanh Lam is Chief Data Science & AI Officer at Cake by VPBank, Vietnam's largest digital bank, where he leads a team running 100+ AI models and 150+ voice agents in production.
                     </p>
                 </div>
             </article>
 
             <article class="content-vi">
-                <div class="flex flex-col gap-6 leading-relaxed text-muted">
+                <div class="flex flex-col gap-6 leading-relaxed text-muted font-serif">
+                    
+                    <p class="text-foreground text-base">
+                        AI agent thất bại vì lý do tương tự chim ưng chưa được huấn luyện: chúng theo bản năng, không theo ý định. Sau khi triển khai 150+ voice agent xử lý hàng triệu cuộc gọi ngân hàng tại Cake, tôi nhận ra giải pháp không phải model tốt hơn—mà là context engineering tốt hơn. Đây là framework.
+                    </p>
+
                     <p>
-                        Ở UAE, ưng thủ bậc thầy kiếm hàng triệu đô. Họ mất nhiều tháng xây dựng niềm tin với một con chim có thể bay đi mãi mãi. Hai thiết bị GPS trên mỗi con ưng—không phải vì chim có ác ý, mà vì nó theo bản năng, không theo ý định.
+                        Ở UAE, ưng thủ bậc thầy kiếm hàng triệu đô. Họ mất nhiều tháng xây dựng niềm tin với một con chim có thể bay đi mãi mãi. Hai thiết bị GPS trên mỗi con ưng—không phải vì chim có ác ý, mà vì nó theo bản năng, không theo ý định. Bạn có công cụ với khả năng đáng sợ. Bổ nhào 300km/h. Nhận diện mẫu cấp thiên tài. Nhưng cũng: dễ bị lừa bởi mồi giả, tấn công nhầm mục tiêu, không hiểu tại sao bạn muốn điều bạn muốn.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Tại Sao AI Agent Tấn Công Nhầm Mục Tiêu</h2>
+                    
+                    <p>
+                        Thất bại phổ biến nhất của agent không phải năng lực—mà là context. Agent tổng quát thấy mọi thứ sẽ cố làm mọi thứ. Tại Cake, voice agent đầu tiên của chúng tôi có tỷ lệ định tuyến sai 34%. Chúng nghe "chuyển" và khởi tạo chuyển tiền khi khách hàng muốn "chuyển máy cho nhân viên."
                     </p>
                     <p class="text-foreground font-medium">
-                        Nghe quen không?
+                        Ưng thủ đã hiểu điều này từ nhiều thế kỷ: không ai nói "đi săn đi." Chọn địa hình. Đọc gió. Xác định loại mồi. Tính thời điểm thả.
                     </p>
                     <p>
-                        Bạn có công cụ với khả năng đáng sợ. Bổ nhào 300km/h. Nhận diện mẫu cấp thiên tài. Nhưng cũng: dễ bị lừa bởi mồi giả, tấn công nhầm mục tiêu, không hiểu tại sao bạn muốn điều bạn muốn. Chúng ta đốt hàng tỷ đô để xây thứ này. Giờ phải trông nó như trông một con chim rất đắt tiền.
+                        Giải pháp là cô lập domain. Chúng tôi định tuyến intent đến agent chuyên biệt, không phải một agent tổng quát. Agent kiểm tra số dư không bao giờ thấy công cụ chuyển tiền. Agent khiếu nại không bao giờ thấy API giao dịch. Thu hẹp context từ "mọi thứ" xuống "đúng thứ cần thiết" giảm tỷ lệ định tuyến sai xuống 8%.
+                    </p>
+                    <p class="border-l-2 border-black pl-4 text-foreground italic">
+                        Context engineering không phải prompt engineering. Đó là chọn những gì agent thấy trước khi nó hành động—logic định tuyến, quyền truy cập tool, phạm vi memory. Agent với context hẹp hơn vượt trội agent tổng quát về tỷ lệ giải quyết.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Context Engineering: Chọn Địa Hình</h2>
+                    
+                    <p>
+                        Mỗi lần triển khai agent cần ba quyết định về context:
                     </p>
                     <p>
-                        Đây là điều ưng thủ đã hiểu từ nhiều thế kỷ trước: không ai nói "đi săn đi." Chọn địa hình. Đọc gió. Xác định loại mồi. Tính thời điểm thả. Đây là context engineering—chỉ có thêm lông vũ.
+                        <strong class="text-foreground">1. Định tuyến intent.</strong> Agent nào xử lý query nào? Chúng tôi dùng classifier nhẹ (không phải LLM chính) để định tuyến trước khi model đắt tiền chạy. Phân loại sai ở đây lan sang mọi thứ khác.
                     </p>
                     <p>
-                        Và không bao giờ thưởng giữa chừng. Chim về. Kiểm tra: Đúng con mồi? Thực sự bắt được? Không phải thú cưng nhà ai? Chỉ khi đó: thưởng. RLVR hoạt động y vậy. Toán có đáp án đúng. Code chạy hoặc crash. Kiểm chứng được.
+                        <strong class="text-foreground">2. Giới hạn tool.</strong> Agent này được động vào gì? Agent tranh chấp thanh toán có thể đọc giao dịch nhưng không sửa được. Nó chuyển cho người cho hoàn tiền. Ít tool hơn = ít bề mặt tấn công hơn = ít hành động ảo giác hơn.
                     </p>
-                    <p class="text-foreground font-medium">
-                        Sau cuộc săn, chim nghỉ. Ăn. Phục hồi. GPU của bạn không nghỉ. Có lẽ nên?
+                    <p>
+                        <strong class="text-foreground">3. Ranh giới memory.</strong> Bao nhiêu lịch sử hội thoại? Chúng tôi giới hạn 4 lượt cho query giao dịch, không giới hạn cho tranh chấp phức tạp. Memory dài mời nhầm lẫn. Memory ngắn mất context. Khớp memory với độ phức tạp task.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Xác Minh Trước Thưởng: Mô Hình RLVR</h2>
+                    
+                    <p>
+                        Ưng thủ không bao giờ thưởng giữa chừng. Chim về. Kiểm tra: Đúng con mồi? Thực sự bắt được? Không phải thú cưng nhà ai? Chỉ khi đó: thưởng.
+                    </p>
+                    <p>
+                        Đây là RLVR—Reinforcement Learning with Verifiable Rewards. Toán có đáp án đúng. Code chạy hoặc crash. Giao dịch ngân hàng hoặc khớp hoặc không.
+                    </p>
+                    <p>
+                        Tại Cake, mỗi cuộc gọi voice agent được chấm điểm sau khi hoàn thành: Intent đã nêu của khách có được giải quyết? Có flag compliance nào không? Khách có gọi lại trong 24 giờ không? Chúng tôi cân resolution (40%), compliance (35%), và tỷ lệ gọi lại (25%). Agent dưới ngưỡng được review prompt, không retrain mù quáng.
+                    </p>
+                    <p class="border-l-2 border-black pl-4 text-foreground italic">
+                        Không bao giờ optimize hành vi agent trên output trung gian. Xác minh kết quả cuối. Câu trả lời sai nhưng tự tin còn tệ hơn câu đúng nhưng không chắc.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Giám Sát: Hai GPS Tracker</h2>
+                    
+                    <p>
+                        Mỗi con ưng đeo hai GPS tracker. Dự phòng. Giám sát agent của chúng tôi theo nguyên tắc tương tự:
+                    </p>
+                    <p>
+                        <strong class="text-foreground">Runtime logging:</strong> Mỗi cuộc gọi ghi lại độ tin cậy phân loại intent, tool calls, token tiêu thụ, và latency. Phát hiện drift trước khi khách phàn nàn.
+                    </p>
+                    <p>
+                        <strong class="text-foreground">Outcome tracking:</strong> Tỷ lệ giải quyết, tỷ lệ escalation, satisfaction khách, contact lặp lại. Phát hiện agent có thực sự giúp được không.
+                    </p>
+                    <p>
+                        Khoảng cách giữa runtime metrics (agent làm việc) và outcome metrics (việc hiệu quả) là nơi thất bại ẩn náu. Agent có thể thực thi hoàn hảo nhưng vẫn thất bại với khách.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Khi Nào Người Can Thiệp</h2>
+                    
+                    <p>
+                        Tỷ lệ override của người ở mức 23%. Đó không phải metric thất bại—đó là lựa chọn thiết kế. Agent xử lý volume. Người xử lý edge case, tình huống cảm xúc, và mọi thứ liên quan đến phán đoán pháp lý.
                     </p>
                     <p>
                         Chim ưng không săn <em>thay</em> bạn. Nó săn <em>cùng</em> bạn. Bạn mang phán đoán nó không bao giờ có. Nó mang tốc độ bạn không bao giờ có. AI agent hiện tại là chim ưng, không phải chó. Chó hiểu ý chủ. Chim ưng theo huấn luyện.
                     </p>
-                    <p class="border-l-2 border-black pl-4 text-foreground">
+                    <p>
+                        Chúng tôi huấn luyện agent nhận ra giới hạn: "Tôi không tự tin có thể giúp việc này. Để tôi kết nối bạn với chuyên viên." Chuyển giao nhẹ nhàng hơn giải quyết hỏng.
+                    </p>
+
+                    <h2 class="font-serif text-lg font-bold mt-6 border-b border-black pb-2">Tóm Tắt Framework</h2>
+                    
+                    <p>
+                        Triển khai AI agent ở quy mô cần bốn thứ:
+                    </p>
+                    <p>
+                        <strong class="text-foreground">1. Context engineering:</strong> Định tuyến đến agent chuyên biệt. Giới hạn tool hẹp. Bound memory phù hợp.
+                    </p>
+                    <p>
+                        <strong class="text-foreground">2. Verified rewards:</strong> Chấm điểm outcome, không phải output. Resolution rate > confidence score.
+                    </p>
+                    <p>
+                        <strong class="text-foreground">3. Dual monitoring:</strong> Theo dõi cả agent làm gì và có hiệu quả không.
+                    </p>
+                    <p>
+                        <strong class="text-foreground">4. Designed handoffs:</strong> Biết khi nào người can thiệp. Xây escalation path trước.
+                    </p>
+                    
+                    <p class="border-l-2 border-black pl-4 text-foreground italic mt-6">
                         Ưng thủ giỏi nhất không phải người có chim nhanh nhất. Mà là người biết khi nào thả, khi nào gọi về—và đủ thành thật để kiểm tra xem thành quả có đúng thứ mình yêu cầu không.
+                    </p>
+
+                    <p class="text-xs text-muted mt-8 font-mono">
+                        Pham Thanh Lam là Chief Data Science & AI Officer tại Cake by VPBank, ngân hàng số lớn nhất Việt Nam, nơi anh dẫn dắt team vận hành 100+ AI model và 150+ voice agent trong production.
                     </p>
                 </div>
             </article>
 
             <div class="mt-12 pt-6 border-t border-gray-200">
+                <p class="text-xs text-muted font-mono italic">
+                    <strong class="not-italic">Disclaimer:</strong> The views expressed in this article are my own and do not represent the official position of Cake by VPBank or VPBank. Numbers and metrics cited are illustrative examples based on general industry patterns and personal experience, not official company data. Nothing in this article constitutes financial, legal, or professional advice.
+                </p>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-gray-200">
                 <h2 class="font-serif text-lg font-bold mb-4">References</h2>
                 <div class="flex flex-col gap-2 text-xs text-muted">
                     <a href="https://karpathy.bearblog.dev/year-in-review-2025/" target="_blank" class="underline underline-offset-4 hover:text-foreground">Andrej Karpathy — LLMs in 2025</a>
+                    <a href="https://simonwillison.net/2026/Jan/8/llm-predictions-for-2026/" target="_blank" class="underline underline-offset-4 hover:text-foreground">Simon Willison — LLM Predictions for 2026</a>
                     <a href="https://simonwillison.net/2024/Dec/31/llms-in-2024/" target="_blank" class="underline underline-offset-4 hover:text-foreground">Simon Willison — LLMs in 2024</a>
                 </div>
             </div>
@@ -133,7 +307,7 @@
             <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
                 <p class="font-serif text-sm text-black">Pham Thanh Lam (λ)</p>
                 <div class="flex gap-4">
-                    <span>© 2025</span>
+                    <span>© 2026</span>
                 </div>
             </footer>
 
