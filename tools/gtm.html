@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-VC31GENS6S');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI GTM Playbook | Interactive Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                        positive: '#16a34a',
+                        negative: '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .shadow-brutal { box-shadow: 3px 3px 0px #000; }
+        .result-panel { display: none; }
+        .result-panel.show { display: block; }
+        
+        /* Tooltip styles */
+        .tooltip-trigger {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dotted #666;
+        }
+        .tooltip-trigger:hover .tooltip-content {
+            display: block;
+        }
+        .tooltip-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            color: #fff;
+            padding: 6px 10px;
+            font-size: 10px;
+            white-space: pre-line;
+            z-index: 100;
+            margin-bottom: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            text-align: center;
+            min-width: max-content;
+        }
+        .tooltip-content::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: #000;
+        }
+        
+        /* Quiz styles */
+        .quiz-option {
+            transition: all 0.15s ease;
+        }
+        .quiz-option:hover:not(.selected):not(.correct):not(.incorrect) {
+            background-color: #f3f4f6;
+        }
+        .quiz-option.selected {
+            border-color: #000;
+            background-color: #FBD45B;
+        }
+        .quiz-option.correct {
+            border-color: #16a34a;
+            background-color: #dcfce7;
+        }
+        .quiz-option.incorrect {
+            border-color: #dc2626;
+            background-color: #fee2e2;
+        }
+        .quiz-option.disabled {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground font-sans text-sm leading-relaxed">
+
+    <!-- Navigation Dots - Fixed -->
+    <div class="fixed top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-50 bg-white px-3 py-2 border border-black shadow-brutal">
+        <button class="nav-dot w-3 h-3 border border-black bg-black" data-module="0" aria-label="Landing"></button>
+        <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="1" aria-label="Module 1"></button>
+        <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="2" aria-label="Module 2"></button>
+        <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="3" aria-label="Module 3"></button>
+        <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="4" aria-label="Module 4"></button>
+        <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="5" aria-label="Module 5"></button>
+        <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="6" aria-label="Module 6"></button>
+        <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="7" aria-label="Module 7"></button>
+        <button class="nav-dot w-3 h-3 border border-black bg-white hover:bg-gray-200" data-module="8" aria-label="Skill Check"></button>
+    </div>
+
+    <div class="max-w-xl mx-auto px-4 py-16">
+
+        <!-- Module 0: Landing -->
+        <section id="module0" class="module-section">
+            <!-- Cover Image -->
+            <div class="mb-6 border border-black shadow-brutal">
+                <img src="gtm.png" alt="AI GTM Playbook Cover" class="w-full h-auto">
+            </div>
+
+            <div class="mb-8">
+                <p class="text-xs text-muted mb-2">AI GTM PLAYBOOK</p>
+                <h1 class="font-serif text-3xl font-semibold mb-4">Find Your Bullseye</h1>
+                <p class="text-muted text-xs italic mb-6">"Your job is not to do all the channels. Your job is to find the ONE that works."</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">The Framework</div>
+                <p class="text-xs mb-3">25 GTM channels exist. Most founders try 3-4 randomly. Winners test systematically, then focus ruthlessly on ONE.</p>
+                <div class="flex gap-4 text-xs">
+                    <div class="flex-1 text-center p-2 border border-gray-300 rounded-full">Outer Ring<br><span class="text-muted">Brainstorm all 25</span></div>
+                    <div class="flex-1 text-center p-2 border border-gray-300 rounded-full">Middle Ring<br><span class="text-muted">Test top 3-5</span></div>
+                    <div class="flex-1 text-center p-2 border border-black bg-accent rounded-full font-semibold">Bullseye<br><span class="text-[10px]">Focus on ONE</span></div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-xs mb-3">This course covers 6 categories + skill check:</p>
+                <ol class="text-xs space-y-1">
+                    <li><span class="font-semibold">1.</span> Community & Product (6 channels)</li>
+                    <li><span class="font-semibold">2.</span> Content & Brand (6 channels)</li>
+                    <li><span class="font-semibold">3.</span> Paid Acquisition (2 channels)</li>
+                    <li><span class="font-semibold">4.</span> Targeted Acquisition (3 channels)</li>
+                    <li><span class="font-semibold">5.</span> Ecosystem & Partnerships (5 channels)</li>
+                    <li><span class="font-semibold">6.</span> Physical & High-Touch (3 channels)</li>
+                    <li><span class="font-semibold">7.</span> Find Your Bullseye (synthesis)</li>
+                    <li class="text-accent font-semibold">8. 🎯 Skill Check (7 questions)</li>
+                </ol>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">PRODUCT-CHANNEL FIT > PRODUCT-MARKET FIT. THE CHANNEL IS THE STRATEGY.</p>
+            </div>
+
+            <button onclick="navigateModule(1)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal">
+                Start Learning →
+            </button>
+        </section>
+
+        <!-- Module 1: Community & Product -->
+        <section id="module1" class="module-section hidden">
+            <div class="mb-6">
+                <p class="text-xs text-muted mb-2">Module 1 / 7</p>
+                <h2 class="font-serif text-2xl font-semibold mb-2">Community & Product</h2>
+                <p class="text-muted text-xs italic">"The best marketing doesn't feel like marketing."</p>
+            </div>
+
+            <div class="border border-negative/30 bg-negative/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-negative">❌ Wrong Approach</div>
+                <p class="text-xs text-muted">Treat community as a broadcast channel. Spam Discord with product updates. Gate all value behind paywalls.</p>
+            </div>
+
+            <div class="border border-positive/30 bg-positive/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-positive">✅ Right Approach</div>
+                <p class="text-xs text-muted">Make the product so good people can't stop sharing. Community becomes a flywheel, not a megaphone.</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">6 Channels</div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">PLG</span> — Perplexity</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Community</span> — LangChain</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Waitlist</span> — Robinhood</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Eng as Marketing</span> — Together</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Viral Marketing</span> — Groq</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Viral Loops</span> — Gamma</div>
+                </div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">PLG Economics Calculator</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Perplexity gives away powerful search free, converts to Pro. Calculate if your free tier makes sense.</p>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Free Users</label>
+                        <input type="number" id="freeUsers" value="10000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Cost/User/Month ($)</label>
+                        <input type="number" id="costPerUser" value="0.50" step="0.1" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Conversion Rate (%)</label>
+                        <input type="number" id="convRate" value="3" step="0.5" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Paid Price/Month ($)</label>
+                        <input type="number" id="paidPrice" value="20" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                </div>
+                <button onclick="calcPLG()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Calculate Unit Economics</button>
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="plgResults"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">THE FREE TIER IS YOUR CAC. CALCULATE IT OR DIE.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(0)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(2)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- Module 2: Content & Brand -->
+        <section id="module2" class="module-section hidden">
+            <div class="mb-6">
+                <p class="text-xs text-muted mb-2">Module 2 / 7</p>
+                <h2 class="font-serif text-2xl font-semibold mb-2">Content & Brand</h2>
+                <p class="text-muted text-xs italic">"Teach, don't sell. The best content makes the reader smarter."</p>
+            </div>
+
+            <div class="border border-negative/30 bg-negative/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-negative">❌ Wrong Approach</div>
+                <p class="text-xs text-muted">Chase vanity keywords. Write about features. Give a sales pitch on stage.</p>
+            </div>
+
+            <div class="border border-positive/30 bg-positive/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-positive">✅ Right Approach</div>
+                <p class="text-xs text-muted">Target high-intent keywords. Write about customer problems. Teach valuable insights, earn trust.</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">6 Channels</div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">SEO</span> — Jasper</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Content Mktg</span> — DeepMind</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Short Video</span> — Blotato</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">PR</span> — Anthropic</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Unconventional PR</span> — Bolt</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Speaking</span> — LangChain</div>
+                </div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Keyword Intent Classifier</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                </div>
+                <p class="text-xs text-muted mb-4">High-intent keywords signal a problem to solve. Score your keyword ideas.</p>
+                <div class="mb-4">
+                    <label class="text-[10px] text-muted block mb-1">Enter a keyword</label>
+                    <input type="text" id="keyword" placeholder="e.g., best AI writing tool" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Search Volume</label>
+                        <select id="volume" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                            <option value="1">Low (&lt;1K)</option>
+                            <option value="2">Medium (1K-10K)</option>
+                            <option value="3">High (10K+)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Purchase Intent</label>
+                        <select id="intent" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                            <option value="1">Informational</option>
+                            <option value="2">Comparison</option>
+                            <option value="3">Transactional</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="calcKeyword()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Score Keyword</button>
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="keywordResults"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">INTENT > VOLUME. 100 BUYERS BEAT 10,000 BROWSERS.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(1)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(3)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- Module 3: Paid Acquisition -->
+        <section id="module3" class="module-section hidden">
+            <div class="mb-6">
+                <p class="text-xs text-muted mb-2">Module 3 / 7</p>
+                <h2 class="font-serif text-2xl font-semibold mb-2">Paid Acquisition</h2>
+                <p class="text-muted text-xs italic">"Paid channels are a tax on not having product-market fit."</p>
+            </div>
+
+            <div class="border border-negative/30 bg-negative/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-negative">❌ Wrong Approach</div>
+                <p class="text-xs text-muted">Scale spend before understanding unit economics. Target broad audiences. Optimize for impressions.</p>
+            </div>
+
+            <div class="border border-positive/30 bg-positive/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-positive">✅ Right Approach</div>
+                <p class="text-xs text-muted">Know your CAC:LTV before scaling. Obsessively narrow targeting. Optimize for conversions.</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">2 Channels</div>
+                <div class="space-y-2 text-xs">
+                    <div class="p-2 border border-gray-200">
+                        <span class="font-semibold">SEM (Search)</span> — Captures existing intent<br>
+                        <span class="text-muted">Example: Writesonic bidding on "AI content generator"</span>
+                    </div>
+                    <div class="p-2 border border-gray-200">
+                        <span class="font-semibold">Social/Display Ads</span> — Creates new demand<br>
+                        <span class="text-muted">Example: Copy.ai targeting writers on LinkedIn</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">CAC:LTV Viability Check</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Rule of thumb: LTV should be 3x+ CAC for paid to work long-term.</p>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Ad Spend/Month ($)</label>
+                        <input type="number" id="adSpend" value="5000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Customers Acquired</label>
+                        <input type="number" id="customersAcq" value="50" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Avg Monthly Revenue ($)</label>
+                        <input type="number" id="avgRevenue" value="30" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Avg Customer Lifespan (mo)</label>
+                        <input type="number" id="lifespan" value="12" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                </div>
+                <button onclick="calcCAC()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Check Viability</button>
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="cacResults"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">SEM = CAPTURE DEMAND. SOCIAL = CREATE DEMAND. CHOOSE YOUR BATTLE.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(2)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(4)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- Module 4: Targeted Acquisition -->
+        <section id="module4" class="module-section hidden">
+            <div class="mb-6">
+                <p class="text-xs text-muted mb-2">Module 4 / 7</p>
+                <h2 class="font-serif text-2xl font-semibold mb-2">Targeted Acquisition</h2>
+                <p class="text-muted text-xs italic">"The founder closes the first 10 deals. Then you hire sales."</p>
+            </div>
+
+            <div class="border border-negative/30 bg-negative/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-negative">❌ Wrong Approach</div>
+                <p class="text-xs text-muted">Hire sales before founder-led selling. Send generic blast emails. Skip personalization.</p>
+            </div>
+
+            <div class="border border-positive/30 bg-positive/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-positive">✅ Right Approach</div>
+                <p class="text-xs text-muted">Close 10-15 deals yourself first. Send behavior-triggered, personalized emails. Research before outreach.</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">3 Channels</div>
+                <div class="space-y-2 text-xs">
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Sales</span> — Glean (high ACV enterprise)</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Email Marketing</span> — Rewind AI (waitlist nurturing)</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Targeting Blogs</span> — beehiiv (niche creator outreach)</div>
+                </div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Sales vs PLG Decision Matrix</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                </div>
+                <p class="text-xs text-muted mb-4">High ACV + complex sale = sales team. Low ACV + simple = PLG. Where do you fit?</p>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Expected ACV ($)</label>
+                        <input type="number" id="acv" value="5000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Sales Cycle (weeks)</label>
+                        <input type="number" id="salesCycle" value="4" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Decision Makers</label>
+                        <select id="decisionMakers" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                            <option value="1">1 (Individual)</option>
+                            <option value="2">2-3 (Small team)</option>
+                            <option value="3">4+ (Committee)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Implementation Complexity</label>
+                        <select id="complexity" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                            <option value="1">Self-serve</option>
+                            <option value="2">Guided onboarding</option>
+                            <option value="3">Custom integration</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="calcSalesModel()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Get Recommendation</button>
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="salesResults"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">FOUNDER-LED SALES FIRST. ALWAYS. NO EXCEPTIONS.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(3)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(5)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- Module 5: Ecosystem & Partnerships -->
+        <section id="module5" class="module-section hidden">
+            <div class="mb-6">
+                <p class="text-xs text-muted mb-2">Module 5 / 7</p>
+                <h2 class="font-serif text-2xl font-semibold mb-2">Ecosystem & Partnerships</h2>
+                <p class="text-muted text-xs italic">"Partner with companies your size first. Big fish come later."</p>
+            </div>
+
+            <div class="border border-negative/30 bg-negative/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-negative">❌ Wrong Approach</div>
+                <p class="text-xs text-muted">Chase Microsoft partnerships on day one. Dictate creative to influencers. Build shallow integrations.</p>
+            </div>
+
+            <div class="border border-positive/30 bg-positive/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-positive">✅ Right Approach</div>
+                <p class="text-xs text-muted">Start with peer-sized partners. Trust influencers with their audience. Build native-feeling integrations.</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">5 Channels</div>
+                <div class="space-y-2 text-xs">
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Cloud Marketplaces</span> — Pinecone (AWS/GCP listing)</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Influencer/Creator</span> — Runway (AI artists as evangelists)</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Biz Dev</span> — Mistral (Microsoft Azure deal)</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Affiliate Programs</span> — AssemblyAI (developer commissions)</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Existing Platforms</span> — Ollama (VS Code, Docker)</div>
+                </div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Partnership Readiness Score</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Big partnerships require traction. Check if you're ready.</p>
+                <div class="space-y-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="check1" class="w-4 h-4">
+                        <label for="check1" class="text-xs">We have 100+ paying customers</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="check2" class="w-4 h-4">
+                        <label for="check2" class="text-xs">We have case studies/testimonials</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="check3" class="w-4 h-4">
+                        <label for="check3" class="text-xs">Our product is stable (no major bugs)</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="check4" class="w-4 h-4">
+                        <label for="check4" class="text-xs">We have bandwidth to support partner</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="check5" class="w-4 h-4">
+                        <label for="check5" class="text-xs">Partner's audience overlaps with ours</label>
+                    </div>
+                </div>
+                <button onclick="calcPartnership()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Check Readiness</button>
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="partnerResults"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">GREAT INTEGRATIONS FEEL NATIVE. SHALLOW ONES GET IGNORED.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(4)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(6)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- Module 6: Physical & High-Touch -->
+        <section id="module6" class="module-section hidden">
+            <div class="mb-6">
+                <p class="text-xs text-muted mb-2">Module 6 / 7</p>
+                <h2 class="font-serif text-2xl font-semibold mb-2">Physical & High-Touch</h2>
+                <p class="text-muted text-xs italic">"A booth without booked meetings is just expensive decoration."</p>
+            </div>
+
+            <div class="border border-negative/30 bg-negative/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-negative">❌ Wrong Approach</div>
+                <p class="text-xs text-muted">Scan badges and call it success. Host events without clear goals. Run offline ads with no CTA.</p>
+            </div>
+
+            <div class="border border-positive/30 bg-positive/5 p-4 mb-6">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2 text-positive">✅ Right Approach</div>
+                <p class="text-xs text-muted">Book qualified meetings for next week. Define event goals (recruiting? leads? feedback?). Measurable CTAs only.</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">3 Channels</div>
+                <div class="space-y-2 text-xs">
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Trade Shows</span> — Together AI (enterprise conferences)</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Offline Events</span> — Luma (community meetups)</div>
+                    <div class="p-2 border border-gray-200"><span class="font-semibold">Offline Ads</span> — Scale AI (SFO airport billboards)</div>
+                </div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Conference ROI Calculator</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Is that $20K booth worth it? Do the math.</p>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Total Cost ($)</label>
+                        <input type="number" id="confCost" value="20000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Expected Meetings</label>
+                        <input type="number" id="meetings" value="30" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Meeting → Opp Rate (%)</label>
+                        <input type="number" id="oppRate" value="30" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Opp → Close Rate (%)</label>
+                        <input type="number" id="closeRate" value="20" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="text-[10px] text-muted block mb-1">Average Deal Size ($)</label>
+                        <input type="number" id="dealSize" value="25000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                    </div>
+                </div>
+                <button onclick="calcConference()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Calculate ROI</button>
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="confResults"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">TRADE SHOWS ARE FOR BOOKING MEETINGS. EVERYTHING ELSE IS NOISE.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(5)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(7)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- Module 7: Bullseye Builder -->
+        <section id="module7" class="module-section hidden">
+            <div class="mb-6">
+                <p class="text-xs text-muted mb-2">Module 7 / 7</p>
+                <h2 class="font-serif text-2xl font-semibold mb-2">Find Your Bullseye</h2>
+                <p class="text-muted text-xs italic">"The channel you focus on is more important than all the channels you try."</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-2">The Process</div>
+                <div class="space-y-2 text-xs">
+                    <div class="flex items-start gap-2">
+                        <span class="font-semibold w-4">1.</span>
+                        <span><span class="font-semibold">Brainstorm</span> — One idea for each of 25 channels</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="font-semibold w-4">2.</span>
+                        <span><span class="font-semibold">Rank</span> — Score by your constraints (cost, effort, fit)</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="font-semibold w-4">3.</span>
+                        <span><span class="font-semibold">Test</span> — Run cheap experiments on top 3-5</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="font-semibold w-4">4.</span>
+                        <span><span class="font-semibold">Focus</span> — Go all-in on the ONE that works</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Final Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Channel Prioritization Matrix</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">SYNTHESIS</span>
+                </div>
+                <p class="text-xs text-muted mb-4">Select your constraints. We'll recommend channels.</p>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Business Model</label>
+                        <select id="bizModel" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                            <option value="b2c">B2C</option>
+                            <option value="b2b">B2B</option>
+                            <option value="devtool">DevTool</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Budget</label>
+                        <select id="budget" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                            <option value="low">Low (&lt;$5K/mo)</option>
+                            <option value="medium">Medium ($5K-$20K/mo)</option>
+                            <option value="high">High ($20K+/mo)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Team Size</label>
+                        <select id="teamSize" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                            <option value="solo">Solo founder</option>
+                            <option value="small">2-5 people</option>
+                            <option value="growth">5+ people</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted block mb-1">Time to Results</label>
+                        <select id="timeline" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                            <option value="fast">Need fast (&lt;1 mo)</option>
+                            <option value="medium">Can wait (1-3 mo)</option>
+                            <option value="slow">Long-term OK (3+ mo)</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="calcBullseye()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Get Recommendations</button>
+                <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="bullseyeResults"></div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">PRODUCT-CHANNEL FIT IS EVERYTHING. FIND IT. THEN SATURATE IT.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(6)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back</button>
+                <button onclick="navigateModule(8)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white bg-accent">Take Skill Check →</button>
+            </div>
+        </section>
+
+        <!-- Module 8: Skill Check -->
+        <section id="module8" class="module-section hidden">
+            <div class="mb-6">
+                <p class="text-xs text-muted mb-2">SKILL CHECK</p>
+                <h2 class="font-serif text-2xl font-semibold mb-2">Test Your Understanding</h2>
+                <p class="text-muted text-xs italic">"7 questions. One from each module. No guessing."</p>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-[10px] font-medium uppercase tracking-wider text-muted">Progress</div>
+                        <div class="text-xs font-semibold"><span id="quizProgress">0</span>/7 answered</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-medium uppercase tracking-wider text-muted">Score</div>
+                        <div class="text-xs font-semibold"><span id="quizScore">0</span>/7 correct</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 1: Community & Product -->
+            <div class="border border-black p-4 mb-4 shadow-brutal quiz-question" id="q1">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] text-muted uppercase">Q1 — Community & Product</span>
+                    <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-gray-300" id="q1Status">Unanswered</span>
+                </div>
+                <p class="text-xs font-semibold mb-4">In a PLG model, what is the "free tier" effectively acting as?</p>
+                <div class="space-y-2">
+                    <button onclick="answerQuiz(1, 'a')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="a">
+                        A. A charity for users who can't pay
+                    </button>
+                    <button onclick="answerQuiz(1, 'b')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="b">
+                        B. Your Customer Acquisition Cost (CAC)
+                    </button>
+                    <button onclick="answerQuiz(1, 'c')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="c">
+                        C. A way to delay monetization
+                    </button>
+                    <button onclick="answerQuiz(1, 'd')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="d">
+                        D. A demo version with no cost implications
+                    </button>
+                </div>
+                <div class="hidden mt-3 p-2 border-l-2 border-positive bg-positive/5 text-xs" id="q1Explain">
+                    <strong>Correct!</strong> The free tier cost = your CAC. If 10,000 free users cost $5,000/mo to serve and convert 300 to paid, your CAC is $16.67.
+                </div>
+            </div>
+
+            <!-- Question 2: Content & Brand -->
+            <div class="border border-black p-4 mb-4 shadow-brutal quiz-question" id="q2">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] text-muted uppercase">Q2 — Content & Brand</span>
+                    <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-gray-300" id="q2Status">Unanswered</span>
+                </div>
+                <p class="text-xs font-semibold mb-4">Which keyword type should you prioritize for content that converts?</p>
+                <div class="space-y-2">
+                    <button onclick="answerQuiz(2, 'a')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="a">
+                        A. High volume, informational ("what is AI")
+                    </button>
+                    <button onclick="answerQuiz(2, 'b')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="b">
+                        B. High volume, trending topics
+                    </button>
+                    <button onclick="answerQuiz(2, 'c')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="c">
+                        C. High intent, transactional ("best AI writing tool")
+                    </button>
+                    <button onclick="answerQuiz(2, 'd')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="d">
+                        D. Brand keywords (your company name)
+                    </button>
+                </div>
+                <div class="hidden mt-3 p-2 border-l-2 border-positive bg-positive/5 text-xs" id="q2Explain">
+                    <strong>Correct!</strong> Intent > Volume. 100 buyers searching "best AI writing tool" beat 10,000 browsers searching "what is AI."
+                </div>
+            </div>
+
+            <!-- Question 3: Paid Acquisition -->
+            <div class="border border-black p-4 mb-4 shadow-brutal quiz-question" id="q3">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] text-muted uppercase">Q3 — Paid Acquisition</span>
+                    <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-gray-300" id="q3Status">Unanswered</span>
+                </div>
+                <p class="text-xs font-semibold mb-4">What's the minimum LTV:CAC ratio for sustainable paid acquisition?</p>
+                <div class="space-y-2">
+                    <button onclick="answerQuiz(3, 'a')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="a">
+                        A. 1:1 (break even)
+                    </button>
+                    <button onclick="answerQuiz(3, 'b')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="b">
+                        B. 2:1 (double your money)
+                    </button>
+                    <button onclick="answerQuiz(3, 'c')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="c">
+                        C. 3:1 or higher
+                    </button>
+                    <button onclick="answerQuiz(3, 'd')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="d">
+                        D. 10:1 (only for enterprise)
+                    </button>
+                </div>
+                <div class="hidden mt-3 p-2 border-l-2 border-positive bg-positive/5 text-xs" id="q3Explain">
+                    <strong>Correct!</strong> 3:1 is the rule of thumb. Below that, you're likely not accounting for overhead, churn, and scaling costs.
+                </div>
+            </div>
+
+            <!-- Question 4: Targeted Acquisition -->
+            <div class="border border-black p-4 mb-4 shadow-brutal quiz-question" id="q4">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] text-muted uppercase">Q4 — Targeted Acquisition</span>
+                    <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-gray-300" id="q4Status">Unanswered</span>
+                </div>
+                <p class="text-xs font-semibold mb-4">When should a startup hire their first salesperson?</p>
+                <div class="space-y-2">
+                    <button onclick="answerQuiz(4, 'a')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="a">
+                        A. Immediately after raising seed funding
+                    </button>
+                    <button onclick="answerQuiz(4, 'b')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="b">
+                        B. After the founder closes 10-15 deals themselves
+                    </button>
+                    <button onclick="answerQuiz(4, 'c')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="c">
+                        C. When they have a marketing team in place
+                    </button>
+                    <button onclick="answerQuiz(4, 'd')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="d">
+                        D. Before building the product
+                    </button>
+                </div>
+                <div class="hidden mt-3 p-2 border-l-2 border-positive bg-positive/5 text-xs" id="q4Explain">
+                    <strong>Correct!</strong> Founder-led sales first. Always. You can't train salespeople on a playbook you haven't written yourself.
+                </div>
+            </div>
+
+            <!-- Question 5: Ecosystem & Partnerships -->
+            <div class="border border-black p-4 mb-4 shadow-brutal quiz-question" id="q5">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] text-muted uppercase">Q5 — Ecosystem & Partnerships</span>
+                    <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-gray-300" id="q5Status">Unanswered</span>
+                </div>
+                <p class="text-xs font-semibold mb-4">What's the right approach to working with influencers/creators?</p>
+                <div class="space-y-2">
+                    <button onclick="answerQuiz(5, 'a')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="a">
+                        A. Give them a strict script to follow
+                    </button>
+                    <button onclick="answerQuiz(5, 'b')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="b">
+                        B. Trust them with creative—they know their audience
+                    </button>
+                    <button onclick="answerQuiz(5, 'c')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="c">
+                        C. Only work with influencers who have 1M+ followers
+                    </button>
+                    <button onclick="answerQuiz(5, 'd')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="d">
+                        D. Require them to only post about your product
+                    </button>
+                </div>
+                <div class="hidden mt-3 p-2 border-l-2 border-positive bg-positive/5 text-xs" id="q5Explain">
+                    <strong>Correct!</strong> Dictating creative backfires. Influencers know their audience—trust them, or the partnership will feel forced and fail.
+                </div>
+            </div>
+
+            <!-- Question 6: Physical & High-Touch -->
+            <div class="border border-black p-4 mb-4 shadow-brutal quiz-question" id="q6">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] text-muted uppercase">Q6 — Physical & High-Touch</span>
+                    <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-gray-300" id="q6Status">Unanswered</span>
+                </div>
+                <p class="text-xs font-semibold mb-4">What's the primary goal of a trade show booth?</p>
+                <div class="space-y-2">
+                    <button onclick="answerQuiz(6, 'a')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="a">
+                        A. Collect as many badge scans as possible
+                    </button>
+                    <button onclick="answerQuiz(6, 'b')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="b">
+                        B. Give out the most swag
+                    </button>
+                    <button onclick="answerQuiz(6, 'c')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="c">
+                        C. Book qualified meetings for the following week
+                    </button>
+                    <button onclick="answerQuiz(6, 'd')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="d">
+                        D. Impress competitors with your booth size
+                    </button>
+                </div>
+                <div class="hidden mt-3 p-2 border-l-2 border-positive bg-positive/5 text-xs" id="q6Explain">
+                    <strong>Correct!</strong> Trade shows are for booking meetings. Badge scans are vanity metrics. Meetings that convert to pipeline are the goal.
+                </div>
+            </div>
+
+            <!-- Question 7: Bullseye Framework -->
+            <div class="border border-black p-4 mb-4 shadow-brutal quiz-question" id="q7">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] text-muted uppercase">Q7 — Bullseye Framework</span>
+                    <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-gray-300" id="q7Status">Unanswered</span>
+                </div>
+                <p class="text-xs font-semibold mb-4">What does "Product-Channel Fit" mean?</p>
+                <div class="space-y-2">
+                    <button onclick="answerQuiz(7, 'a')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="a">
+                        A. Your product works on all distribution channels
+                    </button>
+                    <button onclick="answerQuiz(7, 'b')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="b">
+                        B. Finding the ONE channel where your product spreads naturally
+                    </button>
+                    <button onclick="answerQuiz(7, 'c')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="c">
+                        C. Having a presence on every social media platform
+                    </button>
+                    <button onclick="answerQuiz(7, 'd')" class="quiz-option w-full text-left p-2 border border-gray-200 text-xs" data-answer="d">
+                        D. Matching your product color scheme to channel branding
+                    </button>
+                </div>
+                <div class="hidden mt-3 p-2 border-l-2 border-positive bg-positive/5 text-xs" id="q7Explain">
+                    <strong>Correct!</strong> Product-Channel Fit > Product-Market Fit. Find the ONE channel where your product spreads, then saturate it before moving on.
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="hidden border border-black p-4 mb-6 shadow-brutal" id="quizResults">
+                <div class="text-center mb-4">
+                    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Final Score</div>
+                    <div class="font-serif text-4xl font-bold" id="finalScore">0/7</div>
+                    <div class="text-xs text-muted mt-2" id="scoreMessage">Complete all questions to see results.</div>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-4">
+                    <div class="grid grid-cols-7 gap-1 mb-4">
+                        <div class="text-center p-1 border text-[10px]" id="r1">Q1</div>
+                        <div class="text-center p-1 border text-[10px]" id="r2">Q2</div>
+                        <div class="text-center p-1 border text-[10px]" id="r3">Q3</div>
+                        <div class="text-center p-1 border text-[10px]" id="r4">Q4</div>
+                        <div class="text-center p-1 border text-[10px]" id="r5">Q5</div>
+                        <div class="text-center p-1 border text-[10px]" id="r6">Q6</div>
+                        <div class="text-center p-1 border text-[10px]" id="r7">Q7</div>
+                    </div>
+                </div>
+                
+                <button onclick="resetQuiz()" class="w-full border border-black px-3 py-2 text-xs hover:bg-black hover:text-white">
+                    Retake Quiz
+                </button>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(7)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">← Back to Course</button>
+                <button onclick="navigateModule(0)" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Start Over</button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-16 pt-8 border-t border-gray-200 text-center">
+            <p class="text-xs text-muted">Based on the AI GTM Playbook by <a href="https://linkedin.com/in/goabego" class="underline">goabego</a></p>
+            <p class="text-xs text-muted mt-1">Built with <a href="https://lampt.org" class="underline">lampt.org</a> aesthetic</p>
+        </footer>
+    </div>
+
+    <script>
+        // =====================
+        // NAVIGATION STATE
+        // =====================
+        let currentModule = 0;
+        let highestVisited = 0;
+
+        // =====================
+        // QUIZ STATE
+        // =====================
+        const correctAnswers = {
+            1: 'b',
+            2: 'c',
+            3: 'c',
+            4: 'b',
+            5: 'b',
+            6: 'c',
+            7: 'b'
+        };
+        let userAnswers = {};
+        let quizScore = 0;
+
+        // =====================
+        // DOT UPDATE
+        // =====================
+        function updateDots(activeIndex) {
+            document.querySelectorAll('.nav-dot').forEach((dot, i) => {
+                dot.classList.remove('bg-black');
+                dot.classList.add('bg-white');
+                if (i <= highestVisited) {
+                    dot.classList.remove('bg-white');
+                    dot.classList.add('bg-black');
+                }
+            });
+        }
+
+        // =====================
+        // NAVIGATION
+        // =====================
+        function navigateModule(idx) {
+            currentModule = idx;
+            if (idx > highestVisited) {
+                highestVisited = idx;
+            }
+            document.querySelectorAll('.module-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`module${idx}`).classList.remove('hidden');
+            updateDots(idx);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // =====================
+        // INTERSECTION OBSERVER
+        // =====================
+        function initScrollObserver() {
+            const options = {
+                root: null,
+                rootMargin: '-20% 0px -60% 0px',
+                threshold: 0
+            };
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const section = entry.target;
+                        const moduleIndex = parseInt(section.id.replace('module', ''));
+                        if (!section.classList.contains('hidden')) {
+                            currentModule = moduleIndex;
+                            updateDots(moduleIndex);
+                        }
+                    }
+                });
+            }, options);
+            document.querySelectorAll('.module-section').forEach(section => {
+                observer.observe(section);
+            });
+        }
+
+        // =====================
+        // CLICK HANDLERS
+        // =====================
+        document.querySelectorAll('.nav-dot').forEach(dot => {
+            dot.addEventListener('click', () => navigateModule(parseInt(dot.dataset.module)));
+        });
+
+        // =====================
+        // KEYBOARD NAV
+        // =====================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' && currentModule < 8) {
+                navigateModule(currentModule + 1);
+            } else if (e.key === 'ArrowLeft' && currentModule > 0) {
+                navigateModule(currentModule - 1);
+            }
+        });
+
+        // =====================
+        // QUIZ FUNCTIONS
+        // =====================
+        function answerQuiz(questionNum, answer) {
+            if (userAnswers[questionNum]) return; // Already answered
+            
+            userAnswers[questionNum] = answer;
+            const isCorrect = answer === correctAnswers[questionNum];
+            
+            // Update UI
+            const questionEl = document.getElementById(`q${questionNum}`);
+            const options = questionEl.querySelectorAll('.quiz-option');
+            
+            options.forEach(opt => {
+                opt.classList.add('disabled');
+                if (opt.dataset.answer === answer) {
+                    opt.classList.add(isCorrect ? 'correct' : 'incorrect');
+                }
+                if (opt.dataset.answer === correctAnswers[questionNum] && !isCorrect) {
+                    opt.classList.add('correct');
+                }
+            });
+            
+            // Show explanation
+            if (isCorrect) {
+                document.getElementById(`q${questionNum}Explain`).classList.remove('hidden');
+                quizScore++;
+            } else {
+                const explainEl = document.getElementById(`q${questionNum}Explain`);
+                explainEl.classList.remove('hidden', 'border-positive', 'bg-positive/5');
+                explainEl.classList.add('border-negative', 'bg-negative/5');
+                explainEl.innerHTML = explainEl.innerHTML.replace('Correct!', 'Incorrect.');
+            }
+            
+            // Update status
+            const statusEl = document.getElementById(`q${questionNum}Status`);
+            statusEl.textContent = isCorrect ? '✓ Correct' : '✗ Wrong';
+            statusEl.classList.remove('bg-gray-100', 'border-gray-300');
+            statusEl.classList.add(isCorrect ? 'bg-positive/20' : 'bg-negative/20', 'border-' + (isCorrect ? 'positive' : 'negative'));
+            
+            // Update progress
+            document.getElementById('quizProgress').textContent = Object.keys(userAnswers).length;
+            document.getElementById('quizScore').textContent = quizScore;
+            
+            // Check if complete
+            if (Object.keys(userAnswers).length === 7) {
+                showQuizResults();
+            }
+        }
+
+        function showQuizResults() {
+            const resultsEl = document.getElementById('quizResults');
+            resultsEl.classList.remove('hidden');
+            
+            document.getElementById('finalScore').textContent = `${quizScore}/7`;
+            
+            let message;
+            if (quizScore === 7) {
+                message = "🎯 Perfect! You've mastered the GTM Playbook.";
+            } else if (quizScore >= 5) {
+                message = "💪 Solid understanding. Review the modules you missed.";
+            } else if (quizScore >= 3) {
+                message = "📚 Good start. Go back and study the concepts.";
+            } else {
+                message = "🔄 Time to retake the course. Focus on the fundamentals.";
+            }
+            document.getElementById('scoreMessage').textContent = message;
+            
+            // Update result grid
+            for (let i = 1; i <= 7; i++) {
+                const resultEl = document.getElementById(`r${i}`);
+                const isCorrect = userAnswers[i] === correctAnswers[i];
+                resultEl.classList.add(isCorrect ? 'bg-positive/20' : 'bg-negative/20');
+                resultEl.textContent = isCorrect ? '✓' : '✗';
+            }
+            
+            resultsEl.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetQuiz() {
+            userAnswers = {};
+            quizScore = 0;
+            
+            document.getElementById('quizProgress').textContent = '0';
+            document.getElementById('quizScore').textContent = '0';
+            document.getElementById('quizResults').classList.add('hidden');
+            
+            for (let i = 1; i <= 7; i++) {
+                const questionEl = document.getElementById(`q${i}`);
+                const options = questionEl.querySelectorAll('.quiz-option');
+                options.forEach(opt => {
+                    opt.classList.remove('disabled', 'selected', 'correct', 'incorrect');
+                });
+                
+                document.getElementById(`q${i}Explain`).classList.add('hidden');
+                
+                const statusEl = document.getElementById(`q${i}Status`);
+                statusEl.textContent = 'Unanswered';
+                statusEl.classList.remove('bg-positive/20', 'bg-negative/20', 'border-positive', 'border-negative');
+                statusEl.classList.add('bg-gray-100', 'border-gray-300');
+                
+                const resultEl = document.getElementById(`r${i}`);
+                resultEl.classList.remove('bg-positive/20', 'bg-negative/20');
+                resultEl.textContent = `Q${i}`;
+            }
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // =====================
+        // INIT
+        // =====================
+        document.addEventListener('DOMContentLoaded', () => {
+            updateDots(0);
+            initScrollObserver();
+        });
+
+        // =====================
+        // CALCULATOR FUNCTIONS
+        // =====================
+        function calcPLG() {
+            const freeUsers = parseFloat(document.getElementById('freeUsers').value);
+            const costPerUser = parseFloat(document.getElementById('costPerUser').value);
+            const convRate = parseFloat(document.getElementById('convRate').value) / 100;
+            const paidPrice = parseFloat(document.getElementById('paidPrice').value);
+
+            const monthlyCost = freeUsers * costPerUser;
+            const paidUsers = freeUsers * convRate;
+            const monthlyRevenue = paidUsers * paidPrice;
+            const netRevenue = monthlyRevenue - monthlyCost;
+            const effectiveCAC = monthlyCost / paidUsers;
+
+            const isViable = netRevenue > 0;
+            const verdict = isViable ? 
+                `<span class="text-positive font-semibold">✅ Viable</span>` : 
+                `<span class="text-negative font-semibold">❌ Not Viable</span>`;
+
+            document.getElementById('plgResults').innerHTML = `
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-muted">Monthly Free Tier Cost</span>
+                        <span class="font-semibold">$${monthlyCost.toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted">Paid Conversions</span>
+                        <span class="font-semibold">${paidUsers.toFixed(0)} users</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted">Monthly Revenue</span>
+                        <span class="font-semibold">$${monthlyRevenue.toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted">Effective CAC</span>
+                        <span class="font-semibold">$${effectiveCAC.toFixed(2)}</span>
+                    </div>
+                    <div class="flex justify-between border-t pt-2">
+                        <span class="text-muted">Net Revenue</span>
+                        <span class="font-semibold">${netRevenue >= 0 ? '+' : ''}$${netRevenue.toLocaleString()}</span>
+                    </div>
+                    <div class="flex justify-between"><span class="text-muted">Verdict</span>${verdict}</div>
+                </div>
+            `;
+            document.getElementById('plgResults').classList.add('show');
+        }
+
+        function calcKeyword() {
+            const keyword = document.getElementById('keyword').value;
+            const volume = parseInt(document.getElementById('volume').value);
+            const intent = parseInt(document.getElementById('intent').value);
+            const score = volume + (intent * 2);
+            const maxScore = 9;
+
+            let rating, color;
+            if (score >= 7) { rating = 'Excellent'; color = 'text-positive'; }
+            else if (score >= 5) { rating = 'Good'; color = 'text-accent'; }
+            else { rating = 'Weak'; color = 'text-negative'; }
+
+            const intentLabel = ['', 'Informational', 'Comparison', 'Transactional'][intent];
+            const volumeLabel = ['', 'Low', 'Medium', 'High'][volume];
+
+            document.getElementById('keywordResults').innerHTML = `
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span class="text-muted">Keyword</span><span class="font-semibold">"${keyword || 'N/A'}"</span></div>
+                    <div class="flex justify-between"><span class="text-muted">Volume</span><span>${volumeLabel}</span></div>
+                    <div class="flex justify-between"><span class="text-muted">Intent</span><span>${intentLabel}</span></div>
+                    <div class="flex justify-between border-t pt-2"><span class="text-muted">Score</span><span class="font-semibold ${color}">${score}/${maxScore} — ${rating}</span></div>
+                </div>
+            `;
+            document.getElementById('keywordResults').classList.add('show');
+        }
+
+        function calcCAC() {
+            const adSpend = parseFloat(document.getElementById('adSpend').value);
+            const customers = parseFloat(document.getElementById('customersAcq').value);
+            const avgRevenue = parseFloat(document.getElementById('avgRevenue').value);
+            const lifespan = parseFloat(document.getElementById('lifespan').value);
+
+            const cac = adSpend / customers;
+            const ltv = avgRevenue * lifespan;
+            const ratio = ltv / cac;
+
+            let verdict, color;
+            if (ratio >= 3) { verdict = '✅ Healthy — Scale up'; color = 'text-positive'; }
+            else if (ratio >= 2) { verdict = '⚠️ Borderline — Optimize first'; color = 'text-accent'; }
+            else { verdict = '❌ Unsustainable — Fix unit economics'; color = 'text-negative'; }
+
+            document.getElementById('cacResults').innerHTML = `
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span class="text-muted">CAC</span><span class="font-semibold">$${cac.toFixed(2)}</span></div>
+                    <div class="flex justify-between"><span class="text-muted">LTV</span><span class="font-semibold">$${ltv.toFixed(2)}</span></div>
+                    <div class="flex justify-between border-t pt-2"><span class="text-muted">LTV:CAC Ratio</span><span class="font-semibold">${ratio.toFixed(1)}x</span></div>
+                    <div class="flex justify-between"><span class="text-muted">Verdict</span><span class="font-semibold ${color}">${verdict}</span></div>
+                </div>
+            `;
+            document.getElementById('cacResults').classList.add('show');
+        }
+
+        function calcSalesModel() {
+            const acv = parseFloat(document.getElementById('acv').value);
+            const cycle = parseFloat(document.getElementById('salesCycle').value);
+            const deciders = parseInt(document.getElementById('decisionMakers').value);
+            const complexity = parseInt(document.getElementById('complexity').value);
+
+            const score = (acv > 10000 ? 3 : acv > 2000 ? 2 : 1) + (cycle > 8 ? 3 : cycle > 4 ? 2 : 1) + deciders + complexity;
+
+            let model, details;
+            if (score >= 10) { model = 'Enterprise Sales'; details = 'High ACV + complex sale = hire AEs after founder closes 10-15 deals.'; }
+            else if (score >= 7) { model = 'Sales-Assisted PLG'; details = 'Self-serve entry + sales for expansion.'; }
+            else { model = 'Pure PLG'; details = 'Self-serve all the way. Invest in product, not sales.'; }
+
+            document.getElementById('salesResults').innerHTML = `
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span class="text-muted">Complexity Score</span><span class="font-semibold">${score}/12</span></div>
+                    <div class="flex justify-between border-t pt-2"><span class="text-muted">Recommended Model</span><span class="font-semibold">${model}</span></div>
+                    <p class="text-muted mt-2 border-l-2 border-gray-200 pl-2">${details}</p>
+                </div>
+            `;
+            document.getElementById('salesResults').classList.add('show');
+        }
+
+        function calcPartnership() {
+            const checks = [
+                document.getElementById('check1').checked,
+                document.getElementById('check2').checked,
+                document.getElementById('check3').checked,
+                document.getElementById('check4').checked,
+                document.getElementById('check5').checked
+            ];
+            const score = checks.filter(Boolean).length;
+
+            let verdict;
+            if (score >= 4) verdict = '✅ Ready for partnerships';
+            else if (score >= 2) verdict = '⚠️ Almost ready';
+            else verdict = '❌ Not ready yet';
+
+            document.getElementById('partnerResults').innerHTML = `
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span class="text-muted">Readiness Score</span><span class="font-semibold">${score}/5</span></div>
+                    <div class="flex justify-between border-t pt-2"><span class="text-muted">Verdict</span><span class="font-semibold">${verdict}</span></div>
+                </div>
+            `;
+            document.getElementById('partnerResults').classList.add('show');
+        }
+
+        function calcConference() {
+            const cost = parseFloat(document.getElementById('confCost').value);
+            const meetings = parseFloat(document.getElementById('meetings').value);
+            const oppRate = parseFloat(document.getElementById('oppRate').value) / 100;
+            const closeRate = parseFloat(document.getElementById('closeRate').value) / 100;
+            const dealSize = parseFloat(document.getElementById('dealSize').value);
+
+            const opportunities = meetings * oppRate;
+            const deals = opportunities * closeRate;
+            const revenue = deals * dealSize;
+            const roi = ((revenue - cost) / cost * 100).toFixed(0);
+
+            let verdict, color;
+            if (roi >= 100) { verdict = '✅ Strong ROI — Worth it'; color = 'text-positive'; }
+            else if (roi >= 0) { verdict = '⚠️ Marginal — Optimize or skip'; color = 'text-accent'; }
+            else { verdict = '❌ Negative ROI — Skip this one'; color = 'text-negative'; }
+
+            document.getElementById('confResults').innerHTML = `
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between"><span class="text-muted">Expected Deals</span><span class="font-semibold">${deals.toFixed(1)}</span></div>
+                    <div class="flex justify-between"><span class="text-muted">Expected Revenue</span><span class="font-semibold">$${revenue.toLocaleString()}</span></div>
+                    <div class="flex justify-between border-t pt-2"><span class="text-muted">ROI</span><span class="font-semibold">${roi}%</span></div>
+                    <div class="flex justify-between"><span class="text-muted">Verdict</span><span class="font-semibold ${color}">${verdict}</span></div>
+                </div>
+            `;
+            document.getElementById('confResults').classList.add('show');
+        }
+
+        function calcBullseye() {
+            const model = document.getElementById('bizModel').value;
+            const budget = document.getElementById('budget').value;
+            const team = document.getElementById('teamSize').value;
+            const timeline = document.getElementById('timeline').value;
+
+            const channels = {
+                'PLG': { cost: 'medium', effort: 'high', time: 'medium', models: ['b2c', 'b2b', 'devtool'] },
+                'Community': { cost: 'low', effort: 'medium', time: 'slow', models: ['devtool', 'b2c'] },
+                'Viral Marketing': { cost: 'low', effort: 'medium', time: 'fast', models: ['b2c', 'devtool', 'b2b'] },
+                'SEO': { cost: 'low', effort: 'medium', time: 'slow', models: ['b2c', 'b2b', 'devtool'] },
+                'Content Marketing': { cost: 'low', effort: 'medium', time: 'slow', models: ['b2b', 'devtool'] },
+                'SEM (Paid Search)': { cost: 'high', effort: 'medium', time: 'fast', models: ['b2c', 'b2b'] },
+                'Email Marketing': { cost: 'low', effort: 'low', time: 'medium', models: ['b2c', 'b2b', 'devtool'] },
+                'Influencer/Creator': { cost: 'medium', effort: 'medium', time: 'fast', models: ['b2c', 'devtool'] },
+                'Existing Platforms': { cost: 'low', effort: 'high', time: 'medium', models: ['devtool', 'b2b'] },
+                'Sales': { cost: 'high', effort: 'high', time: 'medium', models: ['b2b'] }
+            };
+
+            const scored = [];
+            for (const [name, ch] of Object.entries(channels)) {
+                if (!ch.models.includes(model)) continue;
+                let score = 0;
+                if (budget === 'low' && ch.cost === 'low') score += 2;
+                else if (budget === 'medium' && ch.cost !== 'high') score += 2;
+                else if (budget === 'high') score += 2;
+                if (team === 'solo' && ch.effort === 'low') score += 2;
+                else if (team === 'small' && ch.effort !== 'high') score += 2;
+                else if (team === 'growth') score += 2;
+                if (timeline === 'fast' && ch.time === 'fast') score += 2;
+                else if (timeline === 'medium' && ch.time !== 'slow') score += 2;
+                else if (timeline === 'slow') score += 2;
+                scored.push({ name, score, cost: ch.cost, effort: ch.effort, time: ch.time });
+            }
+
+            scored.sort((a, b) => b.score - a.score);
+            const top3 = scored.slice(0, 3);
+
+            document.getElementById('bullseyeResults').innerHTML = `
+                <div class="text-xs">
+                    <p class="text-muted mb-3">Test these channels first:</p>
+                    <div class="space-y-2">
+                        ${top3.map((ch, i) => `
+                            <div class="p-2 border ${i === 0 ? 'border-black bg-accent/20' : 'border-gray-200'}">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-semibold">${i === 0 ? '🎯 ' : ''}${ch.name}</span>
+                                    <span class="text-[10px] text-muted">${ch.cost} cost • ${ch.effort} effort</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            document.getElementById('bullseyeResults').classList.add('show');
+        }
+    </script>
+</body>
+</html>
