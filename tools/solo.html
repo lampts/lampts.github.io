@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In My Life | Solo Guitar Masterclass v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                        positive: '#16a34a',
+                        negative: '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .shadow-brutal { box-shadow: 3px 3px 0px #000; }
+        .result-panel { display: none; }
+        .result-panel.show { display: block; }
+        .note-btn { transition: all 0.15s ease; user-select: none; }
+        .note-btn:active { transform: scale(0.95); }
+        .note-btn.playing { animation: notePulse 0.3s ease; }
+        @keyframes notePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); box-shadow: 0 0 20px rgba(251, 212, 91, 0.8); }
+        }
+        .fretboard { background: linear-gradient(180deg, #8B4513 0%, #654321 100%); border-radius: 4px; }
+        .fret-dot { cursor: pointer; transition: all 0.15s ease; }
+        .fret-dot:hover { transform: scale(1.2); filter: brightness(1.2); }
+        .lick-card { transition: all 0.2s ease; }
+        .lick-card:hover { transform: translateY(-2px); }
+        input[type="range"] { -webkit-appearance: none; height: 6px; background: #e5e5e5; border-radius: 3px; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: #FBD45B; border: 2px solid #000; border-radius: 50%; cursor: pointer; }
+    </style>
+</head>
+<body class="bg-background text-foreground font-sans text-sm leading-relaxed">
+    <div class="max-w-xl mx-auto px-4 py-8">
+        
+        <!-- Audio Status Bar -->
+        <div class="flex justify-between items-center mb-4 text-[10px] flex-wrap gap-2">
+            <div class="flex items-center gap-2">
+                <span id="audioStatus" class="text-red-600">● Audio OFF</span>
+                <button onclick="initAudio()" class="border border-black px-2 py-0.5 hover:bg-accent">Enable</button>
+            </div>
+            <div class="flex items-center gap-2">
+                <span>Tempo:</span>
+                <input type="range" id="tempoSlider" min="60" max="140" value="100" class="w-16" onchange="updateTempo()">
+                <span id="tempoValue">100</span>
+            </div>
+        </div>
+
+        <!-- Navigation Dots -->
+        <div class="flex justify-center gap-1.5 mb-8 flex-wrap">
+            <button onclick="navigateModule(0)" class="nav-dot w-3 h-3 border border-black bg-black"></button>
+            <button onclick="navigateModule(1)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(2)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(3)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(4)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(5)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(6)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(7)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(8)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(9)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(10)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+            <button onclick="navigateModule(11)" class="nav-dot w-3 h-3 border border-black bg-white"></button>
+        </div>
+
+        <!-- MODULE 0: LANDING -->
+        <section id="module0" class="module-section">
+            <div class="text-center mb-8">
+                <h1 class="font-serif text-3xl font-semibold mb-2">In My Life</h1>
+                <p class="text-muted text-xs">Solo Guitar Masterclass v2</p>
+                <p class="text-[10px] text-muted mt-1">🔊 Audio + 🎸 Fretboard + 📚 Lick Library</p>
+            </div>
+
+            <div class="border border-black p-6 mb-6 shadow-brutal bg-accent/20">
+                <p class="text-xs italic mb-4">"4 borrowed notes biến bài hát đơn giản thành kiệt tác."</p>
+            </div>
+
+            <!-- Audio Preview -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">🔊 Preview: A Major Triad</span>
+                    <button onclick="playLick('triad_basic')" class="border border-black px-3 py-1 text-xs hover:bg-accent">▶ Play</button>
+                </div>
+                <p class="text-[10px] text-muted">Click Enable Audio → Play để nghe La-Đô#-Mi-La</p>
+            </div>
+
+            <!-- Learning Path -->
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase tracking-wider mb-3">12-Module Path</div>
+                <div class="grid grid-cols-2 gap-2 text-[10px]">
+                    <div class="p-2 bg-green-50 border border-green-200">
+                        <div class="font-semibold">1-3: Foundation</div>
+                        <div class="text-muted">Triad, Targeting, Neighbors</div>
+                    </div>
+                    <div class="p-2 bg-blue-50 border border-blue-200">
+                        <div class="font-semibold">4-6: Vocabulary</div>
+                        <div class="text-muted">Scale, Penta, Tension</div>
+                    </div>
+                    <div class="p-2 bg-purple-50 border border-purple-200">
+                        <div class="font-semibold">7-8: Emotion</div>
+                        <div class="text-muted">Borrowing, Register</div>
+                    </div>
+                    <div class="p-2 bg-orange-50 border border-orange-200">
+                        <div class="font-semibold">9-11: Expression</div>
+                        <div class="text-muted">Phrasing, Solo, Practice</div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="navigateModule(1)" class="w-full border border-black px-4 py-3 text-xs hover:bg-black hover:text-white shadow-brutal">
+                Start Module 1 →
+            </button>
+        </section>
+
+        <!-- MODULE 1: CHORD TONES -->
+        <section id="module1" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 1/11 • FOUNDATION</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Chord Tones: Home Base</h2>
+            <p class="text-xs text-muted mb-6 italic">"Triad (1-3-5) = always safe"</p>
+
+            <!-- Triad with Audio -->
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] font-medium uppercase">A Major Triad</span>
+                    <button onclick="playLick('triad_basic')" class="border border-black px-2 py-0.5 text-[10px] hover:bg-accent">▶ Play</button>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <button onclick="playNote('A3')" class="border border-black p-3 bg-accent hover:bg-yellow-400">
+                        <div class="font-semibold text-lg">La</div>
+                        <div class="text-[10px]">Root</div>
+                    </button>
+                    <button onclick="playNote('C#4')" class="border border-black p-3 bg-accent hover:bg-yellow-400">
+                        <div class="font-semibold text-lg">Đô#</div>
+                        <div class="text-[10px]">3rd</div>
+                    </button>
+                    <button onclick="playNote('E4')" class="border border-black p-3 bg-accent hover:bg-yellow-400">
+                        <div class="font-semibold text-lg">Mi</div>
+                        <div class="text-[10px]">5th</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Fretboard -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="font-semibold text-xs mb-3">Fretboard — Click notes to play</div>
+                <div id="fretboard1" class="mb-2"></div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Build Phrase</span>
+                    <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">PRACTICE</span>
+                </div>
+                
+                <div class="flex justify-center gap-3 mb-4">
+                    <button onclick="addNote('m1','A3','chord')" class="note-btn w-14 h-14 border-2 border-black bg-accent font-semibold shadow-brutal">La</button>
+                    <button onclick="addNote('m1','C#4','chord')" class="note-btn w-14 h-14 border-2 border-black bg-accent font-semibold shadow-brutal">Đô#</button>
+                    <button onclick="addNote('m1','E4','chord')" class="note-btn w-14 h-14 border-2 border-black bg-accent font-semibold shadow-brutal">Mi</button>
+                </div>
+
+                <div class="border border-gray-300 p-3 mb-3 min-h-[50px] bg-gray-50">
+                    <div id="m1-phrase" class="flex flex-wrap gap-1"></div>
+                </div>
+
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="playUserPhrase('m1')" class="border border-black px-3 py-1 text-xs hover:bg-accent">▶ Play</button>
+                    <button onclick="clearPhrase('m1')" class="border border-black px-3 py-1 text-xs hover:bg-gray-100">Clear</button>
+                </div>
+            </div>
+
+            <!-- Licks -->
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-accent/20">
+                <div class="text-[10px] font-medium uppercase mb-3">Lick Library: Triads</div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center p-2 bg-white border border-gray-200">
+                        <div class="text-xs">Ascending: La→Đô#→Mi→La'</div>
+                        <button onclick="playLick('triad_asc')" class="border border-black px-2 py-0.5 text-[10px] hover:bg-accent">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-white border border-gray-200">
+                        <div class="text-xs">Descending: La'→Mi→Đô#→La</div>
+                        <button onclick="playLick('triad_desc')" class="border border-black px-2 py-0.5 text-[10px] hover:bg-accent">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-white border border-gray-200">
+                        <div class="text-xs">Broken: La→Mi→Đô#→La</div>
+                        <button onclick="playLick('triad_broken')" class="border border-black px-2 py-0.5 text-[10px] hover:bg-accent">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">CHORD TONE = ALWAYS SAFE. THIS IS FOUNDATION.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(0)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Home</button>
+                <button onclick="navigateModule(2)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 2: CHORD CHANGES -->
+        <section id="module2" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 2/11 • FOUNDATION</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Targeting Chord Changes</h2>
+
+            <!-- Progression -->
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] font-medium uppercase">Progression</span>
+                    <button onclick="playProgression()" class="border border-black px-2 py-0.5 text-[10px] hover:bg-accent">▶ Play All</button>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="playChord('A')" class="px-3 py-2 bg-accent border border-black text-xs hover:bg-yellow-400">A</button>
+                    <button onclick="playChord('E')" class="px-3 py-2 bg-green-100 border border-black text-xs hover:bg-green-200">E</button>
+                    <button onclick="playChord('F#m')" class="px-3 py-2 bg-blue-100 border border-black text-xs hover:bg-blue-200">F#m</button>
+                    <button onclick="playChord('D')" class="px-3 py-2 bg-orange-100 border border-black text-xs hover:bg-orange-200">D</button>
+                    <button onclick="playChord('Dm')" class="px-3 py-2 bg-purple-200 border border-purple-400 text-xs hover:bg-purple-300">Dm</button>
+                </div>
+            </div>
+
+            <!-- Chord Fretboard -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Chord Tones</span>
+                    <select id="chordSelect" onchange="showChordTones()" class="border border-black px-2 py-1 text-xs">
+                        <option value="A">A Major</option>
+                        <option value="E">E Major</option>
+                        <option value="F#m">F#m</option>
+                        <option value="D">D Major</option>
+                        <option value="Dm">Dm (borrowed)</option>
+                    </select>
+                </div>
+                <div id="fretboard2"></div>
+            </div>
+
+            <!-- Licks -->
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-accent/20">
+                <div class="text-[10px] font-medium uppercase mb-3">Transition Licks</div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center p-2 bg-white border border-gray-200">
+                        <div class="text-xs">A→E: La→Si→Sol#→Mi</div>
+                        <button onclick="playLick('a_to_e')" class="border border-black px-2 py-0.5 text-[10px] hover:bg-accent">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-purple-50 border border-purple-200">
+                        <div class="text-xs">D→Dm: Ré→Fa#→Fa♮→Ré</div>
+                        <button onclick="playLick('d_to_dm')" class="border border-black px-2 py-0.5 text-[10px] hover:bg-accent">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(1)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(3)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 3: NEIGHBORS -->
+        <section id="module3" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 3/11 • FOUNDATION</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Neighbor Notes</h2>
+
+            <!-- Neighbor Map -->
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase mb-3">Neighbor → Target</div>
+                <div class="space-y-2 text-xs">
+                    <div class="flex items-center gap-2">
+                        <button onclick="playNote('G#3')" class="px-2 py-1 bg-red-100 border border-black">Sol#</button>
+                        <span>→</span>
+                        <button onclick="playNote('A3')" class="px-2 py-1 bg-accent border border-black">La</button>
+                        <span>←</span>
+                        <button onclick="playNote('B3')" class="px-2 py-1 bg-red-100 border border-black">Si</button>
+                        <button onclick="playLick('neighbor_a')" class="ml-auto border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="playNote('B3')" class="px-2 py-1 bg-red-100 border border-black">Si</button>
+                        <span>→</span>
+                        <button onclick="playNote('C#4')" class="px-2 py-1 bg-accent border border-black">Đô#</button>
+                        <span>←</span>
+                        <button onclick="playNote('D4')" class="px-2 py-1 bg-red-100 border border-black">Ré</button>
+                        <button onclick="playLick('neighbor_cs')" class="ml-auto border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="font-semibold text-xs mb-3">Build: Neighbor → Chord Tone</div>
+                <div class="grid grid-cols-4 gap-2 mb-4">
+                    <button onclick="addNote('m3','A3','chord')" class="note-btn py-2 border-2 border-black bg-accent text-xs">La</button>
+                    <button onclick="addNote('m3','B3','tension')" class="note-btn py-2 border-2 border-black bg-red-100 text-xs">Si</button>
+                    <button onclick="addNote('m3','C#4','chord')" class="note-btn py-2 border-2 border-black bg-accent text-xs">Đô#</button>
+                    <button onclick="addNote('m3','D4','tension')" class="note-btn py-2 border-2 border-black bg-red-100 text-xs">Ré</button>
+                    <button onclick="addNote('m3','E4','chord')" class="note-btn py-2 border-2 border-black bg-accent text-xs">Mi</button>
+                    <button onclick="addNote('m3','F#4','tension')" class="note-btn py-2 border-2 border-black bg-red-100 text-xs">Fa#</button>
+                    <button onclick="addNote('m3','G#4','tension')" class="note-btn py-2 border-2 border-black bg-red-200 text-xs">Sol#</button>
+                    <button onclick="addNote('m3','A4','chord')" class="note-btn py-2 border-2 border-black bg-accent text-xs">La'</button>
+                </div>
+                <div class="border border-gray-300 p-3 mb-3 min-h-[50px] bg-gray-50">
+                    <div id="m3-phrase" class="flex flex-wrap gap-1"></div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="playUserPhrase('m3')" class="border border-black px-3 py-1 text-xs hover:bg-accent">▶ Play</button>
+                    <button onclick="clearPhrase('m3')" class="border border-black px-3 py-1 text-xs hover:bg-gray-100">Clear</button>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(2)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(4)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 4: SCALE -->
+        <section id="module4" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 4/11 • VOCABULARY</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">A Major Scale</h2>
+
+            <!-- Interactive Scale -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Click to hear stability</span>
+                    <button onclick="playLick('scale_asc')" class="border border-black px-2 py-0.5 text-[10px] hover:bg-accent">▶ All</button>
+                </div>
+                <div class="flex gap-1 overflow-x-auto">
+                    <button onclick="playNote('A3')" class="note-btn flex-1 py-3 border-2 border-black bg-green-200 text-xs min-w-[38px]"><div>La</div><div class="text-[8px]">1</div></button>
+                    <button onclick="playNote('B3')" class="note-btn flex-1 py-3 border-2 border-black bg-yellow-100 text-xs min-w-[38px]"><div>Si</div><div class="text-[8px]">2</div></button>
+                    <button onclick="playNote('C#4')" class="note-btn flex-1 py-3 border-2 border-black bg-green-200 text-xs min-w-[38px]"><div>Đô#</div><div class="text-[8px]">3</div></button>
+                    <button onclick="playNote('D4')" class="note-btn flex-1 py-3 border-2 border-black bg-orange-100 text-xs min-w-[38px]"><div>Ré</div><div class="text-[8px]">4</div></button>
+                    <button onclick="playNote('E4')" class="note-btn flex-1 py-3 border-2 border-black bg-green-200 text-xs min-w-[38px]"><div>Mi</div><div class="text-[8px]">5</div></button>
+                    <button onclick="playNote('F#4')" class="note-btn flex-1 py-3 border-2 border-black bg-yellow-100 text-xs min-w-[38px]"><div>Fa#</div><div class="text-[8px]">6</div></button>
+                    <button onclick="playNote('G#4')" class="note-btn flex-1 py-3 border-2 border-black bg-red-200 text-xs min-w-[38px]"><div>Sol#</div><div class="text-[8px]">7</div></button>
+                    <button onclick="playNote('A4')" class="note-btn flex-1 py-3 border-2 border-black bg-green-200 text-xs min-w-[38px]"><div>La'</div><div class="text-[8px]">8</div></button>
+                </div>
+            </div>
+
+            <div id="fretboard4" class="border border-black p-4 mb-6 shadow-brutal"></div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(3)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(5)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 5: PENTATONIC -->
+        <section id="module5" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 5/11 • VOCABULARY</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Pentatonic = Safe Mode</h2>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-xs font-semibold">Full Scale (7)</span>
+                            <button onclick="playLick('scale_asc')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                        </div>
+                        <div class="flex gap-1 flex-wrap text-[10px]">
+                            <span class="px-2 py-1 bg-accent border border-black">La</span>
+                            <span class="px-2 py-1 bg-accent border border-black">Si</span>
+                            <span class="px-2 py-1 bg-accent border border-black">Đô#</span>
+                            <span class="px-2 py-1 bg-red-200 border border-red-400 line-through">Ré</span>
+                            <span class="px-2 py-1 bg-accent border border-black">Mi</span>
+                            <span class="px-2 py-1 bg-accent border border-black">Fa#</span>
+                            <span class="px-2 py-1 bg-red-200 border border-red-400 line-through">Sol#</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-xs font-semibold">Pentatonic (5)</span>
+                            <button onclick="playLick('penta_asc')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                        </div>
+                        <div class="flex gap-1 flex-wrap text-[10px]">
+                            <span class="px-2 py-1 bg-accent border border-black">La</span>
+                            <span class="px-2 py-1 bg-accent border border-black">Si</span>
+                            <span class="px-2 py-1 bg-accent border border-black">Đô#</span>
+                            <span class="px-2 py-1 bg-accent border border-black">Mi</span>
+                            <span class="px-2 py-1 bg-accent border border-black">Fa#</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="fretboard5" class="border border-black p-4 mb-6 shadow-brutal"></div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(4)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(6)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 6: TENSION -->
+        <section id="module6" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 6/11 • VOCABULARY</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Tension & Resolution</h2>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase mb-3">Tension → Resolution</div>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between p-2 bg-white border border-red-200">
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="px-2 py-1 bg-red-200 border border-red-400">Sol#</span>→<span class="px-2 py-1 bg-green-200 border border-green-400">La</span>
+                        </div>
+                        <button onclick="playLick('tension_gs_a')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex items-center justify-between p-2 bg-white border border-orange-200">
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="px-2 py-1 bg-orange-200 border border-orange-400">Ré</span>→<span class="px-2 py-1 bg-green-200 border border-green-400">Đô#</span>
+                        </div>
+                        <button onclick="playLick('tension_d_cs')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ratio Exercise -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Build: Target 30-40% tension</span>
+                </div>
+                <div class="grid grid-cols-4 gap-2 mb-4">
+                    <button onclick="addNote('m6','A3','chord')" class="note-btn py-2 border-2 border-black bg-green-100 text-xs">La✓</button>
+                    <button onclick="addNote('m6','B3','tension')" class="note-btn py-2 border-2 border-black bg-yellow-100 text-xs">Si~</button>
+                    <button onclick="addNote('m6','C#4','chord')" class="note-btn py-2 border-2 border-black bg-green-100 text-xs">Đô#✓</button>
+                    <button onclick="addNote('m6','D4','tension')" class="note-btn py-2 border-2 border-black bg-orange-100 text-xs">Ré~</button>
+                    <button onclick="addNote('m6','E4','chord')" class="note-btn py-2 border-2 border-black bg-green-100 text-xs">Mi✓</button>
+                    <button onclick="addNote('m6','F#4','tension')" class="note-btn py-2 border-2 border-black bg-yellow-100 text-xs">Fa#~</button>
+                    <button onclick="addNote('m6','G#4','tension')" class="note-btn py-2 border-2 border-black bg-red-100 text-xs">Sol#!</button>
+                    <button onclick="addNote('m6','A4','chord')" class="note-btn py-2 border-2 border-black bg-green-100 text-xs">La'✓</button>
+                </div>
+                <div class="border border-gray-300 p-3 mb-3 bg-gray-50">
+                    <div class="flex justify-between items-center mb-2">
+                        <div id="m6-phrase" class="flex flex-wrap gap-1"></div>
+                        <span class="text-[10px] font-semibold" id="m6-ratio">0%</span>
+                    </div>
+                    <div class="h-2 bg-gray-200 rounded"><div id="m6-bar" class="h-full bg-green-500 rounded" style="width:0%"></div></div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="playUserPhrase('m6')" class="border border-black px-3 py-1 text-xs hover:bg-accent">▶ Play</button>
+                    <button onclick="clearPhrase('m6')" class="border border-black px-3 py-1 text-xs hover:bg-gray-100">Clear</button>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(5)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(7)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 7: MODAL BORROWING -->
+        <section id="module7" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 7/11 • EMOTION</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Modal Borrowing</h2>
+
+            <!-- D vs Dm -->
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-purple-50">
+                <div class="text-[10px] font-medium uppercase mb-3 text-purple-700">D → Dm Pivot</div>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="text-center border border-gray-300 p-3 bg-white">
+                        <div class="font-semibold text-xs mb-2">D Major</div>
+                        <div class="flex justify-center gap-1 mb-2">
+                            <button onclick="playNote('D4')" class="px-2 py-1 bg-orange-100 border border-black text-[10px]">Ré</button>
+                            <button onclick="playNote('F#4')" class="px-2 py-1 bg-orange-100 border border-black text-[10px]">Fa#</button>
+                            <button onclick="playNote('A4')" class="px-2 py-1 bg-orange-100 border border-black text-[10px]">La</button>
+                        </div>
+                        <button onclick="playChord('D')" class="border border-black px-2 py-1 text-[10px]">▶ Chord</button>
+                    </div>
+                    <div class="text-center border-2 border-purple-400 p-3 bg-purple-100">
+                        <div class="font-semibold text-xs mb-2 text-purple-700">D Minor</div>
+                        <div class="flex justify-center gap-1 mb-2">
+                            <button onclick="playNote('D4')" class="px-2 py-1 bg-purple-200 border border-purple-400 text-[10px]">Ré</button>
+                            <button onclick="playNote('F4')" class="px-2 py-1 bg-purple-300 border border-purple-500 text-[10px]">Fa♮</button>
+                            <button onclick="playNote('A4')" class="px-2 py-1 bg-purple-200 border border-purple-400 text-[10px]">La</button>
+                        </div>
+                        <button onclick="playChord('Dm')" class="border border-purple-400 px-2 py-1 text-[10px]">▶ Chord</button>
+                    </div>
+                </div>
+                <button onclick="playLick('d_dm_compare')" class="w-full border-2 border-purple-400 py-2 text-xs hover:bg-purple-200">▶ Hear D → Dm Transition</button>
+            </div>
+
+            <!-- Licks -->
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-accent/20">
+                <div class="text-[10px] font-medium uppercase mb-3">Borrowed Note Licks</div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center p-2 bg-purple-50 border border-purple-200">
+                        <div class="text-xs">Fa#→Fa♮ slide: Ré→Fa#→Fa♮→Mi→Ré</div>
+                        <button onclick="playLick('borrowed_slide')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-purple-50 border border-purple-200">
+                        <div class="text-xs">G7 approach: Mi→Sol♮→Fa♮→Mi</div>
+                        <button onclick="playLick('g7_approach')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(6)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(8)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 8: REGISTER -->
+        <section id="module8" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 8/11 • EMOTION</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Voicing & Register</h2>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="text-[10px] font-medium uppercase mb-3">Same note, different octave</div>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="playNote('A2')" class="p-4 border-2 border-black bg-orange-100 hover:bg-orange-200">
+                        <div class="font-bold">La</div>
+                        <div class="text-[10px]">Low</div>
+                        <div class="text-[10px] text-muted">Warm</div>
+                    </button>
+                    <button onclick="playNote('A3')" class="p-4 border-2 border-black bg-green-100 hover:bg-green-200">
+                        <div class="font-bold">La</div>
+                        <div class="text-[10px]">Mid</div>
+                        <div class="text-[10px] text-muted">Balanced</div>
+                    </button>
+                    <button onclick="playNote('A4')" class="p-4 border-2 border-black bg-blue-100 hover:bg-blue-200">
+                        <div class="font-bold">La</div>
+                        <div class="text-[10px]">High</div>
+                        <div class="text-[10px] text-muted">Bright</div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase mb-3">Same melody, 3 registers</div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center p-2 bg-orange-50 border border-orange-200">
+                        <span class="text-xs">La-Si-Đô# (Low)</span>
+                        <button onclick="playLick('reg_low')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-green-50 border border-green-200">
+                        <span class="text-xs">La-Si-Đô# (Mid)</span>
+                        <button onclick="playLick('reg_mid')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-blue-50 border border-blue-200">
+                        <span class="text-xs">La-Si-Đô# (High)</span>
+                        <button onclick="playLick('reg_high')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(7)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(9)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 9: PHRASING -->
+        <section id="module9" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 9/11 • EXPRESSION</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Phrasing & Space</h2>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase mb-3">Space = breathing room</div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center p-2 bg-white border border-gray-200">
+                        <div class="text-xs">Crowded: La-Si-Đô#-Ré-Mi-Fa#-Sol#-La</div>
+                        <button onclick="playLick('phrase_crowded')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-green-50 border border-green-200">
+                        <div class="text-xs">With space: La-Si-Đô# . . Mi-Ré-Đô# . . La</div>
+                        <button onclick="playLick('phrase_space')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="text-[10px] font-medium uppercase mb-3">Motif repetition = memorability</div>
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center p-2 bg-white border border-gray-200">
+                        <div class="text-xs">Motif 1x: La-Si-Đô#</div>
+                        <button onclick="playLick('motif_once')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-accent/30 border border-accent">
+                        <div class="text-xs">Motif 3x: La-Si-Đô# . La-Si-Đô# . La-Si-Đô#-Mi</div>
+                        <button onclick="playLick('motif_repeat')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+                <p class="text-xs font-semibold">SPACE IS THE MOST IMPORTANT NOTE.</p>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(8)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(10)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Next →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 10: FULL SOLO -->
+        <section id="module10" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 10/11 • MASTERY</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Full Solo</h2>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-accent/20">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-[10px] font-medium uppercase">Example Solo</span>
+                    <button onclick="playLick('full_solo')" class="border border-black px-3 py-1 text-xs hover:bg-accent">▶ Play Full</button>
+                </div>
+                <div class="font-mono text-[10px] bg-white p-3 border border-gray-300 space-y-1">
+                    <div><span class="text-muted">A:</span> Mi-Ré-<b>Đô#</b>-<b>La</b></div>
+                    <div><span class="text-muted">E:</span> Si-<b>Sol#</b>-La-<b>Mi</b></div>
+                    <div><span class="text-muted">F#m:</span> La-Sol#-<b>Fa#</b>-Mi</div>
+                    <div><span class="text-muted">D:</span> <b>Fa#</b>-Mi-<b>Ré</b></div>
+                    <div><span class="text-muted">Dm:</span> <b class="text-purple-600">Fa♮</b>-Mi-<b>Ré</b></div>
+                    <div><span class="text-muted">A:</span> Đô#-Si-<b>La</b></div>
+                </div>
+            </div>
+
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+                <div class="text-[10px] font-medium uppercase mb-2">Checklist</div>
+                <div class="space-y-1 text-xs">
+                    <div>☐ Target chord tones at changes</div>
+                    <div>☐ Use neighbors to connect</div>
+                    <div>☐ Tension ratio ~30-40%</div>
+                    <div>☐ Highlight D→Dm (Fa#→Fa♮)</div>
+                    <div>☐ Register arc (mid→high→low)</div>
+                    <div>☐ Repeat motif 2-3x</div>
+                    <div>☐ Leave space</div>
+                    <div>☐ End on root (La)</div>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(9)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(11)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">Practice →</button>
+            </div>
+        </section>
+
+        <!-- MODULE 11: PRACTICE ROOM -->
+        <section id="module11" class="module-section hidden">
+            <div class="text-xs text-muted mb-2">Module 11/11 • PRACTICE</div>
+            <h2 class="font-serif text-2xl font-semibold mb-1">Practice Room</h2>
+
+            <!-- Fretboard -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Interactive Fretboard</span>
+                    <select id="fretMode" onchange="updateFretMode()" class="border border-black px-2 py-1 text-[10px]">
+                        <option value="scale">A Major Scale</option>
+                        <option value="penta">Pentatonic</option>
+                        <option value="A">A Chord</option>
+                        <option value="Dm">Dm Chord</option>
+                    </select>
+                </div>
+                <div id="fretboard11"></div>
+                <div class="border border-gray-300 p-2 mt-3 bg-gray-50">
+                    <div id="m11-phrase" class="flex flex-wrap gap-1 min-h-[24px]"></div>
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="playUserPhrase('m11')" class="border border-black px-3 py-1 text-xs hover:bg-accent">▶ Play</button>
+                    <button onclick="clearPhrase('m11')" class="border border-black px-3 py-1 text-xs hover:bg-gray-100">Clear</button>
+                    <button onclick="loopPhrase('m11')" class="border border-black px-3 py-1 text-xs hover:bg-accent">🔁 Loop</button>
+                </div>
+            </div>
+
+            <!-- Backing Track -->
+            <div class="border border-black p-4 mb-6 shadow-brutal bg-accent/20">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="font-semibold text-xs">Backing Track</span>
+                    <span id="currentChord" class="px-2 py-1 bg-white border border-black text-xs">-</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="playBackingTrack()" id="backingBtn" class="border-2 border-black px-4 py-2 text-xs hover:bg-accent">▶ Play</button>
+                    <button onclick="stopBacking()" class="border border-black px-3 py-1 text-xs hover:bg-gray-100">⏹ Stop</button>
+                </div>
+            </div>
+
+            <!-- Lick Library -->
+            <div class="border border-black p-4 mb-6 shadow-brutal">
+                <div class="text-[10px] font-medium uppercase mb-3">Complete Lick Library</div>
+                <div class="space-y-1 max-h-48 overflow-y-auto">
+                    <div class="flex justify-between items-center p-2 bg-gray-50 border">
+                        <span class="text-xs">Ascending Triad</span>
+                        <button onclick="playLick('triad_asc')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-gray-50 border">
+                        <span class="text-xs">A→E Transition</span>
+                        <button onclick="playLick('a_to_e')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-purple-50 border border-purple-200">
+                        <span class="text-xs">D→Dm Pivot</span>
+                        <button onclick="playLick('d_to_dm')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-purple-50 border border-purple-200">
+                        <span class="text-xs">Borrowed Slide</span>
+                        <button onclick="playLick('borrowed_slide')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                    <div class="flex justify-between items-center p-2 bg-accent/30 border border-accent">
+                        <span class="text-xs font-semibold">Full Solo</span>
+                        <button onclick="playLick('full_solo')" class="border border-black px-2 py-0.5 text-[10px]">▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="navigateModule(10)" class="border border-black px-4 py-2 text-xs hover:bg-gray-100">← Back</button>
+                <button onclick="navigateModule(0)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white">🏠 Home</button>
+            </div>
+        </section>
+
+        <footer class="mt-12 pt-6 border-t border-gray-200 text-center">
+            <p class="text-[10px] text-muted">"In My Life" — The Beatles (1965) • Audio + Fretboard + Licks</p>
+        </footer>
+    </div>
+
+    <script>
+        // ========== AUDIO ==========
+        let audioCtx = null;
+        let tempo = 100;
+        let loopId = null;
+        let backingId = null;
+
+        const freq = {
+            'A2':110,'B2':123.47,'C#3':138.59,'D3':146.83,'E3':164.81,'F3':174.61,'F#3':185,'G3':196,'G#3':207.65,
+            'A3':220,'B3':246.94,'C#4':277.18,'D4':293.66,'E4':329.63,'F4':349.23,'F#4':369.99,'G4':392,'G#4':415.30,
+            'A4':440,'B4':493.88,'C#5':554.37,'D5':587.33,'E5':659.25,'F5':698.46,'F#5':739.99,'G5':783.99,'G#5':830.61,'A5':880
+        };
+
+        const chordNotes = {
+            'A':['A3','C#4','E4'],'E':['E3','G#3','B3'],'F#m':['F#3','A3','C#4','E4'],
+            'D':['D4','F#4','A4'],'Dm':['D4','F4','A4'],'G7':['G3','B3','D4','F4']
+        };
+
+        const licks = {
+            'triad_basic':['A3','C#4','E4','A4'],
+            'triad_asc':['A3','C#4','E4','A4'],
+            'triad_desc':['A4','E4','C#4','A3'],
+            'triad_broken':['A3','E4','C#4','A3'],
+            'a_to_e':['A3','B3','G#3','E3'],
+            'd_to_dm':['D4','F#4','F4','D4'],
+            'd_dm_compare':['D4','F#4','A4',null,'D4','F4','A4'],
+            'neighbor_a':['G#3','A3','B3','A3'],
+            'neighbor_cs':['B3','C#4','D4','C#4'],
+            'scale_asc':['A3','B3','C#4','D4','E4','F#4','G#4','A4'],
+            'penta_asc':['A3','B3','C#4','E4','F#4','A4'],
+            'tension_gs_a':['G#4','G#4','A4'],
+            'tension_d_cs':['D4','D4','C#4'],
+            'borrowed_slide':['D4','F#4','F4','E4','D4'],
+            'g7_approach':['E4','G4','F4','E4'],
+            'reg_low':['A2','B2','C#3'],
+            'reg_mid':['A3','B3','C#4'],
+            'reg_high':['A4','B4','C#5'],
+            'phrase_crowded':['A3','B3','C#4','D4','E4','F#4','G#4','A4'],
+            'phrase_space':['A3','B3','C#4',null,null,'E4','D4','C#4',null,null,'A3'],
+            'motif_once':['A3','B3','C#4'],
+            'motif_repeat':['A3','B3','C#4',null,'A3','B3','C#4',null,'A3','B3','C#4','E4'],
+            'full_solo':['E4','D4','C#4','A3',null,'B3','G#3','A3','E3',null,'A3','G#3','F#3','E3',null,'F#4','E4','D4',null,'F4','E4','D4',null,'C#4','B3','A3']
+        };
+
+        const noteNames = {'A':'La','B':'Si','C#':'Đô#','D':'Ré','E':'Mi','F#':'Fa#','F':'Fa♮','G#':'Sol#','G':'Sol♮'};
+
+        function initAudio() {
+            if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+            if(audioCtx.state==='suspended') audioCtx.resume();
+            document.getElementById('audioStatus').textContent = '● Audio ON';
+            document.getElementById('audioStatus').className = 'text-green-600';
+        }
+
+        function updateTempo() {
+            tempo = parseInt(document.getElementById('tempoSlider').value);
+            document.getElementById('tempoValue').textContent = tempo;
+        }
+
+        function playNote(note, dur=0.3) {
+            if(!audioCtx) initAudio();
+            if(!freq[note]) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq[note];
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + dur);
+        }
+
+        function playChord(chord) {
+            if(!audioCtx) initAudio();
+            const notes = chordNotes[chord];
+            if(!notes) return;
+            notes.forEach((n,i) => setTimeout(() => playNote(n, 0.8), i*30));
+        }
+
+        function playLick(name) {
+            if(!audioCtx) initAudio();
+            const notes = licks[name];
+            if(!notes) return;
+            const beat = 60/tempo;
+            notes.forEach((n,i) => { if(n) setTimeout(() => playNote(n, beat*0.8), i*beat*1000); });
+        }
+
+        function playProgression() {
+            const prog = ['A','E','F#m','D','Dm','A'];
+            const beat = 60/tempo*4;
+            prog.forEach((c,i) => setTimeout(() => { playChord(c); document.getElementById('currentChord').textContent = c; }, i*beat*1000));
+        }
+
+        let backingOn = false;
+        function playBackingTrack() {
+            if(backingOn) { stopBacking(); return; }
+            backingOn = true;
+            document.getElementById('backingBtn').textContent = '⏸ Pause';
+            const prog = ['A','E','F#m','D','Dm','A'];
+            const beat = 60/tempo*4000;
+            let idx = 0;
+            function next() { if(!backingOn) return; playChord(prog[idx]); document.getElementById('currentChord').textContent = prog[idx]; idx = (idx+1)%prog.length; }
+            next();
+            backingId = setInterval(next, beat);
+        }
+
+        function stopBacking() {
+            backingOn = false;
+            if(backingId) { clearInterval(backingId); backingId = null; }
+            document.getElementById('backingBtn').textContent = '▶ Play';
+            document.getElementById('currentChord').textContent = '-';
+        }
+
+        // ========== STATE ==========
+        const state = { m1:[], m3:[], m6:[], m11:[] };
+
+        function addNote(mod, note, type) {
+            state[mod].push({note, type});
+            playNote(note);
+            renderPhrase(mod);
+            if(mod === 'm6') updateRatio();
+        }
+
+        function clearPhrase(mod) {
+            state[mod] = [];
+            renderPhrase(mod);
+            if(mod === 'm6') updateRatio();
+        }
+
+        function renderPhrase(mod) {
+            const el = document.getElementById(`${mod}-phrase`);
+            if(!el) return;
+            el.innerHTML = state[mod].map(p => {
+                const n = p.note.replace(/[0-9]/g,'');
+                let bg = 'bg-accent';
+                if(p.type === 'tension') bg = 'bg-red-100';
+                if(p.type === 'borrowed') bg = 'bg-purple-200';
+                return `<span class="px-2 py-1 ${bg} border border-black text-xs">${noteNames[n]||n}</span>`;
+            }).join('');
+        }
+
+        function playUserPhrase(mod) {
+            if(!audioCtx) initAudio();
+            const phrase = state[mod];
+            if(!phrase.length) return;
+            const beat = 60/tempo;
+            phrase.forEach((p,i) => setTimeout(() => playNote(p.note, beat*0.8), i*beat*1000));
+        }
+
+        function loopPhrase(mod) {
+            if(loopId) { clearInterval(loopId); loopId = null; return; }
+            const phrase = state[mod];
+            if(!phrase.length) return;
+            const beat = 60/tempo;
+            const dur = phrase.length * beat * 1000 + 500;
+            playUserPhrase(mod);
+            loopId = setInterval(() => playUserPhrase(mod), dur);
+        }
+
+        function updateRatio() {
+            const phrase = state.m6;
+            const t = phrase.filter(p => p.type === 'tension').length;
+            const r = phrase.length ? Math.round(t/phrase.length*100) : 0;
+            document.getElementById('m6-ratio').textContent = `${r}%`;
+            const bar = document.getElementById('m6-bar');
+            bar.style.width = `${r}%`;
+            bar.className = 'h-full rounded ' + (r>=25 && r<=45 ? 'bg-green-500' : r>45 ? 'bg-red-500' : 'bg-yellow-500');
+        }
+
+        // ========== FRETBOARD ==========
+        const strings = [
+            ['E4','F4','F#4','G4','G#4','A4','A#4','B4','C5','C#5','D5','D#5','E5'],
+            ['B3','C4','C#4','D4','D#4','E4','F4','F#4','G4','G#4','A4','A#4','B4'],
+            ['G3','G#3','A3','A#3','B3','C4','C#4','D4','D#4','E4','F4','F#4','G4'],
+            ['D3','D#3','E3','F3','F#3','G3','G#3','A3','A#3','B3','C4','C#4','D4'],
+            ['A2','A#2','B2','C3','C#3','D3','D#3','E3','F3','F#3','G3','G#3','A3'],
+            ['E2','F2','F#2','G2','G#2','A2','A#2','B2','C3','C#3','D3','D#3','E3']
+        ];
+
+        const scales = {
+            'scale':['A','B','C#','D','E','F#','G#'],
+            'penta':['A','B','C#','E','F#'],
+            'A':['A','C#','E'],
+            'E':['E','G#','B'],
+            'F#m':['F#','A','C#','E'],
+            'D':['D','F#','A'],
+            'Dm':['D','F','A']
+        };
+
+        const colors = {'A':'#FBD45B','C#':'#FBD45B','E':'#FBD45B','B':'#fecaca','D':'#fed7aa','F#':'#fecaca','G#':'#fca5a5','F':'#c4b5fd','G':'#c4b5fd'};
+
+        function createFretboard(id, highlight, click) {
+            const el = document.getElementById(id);
+            if(!el) return;
+            const w=480, h=110, frets=12, strs=6;
+            const fw = w/(frets+1), ss = h/(strs+1);
+            let svg = `<svg viewBox="0 0 ${w} ${h}" class="fretboard w-full">`;
+            svg += `<rect x="28" y="8" width="5" height="${h-16}" fill="#F5F5DC"/>`;
+            for(let f=0;f<=frets;f++) svg += `<line x1="${35+f*fw}" y1="8" x2="${35+f*fw}" y2="${h-8}" stroke="#C0C0C0" stroke-width="2"/>`;
+            [3,5,7,9].forEach(f => svg += `<circle cx="${35+(f-0.5)*fw}" cy="${h/2}" r="4" fill="#1a1a1a" opacity="0.3"/>`);
+            svg += `<circle cx="${35+11.5*fw}" cy="${h/2-12}" r="3" fill="#1a1a1a" opacity="0.3"/>`;
+            svg += `<circle cx="${35+11.5*fw}" cy="${h/2+12}" r="3" fill="#1a1a1a" opacity="0.3"/>`;
+            for(let s=0;s<strs;s++) svg += `<line x1="30" y1="${ss*(s+1)}" x2="${w-10}" y2="${ss*(s+1)}" stroke="#D4AF37" stroke-width="${1+s*0.3}"/>`;
+            for(let s=0;s<strs;s++) {
+                for(let f=0;f<=frets;f++) {
+                    const note = strings[s][f];
+                    const n = note.replace(/[0-9]/g,'');
+                    if(highlight.includes(n)) {
+                        const x = f===0 ? 15 : 35+(f-0.5)*fw;
+                        const y = ss*(s+1);
+                        const c = colors[n] || '#FBD45B';
+                        const onclick = click ? `onclick="${click}('${note}')"` : `onclick="playNote('${note}')"`;
+                        svg += `<circle cx="${x}" cy="${y}" r="9" fill="${c}" stroke="#000" stroke-width="1.5" class="fret-dot" ${onclick}/>`;
+                        svg += `<text x="${x}" y="${y+3}" text-anchor="middle" font-size="7" font-weight="600" pointer-events="none">${(noteNames[n]||n).substring(0,2)}</text>`;
+                    }
+                }
+            }
+            svg += '</svg>';
+            el.innerHTML = svg;
+        }
+
+        function showChordTones() {
+            const c = document.getElementById('chordSelect').value;
+            createFretboard('fretboard2', scales[c] || scales['A']);
+        }
+
+        function updateFretMode() {
+            const m = document.getElementById('fretMode').value;
+            createFretboard('fretboard11', scales[m] || scales['scale'], 'addFromFret');
+        }
+
+        function addFromFret(note) {
+            state.m11.push({note, type:'note'});
+            playNote(note);
+            renderPhrase('m11');
+        }
+
+        // ========== NAVIGATION ==========
+        function navigateModule(idx) {
+            if(loopId) { clearInterval(loopId); loopId = null; }
+            if(backingId) stopBacking();
+            document.querySelectorAll('.module-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`module${idx}`).classList.remove('hidden');
+            document.querySelectorAll('.nav-dot').forEach((d,i) => {
+                d.classList.toggle('bg-black', i<=idx);
+                d.classList.toggle('bg-white', i>idx);
+            });
+            window.scrollTo({top:0, behavior:'smooth'});
+            // Init fretboards
+            if(idx===1) createFretboard('fretboard1', ['A','C#','E']);
+            if(idx===2) createFretboard('fretboard2', ['A','C#','E']);
+            if(idx===4) createFretboard('fretboard4', ['A','B','C#','D','E','F#','G#']);
+            if(idx===5) createFretboard('fretboard5', ['A','B','C#','E','F#']);
+            if(idx===11) createFretboard('fretboard11', ['A','B','C#','D','E','F#','G#'], 'addFromFret');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => setTimeout(() => createFretboard('fretboard1', ['A','C#','E']), 100));
+    </script>
+</body>
+</html>
