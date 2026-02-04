@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML/DS Quiz Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                        positive: '#16a34a',
+                        negative: '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --fg: #000000;
+            --muted: #666666;
+            --accent: #FBD45B;
+            --positive: #16a34a;
+            --negative: #dc2626;
+            --panel-bg: #ffffff;
+            --input-bg: #ffffff;
+            --border: #000000;
+            --border-light: #e5e5e5;
+            --hover-bg: #f5f5f5;
+            --shadow-color: #000000;
+        }
+
+        body.dark-mode {
+            --bg: #1a1a1a;
+            --fg: #e5e5e5;
+            --muted: #888888;
+            --panel-bg: #242424;
+            --input-bg: #333333;
+            --border: #555555;
+            --border-light: #333333;
+            --hover-bg: #333333;
+            --shadow-color: #000000;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--fg);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .shadow-brutal { box-shadow: 3px 3px 0px var(--shadow-color); }
+        .shadow-brutal-sm { box-shadow: 2px 2px 0px var(--shadow-color); }
+        pre, code { font-family: 'IBM Plex Mono', monospace; white-space: pre-wrap; word-wrap: break-word; }
+        
+        /* Form elements */
+        input[type="text"], input[type="number"], textarea {
+            background: var(--input-bg);
+            color: var(--fg);
+            border-color: var(--border-light);
+        }
+        input[type="text"]:focus, input[type="number"]:focus, textarea:focus {
+            border-color: var(--fg);
+        }
+
+        /* Radio/Checkbox styling */
+        input[type="radio"], input[type="checkbox"] {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--fg);
+            background: var(--input-bg);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        input[type="radio"] { border-radius: 50%; }
+        input[type="checkbox"] { border-radius: 2px; }
+        input[type="radio"]:checked, input[type="checkbox"]:checked {
+            background: var(--accent);
+            border-color: var(--fg);
+        }
+        input[type="radio"]:checked::after {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background: var(--fg);
+            border-radius: 50%;
+            margin: 3px;
+        }
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            display: block;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 14px;
+            color: var(--fg);
+        }
+        
+        /* Progress bar */
+        .progress-track { height: 4px; background: var(--border-light); }
+        .progress-fill { height: 100%; background: var(--fg); transition: width 0.3s; }
+        
+        /* Option hover */
+        .option-card { transition: all 0.15s; }
+        .option-card:hover { background: var(--hover-bg); }
+        .option-card.selected { background: color-mix(in srgb, var(--accent) 20%, transparent); border-color: var(--fg); }
+        
+        /* Top buttons */
+        .top-buttons {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-btn:hover { opacity: 1; transform: scale(1.05); }
+
+        /* Settings panel */
+        .settings-panel {
+            position: fixed;
+            top: 60px;
+            right: 15px;
+            width: min(360px, calc(100vw - 30px));
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            z-index: 99;
+            display: none;
+        }
+        .settings-panel.active { display: block; }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            padding: 0.75rem 1rem;
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: slideIn 0.3s ease-out;
+            max-width: 300px;
+        }
+        .toast.success { border-left: 3px solid var(--positive); }
+        .toast.error { border-left: 3px solid var(--negative); }
+        .toast.info { border-left: 3px solid var(--accent); }
+        .toast a { text-decoration: underline; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideOut { from { opacity: 1; } to { opacity: 0; transform: translateX(20px); } }
+        .toast.hiding { animation: slideOut 0.3s ease-out forwards; }
+
+        /* Inline confirm */
+        .inline-confirm {
+            background: color-mix(in srgb, var(--accent) 15%, var(--panel-bg));
+            border: 1px solid var(--accent);
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+
+        /* Panels and cards */
+        .panel { background: var(--panel-bg); border-color: var(--border); }
+        .card-muted { background: var(--hover-bg); border-color: var(--border-light); }
+    </style>
+</head>
+<body class="bg-background text-foreground font-sans text-sm leading-relaxed min-h-screen">
+    <!-- Top Buttons -->
+    <div class="top-buttons">
+        <button id="settings-toggle" class="icon-btn" title="Settings">⚙️</button>
+        <button id="theme-toggle" class="icon-btn" title="Toggle theme">☀️</button>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel shadow-brutal" id="settings-panel">
+        <div class="flex justify-between items-center mb-4">
+            <span class="font-semibold text-xs">Settings</span>
+            <button onclick="UI.toggleSettings()" class="text-xs text-muted hover:text-foreground">✕</button>
+        </div>
+        
+        <div class="mb-4">
+            <label class="text-[10px] text-muted block mb-1">GitHub Personal Access Token</label>
+            <div class="flex gap-2">
+                <input type="password" id="github-token-input" placeholder="ghp_xxxx..." 
+                    class="flex-1 border px-2 py-1 text-xs focus:outline-none">
+                <button onclick="UI.saveGitHubToken()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">
+                    Save
+                </button>
+            </div>
+            <div class="flex items-center gap-2 mt-2">
+                <span id="token-status" class="text-[10px]"></span>
+            </div>
+            <p class="text-[10px] text-muted mt-2">
+                Used for saving session logs to Gist.<br>
+                <a href="https://github.com/settings/tokens/new?scopes=gist&description=Quiz%20Platform" 
+                   target="_blank" class="underline">Create token with gist scope ↗</a>
+            </p>
+        </div>
+        
+        <div class="border-t border-gray-200 pt-3 mt-3">
+            <button onclick="UI.clearAllData()" class="text-[10px] text-negative hover:underline">
+                Clear all local data
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <div class="max-w-xl mx-auto px-4 py-8">
+        
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <div class="text-[10px] tracking-wider text-muted mb-1">CAKE BY VPBANK</div>
+            <h1 class="font-serif text-2xl font-semibold">ML/DS Quiz Platform</h1>
+            <p class="text-xs text-muted mt-2">Generate assessments • Share via URL • Track results</p>
+        </header>
+
+        <!-- Mode Router -->
+        <div id="app"></div>
+
+        <!-- Footer -->
+        <footer class="mt-12 pt-6 border-t border-gray-200 text-center">
+            <p class="text-xs text-muted">All data stored in URL. No server required.</p>
+        </footer>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        // ========================================
+        // UI Utilities (Toast, Theme, Settings)
+        // ========================================
+        const UI = {
+            // Toast notifications
+            toast(message, type = 'info', duration = 4000, link = null) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+                toast.innerHTML = `
+                    <span>${icon}</span>
+                    <span>${message}</span>
+                    ${link ? `<a href="${link}" target="_blank">View ↗</a>` : ''}
+                `;
+                
+                container.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.classList.add('hiding');
+                    setTimeout(() => toast.remove(), 300);
+                }, duration);
+            },
+
+            // Theme toggle
+            initTheme() {
+                const saved = localStorage.getItem('quiz_theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const isDark = saved === 'dark' || (!saved && prefersDark);
+                
+                if (isDark) document.body.classList.add('dark-mode');
+                this.updateThemeButton();
+            },
+
+            toggleTheme() {
+                document.body.classList.toggle('dark-mode');
+                const isDark = document.body.classList.contains('dark-mode');
+                localStorage.setItem('quiz_theme', isDark ? 'dark' : 'light');
+                this.updateThemeButton();
+            },
+
+            updateThemeButton() {
+                const btn = document.getElementById('theme-toggle');
+                if (btn) {
+                    btn.textContent = document.body.classList.contains('dark-mode') ? '🌙' : '☀️';
+                }
+            },
+
+            // Settings panel
+            toggleSettings() {
+                const panel = document.getElementById('settings-panel');
+                panel.classList.toggle('active');
+                
+                if (panel.classList.contains('active')) {
+                    this.updateTokenStatus();
+                    // Pre-fill token input if exists (masked)
+                    const token = localStorage.getItem('github_token');
+                    const input = document.getElementById('github-token-input');
+                    if (token && input) {
+                        input.value = token;
+                    }
+                }
+            },
+
+            saveGitHubToken() {
+                const input = document.getElementById('github-token-input');
+                const token = input.value.trim();
+                
+                if (token) {
+                    localStorage.setItem('github_token', token);
+                    this.toast('GitHub token saved', 'success');
+                } else {
+                    localStorage.removeItem('github_token');
+                    this.toast('GitHub token removed', 'info');
+                }
+                
+                this.updateTokenStatus();
+            },
+
+            updateTokenStatus() {
+                const status = document.getElementById('token-status');
+                const token = localStorage.getItem('github_token');
+                
+                if (status) {
+                    if (token) {
+                        status.innerHTML = `<span class="text-positive">✓ Token configured</span>`;
+                    } else {
+                        status.innerHTML = `<span class="text-negative">✗ Not configured</span>`;
+                    }
+                }
+            },
+
+            clearAllData() {
+                const keys = ['quiz_gist_url', 'quiz_answer_keys', 'quiz_sessions', 'github_token', 'quiz_theme'];
+                if (confirm('Clear all local data? This cannot be undone.')) {
+                    keys.forEach(k => localStorage.removeItem(k));
+                    this.toast('All data cleared', 'info');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            },
+
+            // Inline confirm (returns promise)
+            confirm(message, container) {
+                return new Promise((resolve) => {
+                    const div = document.createElement('div');
+                    div.className = 'inline-confirm fade-in';
+                    div.innerHTML = `
+                        <p class="text-xs mb-3">${message}</p>
+                        <div class="flex gap-2">
+                            <button class="confirm-yes border border-black bg-accent px-3 py-1 text-xs hover:shadow-brutal-sm">Yes, continue</button>
+                            <button class="confirm-no border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Cancel</button>
+                        </div>
+                    `;
+                    
+                    container.prepend(div);
+                    
+                    div.querySelector('.confirm-yes').onclick = () => { div.remove(); resolve(true); };
+                    div.querySelector('.confirm-no').onclick = () => { div.remove(); resolve(false); };
+                });
+            },
+
+            // Initialize event listeners
+            init() {
+                this.initTheme();
+                
+                document.getElementById('theme-toggle')?.addEventListener('click', () => this.toggleTheme());
+                document.getElementById('settings-toggle')?.addEventListener('click', () => this.toggleSettings());
+                
+                // Close settings on escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        document.getElementById('settings-panel')?.classList.remove('active');
+                    }
+                });
+                
+                // Close settings on outside click
+                document.addEventListener('click', (e) => {
+                    const panel = document.getElementById('settings-panel');
+                    const toggle = document.getElementById('settings-toggle');
+                    if (panel?.classList.contains('active') && 
+                        !panel.contains(e.target) && 
+                        !toggle.contains(e.target)) {
+                        panel.classList.remove('active');
+                    }
+                });
+            }
+        };
+
+        // Expose UI globally
+        window.UI = UI;
+
+        // ========================================
+        // PHASE 1: Core URL Codec
+        // ========================================
+        const URLCodec = {
+            async compress(obj) {
+                const json = JSON.stringify(obj);
+                const bytes = new TextEncoder().encode(json);
+                const stream = new CompressionStream('deflate-raw');
+                const writer = stream.writable.getWriter();
+                writer.write(bytes);
+                writer.close();
+                const buf = await new Response(stream.readable).arrayBuffer();
+                return btoa(String.fromCharCode(...new Uint8Array(buf)))
+                    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            },
+
+            async decompress(b64) {
+                try {
+                    const str = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+                    const bytes = new Uint8Array(str.length);
+                    for (let i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i);
+                    const stream = new DecompressionStream('deflate-raw');
+                    const writer = stream.writable.getWriter();
+                    writer.write(bytes);
+                    writer.close();
+                    const buf = await new Response(stream.readable).arrayBuffer();
+                    return JSON.parse(new TextDecoder().decode(buf));
+                } catch (e) {
+                    console.error('Decompress failed:', e);
+                    return null;
+                }
+            },
+
+            // Simple hash for quiz ID
+            hash(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash;
+                }
+                return Math.abs(hash).toString(36).substring(0, 8);
+            },
+
+            // Parse URL hash
+            parseHash() {
+                const hash = location.hash.slice(1);
+                if (!hash) return { mode: 'admin' };
+                
+                const params = new URLSearchParams(hash);
+                if (params.has('q')) return { mode: 'quiz', data: params.get('q') };
+                if (params.has('a')) return { mode: 'answer', data: params.get('a'), qid: params.get('qid') };
+                if (params.has('r')) return { mode: 'result', data: params.get('r') };
+                return { mode: 'admin' };
+            },
+
+            // Set URL hash
+            setHash(mode, data, extra = {}) {
+                const params = new URLSearchParams();
+                if (mode === 'quiz') params.set('q', data);
+                else if (mode === 'answer') {
+                    params.set('a', data);
+                    if (extra.qid) params.set('qid', extra.qid);
+                }
+                else if (mode === 'result') params.set('r', data);
+                
+                const hash = params.toString();
+                history.replaceState({}, '', hash ? `#${hash}` : location.pathname);
+                return location.href;
+            },
+
+            getStats(data) {
+                const urlLength = location.origin.length + location.pathname.length + 3 + data.length;
+                const qrFits = urlLength <= 2500;
+                return { urlLength, qrFits, compressedBytes: data.length };
+            },
+
+            renderQR(container, url) {
+                try {
+                    const qr = qrcode(0, 'L');
+                    qr.addData(url);
+                    qr.make();
+                    container.innerHTML = qr.createSvgTag(4, 0);
+                    return true;
+                } catch (e) {
+                    container.innerHTML = '<div class="p-4 text-muted text-center text-xs">URL too long for QR</div>';
+                    return false;
+                }
+            }
+        };
+
+        // ========================================
+        // PHASE 1: Question Bank Loader
+        // ========================================
+        const QuestionBank = {
+            cache: null,
+
+            // Parse Gist URL to raw URL
+            parseGistUrl(url) {
+                // Direct raw URL
+                if (url.includes('raw.githubusercontent.com') || url.includes('/raw/')) {
+                    return url;
+                }
+                
+                // Gist URL: https://gist.github.com/user/id
+                const gistMatch = url.match(/gist\.github\.com\/[\w-]+\/([a-f0-9]+)/i);
+                if (gistMatch) {
+                    return `https://gist.githubusercontent.com/raw/${gistMatch[1]}`;
+                }
+                
+                // GitHub file URL
+                const ghMatch = url.match(/github\.com\/([\w-]+)\/([\w-]+)\/blob\/([^/]+)\/(.+)/);
+                if (ghMatch) {
+                    return `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}/${ghMatch[3]}/${ghMatch[4]}`;
+                }
+                
+                // Assume it's already a valid URL
+                return url;
+            },
+
+            async loadFromUrl(url) {
+                const rawUrl = this.parseGistUrl(url);
+                console.log('Loading from:', rawUrl);
+                
+                const response = await fetch(rawUrl);
+                if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+                
+                const data = await response.json();
+                
+                // Normalize: support both array and {questions: [...]} format
+                const questions = Array.isArray(data) ? data : data.questions;
+                if (!questions || !questions.length) throw new Error('No questions found');
+                
+                // Detect format: MCQ (has options) vs Legacy (has final_answer)
+                const isMCQ = questions[0].options && Array.isArray(questions[0].options);
+                
+                // Normalize each question
+                this.cache = questions.map(q => {
+                    if (isMCQ) {
+                        // New MCQ format
+                        return {
+                            id: q.id,
+                            domain: this.normalizeDomain(q.domain),
+                            difficulty: q.difficulty || 3,
+                            type: q.type || 'Conceptual',
+                            topic: q.topic || 'General',
+                            question: q.question,
+                            options: q.options,
+                            correct: q.correct,
+                            explanation: q.explanation || ''
+                        };
+                    } else {
+                        // Legacy format - convert
+                        return {
+                            id: q.id || q.problem_id || `q_${Math.random().toString(36).slice(2, 8)}`,
+                            domain: this.normalizeDomain(q.domain),
+                            difficulty: q.difficulty || 3,
+                            type: q.problem_type || q.type || 'Conceptual',
+                            topic: q.topic || 'General',
+                            question: q.problem_text || q.question,
+                            answer: q.final_answer || q.answer,
+                            solution_steps: q.solution_steps || [],
+                            // Legacy format doesn't have MCQ options
+                            options: null,
+                            correct: null
+                        };
+                    }
+                });
+                
+                return this.cache;
+            },
+
+            normalizeDomain(domain) {
+                if (!domain) return 'general';
+                const map = {
+                    'data preprocessing & feature engineering': 'preprocessing',
+                    'preprocessing': 'preprocessing',
+                    'model selection & evaluation': 'model_eval',
+                    'model_eval': 'model_eval',
+                    'deep learning': 'deep_learning',
+                    'deep_learning': 'deep_learning',
+                    'dl': 'deep_learning',
+                    'statistics & probability': 'statistics',
+                    'statistics': 'statistics',
+                    'stats': 'statistics',
+                    'mlops & deployment': 'mlops',
+                    'mlops': 'mlops'
+                };
+                return map[domain.toLowerCase()] || domain.toLowerCase().replace(/\s+/g, '_');
+            },
+
+            getDomainLabel(domain) {
+                const labels = {
+                    'preprocessing': 'Preprocessing',
+                    'model_eval': 'Model Eval',
+                    'deep_learning': 'Deep Learning',
+                    'statistics': 'Statistics',
+                    'mlops': 'MLOps',
+                    'general': 'General'
+                };
+                return labels[domain] || domain;
+            },
+
+            filterByLevel(questions, level) {
+                const diffMap = {
+                    'junior': [1, 2],
+                    'intermediate': [3],
+                    'advanced': [4, 5],
+                    'mixed': [1, 2, 3, 4, 5]
+                };
+                const allowed = diffMap[level] || diffMap['mixed'];
+                return questions.filter(q => allowed.includes(q.difficulty));
+            },
+
+            getStats(questions) {
+                const stats = {
+                    total: questions.length,
+                    byDomain: {},
+                    byDifficulty: {},
+                    byType: {},
+                    isMCQ: questions.length > 0 && questions[0].options !== null
+                };
+                
+                questions.forEach(q => {
+                    stats.byDomain[q.domain] = (stats.byDomain[q.domain] || 0) + 1;
+                    stats.byDifficulty[q.difficulty] = (stats.byDifficulty[q.difficulty] || 0) + 1;
+                    stats.byType[q.type] = (stats.byType[q.type] || 0) + 1;
+                });
+                
+                return stats;
+            }
+        };
+
+        // ========================================
+        // PHASE 2: Quiz Generator (MCQ-native with fallback for legacy)
+        // ========================================
+        const QuizGenerator = {
+            // Seeded random for reproducible shuffles
+            seededRandom(seed) {
+                const x = Math.sin(seed++) * 10000;
+                return x - Math.floor(x);
+            },
+
+            // Fisher-Yates shuffle (optionally seeded)
+            shuffle(array, seed = null) {
+                const arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const rand = seed !== null ? this.seededRandom(seed + i) : Math.random();
+                    const j = Math.floor(rand * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            },
+
+            // Select questions with domain balance
+            selectBalanced(questions, perDomain = 5) {
+                const byDomain = {};
+                questions.forEach(q => {
+                    if (!byDomain[q.domain]) byDomain[q.domain] = [];
+                    byDomain[q.domain].push(q);
+                });
+                
+                const selected = [];
+                Object.keys(byDomain).forEach(domain => {
+                    const pool = this.shuffle(byDomain[domain]);
+                    selected.push(...pool.slice(0, Math.min(perDomain, pool.length)));
+                });
+                
+                return this.shuffle(selected);
+            },
+
+            // Shuffle MCQ options and return new correct index
+            shuffleOptions(options, correctIndex, seed) {
+                // Create array of [option, isCorrect]
+                const pairs = options.map((opt, i) => ({ text: opt, wasCorrect: i === correctIndex }));
+                const shuffled = this.shuffle(pairs, seed);
+                const newOptions = shuffled.map(p => p.text);
+                const newCorrect = shuffled.findIndex(p => p.wasCorrect);
+                return { options: newOptions, correct: newCorrect };
+            },
+
+            // Generate reference-based quiz (small URL)
+            generate(questions, config, sourceUrl = null) {
+                const {
+                    level = 'mixed',
+                    questionsPerDomain = 5,
+                    title = 'ML/DS Assessment',
+                    timeLimit = 30
+                } = config;
+
+                const filtered = QuestionBank.filterByLevel(questions, level);
+                const selected = this.selectBalanced(filtered, questionsPerDomain);
+                
+                // Detect if MCQ format
+                const isMCQ = selected.length > 0 && selected[0].options !== null;
+                
+                // Generate random seeds for each question's option shuffle
+                const seeds = selected.map(() => Math.floor(Math.random() * 100000));
+                
+                // Build minimal quiz reference (for URL)
+                const quizRef = {
+                    v: 2,
+                    id: URLCodec.hash(Date.now().toString() + Math.random()),
+                    t: title,
+                    l: level,
+                    tm: timeLimit,
+                    src: sourceUrl || localStorage.getItem('quiz_gist_url') || '',
+                    q: selected.map((q, i) => [q.id, seeds[i]])
+                };
+
+                // Build full quiz (for local use/preview)
+                const fullQuiz = {
+                    v: 2,
+                    id: quizRef.id,
+                    title,
+                    level,
+                    timeLimit,
+                    created: new Date().toISOString(),
+                    sourceUrl: quizRef.src,
+                    questionCount: selected.length,
+                    isMCQ,
+                    questions: selected.map((q, idx) => {
+                        if (isMCQ) {
+                            // MCQ format: shuffle provided options
+                            const { options, correct } = this.shuffleOptions(q.options, q.correct, seeds[idx]);
+                            return {
+                                idx: idx + 1,
+                                qid: q.id,
+                                seed: seeds[idx],
+                                domain: q.domain,
+                                difficulty: q.difficulty,
+                                type: q.type,
+                                topic: q.topic,
+                                text: q.question,
+                                options,
+                                correct,
+                                explanation: q.explanation
+                            };
+                        } else {
+                            // Legacy format: generate distractors (fallback)
+                            const summary = this.summarizeAnswer(q.answer);
+                            const distractors = this.generateDistractors(q, questions);
+                            const allOptions = [summary, ...distractors];
+                            const shuffled = this.shuffle(allOptions, seeds[idx]);
+                            return {
+                                idx: idx + 1,
+                                qid: q.id,
+                                seed: seeds[idx],
+                                domain: q.domain,
+                                difficulty: q.difficulty,
+                                type: q.type,
+                                topic: q.topic,
+                                text: q.question,
+                                options: shuffled,
+                                correct: shuffled.indexOf(summary),
+                                explanation: q.answer
+                            };
+                        }
+                    })
+                };
+
+                return { quizRef, fullQuiz };
+            },
+
+            // Legacy: summarize answer for MCQ option
+            summarizeAnswer(answer, maxLen = 100) {
+                if (!answer) return "See detailed solution.";
+                
+                const cleaned = answer
+                    .replace(/```[\s\S]*?```/g, '')
+                    .replace(/\*\*([^*]+)\*\*/g, '$1')
+                    .replace(/`([^`]+)`/g, '$1')
+                    .replace(/\n+/g, ' ')
+                    .trim();
+                
+                if (cleaned.length <= maxLen) return cleaned;
+                
+                const truncated = cleaned.substring(0, maxLen);
+                const lastPeriod = truncated.lastIndexOf('.');
+                const breakPoint = lastPeriod > maxLen * 0.5 ? lastPeriod + 1 : truncated.lastIndexOf(' ');
+                return cleaned.substring(0, Math.max(breakPoint, 50)).trim() + '...';
+            },
+
+            // Legacy: generate distractors from other questions
+            generateDistractors(question, allQuestions, count = 3) {
+                const sameDomain = allQuestions.filter(q => 
+                    q.domain === question.domain && q.id !== question.id && q.answer
+                );
+                const otherDomain = allQuestions.filter(q => 
+                    q.domain !== question.domain && q.answer
+                );
+                
+                const pool = [...this.shuffle(sameDomain), ...this.shuffle(otherDomain)];
+                const distractors = [];
+                
+                for (const q of pool) {
+                    if (distractors.length >= count) break;
+                    const summary = this.summarizeAnswer(q.answer);
+                    if (summary && !distractors.includes(summary)) {
+                        distractors.push(summary);
+                    }
+                }
+                
+                const fallbacks = [
+                    "This approach ignores key assumptions.",
+                    "This addresses a different problem.",
+                    "This is impractical for this scenario."
+                ];
+                
+                while (distractors.length < count) {
+                    distractors.push(fallbacks[distractors.length] || `Option ${distractors.length + 2}`);
+                }
+                
+                return distractors.slice(0, count);
+            },
+
+            // Rebuild full quiz from reference (when candidate loads URL)
+            async rebuildFromRef(quizRef) {
+                const questions = await QuestionBank.loadFromUrl(quizRef.src);
+                
+                const qMap = {};
+                questions.forEach(q => qMap[q.id] = q);
+                
+                const isMCQ = questions.length > 0 && questions[0].options !== null;
+                
+                const rebuiltQuestions = quizRef.q.map(([qid, seed], idx) => {
+                    const q = qMap[qid];
+                    if (!q) {
+                        console.warn(`Question ${qid} not found in bank`);
+                        return null;
+                    }
+                    
+                    if (isMCQ) {
+                        // MCQ format: shuffle with same seed for consistency
+                        const { options, correct } = this.shuffleOptions(q.options, q.correct, seed);
+                        return {
+                            idx: idx + 1,
+                            qid: q.id,
+                            seed,
+                            domain: q.domain,
+                            difficulty: q.difficulty,
+                            type: q.type,
+                            topic: q.topic,
+                            text: q.question,
+                            options,
+                            _correctIdx: correct,
+                            _explanation: q.explanation
+                        };
+                    } else {
+                        // Legacy format
+                        const summary = this.summarizeAnswer(q.answer);
+                        const distractors = this.generateDistractors(q, questions);
+                        const allOptions = [summary, ...distractors];
+                        const shuffled = this.shuffle(allOptions, seed);
+                        return {
+                            idx: idx + 1,
+                            qid: q.id,
+                            seed,
+                            domain: q.domain,
+                            difficulty: q.difficulty,
+                            type: q.type,
+                            topic: q.topic,
+                            text: q.question,
+                            options: shuffled,
+                            _correctIdx: shuffled.indexOf(summary),
+                            _explanation: q.answer
+                        };
+                    }
+                }).filter(Boolean);
+
+                return {
+                    v: 2,
+                    id: quizRef.id,
+                    title: quizRef.t,
+                    level: quizRef.l,
+                    timeLimit: quizRef.tm,
+                    sourceUrl: quizRef.src,
+                    questionCount: rebuiltQuestions.length,
+                    isMCQ,
+                    questions: rebuiltQuestions
+                };
+            },
+
+            // Create answer key (for scoring)
+            createAnswerKey(fullQuiz) {
+                return {
+                    quizId: fullQuiz.id,
+                    src: fullQuiz.sourceUrl,
+                    isMCQ: fullQuiz.isMCQ,
+                    answers: fullQuiz.questions.map(q => ({
+                        qid: q.qid,
+                        domain: q.domain,
+                        seed: q.seed,
+                        correct: q.correct,
+                        explanation: q.explanation
+                    }))
+                };
+            }
+        };
+
+        // ========================================
+        // PHASE 3: Admin UI
+        // ========================================
+        const AdminUI = {
+            state: {
+                questions: null,
+                generatedQuiz: null,
+                generatedUrl: null,
+                answerKey: null
+            },
+
+            render() {
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <div class="fade-in">
+                        <!-- Step 1: Load Question Bank -->
+                        <section class="border border-black p-4 mb-6 shadow-brutal">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="font-semibold text-xs">1. Load Question Bank</span>
+                                <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-gray-300" id="bank-status">Not loaded</span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="text-[10px] text-muted block mb-1">Gist / GitHub URL</label>
+                                <input type="text" id="gist-url" 
+                                    placeholder="https://gist.github.com/user/id or raw URL"
+                                    class="w-full border border-gray-300 px-3 py-2 text-xs focus:border-black focus:outline-none"
+                                    value="${localStorage.getItem('quiz_gist_url') || ''}">
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <button id="load-bank" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white transition-colors">
+                                    Load Bank
+                                </button>
+                                <button id="load-sample" class="border border-gray-300 px-4 py-2 text-xs hover:border-black transition-colors text-muted">
+                                    Use Sample Data
+                                </button>
+                            </div>
+                            
+                            <div id="bank-stats" class="mt-3 text-xs text-muted hidden"></div>
+                        </section>
+
+                        <!-- Step 2: Configure Quiz -->
+                        <section class="border border-black p-4 mb-6 shadow-brutal" id="config-section">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="font-semibold text-xs">2. Configure Quiz</span>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="text-[10px] text-muted block mb-2">Interview Level</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="level" value="junior">
+                                        <span class="text-xs">Junior (★★☆)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="level" value="intermediate" checked>
+                                        <span class="text-xs">Intermediate (★★★)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="level" value="advanced">
+                                        <span class="text-xs">Advanced (★★★★)</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="radio" name="level" value="mixed">
+                                        <span class="text-xs">Mixed</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-3 mb-4">
+                                <div>
+                                    <label class="text-[10px] text-muted block mb-1">Questions/Domain</label>
+                                    <input type="number" id="per-domain" value="5" min="1" max="20"
+                                        class="w-full border border-gray-300 px-2 py-1 text-xs focus:border-black focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-muted block mb-1">Time (min)</label>
+                                    <input type="number" id="time-limit" value="30" min="5" max="120"
+                                        class="w-full border border-gray-300 px-2 py-1 text-xs focus:border-black focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-muted block mb-1">Quiz Title</label>
+                                    <input type="text" id="quiz-title" value="ML/DS Assessment"
+                                        class="w-full border border-gray-300 px-2 py-1 text-xs focus:border-black focus:outline-none">
+                                </div>
+                            </div>
+                            
+                            <div class="text-[10px] text-muted mb-4 p-2 bg-gray-50 border border-gray-200">
+                                💡 <strong>Reference-based URLs:</strong> Questions are fetched from your gist when candidate opens the quiz. This keeps URLs small (~1KB vs ~15KB).
+                            </div>
+                            
+                            <button id="generate-quiz" class="w-full border border-black bg-accent px-4 py-2 text-xs font-medium hover:shadow-brutal-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                Generate Quiz
+                            </button>
+                        </section>
+
+                        <!-- Step 3: Share Quiz -->
+                        <section class="border border-black p-4 mb-6 shadow-brutal hidden" id="share-section">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="font-semibold text-xs">3. Share with Candidate</span>
+                                <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black" id="quiz-id"></span>
+                            </div>
+                            
+                            <div class="bg-white border border-gray-200 p-4 mb-3 flex justify-center" id="qr-container">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="text-[10px] text-muted block mb-1">Quiz URL</label>
+                                <div class="border border-gray-300 p-2 bg-gray-50 text-[10px] break-all max-h-20 overflow-y-auto" id="quiz-url"></div>
+                            </div>
+                            
+                            <div class="text-xs text-muted text-center mb-3" id="url-stats"></div>
+                            
+                            <div class="flex gap-2">
+                                <button id="copy-url" class="flex-1 border border-black bg-black text-white px-4 py-2 text-xs hover:bg-gray-800 transition-colors">
+                                    Copy URL
+                                </button>
+                                <button id="preview-quiz" class="flex-1 border border-black px-4 py-2 text-xs hover:bg-black hover:text-white transition-colors">
+                                    Preview Quiz
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- Answer Key (Admin Only) -->
+                        <section class="border border-black p-4 mb-6 shadow-brutal hidden" id="answer-key-section">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="font-semibold text-xs">🔐 Answer Key (Admin Only)</span>
+                                <button id="toggle-answers" class="text-[10px] text-muted underline">Show</button>
+                            </div>
+                            <div id="answer-key-content" class="hidden">
+                                <div class="text-xs text-muted mb-2">Store this locally to score submissions:</div>
+                                <pre class="border border-gray-200 p-2 bg-gray-50 text-[10px] max-h-40 overflow-y-auto" id="answer-key-json"></pre>
+                                <button id="copy-answer-key" class="mt-2 border border-gray-300 px-3 py-1 text-[10px] hover:border-black">
+                                    Copy Answer Key
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- Session Logs -->
+                        <section class="border border-black p-4 mb-6 shadow-brutal" id="sessions-section">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="font-semibold text-xs">Session Logs</span>
+                                <button onclick="window.AdminUI.refreshSessions()" class="text-[10px] text-muted underline">Refresh</button>
+                            </div>
+                            <div id="sessions-list"></div>
+                            <div class="mt-3 pt-3 border-t border-gray-200">
+                                <div class="text-[10px] text-muted mb-2">Paste candidate's answer URL to score:</div>
+                                <div class="flex gap-2">
+                                    <input type="text" id="answer-url-input" placeholder="#a=eJw..." 
+                                        class="flex-1 border px-2 py-1 text-xs focus:outline-none">
+                                    <button onclick="window.AdminUI.scoreAnswerUrl()" 
+                                        class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">
+                                        Score
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                `;
+
+                this.attachEventListeners();
+                this.refreshSessions();
+            },
+
+            refreshSessions() {
+                const sessionsEl = document.getElementById('sessions-list');
+                const sessions = JSON.parse(localStorage.getItem('quiz_sessions') || '[]');
+                
+                if (sessions.length === 0) {
+                    sessionsEl.innerHTML = '<p class="text-xs text-muted">No sessions recorded yet.</p>';
+                    return;
+                }
+
+                // Sort by timestamp desc
+                sessions.sort((a, b) => b.timestamp - a.timestamp);
+                
+                sessionsEl.innerHTML = `
+                    <div class="space-y-2 max-h-40 overflow-y-auto">
+                        ${sessions.slice(0, 10).map(s => `
+                            <div class="flex items-center justify-between p-2 border border-gray-200 text-xs">
+                                <div>
+                                    <span class="font-medium">${s.score}%</span>
+                                    <span class="text-muted ml-2">${new Date(s.timestamp).toLocaleDateString()}</span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] text-muted">${s.quizId.substring(0, 6)}</span>
+                                    ${s.gistUrl ? `<a href="${s.gistUrl}" target="_blank" class="text-[10px] underline">View</a>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+
+            scoreAnswerUrl() {
+                const input = document.getElementById('answer-url-input').value.trim();
+                if (!input) {
+                    UI.toast('Paste the answer URL or hash', 'error');
+                    return;
+                }
+
+                // Extract hash part
+                let hash = input;
+                if (input.includes('#')) {
+                    hash = input.split('#')[1];
+                }
+                if (!hash.startsWith('a=')) {
+                    hash = 'a=' + hash;
+                }
+
+                // Navigate to result view
+                location.hash = hash;
+            },
+
+            attachEventListeners() {
+                // Load bank
+                document.getElementById('load-bank').addEventListener('click', () => this.loadBank());
+                document.getElementById('load-sample').addEventListener('click', () => this.loadSampleData());
+                
+                // Generate quiz
+                document.getElementById('generate-quiz').addEventListener('click', () => this.generateQuiz());
+                
+                // Copy URL
+                document.getElementById('copy-url')?.addEventListener('click', () => this.copyUrl());
+                
+                // Preview
+                document.getElementById('preview-quiz')?.addEventListener('click', () => this.previewQuiz());
+                
+                // Toggle answer key
+                document.getElementById('toggle-answers')?.addEventListener('click', () => this.toggleAnswerKey());
+                
+                // Copy answer key
+                document.getElementById('copy-answer-key')?.addEventListener('click', () => this.copyAnswerKey());
+            },
+
+            async loadBank() {
+                const url = document.getElementById('gist-url').value.trim();
+                if (!url) {
+                    UI.toast('Please enter a Gist or GitHub URL', 'error');
+                    return;
+                }
+
+                const statusEl = document.getElementById('bank-status');
+                const statsEl = document.getElementById('bank-stats');
+                
+                statusEl.textContent = 'Loading...';
+                statusEl.className = 'px-1.5 py-0.5 bg-accent text-[10px] border border-black';
+
+                try {
+                    const questions = await QuestionBank.loadFromUrl(url);
+                    this.state.questions = questions;
+                    
+                    // Save URL for next time
+                    localStorage.setItem('quiz_gist_url', url);
+                    
+                    // Update UI
+                    const stats = QuestionBank.getStats(questions);
+                    statusEl.textContent = `✓ ${stats.total} questions`;
+                    statusEl.className = 'px-1.5 py-0.5 bg-positive text-white text-[10px] border border-positive';
+                    
+                    // Show stats
+                    const domainList = Object.entries(stats.byDomain)
+                        .map(([d, c]) => `${QuestionBank.getDomainLabel(d)}: ${c}`)
+                        .join(' • ');
+                    statsEl.innerHTML = `<strong>Domains:</strong> ${domainList}`;
+                    statsEl.classList.remove('hidden');
+                    
+                    // Enable generate button
+                    document.getElementById('generate-quiz').disabled = false;
+                    
+                    UI.toast(`Loaded ${stats.total} questions`, 'success');
+                    
+                } catch (error) {
+                    console.error('Load failed:', error);
+                    statusEl.textContent = 'Failed';
+                    statusEl.className = 'px-1.5 py-0.5 bg-negative text-white text-[10px] border border-negative';
+                    UI.toast(`Failed to load: ${error.message}`, 'error');
+                }
+            },
+
+            loadSampleData() {
+                // Create sample questions for testing
+                const sampleQuestions = this.createSampleQuestions();
+                this.state.questions = sampleQuestions;
+                
+                const statusEl = document.getElementById('bank-status');
+                const statsEl = document.getElementById('bank-stats');
+                
+                statusEl.textContent = `✓ ${sampleQuestions.length} sample questions`;
+                statusEl.className = 'px-1.5 py-0.5 bg-positive text-white text-[10px] border border-positive';
+                
+                const stats = QuestionBank.getStats(sampleQuestions);
+                const domainList = Object.entries(stats.byDomain)
+                    .map(([d, c]) => `${QuestionBank.getDomainLabel(d)}: ${c}`)
+                    .join(' • ');
+                statsEl.innerHTML = `<strong>Domains:</strong> ${domainList}`;
+                statsEl.classList.remove('hidden');
+                
+                document.getElementById('generate-quiz').disabled = false;
+            },
+
+            createSampleQuestions() {
+                // Sample MCQ questions for testing (5 per domain)
+                return [
+                    // Preprocessing
+                    { id: 'sample_pre_1', domain: 'preprocessing', difficulty: 1, type: 'Conceptual', topic: 'Missing values',
+                      question: 'What imputation method is robust to outliers?',
+                      options: ['Mean', 'Median', 'Mode', 'Zero'], correct: 1, explanation: 'Median is not affected by extreme values.' },
+                    { id: 'sample_pre_2', domain: 'preprocessing', difficulty: 2, type: 'Conceptual', topic: 'Scaling',
+                      question: 'Which scaler uses median and IQR?',
+                      options: ['StandardScaler', 'MinMaxScaler', 'RobustScaler', 'Normalizer'], correct: 2, explanation: 'RobustScaler uses median and IQR.' },
+                    { id: 'sample_pre_3', domain: 'preprocessing', difficulty: 3, type: 'Debugging', topic: 'Leakage',
+                      question: 'Fitting scaler on full data before split causes:',
+                      options: ['Underfitting', 'Data leakage', 'Slow training', 'Memory issues'], correct: 1, explanation: 'Test statistics leak into training.' },
+                    { id: 'sample_pre_4', domain: 'preprocessing', difficulty: 4, type: 'Conceptual', topic: 'Encoding',
+                      question: 'Best encoding for 500 unique cities in a tree model?',
+                      options: ['One-hot', 'Label', 'Target encoding', 'Binary'], correct: 2, explanation: 'Target encoding handles high cardinality well.' },
+                    { id: 'sample_pre_5', domain: 'preprocessing', difficulty: 5, type: 'Interpretation', topic: 'Drift',
+                      question: 'Feature distribution shift in production indicates:',
+                      options: ['Model bug', 'Data drift', 'Overfitting', 'Underfitting'], correct: 1, explanation: 'Distribution change suggests data drift.' },
+                    
+                    // Model Eval
+                    { id: 'sample_eval_1', domain: 'model_eval', difficulty: 1, type: 'Conceptual', topic: 'Metrics',
+                      question: 'For rare fraud detection (0.1%), which metric?',
+                      options: ['Accuracy', 'PR-AUC', 'R-squared', 'MAE'], correct: 1, explanation: 'PR-AUC focuses on rare class.' },
+                    { id: 'sample_eval_2', domain: 'model_eval', difficulty: 2, type: 'Conceptual', topic: 'Precision/Recall',
+                      question: 'To catch all cancer cases, prioritize:',
+                      options: ['High precision', 'High recall', 'High accuracy', 'Low latency'], correct: 1, explanation: 'Recall minimizes false negatives.' },
+                    { id: 'sample_eval_3', domain: 'model_eval', difficulty: 3, type: 'Interpretation', topic: 'Confusion matrix',
+                      question: 'TP=80, FP=20. Precision is:',
+                      options: ['0.67', '0.80', '0.085', '0.94'], correct: 1, explanation: 'Precision = TP/(TP+FP) = 80/100.' },
+                    { id: 'sample_eval_4', domain: 'model_eval', difficulty: 4, type: 'Debugging', topic: 'Overfitting',
+                      question: 'Train AUC 0.99, Test AUC 0.75 indicates:',
+                      options: ['Underfitting', 'Overfitting', 'Good fit', 'Data leakage'], correct: 1, explanation: 'Large gap = overfitting.' },
+                    { id: 'sample_eval_5', domain: 'model_eval', difficulty: 5, type: 'Conceptual', topic: 'Calibration',
+                      question: 'Model predicts 70% click probability but only 35% click. This is:',
+                      options: ['Good calibration', 'Overconfident', 'Low recall', 'Low precision'], correct: 1, explanation: 'Predictions are 2x too high.' },
+                    
+                    // Deep Learning
+                    { id: 'sample_dl_1', domain: 'deep_learning', difficulty: 1, type: 'Conceptual', topic: 'Activations',
+                      question: 'ReLU avoids vanishing gradients because:',
+                      options: ['Outputs bounded 0-1', 'Gradient=1 for positive', 'Differentiable everywhere', 'More expensive'], correct: 1, explanation: 'ReLU has constant gradient for x>0.' },
+                    { id: 'sample_dl_2', domain: 'deep_learning', difficulty: 2, type: 'Conceptual', topic: 'BatchNorm',
+                      question: 'Batch normalization normalizes:',
+                      options: ['Weights', 'Layer inputs', 'Learning rate', 'Batch size'], correct: 1, explanation: 'BatchNorm normalizes activations.' },
+                    { id: 'sample_dl_3', domain: 'deep_learning', difficulty: 3, type: 'Debugging', topic: 'Training',
+                      question: 'Loss stuck at -log(1/10) ≈ 2.3 for 10-class problem means:',
+                      options: ['Learning rate too high', 'Random predictions', 'Batch too small', 'Need more epochs'], correct: 1, explanation: 'Model outputs uniform 0.1 for all classes.' },
+                    { id: 'sample_dl_4', domain: 'deep_learning', difficulty: 4, type: 'Conceptual', topic: 'Dropout',
+                      question: 'During inference, dropout should be:',
+                      options: ['Same as training', 'Off with weight scaling', 'Off (if inverted dropout)', 'Lower rate'], correct: 2, explanation: 'Inverted dropout scales during training.' },
+                    { id: 'sample_dl_5', domain: 'deep_learning', difficulty: 5, type: 'Interpretation', topic: 'Attention',
+                      question: 'Attention weights computed by:',
+                      options: ['softmax(Q*K)*V', 'softmax(QK^T/√d)V', 'sigmoid(Q+K)*V', 'LayerNorm(QKV)'], correct: 1, explanation: 'Scaled dot-product attention.' },
+                    
+                    // Statistics
+                    { id: 'sample_stat_1', domain: 'statistics', difficulty: 1, type: 'Conceptual', topic: 'Distributions',
+                      question: 'Mean > Median indicates:',
+                      options: ['Normal', 'Right-skewed', 'Left-skewed', 'Bimodal'], correct: 1, explanation: 'Right tail pulls mean up.' },
+                    { id: 'sample_stat_2', domain: 'statistics', difficulty: 2, type: 'Conceptual', topic: 'p-value',
+                      question: 'p-value = 0.03 means:',
+                      options: ['3% treatment works', '3% chance if null true', '3% effect size', '97% prefer treatment'], correct: 1, explanation: 'p = P(data|H0).' },
+                    { id: 'sample_stat_3', domain: 'statistics', difficulty: 3, type: 'Interpretation', topic: 'Correlation',
+                      question: 'Ice cream sales correlate with drowning. This means:',
+                      options: ['Causation', 'Reverse causation', 'Confounding variable', 'Calculation error'], correct: 2, explanation: 'Summer is the confounder.' },
+                    { id: 'sample_stat_4', domain: 'statistics', difficulty: 4, type: 'Conceptual', topic: 'CI',
+                      question: '95% CI [10,20] means:',
+                      options: ['95% prob true mean in range', '95% of CIs contain true mean', '95% of data in range', 'Mean is 15'], correct: 1, explanation: 'Frequentist interpretation.' },
+                    { id: 'sample_stat_5', domain: 'statistics', difficulty: 5, type: 'Debugging', topic: 'Multiple testing',
+                      question: '20 tests at α=0.05, no real effects. Expected false positives:',
+                      options: ['0', '1', '5', '20'], correct: 1, explanation: '20 * 0.05 = 1 expected.' },
+                    
+                    // MLOps
+                    { id: 'sample_ops_1', domain: 'mlops', difficulty: 1, type: 'Conceptual', topic: 'Versioning',
+                      question: 'Model versioning enables:',
+                      options: ['Licensing', 'Rollback and A/B testing', 'Smaller files', 'Not needed'], correct: 1, explanation: 'Versioning enables rollback.' },
+                    { id: 'sample_ops_2', domain: 'mlops', difficulty: 2, type: 'Conceptual', topic: 'Serving',
+                      question: 'Batch inference preferred when:',
+                      options: ['Low latency needed', 'Predictions can be precomputed', 'Data changes every second', 'Model is small'], correct: 1, explanation: 'Batch for precomputed predictions.' },
+                    { id: 'sample_ops_3', domain: 'mlops', difficulty: 3, type: 'Debugging', topic: 'Deployment',
+                      question: '"Feature X not found" in production likely means:',
+                      options: ['Bad hardware', 'Pipeline not deployed', 'Corrupted model', 'Python mismatch'], correct: 1, explanation: 'Feature engineering not deployed.' },
+                    { id: 'sample_ops_4', domain: 'mlops', difficulty: 4, type: 'Conceptual', topic: 'Monitoring',
+                      question: 'Feature distribution shift triggers:',
+                      options: ['Latency alert', 'Data drift investigation', 'File size alert', 'Request alert'], correct: 1, explanation: 'Distribution shift = data drift.' },
+                    { id: 'sample_ops_5', domain: 'mlops', difficulty: 5, type: 'Interpretation', topic: 'Canary',
+                      question: '5% canary shows 2% metric drop. Action:',
+                      options: ['Wait longer', 'Roll out 100%', 'Roll back and investigate', 'Increase to 50%'], correct: 2, explanation: 'Roll back to protect users.' }
+                ];
+            },
+
+            async generateQuiz() {
+                if (!this.state.questions) {
+                    UI.toast('Load question bank first', 'error');
+                    return;
+                }
+
+                const level = document.querySelector('input[name="level"]:checked').value;
+                const perDomain = parseInt(document.getElementById('per-domain').value) || 5;
+                const timeLimit = parseInt(document.getElementById('time-limit').value) || 30;
+                const title = document.getElementById('quiz-title').value || 'ML/DS Assessment';
+                const sourceUrl = document.getElementById('gist-url').value.trim();
+
+                // Generate quiz (reference + full)
+                const { quizRef, fullQuiz } = QuizGenerator.generate(this.state.questions, {
+                    level,
+                    questionsPerDomain: perDomain,
+                    title,
+                    timeLimit
+                }, sourceUrl);
+
+                this.state.generatedQuiz = fullQuiz;
+                this.state.answerKey = QuizGenerator.createAnswerKey(fullQuiz);
+                
+                // Compress ONLY the reference (small!)
+                const compressed = await URLCodec.compress(quizRef);
+                const url = `${location.origin}${location.pathname}#q=${compressed}`;
+                
+                this.state.generatedUrl = url;
+
+                // Show share section
+                const shareSection = document.getElementById('share-section');
+                shareSection.classList.remove('hidden');
+                
+                document.getElementById('quiz-id').textContent = `ID: ${fullQuiz.id}`;
+                document.getElementById('quiz-url').textContent = url;
+                
+                // Stats
+                const stats = URLCodec.getStats(compressed);
+                const qrOk = stats.urlLength <= 2500;
+                document.getElementById('url-stats').innerHTML = 
+                    `${fullQuiz.questionCount} questions • <strong>${stats.compressedBytes} bytes</strong> • ${stats.urlLength} chars ${qrOk ? '✓ QR OK' : '⚠️ URL only'}`;
+                
+                // QR code
+                const qrContainer = document.getElementById('qr-container');
+                if (qrOk) {
+                    URLCodec.renderQR(qrContainer, url);
+                } else {
+                    qrContainer.innerHTML = '<div class="p-4 text-muted text-center text-xs">URL works, but too long for QR.<br>Use Copy URL instead.</div>';
+                }
+                
+                // Show answer key section
+                const answerSection = document.getElementById('answer-key-section');
+                answerSection.classList.remove('hidden');
+                document.getElementById('answer-key-json').textContent = JSON.stringify(this.state.answerKey, null, 2);
+                
+                // Store answer key locally
+                const storedKeys = JSON.parse(localStorage.getItem('quiz_answer_keys') || '{}');
+                storedKeys[fullQuiz.id] = this.state.answerKey;
+                localStorage.setItem('quiz_answer_keys', JSON.stringify(storedKeys));
+                
+                UI.toast(`Quiz generated: ${fullQuiz.questionCount} questions`, 'success');
+                
+                // Scroll to share section
+                shareSection.scrollIntoView({ behavior: 'smooth' });
+            },
+
+            copyUrl() {
+                if (!this.state.generatedUrl) return;
+                navigator.clipboard.writeText(this.state.generatedUrl).then(() => {
+                    UI.toast('URL copied to clipboard', 'success');
+                });
+            },
+
+            previewQuiz() {
+                if (!this.state.generatedUrl) return;
+                window.open(this.state.generatedUrl, '_blank');
+            },
+
+            toggleAnswerKey() {
+                const content = document.getElementById('answer-key-content');
+                const btn = document.getElementById('toggle-answers');
+                content.classList.toggle('hidden');
+                btn.textContent = content.classList.contains('hidden') ? 'Show' : 'Hide';
+            },
+
+            copyAnswerKey() {
+                const json = document.getElementById('answer-key-json').textContent;
+                navigator.clipboard.writeText(json).then(() => {
+                    UI.toast('Answer key copied', 'success');
+                });
+            }
+        };
+
+        // Expose AdminUI for onclick handlers
+        window.AdminUI = AdminUI;
+
+        // ========================================
+        // Quiz UI (Candidate View)
+        // ========================================
+        const QuizUI = {
+            state: {
+                quiz: null,
+                currentQuestion: 0,
+                answers: [],
+                startTime: null,
+                loading: false
+            },
+
+            async render(compressedData) {
+                const app = document.getElementById('app');
+                
+                // Show loading
+                app.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-2xl mb-4">⏳</div>
+                        <p class="text-sm text-muted">Loading quiz...</p>
+                    </div>
+                `;
+
+                try {
+                    const data = await URLCodec.decompress(compressedData);
+                    if (!data) throw new Error('Invalid quiz data');
+
+                    let quiz;
+                    
+                    // Check version
+                    if (data.v === 2) {
+                        // Reference-based: need to fetch questions from source
+                        if (!data.src) {
+                            throw new Error('Quiz source URL missing');
+                        }
+                        app.innerHTML = `
+                            <div class="text-center py-12">
+                                <div class="text-2xl mb-4">📚</div>
+                                <p class="text-sm text-muted">Loading questions from bank...</p>
+                                <p class="text-[10px] text-muted mt-2">${data.src.substring(0, 50)}...</p>
+                            </div>
+                        `;
+                        quiz = await QuizGenerator.rebuildFromRef(data);
+                    } else {
+                        // V1: embedded questions (legacy/preview)
+                        quiz = data;
+                    }
+
+                    this.state.quiz = quiz;
+                    this.state.answers = new Array(quiz.questions.length).fill(null);
+                    this.state.startTime = Date.now();
+                    
+                    this.renderQuiz();
+                    
+                } catch (error) {
+                    console.error('Quiz load error:', error);
+                    app.innerHTML = `
+                        <div class="border border-negative p-4 text-center">
+                            <p class="text-sm text-negative mb-2">Failed to load quiz</p>
+                            <p class="text-xs text-muted">${error.message}</p>
+                            <a href="${location.pathname}" class="text-xs underline mt-4 block">Go to Admin</a>
+                        </div>
+                    `;
+                }
+            },
+
+            renderQuiz() {
+                const { quiz, currentQuestion, answers } = this.state;
+                const q = quiz.questions[currentQuestion];
+                const answered = answers.filter(a => a !== null).length;
+                const progress = (answered / quiz.questions.length) * 100;
+
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <div class="fade-in">
+                        <!-- Quiz Header -->
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-serif text-lg">${quiz.title}</span>
+                                <span class="text-xs text-muted">${quiz.level.toUpperCase()}</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" style="width: ${progress}%"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-muted mt-1">
+                                <span>${answered} / ${quiz.questions.length} answered</span>
+                                <span>Q${currentQuestion + 1}</span>
+                            </div>
+                        </div>
+
+                        <!-- Question Card -->
+                        <div class="border border-black p-4 mb-4 shadow-brutal">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <span class="px-2 py-0.5 bg-gray-100 text-[10px] border border-gray-300 mr-2">
+                                        ${QuestionBank.getDomainLabel(q.domain)}
+                                    </span>
+                                    <span class="px-2 py-0.5 bg-accent text-[10px] border border-black">${q.type}</span>
+                                </div>
+                                <span class="text-xs text-muted">${'★'.repeat(q.difficulty)}${'☆'.repeat(5-q.difficulty)}</span>
+                            </div>
+                            
+                            <div class="text-xs mb-1 text-muted">${q.topic}</div>
+                            <pre class="text-sm whitespace-pre-wrap mb-4 max-h-64 overflow-y-auto">${q.text}</pre>
+                            
+                            <!-- Options -->
+                            <div class="space-y-2">
+                                ${q.options.map((opt, i) => `
+                                    <div class="option-card border border-gray-300 p-3 cursor-pointer transition-all ${answers[currentQuestion] === i ? 'selected border-black' : 'hover:border-gray-400'}"
+                                         onclick="window.QuizUI.selectOption(${i})">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-6 h-6 border-2 border-black rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 ${answers[currentQuestion] === i ? 'bg-accent' : 'bg-white'}">
+                                                ${String.fromCharCode(65 + i)}
+                                            </div>
+                                            <div class="text-xs flex-1">${opt}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Navigation -->
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="window.QuizUI.navigate(-1)" 
+                                class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white transition-colors ${currentQuestion === 0 ? 'opacity-30 cursor-not-allowed' : ''}"
+                                ${currentQuestion === 0 ? 'disabled' : ''}>
+                                ← Previous
+                            </button>
+                            
+                            <div class="flex flex-wrap gap-1 justify-center max-w-xs">
+                                ${quiz.questions.map((_, i) => `
+                                    <button onclick="window.QuizUI.goTo(${i})"
+                                        class="w-6 h-6 border text-[10px] transition-all ${i === currentQuestion ? 'border-black bg-black text-white' : answers[i] !== null ? 'border-black bg-accent' : 'border-gray-300 hover:border-gray-400'}">
+                                        ${i + 1}
+                                    </button>
+                                `).join('')}
+                            </div>
+                            
+                            <button onclick="window.QuizUI.navigate(1)"
+                                class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white transition-colors ${currentQuestion === quiz.questions.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}"
+                                ${currentQuestion === quiz.questions.length - 1 ? 'disabled' : ''}>
+                                Next →
+                            </button>
+                        </div>
+
+                        <!-- Submit -->
+                        <button onclick="window.QuizUI.submit()"
+                            class="w-full border-2 border-black bg-accent px-4 py-3 text-sm font-medium hover:shadow-brutal transition-all ${answered < quiz.questions.length ? 'opacity-60' : ''}">
+                            Submit Quiz (${answered}/${quiz.questions.length} answered)
+                        </button>
+                    </div>
+                `;
+            },
+
+            selectOption(index) {
+                this.state.answers[this.state.currentQuestion] = index;
+                this.renderQuiz();
+            },
+
+            navigate(delta) {
+                const newIndex = this.state.currentQuestion + delta;
+                if (newIndex >= 0 && newIndex < this.state.quiz.questions.length) {
+                    this.state.currentQuestion = newIndex;
+                    this.renderQuiz();
+                }
+            },
+
+            goTo(index) {
+                this.state.currentQuestion = index;
+                this.renderQuiz();
+            },
+
+            async submit() {
+                const { quiz, answers, startTime } = this.state;
+                const unanswered = answers.filter(a => a === null).length;
+                
+                const doSubmit = async () => {
+                    // Create compact answer submission
+                    const submission = {
+                        v: 1,
+                        qid: quiz.id,
+                        ts: Date.now(),
+                        dur: Math.round((Date.now() - startTime) / 1000),
+                        a: answers  // Just the answer indices
+                    };
+
+                    // Compress and create answer URL
+                    const compressed = await URLCodec.compress(submission);
+                    const answerUrl = `${location.origin}${location.pathname}#a=${compressed}`;
+                    
+                    const duration = submission.dur;
+                    const mins = Math.floor(duration / 60);
+                    const secs = duration % 60;
+                    
+                    // Show submission result
+                    const app = document.getElementById('app');
+                    app.innerHTML = `
+                        <div class="fade-in text-center">
+                            <div class="text-6xl mb-4">✓</div>
+                            <h2 class="font-serif text-xl mb-2">Quiz Submitted!</h2>
+                            <p class="text-sm text-muted mb-6">Duration: ${mins}m ${secs}s</p>
+                            
+                            <div class="border border-black p-4 mb-4 shadow-brutal text-left">
+                                <div class="text-[10px] text-muted mb-2">Share this URL with the interviewer to see your results:</div>
+                                <div class="border p-2 text-[10px] break-all max-h-20 overflow-y-auto" style="background: var(--input-bg); border-color: var(--border-light);">${answerUrl}</div>
+                            </div>
+                            
+                            <button onclick="navigator.clipboard.writeText('${answerUrl}').then(() => UI.toast('Copied!', 'success'))"
+                                class="border border-black bg-black text-white px-6 py-2 text-xs hover:bg-gray-800">
+                                Copy Answer URL
+                            </button>
+                            
+                            <p class="text-[10px] text-muted mt-6">Quiz ID: ${quiz.id}</p>
+                        </div>
+                    `;
+                };
+                
+                if (unanswered > 0) {
+                    // Show inline confirmation
+                    const nav = document.querySelector('.fade-in');
+                    const confirmed = await UI.confirm(
+                        `⚠️ You have <strong>${unanswered}</strong> unanswered questions. Submit anyway?`,
+                        nav
+                    );
+                    if (!confirmed) return;
+                }
+                
+                await doSubmit();
+            }
+        };
+
+        // Expose for onclick handlers
+        window.QuizUI = QuizUI;
+
+        // ========================================
+        // PHASE 5-6: Result UI (Scoring & Session Logs)
+        // ========================================
+        const ResultUI = {
+            state: {
+                submission: null,
+                answerKey: null,
+                quiz: null,
+                score: null
+            },
+
+            async render(compressedData) {
+                const app = document.getElementById('app');
+                
+                app.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="text-2xl mb-4">📊</div>
+                        <p class="text-sm text-muted">Loading results...</p>
+                    </div>
+                `;
+
+                try {
+                    // Decompress submission
+                    const submission = await URLCodec.decompress(compressedData);
+                    if (!submission) throw new Error('Invalid answer data');
+                    
+                    this.state.submission = submission;
+                    
+                    // Try to get answer key from localStorage
+                    const storedKeys = JSON.parse(localStorage.getItem('quiz_answer_keys') || '{}');
+                    let answerKey = storedKeys[submission.qid];
+                    
+                    if (!answerKey) {
+                        // Try to rebuild from source if we have it
+                        app.innerHTML = `
+                            <div class="border border-black p-4 shadow-brutal">
+                                <div class="text-center mb-4">
+                                    <div class="text-2xl mb-2">🔐</div>
+                                    <p class="text-sm">Answer key not found locally</p>
+                                    <p class="text-xs text-muted mt-1">Quiz ID: ${submission.qid}</p>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="text-[10px] text-muted block mb-1">Paste Answer Key JSON or Question Bank URL</label>
+                                    <textarea id="manual-key" rows="4" placeholder='{"quizId": "...", "answers": [...]}' 
+                                        class="w-full border border-gray-300 px-2 py-1 text-xs focus:border-black focus:outline-none font-mono"></textarea>
+                                </div>
+                                
+                                <button onclick="window.ResultUI.loadManualKey()" 
+                                    class="w-full border border-black bg-accent px-4 py-2 text-xs hover:shadow-brutal-sm">
+                                    Load & Score
+                                </button>
+                                
+                                <a href="${location.pathname}" class="text-xs text-muted underline block text-center mt-4">
+                                    Go to Admin
+                                </a>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    this.state.answerKey = answerKey;
+                    await this.calculateAndRender();
+                    
+                } catch (error) {
+                    console.error('Result load error:', error);
+                    app.innerHTML = `
+                        <div class="border border-negative p-4 text-center">
+                            <p class="text-sm text-negative mb-2">Failed to load results</p>
+                            <p class="text-xs text-muted">${error.message}</p>
+                            <a href="${location.pathname}" class="text-xs underline mt-4 block">Go to Admin</a>
+                        </div>
+                    `;
+                }
+            },
+
+            async loadManualKey() {
+                const input = document.getElementById('manual-key').value.trim();
+                if (!input) {
+                    UI.toast('Please paste the answer key JSON', 'error');
+                    return;
+                }
+
+                try {
+                    // Check if it's a URL
+                    if (input.startsWith('http')) {
+                        UI.toast('Paste the answer key JSON directly, not a URL', 'info');
+                        return;
+                    }
+                    
+                    // Parse as JSON
+                    const answerKey = JSON.parse(input);
+                    if (!answerKey.answers || !Array.isArray(answerKey.answers)) {
+                        throw new Error('Invalid answer key format');
+                    }
+                    
+                    this.state.answerKey = answerKey;
+                    
+                    // Store for future use
+                    const storedKeys = JSON.parse(localStorage.getItem('quiz_answer_keys') || '{}');
+                    storedKeys[this.state.submission.qid] = answerKey;
+                    localStorage.setItem('quiz_answer_keys', JSON.stringify(storedKeys));
+                    
+                    await this.calculateAndRender();
+                    
+                } catch (error) {
+                    UI.toast('Error: ' + error.message, 'error');
+                }
+            },
+
+            async calculateAndRender() {
+                const { submission, answerKey } = this.state;
+                
+                // Calculate score
+                const results = this.calculateScore(submission.a, answerKey.answers);
+                this.state.score = results;
+                
+                // Render results
+                this.renderResults(submission, results);
+            },
+
+            calculateScore(candidateAnswers, correctAnswers) {
+                const results = {
+                    total: correctAnswers.length,
+                    correct: 0,
+                    incorrect: 0,
+                    unanswered: 0,
+                    byDomain: {},
+                    details: []
+                };
+
+                correctAnswers.forEach((ans, idx) => {
+                    const candidate = candidateAnswers[idx];
+                    const isCorrect = candidate === ans.correct;
+                    const isUnanswered = candidate === null || candidate === undefined;
+                    
+                    // Initialize domain stats
+                    const domain = ans.domain || 'unknown';
+                    if (!results.byDomain[domain]) {
+                        results.byDomain[domain] = { correct: 0, total: 0, questions: [] };
+                    }
+                    results.byDomain[domain].total++;
+                    
+                    if (isUnanswered) {
+                        results.unanswered++;
+                    } else if (isCorrect) {
+                        results.correct++;
+                        results.byDomain[domain].correct++;
+                    } else {
+                        results.incorrect++;
+                    }
+                    
+                    results.details.push({
+                        idx: idx + 1,
+                        qid: ans.qid,
+                        domain,
+                        candidateAnswer: candidate,
+                        correctAnswer: ans.correct,
+                        isCorrect,
+                        isUnanswered,
+                        explanation: ans.explanation || ''
+                    });
+                    
+                    results.byDomain[domain].questions.push(results.details[results.details.length - 1]);
+                });
+
+                results.percentage = Math.round((results.correct / results.total) * 100);
+                return results;
+            },
+
+            renderResults(submission, results) {
+                const duration = submission.dur || 0;
+                const mins = Math.floor(duration / 60);
+                const secs = duration % 60;
+                
+                // Determine grade
+                let grade, gradeColor, gradeEmoji;
+                if (results.percentage >= 90) { grade = 'Excellent'; gradeColor = 'text-positive'; gradeEmoji = '🏆'; }
+                else if (results.percentage >= 75) { grade = 'Good'; gradeColor = 'text-positive'; gradeEmoji = '✅'; }
+                else if (results.percentage >= 60) { grade = 'Pass'; gradeColor = 'text-accent'; gradeEmoji = '📝'; }
+                else { grade = 'Needs Improvement'; gradeColor = 'text-negative'; gradeEmoji = '📚'; }
+
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <div class="fade-in">
+                        <!-- Score Header -->
+                        <div class="border border-black p-6 mb-6 shadow-brutal text-center">
+                            <div class="text-5xl mb-2">${gradeEmoji}</div>
+                            <div class="text-4xl font-serif font-bold mb-1">${results.percentage}%</div>
+                            <div class="text-lg ${gradeColor} font-medium mb-2">${grade}</div>
+                            <div class="text-sm text-muted">
+                                ${results.correct} / ${results.total} correct
+                                ${results.unanswered > 0 ? `• ${results.unanswered} unanswered` : ''}
+                            </div>
+                            <div class="text-xs text-muted mt-2">Duration: ${mins}m ${secs}s</div>
+                        </div>
+
+                        <!-- Domain Breakdown -->
+                        <div class="border border-black p-4 mb-6 shadow-brutal">
+                            <div class="text-xs font-semibold mb-4">Performance by Domain</div>
+                            ${Object.entries(results.byDomain).map(([domain, stats]) => {
+                                const pct = Math.round((stats.correct / stats.total) * 100);
+                                const barColor = pct >= 80 ? 'bg-positive' : pct >= 60 ? 'bg-accent' : 'bg-negative';
+                                return `
+                                    <div class="mb-3">
+                                        <div class="flex justify-between text-xs mb-1">
+                                            <span>${QuestionBank.getDomainLabel(domain)}</span>
+                                            <span class="font-medium">${stats.correct}/${stats.total} (${pct}%)</span>
+                                        </div>
+                                        <div class="h-2 bg-gray-200 border border-gray-300">
+                                            <div class="h-full ${barColor}" style="width: ${pct}%"></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        <!-- Question Details (Collapsible) -->
+                        <div class="border border-black p-4 mb-6 shadow-brutal">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs font-semibold">Question Details</span>
+                                <button onclick="document.getElementById('details-list').classList.toggle('hidden')" 
+                                    class="text-[10px] text-muted underline">Toggle</button>
+                            </div>
+                            <div id="details-list" class="space-y-2 max-h-96 overflow-y-auto">
+                                ${results.details.map(d => `
+                                    <div class="p-2 border ${d.isCorrect ? 'border-positive bg-positive/5' : d.isUnanswered ? 'border-gray-300' : 'border-negative bg-negative/5'}">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="w-5 h-5 flex items-center justify-center text-xs font-medium ${d.isCorrect ? 'text-positive' : d.isUnanswered ? 'text-muted' : 'text-negative'}">
+                                                ${d.isCorrect ? '✓' : d.isUnanswered ? '○' : '✗'}
+                                            </span>
+                                            <span class="text-xs flex-1">
+                                                Q${d.idx} 
+                                                <span class="text-muted">(${QuestionBank.getDomainLabel(d.domain)})</span>
+                                            </span>
+                                            <span class="text-[10px] text-muted">
+                                                ${d.isUnanswered ? 'No answer' : `You: ${String.fromCharCode(65 + d.candidateAnswer)}`}
+                                                ${!d.isCorrect ? ` → Correct: ${String.fromCharCode(65 + d.correctAnswer)}` : ''}
+                                            </span>
+                                        </div>
+                                        ${d.explanation ? `<div class="text-[10px] text-muted pl-7 mt-1">${d.explanation}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="grid grid-cols-2 gap-3 mb-6">
+                            <button onclick="window.ResultUI.exportResults()" 
+                                class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white transition-colors">
+                                Export JSON
+                            </button>
+                            <button onclick="window.ResultUI.saveToGist()" 
+                                class="border border-black bg-accent px-4 py-2 text-xs hover:shadow-brutal-sm transition-all">
+                                Save to Gist
+                            </button>
+                        </div>
+
+                        <!-- Session Info -->
+                        <div class="text-center text-[10px] text-muted">
+                            <p>Quiz ID: ${submission.qid}</p>
+                            <p>Submitted: ${new Date(submission.ts).toLocaleString()}</p>
+                        </div>
+
+                        <a href="${location.pathname}" class="block text-center text-xs underline text-muted mt-6">
+                            ← Back to Admin
+                        </a>
+                    </div>
+                `;
+            },
+
+            exportResults() {
+                const { submission, score } = this.state;
+                
+                const exportData = {
+                    quizId: submission.qid,
+                    submittedAt: new Date(submission.ts).toISOString(),
+                    duration: submission.dur,
+                    score: {
+                        correct: score.correct,
+                        total: score.total,
+                        percentage: score.percentage
+                    },
+                    byDomain: Object.fromEntries(
+                        Object.entries(score.byDomain).map(([d, s]) => [d, { correct: s.correct, total: s.total }])
+                    ),
+                    answers: submission.a,
+                    details: score.details.map(d => ({
+                        qid: d.qid,
+                        domain: d.domain,
+                        selected: d.candidateAnswer,
+                        correct: d.correctAnswer,
+                        isCorrect: d.isCorrect,
+                        explanation: d.explanation
+                    }))
+                };
+
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `quiz-result-${submission.qid}-${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            },
+
+            async saveToGist() {
+                const token = localStorage.getItem('github_token');
+                if (!token) {
+                    UI.toast('Configure GitHub token in Settings first', 'error');
+                    UI.toggleSettings();
+                    return;
+                }
+
+                const { submission, score } = this.state;
+                
+                const gistContent = {
+                    quizId: submission.qid,
+                    submittedAt: new Date(submission.ts).toISOString(),
+                    duration: submission.dur,
+                    score: {
+                        correct: score.correct,
+                        total: score.total,
+                        percentage: score.percentage,
+                        grade: score.percentage >= 90 ? 'Excellent' : score.percentage >= 75 ? 'Good' : score.percentage >= 60 ? 'Pass' : 'Needs Improvement'
+                    },
+                    byDomain: Object.fromEntries(
+                        Object.entries(score.byDomain).map(([d, s]) => [
+                            QuestionBank.getDomainLabel(d), 
+                            `${s.correct}/${s.total} (${Math.round(s.correct/s.total*100)}%)`
+                        ])
+                    ),
+                    details: score.details.map(d => ({
+                        q: d.idx,
+                        domain: QuestionBank.getDomainLabel(d.domain),
+                        result: d.isCorrect ? '✓' : d.isUnanswered ? '○' : '✗'
+                    }))
+                };
+
+                const filename = `quiz-${submission.qid}-${Date.now()}.json`;
+                
+                UI.toast('Saving to Gist...', 'info', 2000);
+                
+                try {
+                    const response = await fetch('https://api.github.com/gists', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `token ${localStorage.getItem('github_token')}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            description: `Quiz Result: ${score.correct}/${score.total} (${score.percentage}%) - ${submission.qid}`,
+                            public: false,
+                            files: {
+                                [filename]: {
+                                    content: JSON.stringify(gistContent, null, 2)
+                                }
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.message || 'Failed to create gist');
+                    }
+
+                    const gist = await response.json();
+                    
+                    // Store reference locally
+                    const sessions = JSON.parse(localStorage.getItem('quiz_sessions') || '[]');
+                    sessions.push({
+                        quizId: submission.qid,
+                        gistId: gist.id,
+                        gistUrl: gist.html_url,
+                        score: score.percentage,
+                        timestamp: Date.now()
+                    });
+                    localStorage.setItem('quiz_sessions', JSON.stringify(sessions));
+
+                    UI.toast('Saved to Gist', 'success', 5000, gist.html_url);
+                    
+                } catch (error) {
+                    console.error('Gist save error:', error);
+                    if (error.message.includes('Bad credentials')) {
+                        localStorage.removeItem('github_token');
+                        UI.toast('Invalid GitHub token. Update in Settings.', 'error');
+                        UI.toggleSettings();
+                    } else {
+                        UI.toast('Error: ' + error.message, 'error');
+                    }
+                }
+            }
+        };
+
+        // Expose for onclick handlers
+        window.ResultUI = ResultUI;
+
+        // ========================================
+        // Router
+        // ========================================
+        async function route() {
+            const { mode, data, qid } = URLCodec.parseHash();
+            
+            switch (mode) {
+                case 'quiz':
+                    await QuizUI.render(data);
+                    break;
+                case 'answer':
+                    await ResultUI.render(data);
+                    break;
+                case 'result':
+                    // Direct result view (future: share results publicly)
+                    await ResultUI.render(data);
+                    break;
+                default:
+                    AdminUI.render();
+            }
+        }
+
+        // Initialize
+        UI.init();
+        window.addEventListener('hashchange', route);
+        route();
+    })();
+    </script>
+</body>
+</html>
