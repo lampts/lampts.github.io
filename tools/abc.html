@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+     <script>
+       window.dataLayer = window.dataLayer || [];
+       function gtag(){dataLayer.push(arguments);}
+       gtag('js', new Date());
+
+       gtag('config', 'G-VC31GENS6S');
+     </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Experiment Valley Competition - Test your A/B testing skills against AI opponents.">
+    <title>Competition | Experiment Valley (Standalone)</title>
+
+    <!-- CDN: Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --accent: #FBD45B;
+            --accent-dark: #e6c34d;
+            --bg: #FAFAF8;
+            --text: #1a1a1a;
+            --gray: #666;
+            --light-gray: #f0f0f0;
+            --border: #000;
+            --success: #2e7d32;
+            --success-bg: #e8f5e9;
+            --error: #c62828;
+            --error-bg: #ffebee;
+            --warning: #f57c00;
+            --warning-bg: #fff3e0;
+            --info: #1976d2;
+            --info-bg: #e3f2fd;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'IBM Plex Serif', Georgia, serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+        .mono { font-family: 'IBM Plex Mono', monospace; }
+
+        /* Brutalist Design */
+        .brutalist { border: 2px solid var(--border); box-shadow: 3px 3px 0 var(--border); }
+        .brutalist-sm { border: 2px solid var(--border); box-shadow: 2px 2px 0 var(--border); }
+
+        /* Buttons */
+        .btn {
+            background: var(--accent);
+            border: 2px solid var(--border);
+            box-shadow: 2px 2px 0 var(--border);
+            padding: 0.5rem 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .btn:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--border); }
+        .btn:active { transform: translate(2px, 2px); box-shadow: none; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 2px 2px 0 var(--border); }
+        .btn-secondary { background: white; }
+        .btn-success { background: var(--success-bg); border-color: var(--success); }
+        .btn-error { background: var(--error-bg); border-color: var(--error); }
+        .btn-large { padding: 0.75rem 1.5rem; font-size: 1rem; }
+
+        /* Cards */
+        .card { background: white; border: 2px solid var(--border); box-shadow: 3px 3px 0 var(--border); padding: 1.5rem; }
+        .card-sm { padding: 1rem; }
+        .card-accent { background: var(--accent); }
+
+        /* Callouts */
+        .callout { padding: 1rem; margin: 1rem 0; }
+        .callout-info { background: var(--info-bg); border-left: 4px solid var(--info); }
+        .callout-warning { background: var(--warning-bg); border-left: 4px solid var(--warning); }
+        .callout-success { background: var(--success-bg); border-left: 4px solid var(--success); }
+        .callout-error { background: var(--error-bg); border-left: 4px solid var(--error); }
+
+        /* Layout */
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+        .container-wide { max-width: 1000px; }
+        .hidden { display: none !important; }
+
+        /* Header */
+        header { background: white; border-bottom: 2px solid var(--border); padding: 0.75rem 1rem; position: sticky; top: 0; z-index: 100; }
+        header nav { max-width: 800px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        header a { color: var(--text); text-decoration: none; font-family: 'IBM Plex Mono', monospace; font-size: 0.875rem; }
+        header a:hover { text-decoration: underline; }
+        .nav-link { padding: 0.25rem 0.5rem; }
+        .nav-link.active { background: var(--accent); }
+
+        /* Progress Bar */
+        .progress-bar { height: 8px; background: var(--light-gray); border: 2px solid var(--border); }
+        .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+
+        /* Grid */
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        @media (max-width: 600px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+        /* Spacing */
+        .mb-1 { margin-bottom: 0.25rem; } .mb-2 { margin-bottom: 0.5rem; } .mb-4 { margin-bottom: 1rem; } .mb-6 { margin-bottom: 1.5rem; } .mb-8 { margin-bottom: 2rem; }
+        .mt-2 { margin-top: 0.5rem; } .mt-4 { margin-top: 1rem; } .mt-6 { margin-top: 1.5rem; }
+        .p-4 { padding: 1rem; }
+        .space-y-2 > * + * { margin-top: 0.5rem; } .space-y-4 > * + * { margin-top: 1rem; } .space-y-6 > * + * { margin-top: 1.5rem; }
+
+        /* Typography */
+        .text-xs { font-size: 0.75rem; } .text-sm { font-size: 0.875rem; } .text-lg { font-size: 1.125rem; } .text-xl { font-size: 1.25rem; } .text-2xl { font-size: 1.5rem; } .text-3xl { font-size: 1.875rem; } .text-4xl { font-size: 2.25rem; }
+        .text-center { text-align: center; } .text-right { text-align: right; }
+        .text-gray { color: var(--gray); } .text-success { color: var(--success); } .text-error { color: var(--error); }
+        .font-bold { font-weight: 700; } .font-semibold { font-weight: 600; }
+
+        /* Flex */
+        .flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; } .justify-center { justify-content: center; } .justify-between { justify-content: space-between; } .gap-2 { gap: 0.5rem; } .gap-4 { gap: 1rem; }
+
+        /* Inputs */
+        input, select { border: 2px solid var(--border); font-family: 'IBM Plex Mono', monospace; padding: 0.5rem; background: white; font-size: 1rem; }
+        input:focus, select:focus { outline: none; box-shadow: 2px 2px 0 var(--border); }
+
+        /* Decision Options */
+        .decision-option {
+            background: white;
+            border: 2px solid var(--border);
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.1s;
+            display: block;
+            width: 100%;
+            text-align: left;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.875rem;
+        }
+        .decision-option:hover { background: var(--light-gray); }
+        .decision-option.selected { background: var(--accent); box-shadow: 2px 2px 0 var(--border); }
+        .decision-option.correct { background: var(--success-bg); border-color: var(--success); }
+        .decision-option.incorrect { background: var(--error-bg); border-color: var(--error); }
+        .decision-option:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Opponent Cards */
+        .opponent-card {
+            background: white;
+            border: 2px solid var(--border);
+            box-shadow: 2px 2px 0 var(--border);
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .opponent-card:hover { background: var(--light-gray); }
+        .opponent-card.selected { background: var(--accent); }
+
+        /* Experiment Display */
+        .metric-box {
+            background: white;
+            border: 2px solid var(--border);
+            padding: 0.75rem;
+            text-align: center;
+        }
+        .metric-value { font-size: 1.5rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+        .metric-label { font-size: 0.75rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Stats Table */
+        .stats-table { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Mono', monospace; font-size: 0.875rem; }
+        .stats-table th, .stats-table td { border: 2px solid var(--border); padding: 0.5rem; text-align: left; }
+        .stats-table th { background: var(--light-gray); font-weight: 600; }
+        .stats-table tr:nth-child(even) td { background: #fafafa; }
+
+        /* Round Splash */
+        .round-splash {
+            position: fixed;
+            inset: 0;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        .round-splash.active { opacity: 1; pointer-events: auto; }
+        .round-splash-content { text-align: center; }
+        .round-splash-title { font-size: 6rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+        .round-splash-subtitle { font-size: 1.5rem; margin-top: 1rem; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            padding: 1rem;
+        }
+        .modal-content {
+            background: white;
+            border: 2px solid var(--border);
+            box-shadow: 4px 4px 0 var(--border);
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        /* Experiment Dots */
+        .exp-dot {
+            width: 32px;
+            height: 32px;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            font-size: 0.875rem;
+            background: var(--light-gray);
+        }
+        .exp-dot.current { background: var(--accent); box-shadow: 2px 2px 0 var(--border); }
+        .exp-dot.correct { background: var(--success-bg); border-color: var(--success); }
+        .exp-dot.incorrect { background: var(--error-bg); border-color: var(--error); }
+
+        /* Chart Container */
+        .chart-container {
+            background: white;
+            border: 2px solid var(--border);
+            padding: 1rem;
+            height: 250px;
+        }
+
+        /* Tabs */
+        .tab-list { display: flex; border-bottom: 2px solid var(--border); }
+        .tab-btn {
+            background: var(--light-gray);
+            border: 2px solid var(--border);
+            border-bottom: none;
+            padding: 0.5rem 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-right: -2px;
+        }
+        .tab-btn.active { background: white; border-bottom: 2px solid white; margin-bottom: -2px; }
+        .tab-content { border: 2px solid var(--border); border-top: none; padding: 1rem; background: white; }
+
+        /* Score Display */
+        .score-badge {
+            display: inline-block;
+            background: var(--accent);
+            border: 2px solid var(--border);
+            padding: 0.25rem 0.75rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 700;
+        }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.3s ease; }
+        .slide-up { animation: slideUp 0.3s ease; }
+
+        /* Tooltips */
+        .tooltip {
+            position: relative;
+            cursor: help;
+            border-bottom: 1px dashed var(--gray);
+        }
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text);
+            color: white;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 400;
+            line-height: 1.4;
+            padding: 0.4rem 0.6rem;
+            border-radius: 4px;
+            width: max-content;
+            max-width: 200px;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s;
+            z-index: 1000;
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+        @media (max-width: 600px) {
+            .tooltip::after {
+                left: 0;
+                transform: none;
+                max-width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Round Splash -->
+    <div id="round-splash" class="round-splash">
+        <div class="round-splash-content">
+            <div id="round-splash-title" class="round-splash-title">Round 1</div>
+            <div id="round-splash-subtitle" class="round-splash-subtitle">Let's begin!</div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="#" class="font-bold" onclick="GameController.showWelcome(); return false;">Experiment Valley</a>
+            <div class="flex gap-4">
+                <a href="ab.html" class="nav-link">Tutorial</a>
+                <a href="#" class="nav-link active">Competition</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container container-wide">
+        <!-- Welcome View -->
+        <div id="welcome-view">
+            <div class="text-center mb-8">
+                <div class="text-4xl mb-4">🎯</div>
+                <div class="brutalist-sm" style="display: inline-block; background: var(--accent); padding: 0.25rem 0.75rem;">
+                    <span class="mono text-sm font-bold">STANDALONE</span>
+                </div>
+                <h1 class="text-3xl font-bold mt-4 mb-2">A/B Testing Competition</h1>
+                <p class="text-gray">Test your decision-making skills against AI opponents</p>
+            </div>
+
+            <div class="card mb-6">
+                <h2 class="text-xl font-bold mb-4">How to Play</h2>
+                <div class="space-y-4">
+                    <div class="flex gap-4">
+                        <div class="score-badge">1</div>
+                        <div>
+                            <strong>Analyze Experiments</strong>
+                            <p class="text-sm text-gray">Review A/B test results including metrics, statistical significance, and potential issues.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="score-badge">2</div>
+                        <div>
+                            <strong>Make Three Decisions</strong>
+                            <p class="text-sm text-gray">Evaluate trustworthiness, choose an action, and determine next steps.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="score-badge">3</div>
+                        <div>
+                            <strong>Advance Through Rounds</strong>
+                            <p class="text-sm text-gray">Get 2 of 3 experiments correct to advance. Beat AI opponents on cumulative impact.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="callout callout-info mb-6">
+                <strong class="mono text-sm">Decision Framework</strong>
+                <ul class="mt-2 text-sm" style="margin-left: 1.25rem; list-style: disc;">
+                    <li><strong>Trustworthy?</strong> — Is the data reliable? Watch for SRM, data loss, or suspicious patterns.</li>
+                    <li><strong>What to do?</strong> — Keep Base, Keep Variant, or Keep Running based on significance.</li>
+                    <li><strong>Next steps?</strong> — Celebrate wins, iterate on learnings, validate or rerun if needed.</li>
+                </ul>
+            </div>
+
+            <div class="callout callout-warning mb-6">
+                <strong class="mono text-sm">What is CPD?</strong>
+                <p class="mt-2 text-sm"><strong>CPD</strong> = <strong>C</strong>onversion <strong>P</strong>oints <strong>D</strong>elta — your cumulative impact on conversion rate. Ship a real winner with +8% uplift? You gain +0.08 CPD. Ship a fake winner (trap)? You might gain 0 or go negative. The player with higher CPD wins!</p>
+            </div>
+
+            <div class="card card-accent mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="mono text-sm font-semibold">Your Best Score</span>
+                    <span id="best-score" class="mono text-sm font-semibold">Round 0 • 0 CPD</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="best-score-bar" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button id="play-btn" class="btn btn-large" onclick="GameController.showPlayModal()">
+                    Start Competition →
+                </button>
+            </div>
+
+            <footer class="text-center text-xs text-gray mt-8" style="padding-top: 1rem; border-top: 1px solid #ddd;">
+                Made with 🧪 | <a href="https://lampt.org" style="color: inherit;">lampt.org</a> | <a href="tutorial-standalone.html" style="color: inherit;">Tutorial</a>
+            </footer>
+        </div>
+
+        <!-- Game View -->
+        <div id="game-view" class="hidden">
+            <!-- Game Header -->
+            <div class="card card-sm mb-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div>
+                            <span class="mono text-xs text-gray">ROUND</span>
+                            <div id="current-round" class="text-2xl font-bold mono">1</div>
+                        </div>
+                        <div class="flex gap-2">
+                            <div id="exp-dot-1" class="exp-dot current">1</div>
+                            <div id="exp-dot-2" class="exp-dot">2</div>
+                            <div id="exp-dot-3" class="exp-dot">3</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <span class="mono text-xs text-gray tooltip" data-tooltip="CPD = Conversion Points Delta. Your cumulative impact on conversion rate.">YOUR IMPACT</span>
+                            <div id="user-impact" class="font-bold mono text-success">+0.00 CPD</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="mono text-xs text-gray" id="opponent-label">VS HIPPO</span>
+                            <div id="opponent-impact" class="font-bold mono text-error">+0.00 CPD</div>
+                        </div>
+                        <button class="btn btn-secondary text-xs" onclick="GameController.showExitModal()">Exit</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Experiment Info -->
+            <div class="card mb-4">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <span id="experiment-name" class="mono text-sm text-gray">EXPERIMENT #1</span>
+                        <h2 id="experiment-title" class="text-lg font-bold">Checkout Button Color Test</h2>
+                    </div>
+                    <div id="experiment-status" class="score-badge">RUNNING</div>
+                </div>
+
+                <!-- Execution Progress -->
+                <div class="mb-4">
+                    <div class="flex justify-between mb-1">
+                        <span class="mono text-xs text-gray">Execution Progress</span>
+                        <span id="execution-progress" class="mono text-xs">Day 14 of 21</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="execution-bar" class="progress-fill" style="width: 67%"></div>
+                    </div>
+                </div>
+
+                <!-- Key Metrics -->
+                <div class="grid-3 mb-4">
+                    <div class="metric-box">
+                        <div id="metric-visitors" class="metric-value">10,000</div>
+                        <div class="metric-label">Total Visitors</div>
+                    </div>
+                    <div class="metric-box">
+                        <div id="metric-uplift" class="metric-value">+5.2%</div>
+                        <div class="metric-label">Observed Uplift</div>
+                    </div>
+                    <div class="metric-box">
+                        <div id="metric-pvalue" class="metric-value">0.023</div>
+                        <div class="metric-label">P-Value</div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tab-list">
+                    <button class="tab-btn active" data-tab="metrics" onclick="GameController.switchTab('metrics')">Metrics</button>
+                    <button class="tab-btn" data-tab="analysis" onclick="GameController.switchTab('analysis')">Analysis</button>
+                    <button class="tab-btn" data-tab="timeline" onclick="GameController.switchTab('timeline')">Timeline</button>
+                </div>
+                <div id="tab-metrics" class="tab-content">
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Variant</th>
+                                <th>Visitors</th>
+                                <th>Conversions</th>
+                                <th>Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metrics-tbody">
+                            <tr>
+                                <td>Control</td>
+                                <td>5,000</td>
+                                <td>250</td>
+                                <td>5.00%</td>
+                            </tr>
+                            <tr>
+                                <td>Variant</td>
+                                <td>5,000</td>
+                                <td>276</td>
+                                <td>5.52%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="tab-analysis" class="tab-content hidden">
+                    <div id="analysis-content" class="space-y-2 mono text-sm">
+                        <div><strong>Statistical Significance:</strong> <span class="text-success">Yes (p=0.023)</span></div>
+                        <div><strong>Confidence Interval:</strong> 95% CI [+1.2%, +9.8%]</div>
+                        <div><strong>Power:</strong> 82%</div>
+                        <div><strong>Sample Ratio:</strong> 50.0% / 50.0% ✓</div>
+                    </div>
+                </div>
+                <div id="tab-timeline" class="tab-content hidden">
+                    <div class="chart-container">
+                        <canvas id="timeline-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warnings -->
+            <div id="warnings-container" class="mb-4 space-y-2"></div>
+
+            <!-- Decisions -->
+            <div class="card">
+                <h3 class="font-bold mb-4">Your Decisions</h3>
+
+                <!-- Trust Decision -->
+                <div class="mb-4">
+                    <label class="mono text-sm font-semibold mb-2 block">1. Is this experiment trustworthy?</label>
+                    <div class="grid-2">
+                        <button class="decision-option" data-group="trust" data-value="TRUSTWORTHY" onclick="GameController.selectDecision('trust', 'TRUSTWORTHY', this)">
+                            ✓ Trustworthy
+                        </button>
+                        <button class="decision-option" data-group="trust" data-value="UNTRUSTWORTHY" onclick="GameController.selectDecision('trust', 'UNTRUSTWORTHY', this)">
+                            ✗ Untrustworthy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Decision -->
+                <div class="mb-4">
+                    <label class="mono text-sm font-semibold mb-2 block">2. What should we do?</label>
+                    <div class="space-y-2">
+                        <button class="decision-option" data-group="action" data-value="KEEP_BASE" onclick="GameController.selectDecision('action', 'KEEP_BASE', this)">
+                            Keep Base — Roll back to the original
+                        </button>
+                        <button class="decision-option" data-group="action" data-value="KEEP_VARIANT" onclick="GameController.selectDecision('action', 'KEEP_VARIANT', this)">
+                            Keep Variant — Ship the change
+                        </button>
+                        <button class="decision-option" data-group="action" data-value="KEEP_RUNNING" onclick="GameController.selectDecision('action', 'KEEP_RUNNING', this)">
+                            Keep Running — Need more data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Follow-up Decision -->
+                <div class="mb-6">
+                    <label class="mono text-sm font-semibold mb-2 block">3. What's the best follow-up?</label>
+                    <div class="grid-2">
+                        <button class="decision-option" data-group="followup" data-value="CELEBRATE" onclick="GameController.selectDecision('followup', 'CELEBRATE', this)">
+                            🎉 Celebrate
+                        </button>
+                        <button class="decision-option" data-group="followup" data-value="ITERATE" onclick="GameController.selectDecision('followup', 'ITERATE', this)">
+                            🔄 Iterate
+                        </button>
+                        <button class="decision-option" data-group="followup" data-value="VALIDATE" onclick="GameController.selectDecision('followup', 'VALIDATE', this)">
+                            🔍 Validate
+                        </button>
+                        <button class="decision-option" data-group="followup" data-value="RERUN" onclick="GameController.selectDecision('followup', 'RERUN', this)">
+                            🔧 Fix & Rerun
+                        </button>
+                    </div>
+                </div>
+
+                <button id="submit-btn" class="btn btn-large" style="width: 100%;" onclick="GameController.submitDecisions()" disabled>
+                    Submit Decisions
+                </button>
+            </div>
+        </div>
+
+        <!-- Completion View -->
+        <div id="completion-view" class="hidden text-center" style="padding: 4rem 0;">
+            <div class="text-4xl mb-4">🏆</div>
+            <h1 id="completion-title" class="text-2xl font-bold mb-2">Game Over!</h1>
+            <p id="completion-subtitle" class="text-gray mb-6">You reached Round 5</p>
+
+            <div class="card mb-6" style="max-width: 400px; margin: 0 auto;">
+                <div class="grid-2 mb-4">
+                    <div>
+                        <div class="mono text-xs text-gray tooltip" data-tooltip="CPD = Conversion Points Delta">YOUR IMPACT</div>
+                        <div id="final-user-impact" class="text-2xl font-bold mono text-success">+2.45 CPD</div>
+                    </div>
+                    <div>
+                        <div class="mono text-xs text-gray">OPPONENT</div>
+                        <div id="final-opponent-impact" class="text-2xl font-bold mono text-error">+1.20 CPD</div>
+                    </div>
+                </div>
+                <div id="final-result" class="callout callout-success">
+                    <strong>You Win!</strong> You outperformed the opponent.
+                </div>
+            </div>
+
+            <button class="btn btn-large" onclick="GameController.showWelcome()">Play Again</button>
+        </div>
+    </main>
+
+    <!-- Play Modal -->
+    <div id="play-modal" class="modal-overlay hidden" onclick="if(event.target===this) GameController.hidePlayModal()">
+        <div class="modal-content slide-up">
+            <h2 class="text-xl font-bold mb-4">Start Competition</h2>
+
+            <div class="mb-4">
+                <label class="mono text-sm font-semibold mb-2 block">Your Name</label>
+                <input type="text" id="player-name" placeholder="Enter your name" style="width: 100%;">
+            </div>
+
+            <div class="mb-6">
+                <label class="mono text-sm font-semibold mb-2 block">Choose Opponent</label>
+                <div class="space-y-2">
+                    <div class="opponent-card selected" data-opponent="HiPPO" onclick="GameController.selectOpponent('HiPPO', this)">
+                        <strong>🦛 HiPPO</strong>
+                        <p class="text-sm text-gray">Highest Paid Person's Opinion — Decides based on gut feeling</p>
+                    </div>
+                    <div class="opponent-card" data-opponent="Random" onclick="GameController.selectOpponent('Random', this)">
+                        <strong>🎲 Random</strong>
+                        <p class="text-sm text-gray">Coin flip decision making</p>
+                    </div>
+                    <div class="opponent-card" data-opponent="Naive" onclick="GameController.selectOpponent('Naive', this)">
+                        <strong>📊 Naive</strong>
+                        <p class="text-sm text-gray">Always picks the higher conversion rate</p>
+                    </div>
+                    <div class="opponent-card" data-opponent="Peek-a-boo" onclick="GameController.selectOpponent('Peek-a-boo', this)">
+                        <strong>👀 Peek-a-boo</strong>
+                        <p class="text-sm text-gray">Checks stats daily, stops at first significance</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="GameController.hidePlayModal()">Cancel</button>
+                <button id="start-game-btn" class="btn" style="flex: 2;" onclick="GameController.startGame()" disabled>Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="modal-overlay hidden">
+        <div class="modal-content slide-up">
+            <div id="feedback-icon" class="text-4xl text-center mb-4">✓</div>
+            <h2 id="feedback-title" class="text-xl font-bold text-center mb-4">Correct!</h2>
+
+            <div id="feedback-results" class="space-y-2 mb-4">
+                <!-- Results will be injected here -->
+            </div>
+
+            <div id="feedback-explanation" class="callout callout-info mb-4">
+                <strong class="mono text-sm">Explanation</strong>
+                <p id="explanation-text" class="text-sm mt-2">The experiment showed statistically significant results...</p>
+            </div>
+
+            <div id="feedback-impact" class="card card-sm mb-4">
+                <div class="grid-2">
+                    <div>
+                        <div class="mono text-xs text-gray tooltip" data-tooltip="CPD = Conversion Points Delta">YOUR IMPACT</div>
+                        <div id="feedback-user-delta" class="font-bold mono">+0.12 CPD</div>
+                    </div>
+                    <div>
+                        <div class="mono text-xs text-gray">OPPONENT</div>
+                        <div id="feedback-opponent-delta" class="font-bold mono">-0.05 CPD</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-large" style="width: 100%;" onclick="GameController.nextExperiment()">
+                Continue →
+            </button>
+        </div>
+    </div>
+
+    <!-- Exit Modal -->
+    <div id="exit-modal" class="modal-overlay hidden" onclick="if(event.target===this) GameController.hideExitModal()">
+        <div class="modal-content slide-up text-center">
+            <div class="text-4xl mb-4">⚠️</div>
+            <h2 class="text-xl font-bold mb-2">Exit Game?</h2>
+            <p class="text-gray mb-6">Your progress will be saved, but you'll need to start a new session.</p>
+            <div class="flex gap-4">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="GameController.hideExitModal()">Cancel</button>
+                <button class="btn btn-error" style="flex: 1;" onclick="GameController.exitGame()">Exit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CDN: JS Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.4/jstat.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Embedded: Virtual Competitors -->
+    <script>
+const VirtualCompetitors = {
+    HiPPO: {
+        name: 'HiPPO',
+        description: 'Decides based on gut feeling',
+        makeDecision: (experiment, metrics) => {
+            // HiPPO goes with their gut - prefers variant if observed uplift looks good
+            // They ignore data quality issues entirely
+            const uplift = metrics.uplift || experiment.observedUplift || 0;
+            if (uplift > 0.05) return { action: 'KEEP_VARIANT', trust: 'TRUSTWORTHY', followup: 'CELEBRATE' };
+            if (uplift < -0.05) return { action: 'KEEP_BASE', trust: 'TRUSTWORTHY', followup: 'ITERATE' };
+            return { action: 'KEEP_RUNNING', trust: 'TRUSTWORTHY', followup: 'VALIDATE' };
+        }
+    },
+    Random: {
+        name: 'Random',
+        description: 'Coin flip decisions',
+        makeDecision: () => {
+            const actions = ['KEEP_BASE', 'KEEP_VARIANT', 'KEEP_RUNNING'];
+            const trusts = ['TRUSTWORTHY', 'UNTRUSTWORTHY'];
+            const followups = ['CELEBRATE', 'ITERATE', 'VALIDATE', 'RERUN'];
+            return {
+                action: actions[Math.floor(Math.random() * actions.length)],
+                trust: trusts[Math.floor(Math.random() * trusts.length)],
+                followup: followups[Math.floor(Math.random() * followups.length)]
+            };
+        }
+    },
+    Naive: {
+        name: 'Naive',
+        description: 'Picks higher conversion rate',
+        makeDecision: (experiment, metrics) => {
+            // Naive just looks at the numbers - if variant rate > control rate, ship it
+            const uplift = metrics.uplift || experiment.observedUplift || 0;
+            if (uplift > 0) return { action: 'KEEP_VARIANT', trust: 'TRUSTWORTHY', followup: 'CELEBRATE' };
+            return { action: 'KEEP_BASE', trust: 'TRUSTWORTHY', followup: 'ITERATE' };
+        }
+    },
+    'Peek-a-boo': {
+        name: 'Peek-a-boo',
+        description: 'Stops at first significance',
+        makeDecision: (experiment, metrics) => {
+            // Peek-a-boo checks for significance and ships immediately when found
+            // They don't check for data quality issues
+            const pValue = metrics.pValue || 1;
+            if (pValue < 0.05) {
+                const uplift = metrics.uplift || experiment.observedUplift || 0;
+                return uplift > 0
+                    ? { action: 'KEEP_VARIANT', trust: 'TRUSTWORTHY', followup: 'CELEBRATE' }
+                    : { action: 'KEEP_BASE', trust: 'TRUSTWORTHY', followup: 'ITERATE' };
+            }
+            return { action: 'KEEP_RUNNING', trust: 'TRUSTWORTHY', followup: 'VALIDATE' };
+        }
+    }
+};
+    </script>
+
+    <!-- Embedded: Challenge Generator (Simplified) -->
+    <script>
+// Challenge generator with proper shuffling and difficulty progression
+const ChallengeGenerator = {
+    // Scenario templates - will be varied with random parameters
+    // observedUplift: what the metrics show (may be misleading)
+    // trueEffect: what would ACTUALLY happen if you ship (reality)
+    scenarioTemplates: {
+        // Trustworthy scenarios (clean data)
+        winner_small:    { type: 'winner', significant: true, observedUplift: [0.05, 0.08], trueEffect: 'match', trustworthy: true, difficulty: 1 },
+        winner_medium:   { type: 'winner', significant: true, observedUplift: [0.08, 0.12], trueEffect: 'match', trustworthy: true, difficulty: 2 },
+        winner_large:    { type: 'winner', significant: true, observedUplift: [0.12, 0.18], trueEffect: 'match', trustworthy: true, difficulty: 1 },
+        loser_small:     { type: 'loser', significant: true, observedUplift: [-0.08, -0.04], trueEffect: 'match', trustworthy: true, difficulty: 1 },
+        loser_medium:    { type: 'loser', significant: true, observedUplift: [-0.12, -0.06], trueEffect: 'match', trustworthy: true, difficulty: 2 },
+        inconclusive:    { type: 'inconclusive', significant: false, observedUplift: [-0.02, 0.03], trueEffect: 'match', trustworthy: true, difficulty: 1 },
+        underpowered:    { type: 'underpowered', significant: false, observedUplift: [0.02, 0.05], trueEffect: 'match', trustworthy: true, issue: 'Underpowered', difficulty: 2 },
+
+        // Trap scenarios (untrustworthy data)
+        srm_positive:    { type: 'srm', significant: true, observedUplift: [0.10, 0.20], trueEffect: 0, trustworthy: false, issue: 'Sample Ratio Mismatch', srmRatio: 0.55, difficulty: 2 },
+        srm_negative:    { type: 'srm', significant: true, observedUplift: [-0.15, -0.08], trueEffect: 0, trustworthy: false, issue: 'Sample Ratio Mismatch', srmRatio: 0.42, difficulty: 3 },
+        early_stop:      { type: 'early_stop', significant: true, observedUplift: [0.08, 0.15], trueEffect: [-0.02, 0.01], trustworthy: false, issue: 'Early Stopping', difficulty: 2 },
+        lucky_day:       { type: 'lucky_day', significant: true, observedUplift: [0.15, 0.30], trueEffect: [-0.01, 0.02], trustworthy: false, issue: 'Lucky Day Effect', difficulty: 3 },
+        data_loss:       { type: 'data_loss', significant: true, observedUplift: [0.10, 0.18], trueEffect: 0, trustworthy: false, issue: 'Data Loss Detected', difficulty: 3 },
+        novelty_effect:  { type: 'novelty', significant: true, observedUplift: [0.12, 0.25], trueEffect: [0.01, 0.03], trustworthy: false, issue: 'Novelty Effect Suspected', difficulty: 4 },
+    },
+
+    // Difficulty tiers - which scenarios are available at each round
+    difficultyTiers: {
+        1: ['winner_small', 'winner_large', 'loser_small', 'inconclusive'],
+        2: ['winner_small', 'winner_medium', 'loser_small', 'loser_medium', 'inconclusive', 'srm_positive'],
+        3: ['winner_medium', 'loser_medium', 'inconclusive', 'underpowered', 'srm_positive', 'early_stop'],
+        4: ['winner_medium', 'winner_large', 'loser_medium', 'inconclusive', 'underpowered', 'srm_positive', 'srm_negative', 'early_stop', 'lucky_day'],
+        5: ['winner_small', 'winner_medium', 'loser_small', 'loser_medium', 'inconclusive', 'underpowered', 'srm_positive', 'srm_negative', 'early_stop', 'lucky_day', 'data_loss'],
+        6: ['winner_medium', 'winner_large', 'loser_medium', 'inconclusive', 'underpowered', 'srm_positive', 'srm_negative', 'early_stop', 'lucky_day', 'data_loss', 'novelty_effect'],
+    },
+
+    experimentNames: [
+        'Checkout Button Color Test',
+        'Homepage Hero Banner A/B',
+        'Pricing Page Layout',
+        'Cart Abandonment Flow',
+        'Search Results Ordering',
+        'Mobile Navigation Update',
+        'Email Subject Line Test',
+        'Product Image Size Test',
+        'CTA Text Variation',
+        'Footer Link Placement',
+        'Signup Form Redesign',
+        'Product Recommendation Engine',
+        'Free Shipping Threshold',
+        'Countdown Timer Widget',
+        'Trust Badge Placement',
+        'Review Display Format',
+        'Payment Options Order',
+        'Wishlist Feature Test',
+        'Size Guide Popup',
+        'Related Products Layout'
+    ],
+
+    // Track used scenarios per round to ensure variety
+    currentRoundScenarios: [],
+    lastRound: 0,
+
+    // Fisher-Yates shuffle
+    shuffle(array) {
+        const arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    },
+
+    // Get random value from range [min, max]
+    randomInRange(range) {
+        if (Array.isArray(range)) {
+            return range[0] + Math.random() * (range[1] - range[0]);
+        }
+        return range;
+    },
+
+    // Generate scenarios for a new round
+    generateRoundScenarios(round) {
+        const tier = Math.min(round, 6);
+        const availableKeys = this.difficultyTiers[tier];
+
+        // Shuffle available scenarios
+        const shuffled = this.shuffle(availableKeys);
+
+        // Ensure at least one trap in rounds 3+ (50% of the time)
+        const traps = shuffled.filter(k => !this.scenarioTemplates[k].trustworthy);
+        const clean = shuffled.filter(k => this.scenarioTemplates[k].trustworthy);
+
+        let selected = [];
+        if (round >= 3 && traps.length > 0 && Math.random() > 0.3) {
+            // Include 1-2 traps in later rounds
+            const numTraps = round >= 5 ? Math.min(2, traps.length) : 1;
+            selected = [...this.shuffle(traps).slice(0, numTraps), ...this.shuffle(clean)].slice(0, 3);
+        } else {
+            selected = shuffled.slice(0, 3);
+        }
+
+        // Final shuffle so traps aren't always in the same position
+        return this.shuffle(selected);
+    },
+
+    generate(round, experimentIndex) {
+        // Generate new round scenarios if round changed
+        if (round !== this.lastRound) {
+            this.currentRoundScenarios = this.generateRoundScenarios(round);
+            this.lastRound = round;
+        }
+
+        // Get scenario template for this experiment
+        const templateKey = this.currentRoundScenarios[experimentIndex] || this.currentRoundScenarios[0];
+        const template = this.scenarioTemplates[templateKey];
+
+        // Randomize the uplift within the template range
+        const observedUplift = this.randomInRange(template.observedUplift);
+
+        // Calculate true effect
+        let trueEffect;
+        if (template.trueEffect === 'match') {
+            trueEffect = observedUplift; // Trustworthy: true effect matches observed
+        } else if (Array.isArray(template.trueEffect)) {
+            trueEffect = this.randomInRange(template.trueEffect);
+        } else {
+            trueEffect = template.trueEffect;
+        }
+
+        // Generate random but varied data
+        const baseRate = 0.03 + Math.random() * 0.06; // 3-9%
+        const variantRate = baseRate * (1 + observedUplift);
+
+        // Underpowered experiments have LOW sample size
+        let visitors;
+        if (template.type === 'underpowered') {
+            visitors = Math.floor(500 + Math.random() * 1500); // 500-2k (way too small)
+        } else {
+            visitors = Math.floor(4000 + Math.random() * 16000); // 4k-20k
+        }
+
+        const totalDays = 14 + Math.floor(Math.random() * 14); // 14-28 days
+
+        // Set days based on scenario type
+        let days;
+        if (template.type === 'early_stop') {
+            days = Math.floor(totalDays * (0.15 + Math.random() * 0.20)); // 15-35% complete (stopped way too early)
+        } else if (template.type === 'novelty') {
+            days = Math.floor(totalDays * (0.20 + Math.random() * 0.15)); // 20-35% complete (too early to trust novelty)
+        } else {
+            days = Math.floor(totalDays * (0.5 + Math.random() * 0.5)); // 50-100% complete
+        }
+
+        // Calculate stats with SRM handling
+        const srmRatio = template.srmRatio || 0.5;
+        const baseVisitors = Math.floor(visitors * srmRatio);
+        const variantVisitors = visitors - baseVisitors;
+        const baseConversions = Math.floor(baseVisitors * baseRate);
+        const variantConversions = Math.floor(variantVisitors * variantRate);
+
+        // Calculate p-value
+        const pValue = template.significant
+            ? 0.001 + Math.random() * 0.045  // 0.001 - 0.046
+            : 0.08 + Math.random() * 0.4;    // 0.08 - 0.48
+
+        // Pick a random experiment name
+        const nameIndex = Math.floor(Math.random() * this.experimentNames.length);
+        const name = this.experimentNames[nameIndex];
+
+        return {
+            name: name,
+            scenario: template,
+            templateKey: templateKey,
+            round: round,
+            metrics: {
+                baseVisitors,
+                variantVisitors,
+                baseConversions,
+                variantConversions,
+                baseRate: baseConversions / baseVisitors,
+                variantRate: variantConversions / variantVisitors,
+                // This is the OBSERVED uplift (what the dashboard shows)
+                uplift: (variantConversions / variantVisitors - baseConversions / baseVisitors) / (baseConversions / baseVisitors),
+                pValue: pValue,
+                significant: pValue < 0.05,
+                days,
+                totalDays
+            },
+            analysis: {
+                trustworthy: template.trustworthy,
+                correctAction: this.getCorrectAction(template),
+                correctFollowup: this.getCorrectFollowup(template),
+                issues: template.issue ? [template.issue] : [],
+                explanation: this.getExplanation(template)
+            },
+            // TRUE EFFECT: what would ACTUALLY happen if you ship (reality vs observed)
+            trueEffect: trueEffect,
+            observedUplift: observedUplift
+        };
+    },
+
+    getCorrectAction(template) {
+        if (!template.trustworthy) return 'KEEP_RUNNING';
+        if (template.type === 'winner') return 'KEEP_VARIANT';
+        if (template.type === 'loser') return 'KEEP_BASE';
+        return 'KEEP_RUNNING';
+    },
+
+    getCorrectFollowup(template) {
+        if (!template.trustworthy) return 'RERUN';
+        if (template.type === 'winner') return 'CELEBRATE';
+        if (template.type === 'loser') return 'ITERATE';
+        return 'VALIDATE';
+    },
+
+    getExplanation(template) {
+        const explanations = {
+            winner: 'The experiment shows a statistically significant positive effect. The data is trustworthy and supports shipping the variant.',
+            loser: 'The experiment shows the variant performs worse than control. Roll back to the base version and learn from the results.',
+            inconclusive: 'Results are not statistically significant. We need more data or the effect may be too small to detect.',
+            srm: 'Sample Ratio Mismatch detected! The traffic split differs significantly from 50/50, indicating a technical issue. Results cannot be trusted.',
+            early_stop: 'This experiment appears to have been evaluated too early. Early stopping inflates false positive rates. The results may not be reliable.',
+            lucky_day: 'Most of the observed effect comes from a single day\'s performance. This could be due to external factors rather than the actual change.',
+            underpowered: 'The experiment lacks sufficient statistical power to detect the expected effect size. Consider running longer or with more traffic.',
+            data_loss: 'Data loss has been detected in this experiment. Some visitor or conversion data may be missing, making the results unreliable.',
+            novelty: 'The effect may be inflated by novelty — users react to change itself, not the improvement. This typically fades over time.'
+        };
+        return explanations[template.type] || 'Analyze the results carefully before making a decision.';
+    }
+};
+    </script>
+
+    <!-- Embedded: Game Controller -->
+    <script>
+const GameController = {
+    state: {
+        currentRound: 1,
+        experimentsInRound: 0,
+        correctInRound: 0,
+        totalCorrect: 0,
+        totalExperiments: 0,
+        userImpact: 0,
+        opponentImpact: 0,
+        selectedOpponent: 'HiPPO',
+        playerName: 'Player',
+        currentExperiment: null,
+        decisions: { trust: null, action: null, followup: null },
+        chart: null
+    },
+
+    init() {
+        // Load saved data
+        const saved = localStorage.getItem('ev_competition_best');
+        if (saved) {
+            const best = JSON.parse(saved);
+            document.getElementById('best-score').textContent = `Round ${best.round} • ${best.impact.toFixed(2)} CPD`;
+            document.getElementById('best-score-bar').style.width = `${Math.min(100, best.round * 10)}%`;
+        }
+
+        // Restore player name
+        const savedName = localStorage.getItem('ev_player_name');
+        if (savedName) {
+            document.getElementById('player-name').value = savedName;
+            this.updateStartButton();
+        }
+
+        // Add input listener
+        document.getElementById('player-name').addEventListener('input', () => this.updateStartButton());
+        document.getElementById('player-name').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !document.getElementById('start-game-btn').disabled) {
+                this.startGame();
+            }
+        });
+    },
+
+    showWelcome() {
+        document.getElementById('welcome-view').classList.remove('hidden');
+        document.getElementById('game-view').classList.add('hidden');
+        document.getElementById('completion-view').classList.add('hidden');
+
+        // Refresh best score display from localStorage
+        const saved = localStorage.getItem('ev_competition_best');
+        if (saved) {
+            const best = JSON.parse(saved);
+            document.getElementById('best-score').textContent = `Round ${best.round} • ${best.impact.toFixed(2)} CPD`;
+            document.getElementById('best-score-bar').style.width = `${Math.min(100, best.round * 10)}%`;
+        }
+    },
+
+    showPlayModal() {
+        document.getElementById('play-modal').classList.remove('hidden');
+        document.getElementById('player-name').focus();
+    },
+
+    hidePlayModal() {
+        document.getElementById('play-modal').classList.add('hidden');
+    },
+
+    selectOpponent(opponent, element) {
+        this.state.selectedOpponent = opponent;
+        document.querySelectorAll('.opponent-card').forEach(c => c.classList.remove('selected'));
+        element.classList.add('selected');
+        this.updateStartButton();
+    },
+
+    updateStartButton() {
+        const hasName = document.getElementById('player-name').value.trim().length > 0;
+        document.getElementById('start-game-btn').disabled = !hasName;
+    },
+
+    startGame() {
+        this.state.playerName = document.getElementById('player-name').value.trim() || 'Player';
+        localStorage.setItem('ev_player_name', this.state.playerName);
+
+        // Reset state
+        this.state.currentRound = 1;
+        this.state.experimentsInRound = 0;
+        this.state.correctInRound = 0;
+        this.state.totalCorrect = 0;
+        this.state.totalExperiments = 0;
+        this.state.userImpact = 0;
+        this.state.opponentImpact = 0;
+
+        // Reset challenge generator for fresh scenarios
+        ChallengeGenerator.lastRound = 0;
+        ChallengeGenerator.currentRoundScenarios = [];
+
+        this.hidePlayModal();
+        document.getElementById('welcome-view').classList.add('hidden');
+        document.getElementById('game-view').classList.remove('hidden');
+
+        // Update opponent label
+        document.getElementById('opponent-label').textContent = `VS ${this.state.selectedOpponent.toUpperCase()}`;
+
+        // Show round splash
+        this.showRoundSplash();
+    },
+
+    showRoundSplash() {
+        const splash = document.getElementById('round-splash');
+        const captions = {
+            1: "Let's begin!",
+            2: "Getting warmer...",
+            3: "Watch for traps!",
+            4: "Stay vigilant!",
+            5: "Expert level!",
+            6: "Master statistician!",
+            7: "Legendary!",
+            8: "Beyond human!",
+            9: "Unstoppable!",
+            10: "Perfect score?"
+        };
+
+        document.getElementById('round-splash-title').textContent = `Round ${this.state.currentRound}`;
+        document.getElementById('round-splash-subtitle').textContent = captions[this.state.currentRound] || "Keep going!";
+
+        splash.classList.add('active');
+        setTimeout(() => {
+            splash.classList.remove('active');
+            this.loadExperiment();
+        }, 1500);
+    },
+
+    loadExperiment() {
+        // Reset decisions
+        this.state.decisions = { trust: null, action: null, followup: null };
+        document.querySelectorAll('.decision-option').forEach(b => {
+            b.classList.remove('selected', 'correct', 'incorrect');
+            b.disabled = false;
+        });
+        document.getElementById('submit-btn').disabled = true;
+
+        // Generate experiment
+        this.state.currentExperiment = ChallengeGenerator.generate(
+            this.state.currentRound,
+            this.state.experimentsInRound
+        );
+        const exp = this.state.currentExperiment;
+
+        // Update UI
+        document.getElementById('current-round').textContent = this.state.currentRound;
+        document.getElementById('experiment-name').textContent = `EXPERIMENT #${this.state.experimentsInRound + 1}`;
+        document.getElementById('experiment-title').textContent = exp.name;
+
+        // Set status indicator based on scenario type
+        const statusEl = document.getElementById('experiment-status');
+        const scenarioType = exp.scenario.type;
+
+        if (scenarioType === 'early_stop') {
+            statusEl.textContent = 'STOPPED EARLY';
+            statusEl.style.background = 'var(--error)';
+            statusEl.style.color = 'white';
+        } else if (scenarioType === 'srm') {
+            statusEl.textContent = 'SRM ALERT';
+            statusEl.style.background = 'var(--error)';
+            statusEl.style.color = 'white';
+        } else if (scenarioType === 'data_loss') {
+            statusEl.textContent = 'DATA ISSUE';
+            statusEl.style.background = 'var(--error)';
+            statusEl.style.color = 'white';
+        } else if (scenarioType === 'underpowered') {
+            statusEl.textContent = 'LOW TRAFFIC';
+            statusEl.style.background = '#f59e0b'; // orange/warning
+            statusEl.style.color = 'white';
+        } else if (scenarioType === 'lucky_day') {
+            statusEl.textContent = 'VOLATILE';
+            statusEl.style.background = '#f59e0b'; // orange/warning
+            statusEl.style.color = 'white';
+        } else if (scenarioType === 'novelty') {
+            statusEl.textContent = 'JUST LAUNCHED';
+            statusEl.style.background = '#8b5cf6'; // purple
+            statusEl.style.color = 'white';
+        } else if (exp.metrics.days >= exp.metrics.totalDays) {
+            statusEl.textContent = 'COMPLETE';
+            statusEl.style.background = 'var(--success)';
+            statusEl.style.color = 'white';
+        } else {
+            statusEl.textContent = 'RUNNING';
+            statusEl.style.background = 'var(--accent)';
+            statusEl.style.color = 'var(--text)';
+        }
+
+        // Update metrics
+        const m = exp.metrics;
+        document.getElementById('metric-visitors').textContent = (m.baseVisitors + m.variantVisitors).toLocaleString();
+        document.getElementById('metric-uplift').textContent = `${m.uplift >= 0 ? '+' : ''}${(m.uplift * 100).toFixed(1)}%`;
+        document.getElementById('metric-pvalue').textContent = m.pValue.toFixed(3);
+        document.getElementById('metric-pvalue').style.color = m.pValue < 0.05 ? 'var(--success)' : 'var(--gray)';
+
+        // Update execution progress
+        document.getElementById('execution-progress').textContent = `Day ${m.days} of ${m.totalDays}`;
+        document.getElementById('execution-bar').style.width = `${(m.days / m.totalDays) * 100}%`;
+
+        // Update metrics table
+        document.getElementById('metrics-tbody').innerHTML = `
+            <tr>
+                <td>Control</td>
+                <td>${m.baseVisitors.toLocaleString()}</td>
+                <td>${m.baseConversions.toLocaleString()}</td>
+                <td>${(m.baseRate * 100).toFixed(2)}%</td>
+            </tr>
+            <tr>
+                <td>Variant</td>
+                <td>${m.variantVisitors.toLocaleString()}</td>
+                <td>${m.variantConversions.toLocaleString()}</td>
+                <td>${(m.variantRate * 100).toFixed(2)}%</td>
+            </tr>
+        `;
+
+        // Update analysis
+        const a = exp.analysis;
+        document.getElementById('analysis-content').innerHTML = `
+            <div><strong>Statistical Significance:</strong> <span class="${m.significant ? 'text-success' : 'text-gray'}">${m.significant ? 'Yes' : 'No'} (p=${m.pValue.toFixed(3)})</span></div>
+            <div><strong>Observed Uplift:</strong> ${m.uplift >= 0 ? '+' : ''}${(m.uplift * 100).toFixed(1)}%</div>
+            <div><strong>Sample Ratio:</strong> ${((m.baseVisitors / (m.baseVisitors + m.variantVisitors)) * 100).toFixed(1)}% / ${((m.variantVisitors / (m.baseVisitors + m.variantVisitors)) * 100).toFixed(1)}%</div>
+            ${a.issues.length > 0 ? `<div class="text-error"><strong>⚠️ Issues:</strong> ${a.issues.join(', ')}</div>` : ''}
+        `;
+
+        // Update warnings
+        const warningsContainer = document.getElementById('warnings-container');
+        warningsContainer.innerHTML = '';
+        if (a.issues.length > 0) {
+            a.issues.forEach(issue => {
+                warningsContainer.innerHTML += `
+                    <div class="callout callout-warning">
+                        <strong class="mono text-sm">⚠️ ${issue}</strong>
+                        <p class="text-sm mt-1">${this.getIssueDescription(issue)}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Update experiment dots
+        this.updateExperimentDots();
+
+        // Update chart
+        this.updateChart();
+
+        // Switch to metrics tab
+        this.switchTab('metrics');
+    },
+
+    getIssueDescription(issue) {
+        const descriptions = {
+            'Sample Ratio Mismatch': 'The traffic split differs significantly from the expected 50/50. This indicates a technical issue with randomization - results cannot be trusted.',
+            'Early Stopping': 'The experiment was stopped before reaching planned sample size. Early peeking inflates false positive rates dramatically.',
+            'Lucky Day Effect': 'Results are heavily influenced by a single day\'s performance. External factors (promotions, outages) may explain the effect.',
+            'Underpowered': 'The sample size is too small to reliably detect the expected effect. Need more data before deciding.',
+            'Data Loss Detected': 'Some visitor or conversion data appears to be missing. Incomplete data makes results unreliable.',
+            'Novelty Effect Suspected': 'Users may be reacting to the change itself, not the improvement. This effect typically fades over time.'
+        };
+        return descriptions[issue] || 'Review this carefully before making a decision.';
+    },
+
+    updateExperimentDots() {
+        for (let i = 1; i <= 3; i++) {
+            const dot = document.getElementById(`exp-dot-${i}`);
+            dot.className = 'exp-dot';
+            if (i === this.state.experimentsInRound + 1) {
+                dot.classList.add('current');
+            } else if (i <= this.state.experimentsInRound) {
+                // Check results for completed experiments
+                dot.classList.add(this.state.roundResults && this.state.roundResults[i-1] ? 'correct' : 'incorrect');
+            }
+        }
+    },
+
+    switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(`tab-${tab}`).classList.remove('hidden');
+    },
+
+    selectDecision(group, value, element) {
+        this.state.decisions[group] = value;
+
+        // Update visual selection
+        document.querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('selected'));
+        element.classList.add('selected');
+
+        // Check if all decisions made
+        const allMade = this.state.decisions.trust && this.state.decisions.action && this.state.decisions.followup;
+        document.getElementById('submit-btn').disabled = !allMade;
+    },
+
+    submitDecisions() {
+        const exp = this.state.currentExperiment;
+        const analysis = exp.analysis;
+        const decisions = this.state.decisions;
+
+        // Check correctness
+        const trustCorrect = (decisions.trust === 'TRUSTWORTHY') === analysis.trustworthy;
+        const actionCorrect = decisions.action === analysis.correctAction;
+        const followupCorrect = decisions.followup === analysis.correctFollowup;
+
+        const correctCount = [trustCorrect, actionCorrect, followupCorrect].filter(Boolean).length;
+        const isCorrect = correctCount >= 2;
+
+        // Calculate impact using the TRUE effect (not observed)
+        // trueEffect represents what would ACTUALLY happen if you ship
+        const trueEffect = exp.trueEffect;
+
+        // Helper function to calculate impact for a decision
+        const calculateImpact = (action) => {
+            if (action === 'KEEP_VARIANT') {
+                // Ship the variant - you get the TRUE effect (good or bad)
+                return trueEffect;
+            } else if (action === 'KEEP_BASE') {
+                // Keep base - if variant was actually bad, you avoided the loss
+                // If variant was actually good, you missed the opportunity (no gain)
+                if (trueEffect < 0) {
+                    // Avoided shipping a bad variant - small positive reward
+                    return Math.abs(trueEffect) * 0.3;
+                } else {
+                    // Missed a good variant - no direct loss, but no gain either
+                    return 0;
+                }
+            } else {
+                // KEEP_RUNNING - neutral, no immediate impact
+                return 0;
+            }
+        };
+
+        const userDelta = calculateImpact(decisions.action);
+        this.state.userImpact += userDelta;
+
+        // Get opponent decision and calculate their impact
+        const opponent = VirtualCompetitors[this.state.selectedOpponent];
+        const opponentDecision = opponent.makeDecision(exp, exp.metrics);
+        const opponentDelta = calculateImpact(opponentDecision.action);
+        this.state.opponentImpact += opponentDelta;
+
+        // Update state
+        this.state.experimentsInRound++;
+        this.state.totalExperiments++;
+        if (isCorrect) {
+            this.state.correctInRound++;
+            this.state.totalCorrect++;
+        }
+
+        // Store result for dots
+        if (!this.state.roundResults) this.state.roundResults = [];
+        this.state.roundResults.push(isCorrect);
+
+        // Update scoreboard
+        document.getElementById('user-impact').textContent = `${this.state.userImpact >= 0 ? '+' : ''}${this.state.userImpact.toFixed(2)} CPD`;
+        document.getElementById('opponent-impact').textContent = `${this.state.opponentImpact >= 0 ? '+' : ''}${this.state.opponentImpact.toFixed(2)} CPD`;
+
+        // Show feedback
+        this.showFeedback(trustCorrect, actionCorrect, followupCorrect, isCorrect, userDelta, opponentDelta, analysis);
+    },
+
+    showFeedback(trustCorrect, actionCorrect, followupCorrect, isCorrect, userDelta, opponentDelta, analysis) {
+        document.getElementById('feedback-modal').classList.remove('hidden');
+
+        document.getElementById('feedback-icon').textContent = isCorrect ? '✓' : '✗';
+        document.getElementById('feedback-icon').style.color = isCorrect ? 'var(--success)' : 'var(--error)';
+        document.getElementById('feedback-title').textContent = isCorrect ? 'Correct!' : 'Incorrect';
+
+        // Show individual results
+        document.getElementById('feedback-results').innerHTML = `
+            <div class="flex justify-between ${trustCorrect ? 'text-success' : 'text-error'}">
+                <span>Trustworthy:</span>
+                <span>${trustCorrect ? '✓ Correct' : '✗ Wrong'}</span>
+            </div>
+            <div class="flex justify-between ${actionCorrect ? 'text-success' : 'text-error'}">
+                <span>Action:</span>
+                <span>${actionCorrect ? '✓ Correct' : '✗ Wrong'} (Should: ${analysis.correctAction})</span>
+            </div>
+            <div class="flex justify-between ${followupCorrect ? 'text-success' : 'text-error'}">
+                <span>Follow-up:</span>
+                <span>${followupCorrect ? '✓ Correct' : '✗ Wrong'} (Should: ${analysis.correctFollowup})</span>
+            </div>
+        `;
+
+        document.getElementById('explanation-text').textContent = analysis.explanation;
+
+        document.getElementById('feedback-user-delta').textContent = `${userDelta >= 0 ? '+' : ''}${userDelta.toFixed(2)} CPD`;
+        document.getElementById('feedback-user-delta').style.color = userDelta >= 0 ? 'var(--success)' : 'var(--error)';
+        document.getElementById('feedback-opponent-delta').textContent = `${opponentDelta >= 0 ? '+' : ''}${opponentDelta.toFixed(2)} CPD`;
+        document.getElementById('feedback-opponent-delta').style.color = opponentDelta >= 0 ? 'var(--success)' : 'var(--error)';
+
+        // Mark decision options
+        document.querySelectorAll('.decision-option').forEach(b => {
+            b.disabled = true;
+            const group = b.dataset.group;
+            const value = b.dataset.value;
+
+            if (group === 'trust') {
+                const correct = (value === 'TRUSTWORTHY') === analysis.trustworthy;
+                if (b.classList.contains('selected')) {
+                    b.classList.add(correct ? 'correct' : 'incorrect');
+                } else if (correct) {
+                    b.classList.add('correct');
+                }
+            } else if (group === 'action') {
+                if (value === analysis.correctAction) b.classList.add('correct');
+                else if (b.classList.contains('selected')) b.classList.add('incorrect');
+            } else if (group === 'followup') {
+                if (value === analysis.correctFollowup) b.classList.add('correct');
+                else if (b.classList.contains('selected')) b.classList.add('incorrect');
+            }
+        });
+    },
+
+    nextExperiment() {
+        document.getElementById('feedback-modal').classList.add('hidden');
+
+        if (this.state.experimentsInRound >= 3) {
+            // End of round
+            if (this.state.correctInRound >= 2) {
+                // Advance to next round
+                this.state.currentRound++;
+                this.state.experimentsInRound = 0;
+                this.state.correctInRound = 0;
+                this.state.roundResults = [];
+                this.showRoundSplash();
+            } else {
+                // Game over
+                this.endGame();
+            }
+        } else {
+            // Next experiment
+            this.loadExperiment();
+        }
+    },
+
+    endGame() {
+        // Save best score
+        const currentScore = { round: this.state.currentRound, impact: this.state.userImpact };
+        const saved = localStorage.getItem('ev_competition_best');
+        const best = saved ? JSON.parse(saved) : { round: 0, impact: 0 };
+
+        if (this.state.currentRound > best.round ||
+            (this.state.currentRound === best.round && this.state.userImpact > best.impact)) {
+            localStorage.setItem('ev_competition_best', JSON.stringify(currentScore));
+        }
+
+        // Show completion
+        document.getElementById('game-view').classList.add('hidden');
+        document.getElementById('completion-view').classList.remove('hidden');
+
+        document.getElementById('completion-title').textContent = this.state.userImpact > this.state.opponentImpact ? 'Victory!' : 'Game Over';
+        document.getElementById('completion-subtitle').textContent = `You reached Round ${this.state.currentRound}`;
+
+        document.getElementById('final-user-impact').textContent = `${this.state.userImpact >= 0 ? '+' : ''}${this.state.userImpact.toFixed(2)} CPD`;
+        document.getElementById('final-opponent-impact').textContent = `${this.state.opponentImpact >= 0 ? '+' : ''}${this.state.opponentImpact.toFixed(2)} CPD`;
+
+        const resultDiv = document.getElementById('final-result');
+        if (this.state.userImpact > this.state.opponentImpact) {
+            resultDiv.className = 'callout callout-success';
+            resultDiv.innerHTML = '<strong>You Win!</strong> You outperformed the opponent.';
+        } else if (this.state.userImpact < this.state.opponentImpact) {
+            resultDiv.className = 'callout callout-error';
+            resultDiv.innerHTML = '<strong>Opponent Wins!</strong> Better luck next time.';
+        } else {
+            resultDiv.className = 'callout callout-warning';
+            resultDiv.innerHTML = '<strong>Tie!</strong> You matched the opponent\'s performance.';
+        }
+    },
+
+    showExitModal() {
+        document.getElementById('exit-modal').classList.remove('hidden');
+    },
+
+    hideExitModal() {
+        document.getElementById('exit-modal').classList.add('hidden');
+    },
+
+    exitGame() {
+        this.hideExitModal();
+        this.endGame();
+    },
+
+    updateChart() {
+        const ctx = document.getElementById('timeline-chart');
+        if (!ctx) return;
+
+        if (this.state.chart) {
+            this.state.chart.destroy();
+        }
+
+        const exp = this.state.currentExperiment;
+        const days = exp.metrics.days;
+
+        // Generate daily data
+        const labels = Array.from({length: days}, (_, i) => `Day ${i + 1}`);
+        const baseData = [];
+        const variantData = [];
+
+        let baseCum = 0, variantCum = 0;
+        for (let i = 0; i < days; i++) {
+            const dailyBase = exp.metrics.baseConversions / days * (0.8 + Math.random() * 0.4);
+            const dailyVariant = exp.metrics.variantConversions / days * (0.8 + Math.random() * 0.4);
+            baseCum += dailyBase;
+            variantCum += dailyVariant;
+            baseData.push((baseCum / (exp.metrics.baseVisitors * (i + 1) / days)) * 100);
+            variantData.push((variantCum / (exp.metrics.variantVisitors * (i + 1) / days)) * 100);
+        }
+
+        this.state.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    { label: 'Control', data: baseData, borderColor: '#666', backgroundColor: 'transparent', tension: 0.3 },
+                    { label: 'Variant', data: variantData, borderColor: '#FBD45B', backgroundColor: 'transparent', tension: 0.3, borderWidth: 2 }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: {
+                    y: {
+                        title: { display: true, text: 'Conversion Rate (%)' },
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    }
+};
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => GameController.init());
+    </script>
+</body>
+</html>
