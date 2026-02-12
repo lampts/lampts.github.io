@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>microGPT Practice Pad</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['IBM Plex Mono', 'monospace'],
+        mono: ['IBM Plex Mono', 'monospace'],
+        serif: ['IBM Plex Serif', 'serif'],
+      },
+      colors: {
+        background: '#ffffff',
+        foreground: '#000000',
+        muted: '#666666',
+        accent: '#FBD45B',
+        positive: '#16a34a',
+        negative: '#dc2626',
+        diff: { add: '#dcfce7', del: '#fee2e2', change: '#fef9c3' },
+      },
+      boxShadow: { brutal: '3px 3px 0px #000' }
+    }
+  }
+}
+</script>
+<style>
+  * { box-sizing: border-box; }
+  ::selection { background: #FBD45B; color: #000; }
+  textarea { font-family: 'IBM Plex Mono', monospace; tab-size: 4; }
+  textarea:focus { outline: 2px solid #000; outline-offset: -2px; }
+  .phase-tab.active { background: #000; color: #fff; }
+  .phase-tab { transition: background 0.15s, color 0.15s; }
+  .block-btn.active { background: #000; color: #fff; }
+  .block-btn.completed { border-color: #16a34a; }
+  .block-btn.completed::after { content: '✓'; position: absolute; top: -4px; right: -4px; background: #16a34a; color: #fff; font-size: 8px; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+  .diff-line { font-size: 12px; line-height: 1.6; font-family: 'IBM Plex Mono', monospace; }
+  .diff-add { background: #dcfce7; }
+  .diff-del { background: #fee2e2; text-decoration: line-through; opacity: 0.7; }
+  .diff-ok { background: transparent; }
+  .diff-scaffold { background: transparent; opacity: 0.35; font-style: italic; }
+  @keyframes pulse-border { 0%,100% { border-color: #000; } 50% { border-color: #FBD45B; } }
+  .typing-active { animation: pulse-border 2s infinite; }
+  .streak-fire { display: inline-block; animation: fire 0.5s ease-in-out; }
+  @keyframes fire { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+  pre code { font-size: 12px; line-height: 1.6; }
+  .hint-blur { filter: blur(4px); transition: filter 0.3s; cursor: pointer; }
+  .hint-blur:hover, .hint-blur.revealed { filter: none; }
+</style>
+</head>
+<body class="bg-background text-foreground font-sans text-xs min-h-screen">
+
+<!-- ═══════════════════════ APP ═══════════════════════ -->
+<div id="app" class="max-w-6xl mx-auto px-4 py-6">
+
+  <!-- HEADER -->
+  <div class="flex items-start justify-between mb-6 pb-4 border-b-2 border-black">
+    <div>
+      <div class="text-[10px] font-semibold tracking-[3px] uppercase text-muted mb-1">Daily Practice</div>
+      <h1 class="font-serif text-2xl font-bold">micro<span class="text-accent" style="text-shadow: 1px 1px 0 #000;">GPT</span> Workpad</h1>
+      <p class="text-muted mt-1 max-w-md">Type from memory. Compare. Understand. Modify. Run. The bugs are the curriculum.</p>
+    </div>
+    <div class="text-right">
+      <div class="flex items-center gap-2 justify-end">
+        <span id="streakDisplay" class="text-lg font-bold">0</span>
+        <span class="text-[10px] text-muted uppercase tracking-wider">day streak</span>
+      </div>
+      <div class="text-[10px] text-muted mt-1">
+        Mastered: <span id="masteredCount" class="font-bold text-foreground">0</span>/9 blocks
+      </div>
+      <div class="mt-2 flex gap-1 justify-end" id="blockDots"></div>
+    </div>
+  </div>
+
+  <!-- GIST LOADER -->
+  <div class="border border-black p-3 mb-6 shadow-brutal bg-gray-50">
+    <div class="flex items-center gap-2">
+      <span class="text-[10px] font-semibold uppercase tracking-wider shrink-0">Gist URL</span>
+      <input id="gistUrl" type="text" value="https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95"
+        class="flex-1 border border-gray-300 px-2 py-1 text-xs font-mono bg-white" placeholder="Paste gist URL...">
+      <button onclick="loadFromGist()" id="loadBtn"
+        class="border border-black px-3 py-1 text-[10px] font-semibold uppercase tracking-wider hover:bg-black hover:text-white shrink-0">
+        Load
+      </button>
+      <span id="loadStatus" class="text-[10px] text-muted shrink-0"></span>
+    </div>
+  </div>
+
+  <!-- BLOCK NAVIGATION -->
+  <div class="flex gap-1 mb-4 flex-wrap" id="blockNav"></div>
+
+  <!-- MAIN WORKSPACE -->
+  <div id="workspace" class="hidden">
+
+    <!-- BLOCK HEADER -->
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <span class="text-[10px] text-muted uppercase tracking-wider">Block <span id="blockNum">1</span> / 9</span>
+        <h2 id="blockTitle" class="font-serif text-lg font-bold mt-0.5"></h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="blockAccuracy" class="text-[10px] text-muted"></span>
+        <span id="blockTimer" class="font-mono text-sm text-muted">0:00</span>
+      </div>
+    </div>
+
+    <!-- PHASE TABS -->
+    <div class="flex gap-0 mb-4 border border-black">
+      <button onclick="setPhase('recall')" data-phase="recall" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider border-r border-black active">
+        ① Recall
+      </button>
+      <button onclick="setPhase('compare')" data-phase="compare" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider border-r border-black" disabled>
+        ② Compare
+      </button>
+      <button onclick="setPhase('explain')" data-phase="explain" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider border-r border-black" disabled>
+        ③ Explain
+      </button>
+      <button onclick="setPhase('modify')" data-phase="modify" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider border-r border-black" disabled>
+        ④ Modify
+      </button>
+      <button onclick="setPhase('run')" data-phase="run" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" disabled>
+        ⑤ Run
+      </button>
+    </div>
+
+    <!-- ══════ PHASE 1: RECALL ══════ -->
+    <div id="phase-recall" class="phase-content">
+      <div class="border-l-2 border-black pl-4 mb-4 py-2 bg-accent/20">
+        <p class="text-xs font-semibold">TYPE THIS BLOCK FROM MEMORY. NO PEEKING.</p>
+        <p class="text-[10px] text-muted mt-1">Skip comments and docstrings — only algorithmic code counts. The struggle is where learning happens.</p>
+      </div>
+
+      <!-- Hint: show first/last line blurred -->
+      <div class="mb-3">
+        <span class="text-[10px] text-muted uppercase tracking-wider">Hint (hover to reveal)</span>
+        <div id="recallHint" class="hint-blur border border-gray-200 p-2 mt-1 bg-gray-50 text-[11px] font-mono text-muted"></div>
+      </div>
+
+      <div class="relative">
+        <textarea id="recallInput"
+          class="w-full border-2 border-black p-4 font-mono text-xs leading-relaxed bg-white resize-none typing-active"
+          rows="18"
+          placeholder="Start typing the code from memory..."
+          spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+        <div class="absolute bottom-2 right-2 flex gap-3">
+          <span id="coreTarget" class="text-[10px] text-muted"></span>
+          <span id="lineCount" class="text-[10px] text-muted">0 lines</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mt-3">
+        <button onclick="skipRecall()" class="text-[10px] text-muted underline hover:text-foreground">
+          Skip (show reference first — reduces learning)
+        </button>
+        <button onclick="submitRecall()"
+          class="border-2 border-black px-6 py-2 text-xs font-semibold uppercase tracking-wider shadow-brutal hover:bg-black hover:text-white">
+          Done — Compare →
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════ PHASE 2: COMPARE ══════ -->
+    <div id="phase-compare" class="phase-content hidden">
+      <div class="border-l-2 border-black pl-4 mb-4 py-2 bg-accent/20">
+        <p class="text-xs font-semibold">YOUR CODE VS. ORIGINAL. EVERY DIFFERENCE IS A LEARNING SIGNAL.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-0 border-2 border-black mb-3">
+        <div class="border-r border-black">
+          <div class="bg-black text-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider">Your Attempt</div>
+          <div id="diffYours" class="p-3 font-mono text-xs leading-relaxed overflow-auto max-h-[500px] bg-white"></div>
+        </div>
+        <div>
+          <div class="bg-black text-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider">Original</div>
+          <div id="diffOriginal" class="p-3 font-mono text-xs leading-relaxed overflow-auto max-h-[500px] bg-white"></div>
+        </div>
+      </div>
+
+      <!-- Accuracy Score -->
+      <div class="border border-black p-4 shadow-brutal bg-gray-50 mb-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-[10px] font-semibold uppercase tracking-wider text-muted mb-1">Core Code Accuracy</div>
+            <div class="flex items-center gap-3">
+              <span id="accuracyScore" class="font-serif text-3xl font-bold">0%</span>
+              <div class="text-[10px] text-muted">
+                <div>Lines correct: <span id="linesCorrect" class="text-foreground font-semibold">0</span></div>
+                <div>Lines missing: <span id="linesMissing" class="text-negative font-semibold">0</span></div>
+                <div>Lines wrong: <span id="linesWrong" class="text-negative font-semibold">0</span></div>
+              </div>
+            </div>
+          </div>
+          <div id="accuracyVerdict" class="text-right"></div>
+        </div>
+        <div class="mt-3 h-3 bg-gray-200 border border-gray-300">
+          <div id="accuracyBar" class="h-full bg-black transition-all duration-500" style="width:0%"></div>
+        </div>
+        <div id="coreLineInfo" class="text-[10px] text-muted mt-2 italic"></div>
+      </div>
+
+      <div class="flex justify-end">
+        <button onclick="setPhase('explain')"
+          class="border-2 border-black px-6 py-2 text-xs font-semibold uppercase tracking-wider shadow-brutal hover:bg-black hover:text-white">
+          Understand Why →
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════ PHASE 3: EXPLAIN ══════ -->
+    <div id="phase-explain" class="phase-content hidden">
+      <div class="border-l-2 border-black pl-4 mb-4 py-2 bg-accent/20">
+        <p class="text-xs font-semibold">NOW UNDERSTAND. EVERY LINE EXISTS FOR A REASON.</p>
+      </div>
+
+      <div id="explainContent" class="space-y-3"></div>
+
+      <div class="flex justify-between mt-4">
+        <button onclick="setPhase('compare')"
+          class="text-[10px] text-muted underline hover:text-foreground">← Back to diff</button>
+        <button onclick="setPhase('modify')"
+          class="border-2 border-black px-6 py-2 text-xs font-semibold uppercase tracking-wider shadow-brutal hover:bg-black hover:text-white">
+          Modify Challenge →
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════ PHASE 4: MODIFY ══════ -->
+    <div id="phase-modify" class="phase-content hidden">
+      <div class="border border-black p-4 shadow-brutal bg-accent/20 mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[10px] font-semibold uppercase tracking-wider">Modification Challenge</span>
+          <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black font-semibold">PROVE IT</span>
+        </div>
+        <p id="modifyChallenge" class="text-xs font-semibold"></p>
+        <p id="modifyHint" class="text-[10px] text-muted mt-1"></p>
+      </div>
+
+      <textarea id="modifyInput"
+        class="w-full border-2 border-black p-4 font-mono text-xs leading-relaxed bg-white resize-none"
+        rows="18" spellcheck="false"></textarea>
+
+      <div class="flex justify-between mt-3">
+        <button onclick="resetModify()" class="text-[10px] text-muted underline hover:text-foreground">Reset to original</button>
+        <button onclick="setPhase('run')"
+          class="border-2 border-black px-6 py-2 text-xs font-semibold uppercase tracking-wider shadow-brutal hover:bg-black hover:text-white">
+          Run It →
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════ PHASE 5: RUN ══════ -->
+    <div id="phase-run" class="phase-content hidden">
+      <div class="border-l-2 border-black pl-4 mb-4 py-2 bg-accent/20">
+        <p class="text-xs font-semibold">EXECUTE AND VERIFY. DOES THE LOSS DECREASE?</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-0 border-2 border-black mb-3">
+        <div class="border-r border-black">
+          <div class="bg-black text-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between">
+            <span>Code</span>
+            <button onclick="runCode()" id="runBtn"
+              class="bg-accent text-black px-2 py-0.5 text-[10px] font-semibold border border-white/30 hover:bg-yellow-300">
+              ▶ RUN
+            </button>
+          </div>
+          <textarea id="runInput"
+            class="w-full p-3 font-mono text-xs leading-relaxed bg-white resize-none border-0"
+            rows="20" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div class="bg-black text-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between">
+            <span>Output</span>
+            <button onclick="clearOutput()" class="text-gray-400 hover:text-white text-[10px]">Clear</button>
+          </div>
+          <pre id="runOutput" class="p-3 font-mono text-xs leading-relaxed overflow-auto max-h-[500px] bg-gray-50 text-foreground"></pre>
+        </div>
+      </div>
+
+      <div id="pyodideStatus" class="text-[10px] text-muted mb-3"></div>
+
+      <div class="flex justify-between">
+        <button onclick="setPhase('modify')" class="text-[10px] text-muted underline hover:text-foreground">← Back to modify</button>
+        <button onclick="completeBlock()"
+          class="border-2 border-positive px-6 py-2 text-xs font-semibold uppercase tracking-wider text-positive shadow-brutal hover:bg-positive hover:text-white">
+          ✓ Complete Block
+        </button>
+      </div>
+    </div>
+
+    <!-- BLOCK NAVIGATION -->
+    <div class="flex justify-between mt-6 pt-4 border-t border-gray-200">
+      <button onclick="prevBlock()" id="prevBtn" class="text-[10px] text-muted hover:text-foreground">← Previous Block</button>
+      <button onclick="nextBlock()" id="nextBtn" class="text-[10px] text-muted hover:text-foreground">Next Block →</button>
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div id="loadingState" class="border-2 border-black p-12 text-center shadow-brutal">
+    <div class="font-serif text-lg font-bold mb-2">Load microGPT to begin</div>
+    <p class="text-muted text-xs">Click Load above, or the source is preset from Karpathy's gist.</p>
+  </div>
+
+</div>
+
+<footer class="text-center text-[10px] text-muted py-6 border-t border-gray-200 mt-8">
+  Built for daily practice · Struggle first, feedback after · <a href="https://lampt.org" class="underline">lampt.org</a>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA: Block definitions with explanations and challenges
+// ═══════════════════════════════════════════════════════════════
+
+const BLOCK_DEFS = [
+  {
+    id: 'imports',
+    title: 'Imports & CLI Arguments',
+    lines: [0, 0], // will be set dynamically
+    explanation: `<div class="space-y-3">
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why These 4 Imports?</div>
+        <p class="text-xs text-muted"><strong>os</strong> — check if dataset file exists before downloading. <strong>math</strong> — log and exp for loss and softmax. <strong>random</strong> — seed, shuffle, and sampling during generation. <strong>argparse</strong> — CLI interface for hyperparameters.</p>
+        <p class="text-xs text-muted mt-2">Zero external dependencies. Every neural net operation is built from scratch. This is the constraint that makes it art.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why These Defaults?</div>
+        <p class="text-xs text-muted"><strong>n_embd=16</strong> — tiny embedding so it runs on CPU in seconds. <strong>n_layer=1</strong> — single transformer block, minimum viable depth. <strong>block_size=8</strong> — 8 character context window. <strong>n_head=4</strong> — so head_dim = 16/4 = 4. Small but demonstrates multi-head pattern.</p>
+        <p class="text-xs text-muted mt-2"><strong>head_dim = n_embd // n_head</strong> — this division is the key architectural constraint. Total compute stays O(d²) regardless of head count. More heads = more diverse attention patterns at same cost.</p>
+      </div>
+    </div>`,
+    challenge: 'Add a --temperature argument (default 1.0) that scales logits before softmax during generation. Where would you use it?',
+    challengeHint: 'Temperature divides logits: logits[i] / temperature. T<1 = sharper, T>1 = more random. Only affects inference, not training.',
+  },
+  {
+    id: 'data',
+    title: 'Data Loading & Tokenizer',
+    explanation: `<div class="space-y-3">
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why Character-Level?</div>
+        <p class="text-xs text-muted">BPE tokenizers (GPT-2: 50k tokens, GPT-4: 100k) are algorithms unto themselves. Character-level tokenization has vocab_size ≈ 28 (26 letters + BOS + EOS). This means the embedding table is tiny, but sequences are longer per word. The tradeoff: simplicity over efficiency.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why BOS/EOS Tokens?</div>
+        <p class="text-xs text-muted"><strong>BOS</strong> (Beginning of Sequence) — the "start generating" signal. During inference, you feed BOS as the first token. The model learns: "after BOS, the distribution over first characters is..."</p>
+        <p class="text-xs text-muted mt-1"><strong>EOS</strong> (End of Sequence) — the "stop generating" signal. Without EOS, the model has no way to learn document boundaries. It would generate forever.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">stoi / itos Pattern</div>
+        <p class="text-xs text-muted">String-to-integer and integer-to-string. Every tokenizer in every LLM has this pair. Tokens are integers for embedding lookup; strings for human reading. The sorted() ensures deterministic mapping across runs.</p>
+      </div>
+    </div>`,
+    challenge: 'Modify the tokenizer to be word-level instead of character-level. Split on spaces. How does vocab_size change? What breaks?',
+    challengeHint: 'Word-level: chars = ["<BOS>","<EOS>"] + sorted(set(word for doc in docs for word in doc.split())). Vocab explodes. Embedding table grows. But sequences shrink.',
+  },
+  {
+    id: 'autograd',
+    title: 'Value: Autograd Engine',
+    explanation: `<div class="space-y-3">
+      <div class="border border-black p-3 bg-accent/20">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">THIS IS THE HARDEST BLOCK. MASTER IT.</div>
+        <p class="text-xs">The Value class IS the engine. Every number in the network is wrapped in Value. Every operation (+, ×, exp, log, relu, **) creates a new Value that remembers its parents and knows its local derivative. Calling .backward() walks the graph in reverse topological order applying chain rule.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why Closures?</div>
+        <p class="text-xs text-muted">Each _backward is a closure that captures the parent Values. When out = a * b, the _backward closure captures a and b. During backprop: a.grad += b.data * out.grad (chain rule). The closure pattern means no separate "backward graph" — it's embedded in the forward graph.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why += for gradients?</div>
+        <p class="text-xs text-muted">A value might be used in multiple operations (fan-out). If x appears in both y=x+1 and z=x*2, gradients from both paths must accumulate. This is the multivariate chain rule: ∂L/∂x = Σ (∂L/∂yᵢ × ∂yᵢ/∂x).</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Topological Sort</div>
+        <p class="text-xs text-muted">Backward must visit nodes in reverse dependency order. If c = a + b, you need c's gradient before computing a's and b's. Topological sort on the DAG ensures this. DFS post-order → reverse = valid backward order.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Derivative Rules Cheat Sheet</div>
+        <p class="text-xs text-muted font-mono">
+          add:  ∂(a+b)/∂a = 1, ∂(a+b)/∂b = 1<br>
+          mul:  ∂(a×b)/∂a = b, ∂(a×b)/∂b = a<br>
+          pow:  ∂(aⁿ)/∂a = n·aⁿ⁻¹<br>
+          exp:  ∂(eᵃ)/∂a = eᵃ (= out.data)<br>
+          log:  ∂(ln a)/∂a = 1/a<br>
+          relu: ∂relu(a)/∂a = 1 if a>0 else 0
+        </p>
+      </div>
+    </div>`,
+    challenge: 'Add a tanh() method to the Value class. tanh(x) = (e²ˣ - 1)/(e²ˣ + 1). Its derivative: 1 - tanh²(x). Test it works by checking gradients.',
+    challengeHint: 'def tanh(self): t = (2*self).exp(); out = (t-1)/(t+1); _backward: self.grad += (1 - out.data**2) * out.grad',
+  },
+  {
+    id: 'params',
+    title: 'Parameter Initialization',
+    explanation: `<div class="space-y-3">
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why std=0.02?</div>
+        <p class="text-xs text-muted">GPT-2's initialization. Small random weights mean initial outputs are near-zero, logits are near-uniform, model starts with maximum entropy (knows nothing). Too large → exploding activations. Too small → vanishing gradients. 0.02 is the Goldilocks value found empirically.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why std=0 for W_o and W_fc2?</div>
+        <p class="text-xs text-muted">These are the output projections of attention and MLP blocks. Initializing to zero means: at initialization, each transformer block is the identity function (x + 0 = x). The residual stream passes through unchanged. Training gradually "turns on" each layer. From the Sparse Transformer paper. This prevents the residual accumulation problem at depth.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">state_dict is a flat dictionary</div>
+        <p class="text-xs text-muted">No nn.Module hierarchy, no .parameters() method, no autograd parameter tracking. Just a dict of 2D lists of Value objects. The params list is built by flattening everything. This is what PyTorch does under the hood — microGPT makes it explicit.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Weight Tying</div>
+        <p class="text-xs text-muted">wte (token embedding) is reused as the output projection. No separate lm_head weight. This halves the embedding parameters and acts as implicit regularization — the model learns embeddings that work both as input features and output classifiers.</p>
+      </div>
+    </div>`,
+    challenge: 'Add a GPT-3 style initialization: scale residual layer weights by 1/√(2*n_layer) instead of zero. Why might this be better for deeper networks?',
+    challengeHint: 'std = 0.02 / math.sqrt(2 * n_layer). At depth, residual contributions accumulate. Scaling down prevents the variance from growing with depth.',
+  },
+  {
+    id: 'primitives',
+    title: 'Primitives: linear, softmax, rmsnorm',
+    explanation: `<div class="space-y-3">
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">linear(): The Universal Building Block</div>
+        <p class="text-xs text-muted">Matrix-vector multiply. w[o][i] * x[i] summed over i = dot product of row o with x. This is the ONLY parameterized operation in the entire network. Everything else (softmax, rmsnorm, relu) is parameter-free. All learning happens through linear layers.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">softmax(): Logits → Probabilities</div>
+        <p class="text-xs text-muted">Subtract max for numerical stability (prevents exp overflow). Exponentiate to make everything positive. Divide by sum to normalize to [0,1]. This is the ONLY way the network converts raw scores into a probability distribution. Used twice: in attention weights and in final token prediction.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">rmsnorm(): Why Not LayerNorm?</div>
+        <p class="text-xs text-muted">LayerNorm: subtract mean, divide by std, apply learnable scale+bias. RMSNorm: just divide by root-mean-square. No mean subtraction, no learnable parameters. Simpler, fewer ops, empirically works just as well. Used by LLaMA, Gemma, and now microGPT.</p>
+        <p class="text-xs text-muted mt-1 font-mono">rmsnorm(x) = x / √(mean(x²) + ε)</p>
+      </div>
+    </div>`,
+    challenge: 'Implement LayerNorm instead of RMSNorm. LayerNorm: mean = Σx/n, var = Σ(x-mean)²/n, output = (x-mean)/√(var+ε). Compare training loss curves.',
+    challengeHint: 'mean = sum(x)/len(x); centered = [xi - mean for xi in x]; var = sum(c*c for c in centered)/len(centered); scale = (var + 1e-5)**-0.5; return [c * scale for c in centered]',
+  },
+  {
+    id: 'gpt_forward',
+    title: 'GPT Forward Pass',
+    explanation: `<div class="space-y-3">
+      <div class="border border-black p-3 bg-accent/20">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">THIS IS THE TRANSFORMER. ALL OF IT.</div>
+        <p class="text-xs">Embedding → for each layer: (rmsnorm → attention → residual) → (rmsnorm → MLP → residual) → weight-tied output projection. That's the entire architecture.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Token Processing: One at a Time</div>
+        <p class="text-xs text-muted">Unlike batched training code that processes all positions at once with a causal mask, microGPT processes tokens sequentially. At position t, the KV cache contains all previous positions. Causality is structural — no mask needed. This is exactly how inference works in production LLMs.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Multi-Head Attention Decomposed</div>
+        <p class="text-xs text-muted">Q, K, V are computed for full d dimensions, then sliced per head: q_h = q[h*d_h:(h+1)*d_h]. Each head independently computes attention over its slice. Outputs are concatenated and projected by W_o. Multiple heads = multiple "interpretations" of the same position — one head might attend to adjacent tokens, another to semantically related ones.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">KV Cache: Why keys[li].append(k)?</div>
+        <p class="text-xs text-muted">At each position, we compute K and V for the current token and append to the cache. Future positions can attend to all cached positions. This is the KV cache that makes autoregressive inference O(T) per step instead of O(T²). In microGPT, it also makes training autoregressive — each step only computes one new token.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Squared ReLU: relu(x)²</div>
+        <p class="text-xs text-muted">Standard: GeLU ≈ x·Φ(x). microGPT: relu(x)². Squaring after ReLU creates sharper sparsity — most activations are exactly zero, and the nonzero ones are amplified quadratically. From the Primer paper (Google, 2021). Simpler to implement and competitive with GeLU.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Pre-Norm vs Post-Norm</div>
+        <p class="text-xs text-muted">microGPT normalizes BEFORE attention/MLP (pre-norm). GPT-2 does the same. Original Transformer used post-norm (normalize after residual add). Pre-norm is more stable for training — the residual stream stays unnormalized, preserving gradient flow.</p>
+      </div>
+    </div>`,
+    challenge: 'Add dropout to attention weights (zero out each weight with probability p=0.1 and scale remaining by 1/(1-p)). Why does this help generalization?',
+    challengeHint: 'After softmax, before weighted sum: if random.random() < p: w = Value(0) else: w = w / (1-p). Dropout prevents co-adaptation of attention patterns.',
+  },
+  {
+    id: 'optimizer',
+    title: 'Adam Optimizer Setup',
+    explanation: `<div class="space-y-3">
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why Adam, Not SGD?</div>
+        <p class="text-xs text-muted">SGD uses the raw gradient. Adam maintains two running averages per parameter: m (first moment / momentum) and v (second moment / RMS of gradient). This gives adaptive learning rates — parameters with large gradients get smaller steps, parameters with small gradients get larger steps. Critical for transformers where gradient magnitudes vary wildly across layers.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">β₁=0.9, β₂=0.95</div>
+        <p class="text-xs text-muted">β₁ controls momentum smoothing (0.9 = exponential moving average over ~10 steps). β₂ controls RMS smoothing (0.95 = over ~20 steps). GPT-3 used β₂=0.95 (not the default 0.999). Lower β₂ = faster adaptation to changing gradient magnitudes, important for language model training.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Bias Correction</div>
+        <p class="text-xs text-muted">m̂ = m/(1-β₁ᵗ) and v̂ = v/(1-β₂ᵗ). At step 1: m is initialized to 0, so m₁ = 0.1×grad (way too small). Dividing by (1-0.9¹) = 0.1 corrects this to m̂₁ = grad. Without correction, early steps are severely biased toward zero.</p>
+      </div>
+    </div>`,
+    challenge: 'Replace Adam with basic SGD with momentum. m = β×m + grad; p -= lr×m. Compare convergence speed. Why is Adam faster for this task?',
+    challengeHint: 'SGD+momentum: m[i] = 0.9*m[i] + p.grad; p.data -= lr_t * m[i]. No v, no bias correction. Simpler but no adaptive learning rates.',
+  },
+  {
+    id: 'training',
+    title: 'Training Loop',
+    explanation: `<div class="space-y-3">
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">One Doc Per Step</div>
+        <p class="text-xs text-muted">No batching. Each step takes one name, tokenizes it, and trains on the entire sequence. In production: batch_size=512+ with thousands of tokens per example. Here: batch_size=1, ~5 tokens per example. The algorithm is identical — just less efficient.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Autoregressive Loss</div>
+        <p class="text-xs text-muted">For sequence [BOS, e, m, m, a, EOS], the model predicts: BOS→e, e→m, m→m, m→a, a→EOS. Each prediction contributes -log(p_correct) to the loss. Averaged over sequence length. This is the same next-token prediction objective used in GPT-4, just on character-level names instead of BPE-tokenized internet text.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Why loss = (1/T) × loss per token?</div>
+        <p class="text-xs text-muted">Averaging over sequence length normalizes the gradient magnitude. Without this, longer sequences would have proportionally larger gradients. The learning rate would need to be sequence-length-dependent. Normalization decouples them.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Linear LR Decay</div>
+        <p class="text-xs text-muted">lr_t = lr × (1 - step/total). Starts at full learning rate, linearly decays to 0. GPT-3 uses cosine decay (smoother). Linear is simpler, works fine for short runs. The key insight: large steps early to find the right region, small steps late to fine-tune within it.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">p.grad = 0 — The Easy-to-Forget Line</div>
+        <p class="text-xs text-muted">Gradients accumulate with +=. After each optimizer step, you MUST zero them. Forgetting this = gradients from step N bleed into step N+1. The loss will look like it's training but the model learns garbage. One of the most common PyTorch bugs.</p>
+      </div>
+    </div>`,
+    challenge: 'Add gradient clipping: if the total gradient norm exceeds 1.0, scale all gradients down proportionally. Why does this prevent training instability?',
+    challengeHint: 'norm = sqrt(sum(p.grad**2 for p in params)); if norm > 1.0: scale = 1.0/norm; for p in params: p.grad *= scale. Prevents exploding gradients from spiking the update.',
+  },
+  {
+    id: 'inference',
+    title: 'Inference & Generation',
+    explanation: `<div class="space-y-3">
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Fresh KV Cache</div>
+        <p class="text-xs text-muted">Each generation starts with empty keys/values. The cache builds up as tokens are generated. This is why the KV cache is a list that gets .append()-ed to. First token: cache has 1 entry, attention is trivial. Last token: cache has block_size entries, full context.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">random.choices() — Sampling</div>
+        <p class="text-xs text-muted">Not argmax (greedy). Sampling from the full distribution introduces diversity. With temperature=1.0, this is ancestral sampling — the "purest" form. In practice, top-k, top-p (nucleus), and temperature scaling are used. microGPT just samples raw.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">EOS as Stop Condition</div>
+        <p class="text-xs text-muted">Generation stops when: (a) EOS token is sampled, or (b) block_size is reached. Without EOS, names would run to max length. The model learns when to stop — "emma" should end after 4 chars, not 8. This is the same mechanism ChatGPT uses to decide when to stop responding.</p>
+      </div>
+      <div class="border border-black p-3 bg-gray-50">
+        <div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Autoregressive Loop</div>
+        <p class="text-xs text-muted">Feed output token as next input. The model's prediction becomes its own context. This is the autoregressive property: P(x₁,...,xₙ) = P(x₁)·P(x₂|x₁)·P(x₃|x₁,x₂)·... Each conditional is one forward pass through the GPT.</p>
+      </div>
+    </div>`,
+    challenge: 'Implement top-k sampling: zero out all probabilities except the top k=5 highest, then renormalize and sample. How does this change generation quality?',
+    challengeHint: 'Sort probs, zero out all but top k. Renormalize: total = sum(top_k_probs); probs = [p/total for p in probs]. Reduces randomness, prevents sampling from tail.',
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+
+let sourceCode = '';
+let blocks = [];
+let currentBlock = 0;
+let currentPhase = 'recall';
+let timerInterval = null;
+let timerSeconds = 0;
+let pyodideReady = false;
+let pyodide = null;
+
+// Persistence
+function loadProgress() {
+  try {
+    return JSON.parse(localStorage.getItem('microgpt_progress') || '{}');
+  } catch { return {}; }
+}
+function saveProgress(data) {
+  localStorage.setItem('microgpt_progress', JSON.stringify(data));
+}
+
+function getStreak() {
+  const p = loadProgress();
+  const today = new Date().toISOString().slice(0, 10);
+  if (p.lastDate === today) return p.streak || 0;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  if (p.lastDate === yesterday) return p.streak || 0;
+  return 0;
+}
+
+function updateStreak() {
+  const p = loadProgress();
+  const today = new Date().toISOString().slice(0, 10);
+  if (p.lastDate === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  p.streak = (p.lastDate === yesterday) ? (p.streak || 0) + 1 : 1;
+  p.lastDate = today;
+  saveProgress(p);
+  updateStreakDisplay();
+}
+
+function updateStreakDisplay() {
+  const s = getStreak();
+  const el = document.getElementById('streakDisplay');
+  el.textContent = s;
+  if (s > 0) el.classList.add('streak-fire');
+
+  const p = loadProgress();
+  const completed = Object.keys(p.completed || {}).length;
+  document.getElementById('masteredCount').textContent = completed;
+
+  // Update dots
+  const dotsEl = document.getElementById('blockDots');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < 9; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'w-2 h-2 border border-gray-400 ' +
+      ((p.completed || {})[i] ? 'bg-positive border-positive' : 'bg-gray-200');
+    dotsEl.appendChild(dot);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GIST LOADER
+// ═══════════════════════════════════════════════════════════════
+
+async function loadFromGist() {
+  const btn = document.getElementById('loadBtn');
+  const status = document.getElementById('loadStatus');
+  const url = document.getElementById('gistUrl').value.trim();
+
+  btn.disabled = true;
+  btn.textContent = 'Loading...';
+  status.textContent = '';
+
+  try {
+    // Extract gist ID
+    const match = url.match(/([a-f0-9]{20,})/);
+    if (!match) throw new Error('Invalid gist URL');
+    const gistId = match[1];
+
+    const resp = await fetch(`https://api.github.com/gists/${gistId}`);
+    if (!resp.ok) throw new Error(`GitHub API: ${resp.status}`);
+    const data = await resp.json();
+
+    // Get first Python file
+    const files = Object.values(data.files);
+    const pyFile = files.find(f => f.filename.endsWith('.py')) || files[0];
+    if (!pyFile) throw new Error('No files found');
+
+    sourceCode = pyFile.content;
+    parseIntoBlocks();
+    initWorkspace();
+    status.textContent = `✓ Loaded ${pyFile.filename} (${sourceCode.split('\n').length} lines)`;
+    status.style.color = '#16a34a';
+  } catch (e) {
+    status.textContent = `✗ ${e.message}`;
+    status.style.color = '#dc2626';
+    // Fall back to embedded source
+    loadEmbeddedSource();
+  }
+  btn.disabled = false;
+  btn.textContent = 'Load';
+}
+
+function loadEmbeddedSource() {
+  sourceCode = EMBEDDED_SOURCE;
+  parseIntoBlocks();
+  initWorkspace();
+  document.getElementById('loadStatus').textContent = '✓ Using embedded source';
+  document.getElementById('loadStatus').style.color = '#16a34a';
+}
+
+function parseIntoBlocks() {
+  const lines = sourceCode.split('\n');
+
+  // Find block boundaries by scanning the code structure
+  const boundaries = findBlockBoundaries(lines);
+  blocks = [];
+
+  for (let i = 0; i < BLOCK_DEFS.length && i < boundaries.length; i++) {
+    const [start, end] = boundaries[i];
+    blocks.push({
+      ...BLOCK_DEFS[i],
+      code: lines.slice(start, end + 1).join('\n'),
+      startLine: start,
+      endLine: end,
+    });
+  }
+}
+
+function findBlockBoundaries(lines) {
+  // Heuristic parser for microgpt structure
+  const boundaries = [];
+  let i = 0;
+
+  // Block 0: imports + CLI args (up to head_dim line)
+  let start = 0;
+  let end = lines.findIndex(l => l.includes('head_dim')) ;
+  if (end < 0) end = 10;
+  boundaries.push([start, end]);
+
+  // Block 1: Data loading + tokenizer (up to stoi/itos)
+  start = end + 1;
+  end = lines.findIndex((l, idx) => idx > start && l.includes('print(f"vocab'));
+  if (end < 0) end = start + 10;
+  boundaries.push([start, end]);
+
+  // Block 2: Value class
+  start = end + 1;
+  while (start < lines.length && !lines[start].includes('class Value')) start++;
+  end = start + 1;
+  while (end < lines.length && (lines[end].startsWith('    ') || lines[end].startsWith('\t') || lines[end].trim() === '')) {
+    end++;
+  }
+  end = Math.min(end - 1, lines.length - 1);
+  // Make sure we don't go past matrix lambda
+  const matrixLine = lines.findIndex((l, idx) => idx > start && l.includes('matrix ='));
+  if (matrixLine > 0 && matrixLine < end) end = matrixLine - 1;
+  boundaries.push([start, end]);
+
+  // Block 3: Parameter init (matrix lambda through params list)
+  start = matrixLine >= 0 ? matrixLine : end + 1;
+  end = lines.findIndex((l, idx) => idx > start && l.includes('print(f"num params'));
+  if (end < 0) end = start + 10;
+  boundaries.push([start, end]);
+
+  // Block 4: Primitives (linear, softmax, rmsnorm)
+  start = end + 1;
+  while (start < lines.length && !lines[start].includes('def linear')) start++;
+  end = lines.findIndex((l, idx) => idx > start && l.includes('def gpt'));
+  if (end < 0) end = start + 15;
+  end = end - 1;
+  while (end > start && lines[end].trim() === '') end--;
+  boundaries.push([start, end]);
+
+  // Block 5: GPT forward
+  start = end + 1;
+  while (start < lines.length && !lines[start].includes('def gpt')) start++;
+  end = start + 1;
+  // Find end of gpt function - next line that starts with a non-indented non-empty line after the function body
+  while (end < lines.length) {
+    if (end > start + 2 && lines[end].trim() !== '' && !lines[end].startsWith(' ') && !lines[end].startsWith('\t') && !lines[end].startsWith('#')) break;
+    end++;
+  }
+  end = end - 1;
+  while (end > start && lines[end].trim() === '') end--;
+  boundaries.push([start, end]);
+
+  // Block 6: Adam optimizer setup
+  start = end + 1;
+  while (start < lines.length && !lines[start].includes('learning_rate') && !lines[start].includes('Adam')) start++;
+  if (start >= lines.length) start = end + 1;
+  end = lines.findIndex((l, idx) => idx > start && l.includes('Training loop'));
+  if (end < 0) end = lines.findIndex((l, idx) => idx > start && l.includes('for step'));
+  if (end < 0) end = start + 5;
+  end = end - 1;
+  while (end > start && lines[end].trim() === '') end--;
+  boundaries.push([start, end]);
+
+  // Block 7: Training loop
+  start = end + 1;
+  while (start < lines.length && !lines[start].includes('for step')) start++;
+  if (start >= lines.length) start = end + 1;
+  // Find end: Inference section
+  end = lines.findIndex((l, idx) => idx > start && (l.includes('Inference') || l.includes('generation')));
+  if (end < 0) end = start + 25;
+  end = end - 1;
+  while (end > start && lines[end].trim() === '') end--;
+  boundaries.push([start, end]);
+
+  // Block 8: Inference
+  start = end + 1;
+  end = lines.length - 1;
+  while (end > start && lines[end].trim() === '') end--;
+  boundaries.push([start, end]);
+
+  return boundaries;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WORKSPACE
+// ═══════════════════════════════════════════════════════════════
+
+function initWorkspace() {
+  document.getElementById('workspace').classList.remove('hidden');
+  document.getElementById('loadingState').classList.add('hidden');
+
+  // Build block nav
+  const nav = document.getElementById('blockNav');
+  nav.innerHTML = '';
+  blocks.forEach((b, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'block-btn relative border border-black px-2 py-1 text-[10px] font-semibold hover:bg-black hover:text-white ' +
+      (i === 0 ? 'active' : '');
+    btn.textContent = `${i + 1}. ${b.title}`;
+    btn.onclick = () => selectBlock(i);
+    nav.appendChild(btn);
+  });
+
+  selectBlock(0);
+  updateStreakDisplay();
+}
+
+function selectBlock(idx) {
+  currentBlock = idx;
+  currentPhase = 'recall';
+
+  // Update nav
+  document.querySelectorAll('.block-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+
+  // Update header
+  document.getElementById('blockNum').textContent = idx + 1;
+  document.getElementById('blockTitle').textContent = blocks[idx].title;
+  document.getElementById('blockAccuracy').textContent = '';
+
+  // Reset phases
+  setPhase('recall');
+  resetTimer();
+
+  // Set hint (first and last CORE line — skip comments/docstrings)
+  const coreLines = extractCoreLines(blocks[idx].code);
+  const hint = coreLines.length > 2
+    ? `${coreLines[0]}\n...\n${coreLines[coreLines.length - 1]}`
+    : coreLines.join('\n');
+  document.getElementById('recallHint').textContent = hint;
+
+  // Clear recall input
+  document.getElementById('recallInput').value = '';
+  updateLineCount();
+
+  // Show target core lines
+  const coreCount = extractCoreLines(blocks[idx].code).length;
+  document.getElementById('coreTarget').textContent = `target: ${coreCount} core lines`;
+
+  // Set modify input
+  document.getElementById('modifyInput').value = blocks[idx].code;
+  document.getElementById('modifyChallenge').textContent = blocks[idx].challenge;
+  document.getElementById('modifyHint').textContent = blocks[idx].challengeHint;
+
+  // Set run input
+  document.getElementById('runInput').value = blocks[idx].code;
+  document.getElementById('runOutput').textContent = '';
+
+  // Set explain content
+  document.getElementById('explainContent').innerHTML = blocks[idx].explanation;
+
+  // Prev/next
+  document.getElementById('prevBtn').style.visibility = idx > 0 ? 'visible' : 'hidden';
+  document.getElementById('nextBtn').style.visibility = idx < blocks.length - 1 ? 'visible' : 'hidden';
+
+  // Enable/disable phase tabs based on whether user has recalled
+  enablePhaseTabs(false);
+
+  startTimer();
+}
+
+function enablePhaseTabs(enabled) {
+  ['compare', 'explain', 'modify', 'run'].forEach(p => {
+    const tab = document.querySelector(`[data-phase="${p}"]`);
+    tab.disabled = !enabled;
+    tab.style.opacity = enabled ? 1 : 0.3;
+  });
+}
+
+function setPhase(phase) {
+  currentPhase = phase;
+
+  // Hide all phases
+  document.querySelectorAll('.phase-content').forEach(el => el.classList.add('hidden'));
+  document.getElementById(`phase-${phase}`).classList.remove('hidden');
+
+  // Update tabs
+  document.querySelectorAll('.phase-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.phase === phase);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 1: RECALL
+// ═══════════════════════════════════════════════════════════════
+
+document.getElementById('recallInput').addEventListener('input', updateLineCount);
+
+function updateLineCount() {
+  const lines = document.getElementById('recallInput').value.split('\n').length;
+  document.getElementById('lineCount').textContent = `${lines} lines`;
+}
+
+function submitRecall() {
+  const userCode = document.getElementById('recallInput').value;
+  const originalCode = blocks[currentBlock].code;
+
+  // Compute diff
+  const diff = computeDiff(userCode, originalCode);
+  renderDiff(diff);
+
+  // Enable all phases
+  enablePhaseTabs(true);
+  setPhase('compare');
+}
+
+function skipRecall() {
+  // Pre-fill with original and mark as skipped
+  document.getElementById('recallInput').value = blocks[currentBlock].code;
+  enablePhaseTabs(true);
+
+  // Show compare with 0% accuracy
+  const diff = computeDiff('', blocks[currentBlock].code);
+  renderDiff(diff);
+  setPhase('compare');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 2: COMPARE (DIFF)
+// ═══════════════════════════════════════════════════════════════
+
+// Classify a line as core (algorithmic) or scaffold (comments, docstrings, boilerplate)
+function classifyLine(line) {
+  const t = line.trim();
+  if (t === '') return 'blank';
+  if (t.startsWith('#')) return 'comment';
+  if (t.startsWith('"""') || t.startsWith("'''")) return 'docstring';
+  if (t === '"""' || t === "'''") return 'docstring';
+  // Pure help strings in argparse are scaffold
+  if (t.startsWith("help='") || t.startsWith('help="')) return 'scaffold';
+  return 'core';
+}
+
+// Normalize a line for comparison: strip inline comments, trailing whitespace
+function normalizeLine(line) {
+  let t = line.trimEnd();
+  // Remove inline comments (but not strings containing #)
+  // Simple heuristic: remove # not inside quotes
+  const noStr = t.replace(/'[^']*'|"[^"]*"/g, '""'); // blank out strings
+  const hashIdx = noStr.indexOf('#');
+  if (hashIdx > 0) {
+    t = t.substring(0, hashIdx).trimEnd();
+  }
+  return t;
+}
+
+// Extract only core lines from code for comparison
+function extractCoreLines(code) {
+  const lines = code.split('\n');
+  let inDocstring = false;
+  const result = [];
+  for (const line of lines) {
+    const t = line.trim();
+    // Track docstrings
+    const tripleCount = (t.match(/"""/g) || []).length;
+    if (inDocstring) {
+      if (tripleCount >= 1) inDocstring = false;
+      continue;
+    }
+    if (tripleCount >= 2) continue; // single-line docstring like """..."""
+    if (tripleCount === 1) { inDocstring = true; continue; }
+    if (t === '' || t.startsWith('#')) continue;
+    result.push(normalizeLine(line));
+  }
+  return result;
+}
+
+function computeDiff(userCode, originalCode) {
+  // Compare on CORE lines only — strip comments, docstrings, blanks
+  const userCore = extractCoreLines(userCode);
+  const origCore = extractCoreLines(originalCode);
+  // Also keep full lines for display
+  const userFull = userCode.split('\n');
+  const origFull = originalCode.split('\n');
+
+  const result = { yours: [], original: [], correct: 0, missing: 0, wrong: 0, total: 0,
+                   coreCorrect: 0, coreMissing: 0, coreWrong: 0, coreTotal: origCore.length };
+
+  // LCS on normalized core lines
+  const lcs = lcsAlign(
+    userCore.map(l => l.trim()),
+    origCore.map(l => l.trim())
+  );
+
+  let correct = 0, wrong = 0, missing = 0;
+
+  lcs.forEach(item => {
+    if (item.type === 'match') {
+      result.yours.push({ text: item.userLine, type: 'ok', isCore: true });
+      result.original.push({ text: item.origLine, type: 'ok', isCore: true });
+      correct++;
+    } else if (item.type === 'delete') {
+      result.yours.push({ text: item.userLine, type: 'del', isCore: true });
+      result.original.push({ text: '', type: 'empty', isCore: true });
+      wrong++;
+    } else if (item.type === 'insert') {
+      result.yours.push({ text: '', type: 'empty', isCore: true });
+      result.original.push({ text: item.origLine, type: 'add', isCore: true });
+      missing++;
+    }
+  });
+
+  result.coreCorrect = correct;
+  result.coreWrong = wrong;
+  result.coreMissing = missing;
+  result.correct = correct;
+  result.wrong = wrong;
+  result.missing = missing;
+  result.total = origCore.length;
+
+  return result;
+}
+
+function lcsAlign(userLines, origLines) {
+  // Build LCS matrix
+  const m = userLines.length, n = origLines.length;
+  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (userLines[i-1] === origLines[j-1]) {
+        dp[i][j] = dp[i-1][j-1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+      }
+    }
+  }
+
+  // Backtrack to build alignment
+  const result = [];
+  let i = m, j = n;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && userLines[i-1] === origLines[j-1]) {
+      result.unshift({ type: 'match', userLine: userLines[i-1], origLine: origLines[j-1] });
+      i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+      result.unshift({ type: 'insert', origLine: origLines[j-1] });
+      j--;
+    } else {
+      result.unshift({ type: 'delete', userLine: userLines[i-1] });
+      i--;
+    }
+  }
+
+  return result;
+}
+
+function renderDiff(diff) {
+  const yoursEl = document.getElementById('diffYours');
+  const origEl = document.getElementById('diffOriginal');
+
+  yoursEl.innerHTML = diff.yours.map(l =>
+    `<div class="diff-line diff-${l.type}" style="min-height:1.6em">${escapeHtml(l.text)}</div>`
+  ).join('');
+
+  origEl.innerHTML = diff.original.map(l =>
+    `<div class="diff-line diff-${l.type === 'add' ? 'add' : l.type}" style="min-height:1.6em">${escapeHtml(l.text)}</div>`
+  ).join('');
+
+  // Accuracy on CORE lines only
+  const accuracy = diff.coreTotal > 0 ? Math.round((diff.coreCorrect / diff.coreTotal) * 100) : 0;
+  document.getElementById('accuracyScore').textContent = accuracy + '%';
+  document.getElementById('linesCorrect').textContent = diff.coreCorrect;
+  document.getElementById('linesMissing').textContent = diff.coreMissing;
+  document.getElementById('linesWrong').textContent = diff.coreWrong;
+  document.getElementById('accuracyBar').style.width = accuracy + '%';
+  document.getElementById('accuracyBar').style.background =
+    accuracy >= 80 ? '#16a34a' : accuracy >= 50 ? '#FBD45B' : '#dc2626';
+
+  // Extra info about what's being scored
+  document.getElementById('coreLineInfo').textContent =
+    `Scoring ${diff.coreTotal} core lines (comments & docstrings excluded)`;
+
+  const verdict = document.getElementById('accuracyVerdict');
+  if (accuracy >= 90) verdict.innerHTML = '<div class="text-positive font-serif text-lg font-bold">Mastery 🔥</div><div class="text-[10px] text-muted">You own this block.</div>';
+  else if (accuracy >= 70) verdict.innerHTML = '<div class="text-foreground font-serif text-lg font-bold">Solid</div><div class="text-[10px] text-muted">Focus on the gaps.</div>';
+  else if (accuracy >= 40) verdict.innerHTML = '<div class="text-orange-500 font-serif text-lg font-bold">Getting There</div><div class="text-[10px] text-muted">Review the explanation.</div>';
+  else verdict.innerHTML = '<div class="text-negative font-serif text-lg font-bold">Keep Going</div><div class="text-[10px] text-muted">Read, understand, try again tomorrow.</div>';
+
+  document.getElementById('blockAccuracy').textContent = `Last: ${accuracy}%`;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/ /g, '&nbsp;');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 4: MODIFY
+// ═══════════════════════════════════════════════════════════════
+
+function resetModify() {
+  document.getElementById('modifyInput').value = blocks[currentBlock].code;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 5: RUN (PYODIDE)
+// ═══════════════════════════════════════════════════════════════
+
+async function loadPyodide() {
+  if (pyodideReady) return true;
+  const status = document.getElementById('pyodideStatus');
+  status.textContent = 'Loading Python runtime (Pyodide ~20MB, first time only)...';
+
+  try {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js';
+    document.head.appendChild(script);
+
+    await new Promise((resolve, reject) => {
+      script.onload = resolve;
+      script.onerror = reject;
+    });
+
+    pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/' });
+    pyodideReady = true;
+    status.textContent = '✓ Python runtime ready';
+    status.style.color = '#16a34a';
+    return true;
+  } catch (e) {
+    status.textContent = '✗ Could not load Pyodide. Run code locally instead: python microgpt.py';
+    status.style.color = '#dc2626';
+    return false;
+  }
+}
+
+async function runCode() {
+  const btn = document.getElementById('runBtn');
+  const output = document.getElementById('runOutput');
+  const code = document.getElementById('runInput').value || document.getElementById('modifyInput').value;
+
+  btn.textContent = '⏳ Loading...';
+  btn.disabled = true;
+
+  // Try Pyodide
+  const ready = await loadPyodide();
+  if (!ready) {
+    output.textContent = 'Pyodide not available. Copy the code and run locally:\n\npython microgpt.py --num_steps 100';
+    btn.textContent = '▶ RUN';
+    btn.disabled = false;
+    return;
+  }
+
+  btn.textContent = '⏳ Running...';
+  output.textContent = '';
+
+  try {
+    // Redirect stdout
+    pyodide.runPython(`
+import sys, io
+sys.stdout = io.StringIO()
+sys.stderr = io.StringIO()
+    `);
+
+    // Patch argparse and file I/O for browser
+    const patchedCode = `
+import sys
+sys.argv = ['microgpt.py', '--num_steps', '50', '--n_embd', '16', '--n_layer', '1', '--block_size', '8']
+
+# Patch file download — use inline data
+import os
+_original_exists = os.path.exists
+def _patched_exists(path):
+    if path == 'input.txt': return True
+    return _original_exists(path)
+os.path.exists = _patched_exists
+
+# Provide minimal inline training data
+_sample_names = """emma\\nolivia\\nava\\nisabella\\nsophia\\nmia\\ncharlotte\\namelia\\nharper\\nevelyn"""
+import builtins
+_original_open = builtins.open
+def _patched_open(path, *args, **kwargs):
+    if path == 'input.txt':
+        import io
+        return io.StringIO(_sample_names)
+    return _original_open(path, *args, **kwargs)
+builtins.open = _patched_open
+
+${code}
+`;
+
+    await pyodide.runPythonAsync(patchedCode);
+
+    const stdout = pyodide.runPython('sys.stdout.getvalue()');
+    const stderr = pyodide.runPython('sys.stderr.getvalue()');
+    output.textContent = stdout + (stderr ? '\n--- stderr ---\n' + stderr : '');
+
+  } catch (e) {
+    output.textContent = `Error:\n${e.message}`;
+    output.style.color = '#dc2626';
+  }
+
+  btn.textContent = '▶ RUN';
+  btn.disabled = false;
+}
+
+function clearOutput() {
+  document.getElementById('runOutput').textContent = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BLOCK COMPLETION
+// ═══════════════════════════════════════════════════════════════
+
+function completeBlock() {
+  const p = loadProgress();
+  if (!p.completed) p.completed = {};
+  p.completed[currentBlock] = true;
+  saveProgress(p);
+  updateStreak();
+  updateStreakDisplay();
+
+  // Visual feedback
+  const navBtns = document.querySelectorAll('.block-btn');
+  if (navBtns[currentBlock]) navBtns[currentBlock].classList.add('completed');
+
+  // Auto-advance
+  if (currentBlock < blocks.length - 1) {
+    setTimeout(() => selectBlock(currentBlock + 1), 500);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════════════════
+
+function startTimer() {
+  resetTimer();
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    const m = Math.floor(timerSeconds / 60);
+    const s = timerSeconds % 60;
+    document.getElementById('blockTimer').textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  }, 1000);
+}
+
+function resetTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerSeconds = 0;
+  document.getElementById('blockTimer').textContent = '0:00';
+}
+
+function prevBlock() { if (currentBlock > 0) selectBlock(currentBlock - 1); }
+function nextBlock() { if (currentBlock < blocks.length - 1) selectBlock(currentBlock + 1); }
+
+// ═══════════════════════════════════════════════════════════════
+// EMBEDDED SOURCE (fallback if gist fetch fails)
+// ═══════════════════════════════════════════════════════════════
+
+const EMBEDDED_SOURCE = `"""
+The most atomic way to train and inference a GPT LLM in pure, dependency-free Python.
+Differences from GPT-2 are minor: rmsnorm instead of layer norm, no biases, square ReLU instead of GeLU nonlinearity.
+The contents of this file is everything algorithmically needed to train a GPT. Everything else is just efficiency.
+Art project by @karpathy.
+"""
+
+import os # for os.path.exists
+import math # for math.log, math.exp
+import random # for random.seed, random.choices
+import argparse # for argparse.ArgumentParser
+
+# CLI arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('--n_embd', type=int, default=16, help='Number of channels in the Transformer')
+parser.add_argument('--n_layer', type=int, default=1, help='Number of layers in the Transformer')
+parser.add_argument('--block_size', type=int, default=8, help='Maximum sequence length')
+parser.add_argument('--num_steps', type=int, default=1000, help='Number of training steps')
+parser.add_argument('--n_head', type=int, default=4, help='Number of attention heads in the Transformer')
+parser.add_argument('--learning_rate', type=float, default=1e-2, help='Learning rate')
+parser.add_argument('--seed', type=int, default=42, help='Random seed')
+args = parser.parse_args()
+random.seed(args.seed)
+n_embd, block_size, n_layer, n_head = args.n_embd, args.block_size, args.n_layer, args.n_head
+head_dim = n_embd // n_head
+
+# Dataset example: the names dataset (one name per line). rest of the code just assumes docs: list[str]
+if not os.path.exists('input.txt'):
+    import urllib.request
+    urllib.request.urlretrieve('https://raw.githubusercontent.com/karpathy/makemore/refs/heads/master/names.txt', 'input.txt')
+with open('input.txt', 'r') as file:
+    text = file.read()
+docs = [line.strip() for line in text.strip().split('\\n') if line.strip()]
+random.shuffle(docs)
+
+# Tokenizer: simple character-level tokenization with BOS/EOS tokens
+chars = ['<BOS>', '<EOS>'] + sorted(list(set(''.join(docs))))
+vocab_size = len(chars)
+stoi = { ch:i for i, ch in enumerate(chars) } # string to integer
+itos = { i:ch for i, ch in enumerate(chars) } # integer to string
+BOS, EOS = stoi['<BOS>'], stoi['<EOS>']
+print(f"vocab size: {vocab_size}, num docs: {len(docs)}")
+
+# Autograd engine
+class Value:
+    """ stores a single scalar value and its gradient """
+
+    def __init__(self, data, _children=(), _op=''):
+        self.data = data
+        self.grad = 0
+        self._backward = lambda: None
+        self._prev = set(_children)
+        self._op = _op # the op that produced this node, for graphviz / debugging / etc
+
+    def __add__(self, other):
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data + other.data, (self, other), '+')
+        def _backward():
+            self.grad += out.grad
+            other.grad += out.grad
+        out._backward = _backward
+        return out
+
+    def __mul__(self, other):
+        other = other if isinstance(other, Value) else Value(other)
+        out = Value(self.data * other.data, (self, other), '*')
+        def _backward():
+            self.grad += other.data * out.grad
+            other.grad += self.data * out.grad
+        out._backward = _backward
+        return out
+
+    def __pow__(self, other):
+        assert isinstance(other, (int, float)), "only supporting int/float powers for now"
+        out = Value(self.data**other, (self,), f'**{other}')
+        def _backward():
+            self.grad += (other * self.data**(other-1)) * out.grad
+        out._backward = _backward
+        return out
+
+    def log(self):
+        out = Value(math.log(self.data), (self,), 'log')
+        def _backward():
+            self.grad += (1 / self.data) * out.grad
+        out._backward = _backward
+        return out
+
+    def exp(self):
+        out = Value(math.exp(self.data), (self,), 'exp')
+        def _backward():
+            self.grad += out.data * out.grad
+        out._backward = _backward
+        return out
+
+    def relu(self):
+        out = Value(0 if self.data < 0 else self.data, (self,), 'ReLU')
+        def _backward():
+            self.grad += (out.data > 0) * out.grad
+        out._backward = _backward
+        return out
+
+    def backward(self):
+        # topological order all of the children in the graph
+        topo = []
+        visited = set()
+        def build_topo(v):
+            if v not in visited:
+                visited.add(v)
+                for child in v._prev:
+                    build_topo(child)
+                topo.append(v)
+        build_topo(self)
+        # go one variable at a time and apply the chain rule to get its gradient
+        self.grad = 1
+        for v in reversed(topo):
+            v._backward()
+
+    def __neg__(self): return self * -1
+    def __radd__(self, other): return self + other
+    def __sub__(self, other): return self + (-other)
+    def __rsub__(self, other): return other + (-self)
+    def __rmul__(self, other): return self * other
+    def __truediv__(self, other): return self * other**-1
+    def __rtruediv__(self, other): return other * self**-1
+    def __repr__(self): return f"Value(data={self.data}, grad={self.grad})"
+
+# Model parameter initialization
+matrix = lambda nout, nin, std=0.02: [[Value(random.gauss(0, std)) for _ in range(nin)] for _ in range(nout)]
+state_dict = {'wte': matrix(vocab_size, n_embd), 'wpe': matrix(block_size, n_embd)}
+for i in range(n_layer):
+    state_dict[f'layer{i}.attn_wq'] = matrix(n_embd, n_embd)
+    state_dict[f'layer{i}.attn_wk'] = matrix(n_embd, n_embd)
+    state_dict[f'layer{i}.attn_wv'] = matrix(n_embd, n_embd)
+    state_dict[f'layer{i}.attn_wo'] = matrix(n_embd, n_embd, std=0)
+    state_dict[f'layer{i}.mlp_fc1'] = matrix(4 * n_embd, n_embd)
+    state_dict[f'layer{i}.mlp_fc2'] = matrix(n_embd, 4 * n_embd, std=0)
+params = [p for mat in state_dict.values() for row in mat for p in row]
+print(f"num params: {len(params)}")
+
+# Model architecture
+def linear(x, w):
+    return [sum(w[o][i] * x[i] for i in range(len(x))) for o in range(len(w))]
+
+def softmax(logits):
+    max_val = max(v.data for v in logits)
+    exps = [(v - max_val).exp() for v in logits]
+    total = sum(exps)
+    return [e / total for e in exps]
+
+def rmsnorm(x):
+    ms = sum(xi * xi for xi in x) / len(x)
+    scale = (ms + 1e-5) ** -0.5
+    return [xi * scale for xi in x]
+
+def gpt(token_id, pos_id, keys, values):
+    tok_emb = state_dict['wte'][token_id] # token embedding
+    pos_emb = state_dict['wpe'][pos_id % block_size] # position embedding
+    x = [t + p for t, p in zip(tok_emb, pos_emb)] # joint token and position embedding
+
+    for li in range(n_layer):
+        # 1) Multi-head attention block
+        x_residual = x
+        x = rmsnorm(x)
+        q = linear(x, state_dict[f'layer{li}.attn_wq'])
+        k = linear(x, state_dict[f'layer{li}.attn_wk'])
+        val = linear(x, state_dict[f'layer{li}.attn_wv'])
+        keys[li].append(k)
+        values[li].append(val)
+        x_attn = []
+        for h in range(n_head):
+            hs = h * head_dim
+            q_h = q[hs:hs+head_dim]
+            k_h = [ki[hs:hs+head_dim] for ki in keys[li]]
+            v_h = [vi[hs:hs+head_dim] for vi in values[li]]
+            attn_logits = [sum(q_h[j] * k_h[t][j] for j in range(head_dim)) / head_dim**0.5 for t in range(len(k_h))]
+            attn_weights = softmax(attn_logits)
+            head_out = [sum(attn_weights[t] * v_h[t][j] for t in range(len(v_h))) for j in range(head_dim)]
+            x_attn.extend(head_out)
+        x = linear(x_attn, state_dict[f'layer{li}.attn_wo'])
+        x = [a + b for a, b in zip(x, x_residual)]
+        # 2) MLP block
+        x_residual = x
+        x = rmsnorm(x)
+        x = linear(x, state_dict[f'layer{li}.mlp_fc1'])
+        x = [xi.relu() ** 2 for xi in x]
+        x = linear(x, state_dict[f'layer{li}.mlp_fc2'])
+        x = [a + b for a, b in zip(x, x_residual)]
+
+    # project to vocab (weight tying with wte)
+    logits = linear(x, state_dict['wte'])
+    return logits
+
+# Adam optimizer
+learning_rate = args.learning_rate
+beta1, beta2, eps_adam = 0.9, 0.95, 1e-8
+m = [0.0] * len(params) # first moment
+v = [0.0] * len(params) # second moment
+
+# Training loop
+for step in range(args.num_steps):
+
+    # Take a single training document, tokenize it, and crop to block_size
+    doc = docs[step % len(docs)]
+    tokens = [BOS] + [stoi[ch] for ch in doc] + [EOS]
+    tokens = tokens[:block_size]
+
+    # Forward pass through the document over time dimension
+    keys, values = [[] for _ in range(n_layer)], [[] for _ in range(n_layer)]
+    lossf = 0.0
+    for pos_id in range(len(tokens) - 1):
+        logits = gpt(tokens[pos_id], pos_id, keys, values)
+        probs = softmax(logits)
+        loss = -probs[tokens[pos_id + 1]].log()
+        loss = (1 / (len(tokens) - 1)) * loss # average over sequence length
+        loss.backward()
+        lossf += loss.data
+
+    # Adam update (optimizer)
+    lr_t = learning_rate * (1 - step / args.num_steps)
+    for i, p in enumerate(params):
+        m[i] = beta1 * m[i] + (1 - beta1) * p.grad
+        v[i] = beta2 * v[i] + (1 - beta2) * p.grad ** 2
+        m_hat = m[i] / (1 - beta1 ** (step + 1))
+        v_hat = v[i] / (1 - beta2 ** (step + 1))
+        p.data -= lr_t * m_hat / (v_hat ** 0.5 + eps_adam)
+        p.grad = 0
+
+    print(f"step {step+1} / {args.num_steps} | loss {lossf:.4f}")
+
+# Inference: generate 5 samples
+print("\\n--- generation ---")
+for sample_idx in range(5):
+    keys, values = [[] for _ in range(n_layer)], [[] for _ in range(n_layer)]
+    token_id = BOS
+    generated = []
+    for pos_id in range(block_size):
+        logits = gpt(token_id, pos_id, keys, values)
+        probs = softmax(logits)
+        token_id = random.choices(range(vocab_size), weights=[p.data for p in probs])[0]
+        if token_id == EOS:
+            break
+        generated.append(itos[token_id])
+    print(f"sample {sample_idx}: {''.join(generated)}")`;
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+
+updateStreakDisplay();
+
+// Auto-load on page open
+window.addEventListener('DOMContentLoaded', () => {
+  // Try gist first, fallback to embedded
+  loadFromGist().catch(() => loadEmbeddedSource());
+});
+</script>
+
+</body>
+</html>
