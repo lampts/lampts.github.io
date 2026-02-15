@@ -3,281 +3,532 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>microGPT Practice Pad</title>
+<title>microGPT — Karpathy</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script>tailwind.config={theme:{extend:{fontFamily:{sans:['IBM Plex Mono','monospace'],mono:['IBM Plex Mono','monospace'],serif:['IBM Plex Serif','serif']},colors:{background:'#ffffff',foreground:'#000000',muted:'#666666',accent:'#FBD45B',positive:'#16a34a',negative:'#dc2626'},boxShadow:{brutal:'3px 3px 0px #000'}}}}</script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['IBM Plex Mono', 'monospace'],
+        mono: ['IBM Plex Mono', 'monospace'],
+        serif: ['IBM Plex Serif', 'serif'],
+      },
+      colors: {
+        background: '#ffffff',
+        foreground: '#000000',
+        muted: '#666666',
+        accent: '#FBD45B',
+        positive: '#16a34a',
+        negative: '#dc2626',
+      },
+      boxShadow: { brutal: '3px 3px 0px #000' }
+    }
+  }
+}
+</script>
 <style>
-*{box-sizing:border-box}::selection{background:#FBD45B;color:#000}textarea{font-family:'IBM Plex Mono',monospace;tab-size:4}textarea:focus{outline:2px solid #000;outline-offset:-2px}.phase-tab.active{background:#000;color:#fff}.phase-tab{transition:background .15s,color .15s}.block-btn.active{background:#000;color:#fff}.block-btn.completed{border-color:#16a34a}.block-btn.completed::after{content:'\2713';position:absolute;top:-4px;right:-4px;background:#16a34a;color:#fff;font-size:8px;width:14px;height:14px;display:flex;align-items:center;justify-content:center;border-radius:50%}.diff-line{font-size:12px;line-height:1.6;font-family:'IBM Plex Mono',monospace}.diff-add{background:#dcfce7}.diff-del{background:#fee2e2;text-decoration:line-through;opacity:.7}.diff-ok{background:transparent}@keyframes pulse-border{0%,100%{border-color:#000}50%{border-color:#FBD45B}}.typing-active{animation:pulse-border 2s infinite}.streak-fire{display:inline-block;animation:fire .5s ease-in-out}@keyframes fire{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}.hint-blur{filter:blur(4px);transition:filter .3s;cursor:pointer}.hint-blur:hover,.hint-blur.revealed{filter:none}
+  * { box-sizing: border-box; }
+  ::selection { background: #FBD45B; color: #000; }
+  html { scroll-behavior: smooth; }
+  body { -webkit-font-smoothing: antialiased; }
+
+  /* Code block styling */
+  .code-block {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    tab-size: 4;
+    overflow-x: auto;
+    counter-reset: line;
+    white-space: pre;
+  }
+  .code-line {
+    display: block;
+    padding: 0 16px 0 52px;
+    position: relative;
+    min-height: 1.7em;
+  }
+  .code-line::before {
+    counter-increment: line;
+    content: counter(line);
+    position: absolute;
+    left: 0;
+    width: 40px;
+    text-align: right;
+    color: #bbb;
+    font-size: 11px;
+    user-select: none;
+    padding-right: 8px;
+    border-right: 1px solid #e5e5e5;
+  }
+  .code-line:hover { background: #FBD45B18; }
+
+  /* Syntax colors */
+  .kw { color: #7c3aed; font-weight: 500; }  /* keywords */
+  .fn { color: #0369a1; }                     /* functions/methods */
+  .st { color: #b45309; }                     /* strings */
+  .cm { color: #9ca3af; font-style: italic; } /* comments */
+  .nu { color: #059669; }                     /* numbers */
+  .op { color: #6b7280; }                     /* operators */
+  .bi { color: #c2410c; }                     /* builtins */
+  .dc { color: #6b7280; font-style: italic; } /* decorators/docstrings */
+  .cl { color: #9333ea; font-weight: 600; }   /* class name */
+
+  /* Section nav */
+  .section-link { transition: all 0.15s; }
+  .section-link:hover { background: #FBD45B; }
+  .section-link.active { background: #000; color: #fff; }
+
+  /* Annotation callout */
+  .anno {
+    border-left: 3px solid #FBD45B;
+    background: #FFFDF0;
+    margin: 0 0 0 52px;
+    padding: 8px 16px;
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #444;
+  }
+  .anno strong { color: #000; }
+  .anno code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  /* Print */
+  @media print {
+    .no-print { display: none !important; }
+    .code-line { font-size: 10px; }
+  }
 </style>
 </head>
 <body class="bg-background text-foreground font-sans text-xs min-h-screen">
-<div id="app" class="max-w-6xl mx-auto px-4 py-6">
-  <div class="flex items-start justify-between mb-6 pb-4 border-b-2 border-black"><div><div class="text-[10px] font-semibold tracking-[3px] uppercase text-muted mb-1">Daily Practice</div><h1 class="font-serif text-2xl font-bold">micro<span class="text-accent" style="text-shadow:1px 1px 0 #000">GPT</span> Workpad</h1><p class="text-muted mt-1 max-w-md">Type from memory. Compare. Understand. Modify. Run.</p></div><div class="text-right"><div class="flex items-center gap-2 justify-end"><span id="streakDisplay" class="text-lg font-bold">0</span><span class="text-[10px] text-muted uppercase tracking-wider">day streak</span></div><div class="text-[10px] text-muted mt-1">Mastered: <span id="masteredCount" class="font-bold text-foreground">0</span>/9</div><div class="mt-2 flex gap-1 justify-end" id="blockDots"></div></div></div>
-  <div class="border border-black p-3 mb-6 shadow-brutal bg-gray-50"><div class="flex items-center gap-2"><span class="text-[10px] font-semibold uppercase tracking-wider shrink-0">Gist</span><input id="gistUrl" type="text" value="https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95" class="flex-1 border border-gray-300 px-2 py-1 text-xs font-mono bg-white"><button onclick="loadFromGist()" id="loadBtn" class="border border-black px-3 py-1 text-[10px] font-semibold uppercase tracking-wider hover:bg-black hover:text-white shrink-0">Load</button><span id="loadStatus" class="text-[10px] text-muted shrink-0"></span></div></div>
-  <div class="flex gap-1 mb-4 flex-wrap" id="blockNav"></div>
-  <div id="workspace" class="hidden">
-    <div class="flex items-center justify-between mb-3"><div><span class="text-[10px] text-muted uppercase tracking-wider">Block <span id="blockNum">1</span>/9</span><h2 id="blockTitle" class="font-serif text-lg font-bold mt-0.5"></h2></div><div class="flex items-center gap-3"><span id="blockAccuracy" class="text-[10px] text-muted"></span><span id="blockTimer" class="font-mono text-sm text-muted">0:00</span></div></div>
-    <div class="flex gap-0 mb-4 border border-black"><button onclick="setPhase('recall')" data-phase="recall" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider border-r border-black active">&#9312; Recall</button><button onclick="setPhase('compare')" data-phase="compare" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider border-r border-black" disabled>&#9313; Compare</button><button onclick="setPhase('explain')" data-phase="explain" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider border-r border-black" disabled>&#9314; Explain</button><button onclick="setPhase('modify')" data-phase="modify" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider border-r border-black" disabled>&#9315; Modify</button><button onclick="setPhase('run')" data-phase="run" class="phase-tab flex-1 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider" disabled>&#9316; Run</button></div>
-    <div id="phase-recall" class="phase-content"><div class="border-l-2 border-black pl-4 mb-4 py-2 bg-accent/20"><p class="text-xs font-semibold">TYPE FROM MEMORY. NO PEEKING.</p><p class="text-[10px] text-muted mt-1">Only code scored. Comments/docstrings excluded.</p></div><div class="mb-3"><span class="text-[10px] text-muted uppercase tracking-wider">Hint (hover)</span><div id="recallHint" class="hint-blur border border-gray-200 p-2 mt-1 bg-gray-50 text-[11px] font-mono text-muted"></div></div><div class="relative"><textarea id="recallInput" class="w-full border-2 border-black p-4 font-mono text-xs leading-relaxed bg-white resize-none typing-active" rows="18" placeholder="Start typing..." spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea><div class="absolute bottom-2 right-2 flex gap-3"><span id="coreTarget" class="text-[10px] text-muted"></span><span id="lineCount" class="text-[10px] text-muted">0 lines</span></div></div><div class="flex items-center justify-between mt-3"><button onclick="skipRecall()" class="text-[10px] text-muted underline hover:text-foreground">Skip</button><button onclick="submitRecall()" class="border-2 border-black px-6 py-2 text-xs font-semibold uppercase tracking-wider shadow-brutal hover:bg-black hover:text-white">Done &#8212; Compare &#8594;</button></div></div>
-    <div id="phase-compare" class="phase-content hidden"><div class="border-l-2 border-black pl-4 mb-4 py-2 bg-accent/20"><p class="text-xs font-semibold">EVERY DIFFERENCE = LEARNING SIGNAL.</p></div><div class="grid grid-cols-2 gap-0 border-2 border-black mb-3"><div class="border-r border-black"><div class="bg-black text-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider">Yours</div><div id="diffYours" class="p-3 font-mono text-xs leading-relaxed overflow-auto max-h-[500px] bg-white"></div></div><div><div class="bg-black text-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider">Original</div><div id="diffOriginal" class="p-3 font-mono text-xs leading-relaxed overflow-auto max-h-[500px] bg-white"></div></div></div><div class="border border-black p-4 shadow-brutal bg-gray-50 mb-3"><div class="flex items-center justify-between"><div><div class="text-[10px] font-semibold uppercase tracking-wider text-muted mb-1">Core Accuracy</div><div class="flex items-center gap-3"><span id="accuracyScore" class="font-serif text-3xl font-bold">0%</span><div class="text-[10px] text-muted"><div>Correct: <span id="linesCorrect" class="text-foreground font-semibold">0</span></div><div>Missing: <span id="linesMissing" class="text-negative font-semibold">0</span></div><div>Wrong: <span id="linesWrong" class="text-negative font-semibold">0</span></div></div></div></div><div id="accuracyVerdict" class="text-right"></div></div><div class="mt-3 h-3 bg-gray-200 border border-gray-300"><div id="accuracyBar" class="h-full bg-black transition-all duration-500" style="width:0%"></div></div><div id="coreLineInfo" class="text-[10px] text-muted mt-2 italic"></div></div><div class="flex justify-end"><button onclick="setPhase('explain')" class="border-2 border-black px-6 py-2 text-xs font-semibold uppercase tracking-wider shadow-brutal hover:bg-black hover:text-white">Understand &#8594;</button></div></div>
-    <div id="phase-explain" class="phase-content hidden"><div class="border-l-2 border-black pl-4 mb-4 py-2 bg-accent/20"><p class="text-xs font-semibold">EVERY LINE EXISTS FOR A REASON.</p></div><div id="explainContent" class="space-y-3"></div><div class="flex justify-between mt-4"><button onclick="setPhase('compare')" class="text-[10px] text-muted underline">&#8592; Back</button><button onclick="setPhase('modify')" class="border-2 border-black px-6 py-2 text-xs font-semibold uppercase tracking-wider shadow-brutal hover:bg-black hover:text-white">Modify &#8594;</button></div></div>
-    <div id="phase-modify" class="phase-content hidden"><div class="border border-black p-4 shadow-brutal bg-accent/20 mb-4"><div class="flex items-center justify-between mb-2"><span class="text-[10px] font-semibold uppercase tracking-wider">Challenge</span><span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black font-semibold">PROVE IT</span></div><p id="modifyChallenge" class="text-xs font-semibold"></p><p id="modifyHint" class="text-[10px] text-muted mt-1"></p></div><textarea id="modifyInput" class="w-full border-2 border-black p-4 font-mono text-xs leading-relaxed bg-white resize-none" rows="18" spellcheck="false"></textarea><div class="flex justify-between mt-3"><button onclick="resetModify()" class="text-[10px] text-muted underline">Reset</button><button onclick="setPhase('run')" class="border-2 border-black px-6 py-2 text-xs font-semibold uppercase tracking-wider shadow-brutal hover:bg-black hover:text-white">Run &#8594;</button></div></div>
-    <div id="phase-run" class="phase-content hidden"><div class="border-l-2 border-black pl-4 mb-4 py-2 bg-accent/20"><p class="text-xs font-semibold">DOES THE LOSS DECREASE?</p></div><div class="grid grid-cols-2 gap-0 border-2 border-black mb-3"><div class="border-r border-black"><div class="bg-black text-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between"><span>Code</span><button onclick="runCode()" id="runBtn" class="bg-accent text-black px-2 py-0.5 text-[10px] font-semibold border border-white/30 hover:bg-yellow-300">&#9654; RUN</button></div><textarea id="runInput" class="w-full p-3 font-mono text-xs leading-relaxed bg-white resize-none border-0" rows="20" spellcheck="false"></textarea></div><div><div class="bg-black text-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between"><span>Output</span><button onclick="clearOutput()" class="text-gray-400 hover:text-white text-[10px]">Clear</button></div><pre id="runOutput" class="p-3 font-mono text-xs leading-relaxed overflow-auto max-h-[500px] bg-gray-50"></pre></div></div><div id="pyodideStatus" class="text-[10px] text-muted mb-3"></div><div class="flex justify-between"><button onclick="setPhase('modify')" class="text-[10px] text-muted underline">&#8592; Back</button><button onclick="completeBlock()" class="border-2 border-positive px-6 py-2 text-xs font-semibold uppercase tracking-wider text-positive shadow-brutal hover:bg-positive hover:text-white">&#10003; Complete</button></div></div>
-    <div class="flex justify-between mt-6 pt-4 border-t border-gray-200"><button onclick="prevBlock()" id="prevBtn" class="text-[10px] text-muted hover:text-foreground">&#8592; Prev</button><button onclick="nextBlock()" id="nextBtn" class="text-[10px] text-muted hover:text-foreground">Next &#8594;</button></div>
+
+<!-- HEADER -->
+<header class="border-b-2 border-black">
+  <div class="max-w-4xl mx-auto px-6 py-8">
+    <div class="text-[10px] font-semibold tracking-[4px] uppercase text-muted mb-2">The Complete Algorithm</div>
+    <h1 class="font-serif text-4xl font-bold mb-2">micro<span class="text-accent" style="text-shadow: 2px 2px 0 #000">GPT</span></h1>
+    <p class="text-sm text-muted max-w-lg leading-relaxed">The most atomic way to train and inference a GPT in pure, dependency-free Python. This file is everything algorithmically needed. Everything else is just efficiency.</p>
+    <div class="flex items-center gap-4 mt-4 text-[11px] text-muted">
+      <span>@karpathy</span>
+      <span class="w-1 h-1 bg-muted rounded-full"></span>
+      <span>243 lines</span>
+      <span class="w-1 h-1 bg-muted rounded-full"></span>
+      <span>0 dependencies</span>
+      <span class="w-1 h-1 bg-muted rounded-full"></span>
+      <a href="https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95" class="underline hover:text-foreground">gist</a>
+    </div>
   </div>
-  <div id="loadingState" class="border-2 border-black p-12 text-center shadow-brutal"><div class="font-serif text-lg font-bold mb-2">Load microGPT to begin</div><p class="text-muted text-xs">Click Load &#8212; preset from Karpathy's gist.</p></div>
+</header>
+
+<!-- SECTION NAV -->
+<nav class="border-b border-gray-200 sticky top-0 bg-white z-50 no-print">
+  <div class="max-w-4xl mx-auto px-6">
+    <div class="flex gap-0 overflow-x-auto" id="sectionNav">
+      <a href="#s-imports" class="section-link px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider border-r border-gray-200 whitespace-nowrap">Imports</a>
+      <a href="#s-tokenizer" class="section-link px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider border-r border-gray-200 whitespace-nowrap">Tokenizer</a>
+      <a href="#s-autograd" class="section-link px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider border-r border-gray-200 whitespace-nowrap">Autograd</a>
+      <a href="#s-params" class="section-link px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider border-r border-gray-200 whitespace-nowrap">Parameters</a>
+      <a href="#s-primitives" class="section-link px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider border-r border-gray-200 whitespace-nowrap">Primitives</a>
+      <a href="#s-gpt" class="section-link px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider border-r border-gray-200 whitespace-nowrap">GPT</a>
+      <a href="#s-adam" class="section-link px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider border-r border-gray-200 whitespace-nowrap">Adam</a>
+      <a href="#s-train" class="section-link px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider border-r border-gray-200 whitespace-nowrap">Training</a>
+      <a href="#s-infer" class="section-link px-3 py-2.5 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap">Inference</a>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="max-w-4xl mx-auto px-6 py-8">
+
+<!-- ARCHITECTURE CARD -->
+<div class="border border-black p-5 mb-10 shadow-brutal bg-gray-50">
+  <div class="text-[10px] font-semibold uppercase tracking-wider text-muted mb-3">Architecture at a Glance</div>
+  <div class="grid grid-cols-5 gap-3 text-center text-[11px]">
+    <div class="border border-black p-2 bg-white"><div class="font-bold">n_embd</div><div class="text-muted">16</div></div>
+    <div class="border border-black p-2 bg-white"><div class="font-bold">n_head</div><div class="text-muted">4</div></div>
+    <div class="border border-black p-2 bg-white"><div class="font-bold">n_layer</div><div class="text-muted">1</div></div>
+    <div class="border border-black p-2 bg-white"><div class="font-bold">block_size</div><div class="text-muted">8</div></div>
+    <div class="border border-black p-2 bg-accent/30"><div class="font-bold">head_dim</div><div class="text-muted">4</div></div>
+  </div>
+  <div class="mt-3 text-[11px] text-muted font-mono text-center">
+    tok+pos → rmsnorm → [rmsnorm→MHA→res | rmsnorm→FFN→res]×1 → lm_head → logits
+  </div>
 </div>
-<footer class="text-center text-[10px] text-muted py-6 border-t border-gray-200 mt-8">Built for daily practice &#183; <a href="https://lampt.org" class="underline">lampt.org</a></footer>
+
+<!-- ═══════════ SECTION: IMPORTS ═══════════ -->
+<section id="s-imports" class="mb-12 scroll-mt-16">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 bg-black text-white flex items-center justify-center text-[10px] font-bold">1</span>
+    <h2 class="font-serif text-xl font-bold">Imports & Data</h2>
+  </div>
+  <div class="border border-black bg-white overflow-hidden mb-1">
+    <div class="code-block"><span class="code-line"><span class="kw">import</span> os       <span class="cm"># os.path.exists</span></span>
+<span class="code-line"><span class="kw">import</span> math     <span class="cm"># math.log, math.exp</span></span>
+<span class="code-line"><span class="kw">import</span> random   <span class="cm"># random.seed, random.choices, random.gauss, random.shuffle</span></span>
+<span class="code-line">random.<span class="fn">seed</span>(<span class="nu">42</span>) <span class="cm"># Let there be order among chaos</span></span>
+<span class="code-line"></span>
+<span class="code-line"><span class="cm"># Let there be an input dataset `docs`: list[str] of documents</span></span>
+<span class="code-line"><span class="kw">if not</span> os.path.<span class="fn">exists</span>(<span class="st">'input.txt'</span>):</span>
+<span class="code-line">    <span class="kw">import</span> urllib.request</span>
+<span class="code-line">    names_url = <span class="st">'https://raw.githubusercontent.com/karpathy/makemore/</span></span>
+<span class="code-line">                 <span class="st">refs/heads/master/names.txt'</span></span>
+<span class="code-line">    urllib.request.<span class="fn">urlretrieve</span>(names_url, <span class="st">'input.txt'</span>)</span>
+<span class="code-line">docs = [l.<span class="fn">strip</span>() <span class="kw">for</span> l <span class="kw">in</span> <span class="bi">open</span>(<span class="st">'input.txt'</span>).<span class="fn">read</span>().<span class="fn">strip</span>().<span class="fn">split</span>(<span class="st">'\\n'</span>) <span class="kw">if</span> l.<span class="fn">strip</span>()]</span>
+<span class="code-line">random.<span class="fn">shuffle</span>(docs)</span>
+<span class="code-line"><span class="bi">print</span>(<span class="st">f"num docs: </span>{<span class="fn">len</span>(docs)}<span class="st">"</span>)</span></div>
+  </div>
+  <div class="anno">
+    <strong>3 imports, 0 dependencies.</strong> os for file check, math for log/exp, random for everything stochastic. Conditional <code>import urllib</code> inside the if-block — don't import what you don't use. <code>seed(42)</code> = deterministic across runs.
+  </div>
+</section>
+
+<!-- ═══════════ SECTION: TOKENIZER ═══════════ -->
+<section id="s-tokenizer" class="mb-12 scroll-mt-16">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 bg-black text-white flex items-center justify-center text-[10px] font-bold">2</span>
+    <h2 class="font-serif text-xl font-bold">Tokenizer</h2>
+  </div>
+  <div class="border border-black bg-white overflow-hidden mb-1">
+    <div class="code-block"><span class="code-line"><span class="cm"># Let there be a Tokenizer to translate strings to discrete symbols and back</span></span>
+<span class="code-line">uchars = <span class="bi">sorted</span>(<span class="bi">set</span>(<span class="st">''</span>.<span class="fn">join</span>(docs)))</span>
+<span class="code-line">BOS = <span class="bi">len</span>(uchars)</span>
+<span class="code-line">vocab_size = <span class="bi">len</span>(uchars) + <span class="nu">1</span></span>
+<span class="code-line"><span class="bi">print</span>(<span class="st">f"vocab size: </span>{vocab_size}<span class="st">"</span>)</span></div>
+  </div>
+  <div class="anno">
+    <strong>No stoi/itos dicts.</strong> <code>uchars</code> is a flat sorted list. Token ID = index. Encode: <code>uchars.index(ch)</code>. Decode: <code>uchars[id]</code>. <strong>BOS only — no EOS.</strong> Same special token bookends each sequence. <code>vocab_size = 27</code> (26 letters + BOS).
+  </div>
+</section>
+
+<!-- ═══════════ SECTION: AUTOGRAD ═══════════ -->
+<section id="s-autograd" class="mb-12 scroll-mt-16">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 bg-accent text-black flex items-center justify-center text-[10px] font-bold border border-black">3</span>
+    <h2 class="font-serif text-xl font-bold">Autograd Engine</h2>
+    <span class="px-1.5 py-0.5 bg-accent text-[9px] border border-black font-semibold uppercase tracking-wider">Core</span>
+  </div>
+  <div class="border-2 border-black bg-white overflow-hidden mb-1">
+    <div class="code-block"><span class="code-line"><span class="cm"># Let there be an Autograd to apply the chain rule recursively</span></span>
+<span class="code-line"><span class="kw">class</span> <span class="cl">Value</span>:</span>
+<span class="code-line">    <span class="dc">"""Stores a single scalar value and its gradient."""</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__init__</span>(self, data, children=(), local_grads=()):</span>
+<span class="code-line">        self.data = data</span>
+<span class="code-line">        self.grad = <span class="nu">0</span></span>
+<span class="code-line">        self._children = children</span>
+<span class="code-line">        self._local_grads = local_grads</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__add__</span>(self, other):</span>
+<span class="code-line">        other = other <span class="kw">if</span> <span class="bi">isinstance</span>(other, Value) <span class="kw">else</span> Value(other)</span>
+<span class="code-line">        <span class="kw">return</span> Value(self.data + other.data, (self, other), (<span class="nu">1</span>, <span class="nu">1</span>))</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__mul__</span>(self, other):</span>
+<span class="code-line">        other = other <span class="kw">if</span> <span class="bi">isinstance</span>(other, Value) <span class="kw">else</span> Value(other)</span>
+<span class="code-line">        <span class="kw">return</span> Value(self.data * other.data,</span>
+<span class="code-line">                     (self, other), (other.data, self.data))</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__pow__</span>(self, n):</span>
+<span class="code-line">        <span class="kw">return</span> Value(self.data**n, (self,),</span>
+<span class="code-line">                     (n * self.data**(n-<span class="nu">1</span>),))</span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">log</span>(self):</span>
+<span class="code-line">        <span class="kw">return</span> Value(math.<span class="fn">log</span>(self.data), (self,),</span>
+<span class="code-line">                     (<span class="nu">1</span>/self.data,))</span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">exp</span>(self):</span>
+<span class="code-line">        <span class="kw">return</span> Value(math.<span class="fn">exp</span>(self.data), (self,),</span>
+<span class="code-line">                     (math.<span class="fn">exp</span>(self.data),))</span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">relu</span>(self):</span>
+<span class="code-line">        <span class="kw">return</span> Value(<span class="bi">max</span>(<span class="nu">0</span>, self.data), (self,),</span>
+<span class="code-line">                     (<span class="bi">float</span>(self.data > <span class="nu">0</span>),))</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__neg__</span>(self): <span class="kw">return</span> self * -<span class="nu">1</span></span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__radd__</span>(self, other): <span class="kw">return</span> self + other</span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__sub__</span>(self, other): <span class="kw">return</span> self + (-other)</span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__rsub__</span>(self, other): <span class="kw">return</span> other + (-self)</span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__rmul__</span>(self, other): <span class="kw">return</span> self * other</span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__truediv__</span>(self, other): <span class="kw">return</span> self * other**-<span class="nu">1</span></span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">__rtruediv__</span>(self, other): <span class="kw">return</span> other * self**-<span class="nu">1</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="kw">def</span> <span class="fn">backward</span>(self):</span>
+<span class="code-line">        topo = []</span>
+<span class="code-line">        visited = <span class="bi">set</span>()</span>
+<span class="code-line">        <span class="kw">def</span> <span class="fn">build_topo</span>(v):</span>
+<span class="code-line">            <span class="kw">if</span> v <span class="kw">not in</span> visited:</span>
+<span class="code-line">                visited.<span class="fn">add</span>(v)</span>
+<span class="code-line">                <span class="kw">for</span> child <span class="kw">in</span> v._children:</span>
+<span class="code-line">                    <span class="fn">build_topo</span>(child)</span>
+<span class="code-line">                topo.<span class="fn">append</span>(v)</span>
+<span class="code-line">        <span class="fn">build_topo</span>(self)</span>
+<span class="code-line">        self.grad = <span class="nu">1</span></span>
+<span class="code-line">        <span class="kw">for</span> v <span class="kw">in</span> <span class="bi">reversed</span>(topo):</span>
+<span class="code-line">            <span class="kw">for</span> child, local_grad <span class="kw">in</span> <span class="bi">zip</span>(v._children, v._local_grads):</span>
+<span class="code-line">                child.grad += local_grad * v.grad</span></div>
+  </div>
+  <div class="anno">
+    <strong>local_grads as tuples, not closures.</strong> Each op stores its local derivatives at construction time. The backward loop is 2 lines: <code>child.grad += local_grad * v.grad</code>. This IS the chain rule. The <code>+=</code> handles fan-out (multivariate chain rule). Topo sort ensures parents are processed before children.
+  </div>
+</section>
+
+<!-- ═══════════ SECTION: PARAMS ═══════════ -->
+<section id="s-params" class="mb-12 scroll-mt-16">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 bg-black text-white flex items-center justify-center text-[10px] font-bold">4</span>
+    <h2 class="font-serif text-xl font-bold">Parameters</h2>
+  </div>
+  <div class="border border-black bg-white overflow-hidden mb-1">
+    <div class="code-block"><span class="code-line"><span class="cm"># Initialize the parameters, to store the knowledge of the model.</span></span>
+<span class="code-line">n_embd = <span class="nu">16</span>     <span class="cm"># embedding dimension</span></span>
+<span class="code-line">n_head = <span class="nu">4</span>      <span class="cm"># number of attention heads</span></span>
+<span class="code-line">n_layer = <span class="nu">1</span>     <span class="cm"># number of layers</span></span>
+<span class="code-line">block_size = <span class="nu">8</span>  <span class="cm"># maximum sequence length</span></span>
+<span class="code-line">head_dim = n_embd // n_head</span>
+<span class="code-line"></span>
+<span class="code-line">matrix = <span class="kw">lambda</span> nout, nin, std=<span class="nu">0.02</span>: \</span>
+<span class="code-line">    [[Value(random.<span class="fn">gauss</span>(<span class="nu">0</span>, std)) <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(nin)] \</span>
+<span class="code-line">     <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(nout)]</span>
+<span class="code-line"></span>
+<span class="code-line">state_dict = {</span>
+<span class="code-line">    <span class="st">'wte'</span>:     matrix(vocab_size, n_embd),</span>
+<span class="code-line">    <span class="st">'wpe'</span>:     matrix(block_size, n_embd),</span>
+<span class="code-line">    <span class="st">'lm_head'</span>: matrix(vocab_size, n_embd),</span>
+<span class="code-line">}</span>
+<span class="code-line"><span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(n_layer):</span>
+<span class="code-line">    state_dict[<span class="st">f'layer</span>{i}<span class="st">.attn_wq'</span>] = matrix(n_embd, n_embd)</span>
+<span class="code-line">    state_dict[<span class="st">f'layer</span>{i}<span class="st">.attn_wk'</span>] = matrix(n_embd, n_embd)</span>
+<span class="code-line">    state_dict[<span class="st">f'layer</span>{i}<span class="st">.attn_wv'</span>] = matrix(n_embd, n_embd)</span>
+<span class="code-line">    state_dict[<span class="st">f'layer</span>{i}<span class="st">.attn_wo'</span>] = matrix(n_embd, n_embd, std=<span class="nu">0</span>)</span>
+<span class="code-line">    state_dict[<span class="st">f'layer</span>{i}<span class="st">.mlp_fc1'</span>] = matrix(<span class="nu">4</span> * n_embd, n_embd)</span>
+<span class="code-line">    state_dict[<span class="st">f'layer</span>{i}<span class="st">.mlp_fc2'</span>] = matrix(n_embd, <span class="nu">4</span> * n_embd, std=<span class="nu">0</span>)</span>
+<span class="code-line"></span>
+<span class="code-line">params = [p <span class="kw">for</span> mat <span class="kw">in</span> state_dict.<span class="fn">values</span>() \</span>
+<span class="code-line">          <span class="kw">for</span> row <span class="kw">in</span> mat <span class="kw">for</span> p <span class="kw">in</span> row]</span>
+<span class="code-line"><span class="bi">print</span>(<span class="st">f"num params: </span>{<span class="fn">len</span>(params)}<span class="st">"</span>)</span></div>
+  </div>
+  <div class="anno">
+    <strong>Separate <code>lm_head</code> — not weight-tied.</strong> Output projection is its own matrix. <code>std=0</code> for W_o and W_fc2 means each layer starts as identity. Triple comprehension flattens all matrices into one param list.
+  </div>
+</section>
+
+<!-- ═══════════ SECTION: PRIMITIVES ═══════════ -->
+<section id="s-primitives" class="mb-12 scroll-mt-16">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 bg-black text-white flex items-center justify-center text-[10px] font-bold">5</span>
+    <h2 class="font-serif text-xl font-bold">Primitives</h2>
+  </div>
+  <div class="border border-black bg-white overflow-hidden mb-1">
+    <div class="code-block"><span class="code-line"><span class="cm"># Follow GPT-2 with minor diffs: rmsnorm, no biases, ReLU²</span></span>
+<span class="code-line"><span class="kw">def</span> <span class="fn">linear</span>(x, w):</span>
+<span class="code-line">    <span class="kw">return</span> [<span class="bi">sum</span>(wi * xi <span class="kw">for</span> wi, xi <span class="kw">in</span> <span class="bi">zip</span>(wo, x)) <span class="kw">for</span> wo <span class="kw">in</span> w]</span>
+<span class="code-line"></span>
+<span class="code-line"><span class="kw">def</span> <span class="fn">softmax</span>(logits):</span>
+<span class="code-line">    max_val = <span class="bi">max</span>(val.data <span class="kw">for</span> val <span class="kw">in</span> logits)</span>
+<span class="code-line">    exps = [(val - max_val).<span class="fn">exp</span>() <span class="kw">for</span> val <span class="kw">in</span> logits]</span>
+<span class="code-line">    total = <span class="bi">sum</span>(exps)</span>
+<span class="code-line">    <span class="kw">return</span> [e / total <span class="kw">for</span> e <span class="kw">in</span> exps]</span>
+<span class="code-line"></span>
+<span class="code-line"><span class="kw">def</span> <span class="fn">rmsnorm</span>(x):</span>
+<span class="code-line">    ms = <span class="bi">sum</span>(xi * xi <span class="kw">for</span> xi <span class="kw">in</span> x) / <span class="bi">len</span>(x)</span>
+<span class="code-line">    scale = (ms + <span class="nu">1e-5</span>) ** -<span class="nu">0.5</span></span>
+<span class="code-line">    <span class="kw">return</span> [xi * scale <span class="kw">for</span> xi <span class="kw">in</span> x]</span></div>
+  </div>
+  <div class="anno">
+    <strong><code>linear()</code> is the only parameterized op.</strong> Everything else is parameter-free. <code>softmax</code> subtracts max for numerical stability. <code>rmsnorm</code> = divide by root-mean-square — simpler than LayerNorm (no mean subtraction, no learnable params).
+  </div>
+</section>
+
+<!-- ═══════════ SECTION: GPT ═══════════ -->
+<section id="s-gpt" class="mb-12 scroll-mt-16">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 bg-accent text-black flex items-center justify-center text-[10px] font-bold border border-black">6</span>
+    <h2 class="font-serif text-xl font-bold">GPT Forward Pass</h2>
+    <span class="px-1.5 py-0.5 bg-accent text-[9px] border border-black font-semibold uppercase tracking-wider">Core</span>
+  </div>
+  <div class="border-2 border-black bg-white overflow-hidden mb-1">
+    <div class="code-block"><span class="code-line"><span class="kw">def</span> <span class="fn">gpt</span>(token_id, pos_id, keys, values):</span>
+<span class="code-line">    tok_emb = state_dict[<span class="st">'wte'</span>][token_id]</span>
+<span class="code-line">    pos_emb = state_dict[<span class="st">'wpe'</span>][pos_id]</span>
+<span class="code-line">    x = [t + p <span class="kw">for</span> t, p <span class="kw">in</span> <span class="bi">zip</span>(tok_emb, pos_emb)]</span>
+<span class="code-line">    x = <span class="fn">rmsnorm</span>(x)</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="kw">for</span> li <span class="kw">in</span> <span class="bi">range</span>(n_layer):</span>
+<span class="code-line">        <span class="cm"># 1) Multi-head attention</span></span>
+<span class="code-line">        x_residual = x</span>
+<span class="code-line">        x = <span class="fn">rmsnorm</span>(x)</span>
+<span class="code-line">        q = <span class="fn">linear</span>(x, state_dict[<span class="st">f'layer</span>{li}<span class="st">.attn_wq'</span>])</span>
+<span class="code-line">        k = <span class="fn">linear</span>(x, state_dict[<span class="st">f'layer</span>{li}<span class="st">.attn_wk'</span>])</span>
+<span class="code-line">        v = <span class="fn">linear</span>(x, state_dict[<span class="st">f'layer</span>{li}<span class="st">.attn_wv'</span>])</span>
+<span class="code-line">        keys[li].<span class="fn">append</span>(k)</span>
+<span class="code-line">        values[li].<span class="fn">append</span>(v)</span>
+<span class="code-line">        x_attn = []</span>
+<span class="code-line">        <span class="kw">for</span> h <span class="kw">in</span> <span class="bi">range</span>(n_head):</span>
+<span class="code-line">            hs = h * head_dim</span>
+<span class="code-line">            q_h = q[hs:hs+head_dim]</span>
+<span class="code-line">            k_h = [ki[hs:hs+head_dim] <span class="kw">for</span> ki <span class="kw">in</span> keys[li]]</span>
+<span class="code-line">            v_h = [vi[hs:hs+head_dim] <span class="kw">for</span> vi <span class="kw">in</span> values[li]]</span>
+<span class="code-line">            attn_logits = [</span>
+<span class="code-line">                <span class="bi">sum</span>(q_h[j] * k_h[t][j]</span>
+<span class="code-line">                    <span class="kw">for</span> j <span class="kw">in</span> <span class="bi">range</span>(head_dim))</span>
+<span class="code-line">                / head_dim**<span class="nu">0.5</span></span>
+<span class="code-line">                <span class="kw">for</span> t <span class="kw">in</span> <span class="bi">range</span>(<span class="bi">len</span>(k_h))]</span>
+<span class="code-line">            attn_weights = <span class="fn">softmax</span>(attn_logits)</span>
+<span class="code-line">            head_out = [</span>
+<span class="code-line">                <span class="bi">sum</span>(attn_weights[t] * v_h[t][j]</span>
+<span class="code-line">                    <span class="kw">for</span> t <span class="kw">in</span> <span class="bi">range</span>(<span class="bi">len</span>(v_h)))</span>
+<span class="code-line">                <span class="kw">for</span> j <span class="kw">in</span> <span class="bi">range</span>(head_dim)]</span>
+<span class="code-line">            x_attn.<span class="fn">extend</span>(head_out)</span>
+<span class="code-line">        x = <span class="fn">linear</span>(x_attn, state_dict[<span class="st">f'layer</span>{li}<span class="st">.attn_wo'</span>])</span>
+<span class="code-line">        x = [a + b <span class="kw">for</span> a, b <span class="kw">in</span> <span class="bi">zip</span>(x, x_residual)]</span>
+<span class="code-line"></span>
+<span class="code-line">        <span class="cm"># 2) MLP</span></span>
+<span class="code-line">        x_residual = x</span>
+<span class="code-line">        x = <span class="fn">rmsnorm</span>(x)</span>
+<span class="code-line">        x = <span class="fn">linear</span>(x, state_dict[<span class="st">f'layer</span>{li}<span class="st">.mlp_fc1'</span>])</span>
+<span class="code-line">        x = [xi.<span class="fn">relu</span>() ** <span class="nu">2</span> <span class="kw">for</span> xi <span class="kw">in</span> x]</span>
+<span class="code-line">        x = <span class="fn">linear</span>(x, state_dict[<span class="st">f'layer</span>{li}<span class="st">.mlp_fc2'</span>])</span>
+<span class="code-line">        x = [a + b <span class="kw">for</span> a, b <span class="kw">in</span> <span class="bi">zip</span>(x, x_residual)]</span>
+<span class="code-line"></span>
+<span class="code-line">    logits = <span class="fn">linear</span>(x, state_dict[<span class="st">'lm_head'</span>])</span>
+<span class="code-line">    <span class="kw">return</span> logits</span></div>
+  </div>
+  <div class="anno">
+    <strong>The entire transformer in one function.</strong> Note: <code>rmsnorm(x)</code> right after embedding (unusual). Sequential token processing — KV cache builds via append, causality is structural (no mask needed). <code>relu()²</code> not GeLU — sharper sparsity (Primer paper). Output via separate <code>lm_head</code>.
+  </div>
+</section>
+
+<!-- ═══════════ SECTION: ADAM ═══════════ -->
+<section id="s-adam" class="mb-12 scroll-mt-16">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 bg-black text-white flex items-center justify-center text-[10px] font-bold">7</span>
+    <h2 class="font-serif text-xl font-bold">Adam Optimizer</h2>
+  </div>
+  <div class="border border-black bg-white overflow-hidden mb-1">
+    <div class="code-block"><span class="code-line"><span class="cm"># Let there be Adam, the blessed optimizer and its buffers</span></span>
+<span class="code-line">learning_rate, beta1, beta2, eps_adam = <span class="nu">1e-2</span>, <span class="nu">0.9</span>, <span class="nu">0.95</span>, <span class="nu">1e-8</span></span>
+<span class="code-line">m = [<span class="nu">0.0</span>] * <span class="bi">len</span>(params)  <span class="cm"># first moment</span></span>
+<span class="code-line">v = [<span class="nu">0.0</span>] * <span class="bi">len</span>(params)  <span class="cm"># second moment</span></span></div>
+  </div>
+  <div class="anno">
+    <strong>β₂=0.95, not default 0.999.</strong> GPT-3 setting. Lower = faster adaptation. Bias-corrected Adam: <code>m̂ = m/(1-β₁ᵗ)</code> prevents early-step damping.
+  </div>
+</section>
+
+<!-- ═══════════ SECTION: TRAINING ═══════════ -->
+<section id="s-train" class="mb-12 scroll-mt-16">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 bg-black text-white flex items-center justify-center text-[10px] font-bold">8</span>
+    <h2 class="font-serif text-xl font-bold">Training Loop</h2>
+  </div>
+  <div class="border border-black bg-white overflow-hidden mb-1">
+    <div class="code-block"><span class="code-line"><span class="cm"># Repeat in sequence</span></span>
+<span class="code-line">num_steps = <span class="nu">500</span></span>
+<span class="code-line"><span class="kw">for</span> step <span class="kw">in</span> <span class="bi">range</span>(num_steps):</span>
+<span class="code-line"></span>
+<span class="code-line">    doc = docs[step % <span class="bi">len</span>(docs)]</span>
+<span class="code-line">    tokens = [BOS] + [uchars.<span class="fn">index</span>(ch) <span class="kw">for</span> ch <span class="kw">in</span> doc] + [BOS]</span>
+<span class="code-line">    n = <span class="bi">min</span>(block_size, <span class="bi">len</span>(tokens) - <span class="nu">1</span>)</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="cm"># Forward: build computation graph to loss</span></span>
+<span class="code-line">    keys, values = [[] <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_layer)], \</span>
+<span class="code-line">                   [[] <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_layer)]</span>
+<span class="code-line">    losses = []</span>
+<span class="code-line">    <span class="kw">for</span> pos_id <span class="kw">in</span> <span class="bi">range</span>(n):</span>
+<span class="code-line">        token_id = tokens[pos_id]</span>
+<span class="code-line">        target_id = tokens[pos_id + <span class="nu">1</span>]</span>
+<span class="code-line">        logits = <span class="fn">gpt</span>(token_id, pos_id, keys, values)</span>
+<span class="code-line">        probs = <span class="fn">softmax</span>(logits)</span>
+<span class="code-line">        loss_t = -probs[target_id].<span class="fn">log</span>()</span>
+<span class="code-line">        losses.<span class="fn">append</span>(loss_t)</span>
+<span class="code-line">    loss = (<span class="nu">1</span> / n) * <span class="bi">sum</span>(losses)</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="cm"># Backward</span></span>
+<span class="code-line">    loss.<span class="fn">backward</span>()</span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="cm"># Adam update with cosine LR decay</span></span>
+<span class="code-line">    lr_t = learning_rate * <span class="nu">0.5</span> * \</span>
+<span class="code-line">           (<span class="nu">1</span> + math.<span class="fn">cos</span>(math.pi * step / num_steps))</span>
+<span class="code-line">    <span class="kw">for</span> i, p <span class="kw">in</span> <span class="bi">enumerate</span>(params):</span>
+<span class="code-line">        m[i] = beta1 * m[i] + (<span class="nu">1</span> - beta1) * p.grad</span>
+<span class="code-line">        v[i] = beta2 * v[i] + (<span class="nu">1</span> - beta2) * p.grad ** <span class="nu">2</span></span>
+<span class="code-line">        m_hat = m[i] / (<span class="nu">1</span> - beta1 ** (step + <span class="nu">1</span>))</span>
+<span class="code-line">        v_hat = v[i] / (<span class="nu">1</span> - beta2 ** (step + <span class="nu">1</span>))</span>
+<span class="code-line">        p.data -= lr_t * m_hat / (v_hat ** <span class="nu">0.5</span> + eps_adam)</span>
+<span class="code-line">        p.grad = <span class="nu">0</span></span>
+<span class="code-line"></span>
+<span class="code-line">    <span class="bi">print</span>(<span class="st">f"step </span>{step+<span class="nu">1</span>:<span class="nu">4</span>d}<span class="st"> / </span>{num_steps:<span class="nu">4</span>d}<span class="st"> | loss </span>{loss.data:<span class="nu">.4</span>f}<span class="st">"</span>)</span></div>
+  </div>
+  <div class="anno">
+    <strong>[BOS] + chars + [BOS]</strong> — same token bookends. <strong>Cosine LR decay</strong>: <code>lr × 0.5 × (1 + cos(π·step/total))</code> — not linear. Losses collected per-position, averaged, single <code>backward()</code> call. <code>p.grad = 0</code> after each step — forget this and gradients leak.
+  </div>
+</section>
+
+<!-- ═══════════ SECTION: INFERENCE ═══════════ -->
+<section id="s-infer" class="mb-12 scroll-mt-16">
+  <div class="flex items-center gap-3 mb-4">
+    <span class="w-7 h-7 bg-black text-white flex items-center justify-center text-[10px] font-bold">9</span>
+    <h2 class="font-serif text-xl font-bold">Inference</h2>
+  </div>
+  <div class="border border-black bg-white overflow-hidden mb-1">
+    <div class="code-block"><span class="code-line"><span class="cm"># Inference: may the model babble back to us</span></span>
+<span class="code-line">temperature = <span class="nu">0.5</span></span>
+<span class="code-line"><span class="bi">print</span>(<span class="st">"\\n--- inference ---"</span>)</span>
+<span class="code-line"><span class="kw">for</span> sample_idx <span class="kw">in</span> <span class="bi">range</span>(<span class="nu">20</span>):</span>
+<span class="code-line">    keys, values = [[] <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_layer)], \</span>
+<span class="code-line">                   [[] <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_layer)]</span>
+<span class="code-line">    token_id = BOS</span>
+<span class="code-line">    sample = []</span>
+<span class="code-line">    <span class="kw">for</span> pos_id <span class="kw">in</span> <span class="bi">range</span>(block_size):</span>
+<span class="code-line">        logits = <span class="fn">gpt</span>(token_id, pos_id, keys, values)</span>
+<span class="code-line">        probs = <span class="fn">softmax</span>([l / temperature <span class="kw">for</span> l <span class="kw">in</span> logits])</span>
+<span class="code-line">        token_id = random.<span class="fn">choices</span>(</span>
+<span class="code-line">            <span class="bi">range</span>(vocab_size),</span>
+<span class="code-line">            weights=[p.data <span class="kw">for</span> p <span class="kw">in</span> probs])[<span class="nu">0</span>]</span>
+<span class="code-line">        <span class="kw">if</span> token_id == BOS: <span class="kw">break</span></span>
+<span class="code-line">        sample.<span class="fn">append</span>(uchars[token_id])</span>
+<span class="code-line">    <span class="bi">print</span>(<span class="st">f"sample </span>{sample_idx+<span class="nu">1</span>:<span class="nu">2</span>d}<span class="st">: </span>{<span class="st">''</span>.<span class="fn">join</span>(sample)}<span class="st">"</span>)</span></div>
+  </div>
+  <div class="anno">
+    <strong>Temperature = 0.5.</strong> Divides logits before softmax — sharper distribution = more focused output. <strong>BOS as stop token.</strong> Start with BOS, sample until BOS again. 20 samples. Each sampled token becomes next input — autoregressive generation with KV cache.
+  </div>
+</section>
+
+<!-- FOOTER -->
+<div class="border-t-2 border-black pt-6 mt-8 text-center">
+  <div class="text-[10px] text-muted uppercase tracking-[3px] mb-2">The Complete Algorithm</div>
+  <p class="text-xs text-muted max-w-md mx-auto">Art project by @karpathy. This file is everything algorithmically needed to train a GPT. Everything else is just efficiency.</p>
+  <div class="flex justify-center gap-4 mt-4 text-[11px]">
+    <a href="https://gist.github.com/karpathy/8627fe009c40f57531cb18360106ce95" class="underline text-muted hover:text-foreground">GitHub Gist</a>
+    <a href="https://karpathy.ai/microgpt.html" class="underline text-muted hover:text-foreground">Original</a>
+  </div>
+</div>
+
+</main>
+
+<footer class="text-center text-[10px] text-muted py-6 border-t border-gray-200 mt-8">
+  Refactored with lampt.org aesthetic · <a href="https://lampt.org" class="underline">lampt.org</a>
+</footer>
+
+<!-- Active section tracking -->
 <script>
-const BLOCK_DEFS = [
-  {id:'imports',title:'Imports & Data Loading',
-    explanation:'<div class="space-y-3"><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">3 Imports. No argparse.</div><p class="text-xs text-muted"><strong>os</strong> \u2014 file exists. <strong>math</strong> \u2014 log/exp. <strong>random</strong> \u2014 seed, shuffle, gauss, choices. Hyperparams hardcoded. Zero deps.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">random.seed(42)</div><p class="text-xs text-muted">Deterministic. Every weight, shuffle, sample reproducible.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Lazy Download</div><p class="text-xs text-muted">if not os.path.exists \u2192 download. Conditional import urllib inside if-block.</p></div></div>',
-    challenge:'Replace names with arithmetic. What changes?',challengeHint:'docs=[f"{a}+{b}={a+b}"]'},
-  {id:'tokenizer',title:'Tokenizer',
-    explanation:'<div class="space-y-3"><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">No stoi/itos Dicts</div><p class="text-xs text-muted">uchars = sorted(set(\u2018\u2019.join(docs))). ID = index. Encode: uchars.index(ch). Decode: uchars[id].</p></div><div class="border border-black p-3 bg-accent/20"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">BOS ONLY \u2014 NO EOS</div><p class="text-xs">BOS = len(uchars). Same token start AND end. Sampling BOS = stop. vocab_size = len(uchars)+1.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">sorted()</div><p class="text-xs text-muted">set() order non-deterministic. sorted() = same char \u2192 same ID.</p></div></div>',
-    challenge:'Add separate EOS. Does training change?',challengeHint:'EOS=len(uchars)+1. tokens=[BOS]+chars+[EOS].'},
-  {id:'autograd',title:'Value: Autograd Engine',
-    explanation:'<div class="space-y-3"><div class="border border-black p-3 bg-accent/20"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">THE HARDEST BLOCK</div><p class="text-xs">Value(data, children, local_grads). Local derivatives as tuple. Backward = topo sort + 2-line chain rule.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">local_grads Tuple (NOT Closures)</div><p class="text-xs text-muted">Old micrograd: closures. This: tuples. <code>child.grad += lg * v.grad</code> \u2014 2 lines replace ALL backward fns.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Rules</div><p class="text-xs text-muted font-mono">add\u2192(1,1) | mul\u2192(b.data,a.data) | pow\u2192(n\u00b7a^(n-1),) | log\u2192(1/a.data,) | exp\u2192(exp(a),) | relu\u2192(float(a&gt;0),)</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">+=</div><p class="text-xs text-muted">Fan-out: grads accumulate. Multivariate chain rule.</p></div></div>',
-    challenge:'Add tanh(). local_grads?',challengeHint:'t=math.tanh(self.data); Value(t,(self,),(1-t**2,))'},
-  {id:'params',title:'Parameter Initialization',
-    explanation:'<div class="space-y-3"><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Constants, Not CLI</div><p class="text-xs text-muted">n_embd=16, n_head=4, n_layer=1, block_size=8. head_dim=4.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">std=0.02 vs std=0</div><p class="text-xs text-muted">Most: N(0,0.02). W_o, W_fc2: zero-init \u2192 identity at init.</p></div><div class="border border-black p-3 bg-accent/20"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">SEPARATE lm_head</div><p class="text-xs">wte, wpe, AND lm_head. NOT weight-tied.</p></div></div>',
-    challenge:'Weight tying: remove lm_head, use wte.',challengeHint:'logits=linear(x,state_dict["wte"])'},
-  {id:'primitives',title:'Primitives: linear, softmax, rmsnorm',
-    explanation:'<div class="space-y-3"><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">linear()</div><p class="text-xs text-muted">Only parameterized op. sum(wi*xi for wi,xi in zip(wo,x)).</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">softmax()</div><p class="text-xs text-muted">max subtract \u2192 exp \u2192 normalize. Used in attention AND prediction.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">rmsnorm()</div><p class="text-xs text-muted">scale=(mean(x\u00b2)+\u03b5)^-0.5. No mean subtraction. LLaMA/Gemma use this.</p></div></div>',
-    challenge:'Full LayerNorm with gamma/beta.',challengeHint:'mean=sum(x)/n; var=sum((xi-mean)^2)/n'},
-  {id:'gpt_forward',title:'GPT Forward Pass',
-    explanation:'<div class="space-y-3"><div class="border border-black p-3 bg-accent/20"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">ENTIRE TRANSFORMER</div><p class="text-xs">embed \u2192 rmsnorm \u2192 (rmsnorm\u2192attn\u2192res)(rmsnorm\u2192MLP\u2192res) \u2192 lm_head. Extra rmsnorm after embed+pos.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">No Mask</div><p class="text-xs text-muted">Sequential. KV cache via append. Causality structural.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">relu(x)\u00b2</div><p class="text-xs text-muted">Not GeLU. Primer paper (Google 2021).</p></div></div>',
-    challenge:'Add attention dropout (p=0.1).',challengeHint:'[Value(0) if random.random()<p else w/(1-p)]'},
-  {id:'optimizer',title:'Adam Optimizer',
-    explanation:'<div class="space-y-3"><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">\u03b2\u2082=0.95</div><p class="text-xs text-muted">GPT-3 setting. Lower = faster adaptation vs 0.999.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Bias Correction</div><p class="text-xs text-muted">m\u0302=m/(1-\u03b2\u2081\u1d57). Without: early steps damped.</p></div></div>',
-    challenge:'SGD+momentum instead.',challengeHint:'m[i]=0.9*m[i]+p.grad; p.data-=lr_t*m[i]'},
-  {id:'training',title:'Training Loop',
-    explanation:'<div class="space-y-3"><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">[BOS]+chars+[BOS]</div><p class="text-xs text-muted">BOS bookends. Same token, two roles.</p></div><div class="border border-black p-3 bg-accent/20"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">COSINE LR DECAY</div><p class="text-xs">lr\u00d70.5\u00d7(1+cos(\u03c0\u00b7step/total)). NOT linear.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">p.grad = 0</div><p class="text-xs text-muted">Must zero. Forget = gradient leak.</p></div></div>',
-    challenge:'Gradient clipping if norm>1.0.',challengeHint:'norm=sqrt(sum(g^2)); if>1: scale all by 1/norm'},
-  {id:'inference',title:'Inference & Generation',
-    explanation:'<div class="space-y-3"><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">Temperature = 0.5</div><p class="text-xs text-muted">Logits/temp before softmax. 0.5 = focused output.</p></div><div class="border border-black p-3 bg-gray-50"><div class="text-[10px] font-semibold uppercase tracking-wider mb-1">BOS = Stop</div><p class="text-xs text-muted">Sample until BOS or block_size. 20 samples.</p></div></div>',
-    challenge:'Top-k sampling (k=5).',challengeHint:'Sort, keep top k, zero rest, renormalize.'},
-];
-let sourceCode='',blocks=[],currentBlock=0,currentPhase='recall',timerInterval=null,timerSeconds=0,pyodideReady=false,pyodide=null;
-function loadProgress(){try{return JSON.parse(localStorage.getItem('microgpt_progress')||'{}')}catch{return{}}}
-function saveProgress(d){localStorage.setItem('microgpt_progress',JSON.stringify(d))}
-function getStreak(){const p=loadProgress(),t=new Date().toISOString().slice(0,10);if(p.lastDate===t)return p.streak||0;const y=new Date(Date.now()-864e5).toISOString().slice(0,10);return p.lastDate===y?p.streak||0:0}
-function updateStreak(){const p=loadProgress(),t=new Date().toISOString().slice(0,10);if(p.lastDate===t)return;const y=new Date(Date.now()-864e5).toISOString().slice(0,10);p.streak=p.lastDate===y?(p.streak||0)+1:1;p.lastDate=t;saveProgress(p);updateStreakDisplay()}
-function updateStreakDisplay(){const s=getStreak();document.getElementById('streakDisplay').textContent=s;if(s>0)document.getElementById('streakDisplay').classList.add('streak-fire');const p=loadProgress();document.getElementById('masteredCount').textContent=Object.keys(p.completed||{}).length;const d=document.getElementById('blockDots');d.innerHTML='';for(let i=0;i<9;i++){const dot=document.createElement('div');dot.className='w-2 h-2 border border-gray-400 '+((p.completed||{})[i]?'bg-positive border-positive':'bg-gray-200');d.appendChild(dot)}}
-async function loadFromGist(){const b=document.getElementById('loadBtn'),st=document.getElementById('loadStatus'),u=document.getElementById('gistUrl').value.trim();b.disabled=true;b.textContent='Loading...';st.textContent='';try{const m=u.match(/([a-f0-9]{20,})/);if(!m)throw new Error('Invalid URL');const r=await fetch(`https://api.github.com/gists/${m[1]}`);if(!r.ok)throw new Error(`API: ${r.status}`);const d=await r.json();const f=Object.values(d.files).find(f=>f.filename.endsWith('.py'))||Object.values(d.files)[0];if(!f)throw new Error('No files');sourceCode=f.content;parseIntoBlocks();initWorkspace();st.textContent=`\u2713 ${f.filename} (${sourceCode.split('\n').length} lines)`;st.style.color='#16a34a'}catch(e){st.textContent=`\u2717 ${e.message} \u2014 embedded`;st.style.color='#dc2626';loadEmbeddedSource()}b.disabled=false;b.textContent='Load'}
-function loadEmbeddedSource(){sourceCode=EMBEDDED_SOURCE;parseIntoBlocks();initWorkspace();document.getElementById('loadStatus').textContent='\u2713 Embedded loaded';document.getElementById('loadStatus').style.color='#16a34a'}
-function parseIntoBlocks(){const lines=sourceCode.split('\n');const boundaries=findBlockBoundaries(lines);blocks=[];for(let i=0;i<BLOCK_DEFS.length&&i<boundaries.length;i++){const[s,e]=boundaries[i];blocks.push({...BLOCK_DEFS[i],code:lines.slice(s,e+1).join('\n'),startLine:s,endLine:e})}}
-function findBlockBoundaries(L){const b=[],f=(fn,a=0)=>L.findIndex((l,i)=>i>a&&fn(l));let e=f(l=>l.includes('print(f"num docs'));if(e<0)e=f(l=>l.includes('print(f"num'));if(e<0)e=12;b.push([0,e]);let s=e+1;e=f(l=>l.includes('print(f"vocab'),s);if(e<0)e=s+5;b.push([s,e]);s=e+1;while(s<L.length&&!L[s].includes('class Value'))s++;e=s+1;while(e<L.length&&(L[e].match(/^[ \t]/)||L[e].trim()===''))e++;let pl=-1;for(let j=s;j<L.length;j++)if(L[j].match(/^n_embd\s*=/)){pl=j;break}if(pl>0){e=pl-1;while(e>s&&L[e].trim()==='')e--;while(e>s&&L[e].trim().startsWith('#'))e--}b.push([s,e]);s=e+1;while(s<L.length&&L[s].trim()==='')s++;if(L[s]&&L[s].startsWith('#'))s=s;e=f(l=>l.includes('print(f"num params'),s);if(e<0)e=s+15;b.push([s,e]);s=e+1;while(s<L.length&&!L[s].includes('def linear'))s++;while(s>0&&(L[s-1].trim().startsWith('#')||L[s-1].trim()===''))s--;while(s<L.length&&L[s].trim()==='')s++;const gl=f(l=>l.includes('def gpt'),s);e=gl>0?gl-1:s+15;while(e>s&&L[e].trim()==='')e--;b.push([s,e]);let gs=gl>=0?gl:e+1;while(gs>0&&(L[gs-1].trim().startsWith('#')||L[gs-1].trim()===''))gs--;while(gs<L.length&&L[gs].trim()==='')gs++;e=gs+1;while(e<L.length){if(e>gs+2&&L[e].trim()!==''&&!L[e].startsWith(' ')&&!L[e].startsWith('\t')){break}e++}e--;while(e>gs&&L[e].trim()==='')e--;b.push([gs,e]);s=e+1;while(s<L.length&&!L[s].match(/learning_rate|Adam/i))s++;while(s>0&&(L[s-1].trim().startsWith('#')||L[s-1].trim()===''))s--;while(s<L.length&&L[s].trim()==='')s++;let tl=-1;for(let j=s;j<L.length;j++)if(L[j].match(/^num_steps\s*=/)||L[j].match(/^for step/)){tl=j;break}if(tl>0){e=tl-1;while(e>s&&L[e].trim()==='')e--}else e=s+4;b.push([s,e]);s=e+1;while(s<L.length&&L[s].trim()==='')s++;if(s>0&&L[s-1]&&L[s-1].trim().startsWith('#'))s--;const il=f(l=>l.match(/^# Inference|^temperature\s*=/),s);e=il>0?il-1:L.length-1;while(e>s&&L[e].trim()==='')e--;b.push([s,e]);s=e+1;while(s<L.length&&L[s].trim()==='')s++;if(s>0&&L[s-1]&&L[s-1].trim().startsWith('#'))s--;e=L.length-1;while(e>s&&L[e].trim()==='')e--;b.push([s,e]);return b}
-function normalizeLine(l){let t=l.trimEnd();const n=t.replace(/'[^']*'|"[^"]*"/g,'""');const h=n.indexOf('#');if(h>0)t=t.substring(0,h).trimEnd();return t}
-function extractCoreLines(code){const lines=code.split('\n');let inDoc=false;const r=[];for(const l of lines){const t=l.trim();const tq=(t.match(/\"\"\"/g)||[]).length;if(inDoc){if(tq>=1)inDoc=false;continue}if(tq>=2)continue;if(tq===1){inDoc=true;continue}if(t===''||t.startsWith('#'))continue;r.push(normalizeLine(l))}return r}
-function initWorkspace(){document.getElementById('workspace').classList.remove('hidden');document.getElementById('loadingState').classList.add('hidden');const nav=document.getElementById('blockNav');nav.innerHTML='';blocks.forEach((b,i)=>{const btn=document.createElement('button');btn.className='block-btn relative border border-black px-2 py-1 text-[10px] font-semibold hover:bg-black hover:text-white '+(i===0?'active':'');btn.textContent=`${i+1}. ${b.title}`;btn.onclick=()=>selectBlock(i);nav.appendChild(btn)});selectBlock(0);updateStreakDisplay()}
-function selectBlock(i){currentBlock=i;document.querySelectorAll('.block-btn').forEach((b,j)=>b.classList.toggle('active',j===i));document.getElementById('blockNum').textContent=i+1;document.getElementById('blockTitle').textContent=blocks[i].title;document.getElementById('blockAccuracy').textContent='';setPhase('recall');resetTimer();const cl=extractCoreLines(blocks[i].code);const h=cl.length>2?`${cl[0]}\n...\n${cl[cl.length-1]}`:cl.join('\n');document.getElementById('recallHint').textContent=h;document.getElementById('recallInput').value='';document.getElementById('coreTarget').textContent=`target: ${cl.length} core lines`;updateLineCount();document.getElementById('modifyInput').value=blocks[i].code;document.getElementById('modifyChallenge').textContent=blocks[i].challenge;document.getElementById('modifyHint').textContent=blocks[i].challengeHint;document.getElementById('runInput').value=blocks[i].code;document.getElementById('runOutput').textContent='';document.getElementById('explainContent').innerHTML=blocks[i].explanation;document.getElementById('prevBtn').style.visibility=i>0?'visible':'hidden';document.getElementById('nextBtn').style.visibility=i<blocks.length-1?'visible':'hidden';enablePhaseTabs(false);startTimer()}
-function enablePhaseTabs(en){['compare','explain','modify','run'].forEach(p=>{const t=document.querySelector(`[data-phase="${p}"]`);t.disabled=!en;t.style.opacity=en?1:0.3})}
-function setPhase(p){currentPhase=p;document.querySelectorAll('.phase-content').forEach(el=>el.classList.add('hidden'));document.getElementById(`phase-${p}`).classList.remove('hidden');document.querySelectorAll('.phase-tab').forEach(t=>t.classList.toggle('active',t.dataset.phase===p))}
-document.getElementById('recallInput').addEventListener('input',updateLineCount);
-function updateLineCount(){document.getElementById('lineCount').textContent=document.getElementById('recallInput').value.split('\n').length+' lines'}
-function submitRecall(){const d=computeDiff(document.getElementById('recallInput').value,blocks[currentBlock].code);renderDiff(d);enablePhaseTabs(true);setPhase('compare')}
-function skipRecall(){document.getElementById('recallInput').value=blocks[currentBlock].code;enablePhaseTabs(true);renderDiff(computeDiff('',blocks[currentBlock].code));setPhase('compare')}
-function computeDiff(uc,oc){const u=extractCoreLines(uc),o=extractCoreLines(oc);const r={yours:[],original:[],coreCorrect:0,coreMissing:0,coreWrong:0,coreTotal:o.length};lcsAlign(u.map(l=>l.trim()),o.map(l=>l.trim())).forEach(it=>{if(it.type==='match'){r.yours.push({text:it.userLine,type:'ok'});r.original.push({text:it.origLine,type:'ok'});r.coreCorrect++}else if(it.type==='delete'){r.yours.push({text:it.userLine,type:'del'});r.original.push({text:'',type:'empty'});r.coreWrong++}else{r.yours.push({text:'',type:'empty'});r.original.push({text:it.origLine,type:'add'});r.coreMissing++}});return r}
-function lcsAlign(U,O){const m=U.length,n=O.length,dp=Array(m+1).fill(null).map(()=>Array(n+1).fill(0));for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)dp[i][j]=U[i-1]===O[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);const r=[];let i=m,j=n;while(i>0||j>0){if(i>0&&j>0&&U[i-1]===O[j-1]){r.unshift({type:'match',userLine:U[i-1],origLine:O[j-1]});i--;j--}else if(j>0&&(i===0||dp[i][j-1]>=dp[i-1][j])){r.unshift({type:'insert',origLine:O[j-1]});j--}else{r.unshift({type:'delete',userLine:U[i-1]});i--}}return r}
-function renderDiff(d){document.getElementById('diffYours').innerHTML=d.yours.map(l=>`<div class="diff-line diff-${l.type}" style="min-height:1.6em">${esc(l.text||'')}</div>`).join('');document.getElementById('diffOriginal').innerHTML=d.original.map(l=>`<div class="diff-line diff-${l.type==='add'?'add':l.type}" style="min-height:1.6em">${esc(l.text||'')}</div>`).join('');const a=d.coreTotal>0?Math.round(d.coreCorrect/d.coreTotal*100):0;document.getElementById('accuracyScore').textContent=a+'%';document.getElementById('linesCorrect').textContent=d.coreCorrect;document.getElementById('linesMissing').textContent=d.coreMissing;document.getElementById('linesWrong').textContent=d.coreWrong;document.getElementById('accuracyBar').style.width=a+'%';document.getElementById('accuracyBar').style.background=a>=80?'#16a34a':a>=50?'#FBD45B':'#dc2626';document.getElementById('coreLineInfo').textContent=`Scoring ${d.coreTotal} core lines (comments excluded)`;const v=document.getElementById('accuracyVerdict');if(a>=90)v.innerHTML='<div class="text-positive font-serif text-lg font-bold">Mastery \ud83d\udd25</div>';else if(a>=70)v.innerHTML='<div class="font-serif text-lg font-bold">Solid</div>';else if(a>=40)v.innerHTML='<div class="text-orange-500 font-serif text-lg font-bold">Getting There</div>';else v.innerHTML='<div class="text-negative font-serif text-lg font-bold">Keep Going</div>';document.getElementById('blockAccuracy').textContent=`Last: ${a}%`}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/ /g,'&nbsp;')}
-function resetModify(){document.getElementById('modifyInput').value=blocks[currentBlock].code}
-async function loadPyodideRuntime(){if(pyodideReady)return true;const st=document.getElementById('pyodideStatus');st.textContent='Loading Python (~20MB)...';try{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js';document.head.appendChild(s);await new Promise((r,j)=>{s.onload=r;s.onerror=j});pyodide=await loadPyodide({indexURL:'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/'});pyodideReady=true;st.textContent='\u2713 Python ready';st.style.color='#16a34a';return true}catch(e){st.textContent='\u2717 Pyodide unavailable';st.style.color='#dc2626';return false}}
-async function runCode(){const b=document.getElementById('runBtn'),o=document.getElementById('runOutput'),c=document.getElementById('runInput').value;b.textContent='\u23f3';b.disabled=true;if(!await loadPyodideRuntime()){o.textContent='Pyodide unavailable. Run locally.';b.textContent='\u25b6 RUN';b.disabled=false;return}b.textContent='\u23f3 Running...';o.textContent='';try{pyodide.runPython(`import sys,io;sys.stdout=io.StringIO();sys.stderr=io.StringIO()`);const pc=`import os,builtins,io\n_oe=os.path.exists\nos.path.exists=lambda p:True if p=='input.txt' else _oe(p)\n_n="emma\\nolivia\\nava\\nisabella\\nsophia\\nmia\\ncharlotte\\namelia\\nharper\\nevelyn"\n_oo=builtins.open\nbuiltins.open=lambda p,*a,**kw:io.StringIO(_n) if p=='input.txt' else _oo(p,*a,**kw)\n`+c;await pyodide.runPythonAsync(pc);const so=pyodide.runPython('sys.stdout.getvalue()'),se=pyodide.runPython('sys.stderr.getvalue()');o.textContent=so+(se?'\n--- stderr ---\n'+se:'')}catch(e){o.textContent=`Error:\n${e.message}`}b.textContent='\u25b6 RUN';b.disabled=false}
-function clearOutput(){document.getElementById('runOutput').textContent=''}
-function completeBlock(){const p=loadProgress();if(!p.completed)p.completed={};p.completed[currentBlock]=true;saveProgress(p);updateStreak();updateStreakDisplay();const n=document.querySelectorAll('.block-btn');if(n[currentBlock])n[currentBlock].classList.add('completed');if(currentBlock<blocks.length-1)setTimeout(()=>selectBlock(currentBlock+1),500)}
-function startTimer(){resetTimer();timerInterval=setInterval(()=>{timerSeconds++;document.getElementById('blockTimer').textContent=`${Math.floor(timerSeconds/60)}:${(timerSeconds%60).toString().padStart(2,'0')}`},1000)}
-function resetTimer(){if(timerInterval)clearInterval(timerInterval);timerSeconds=0;document.getElementById('blockTimer').textContent='0:00'}
-function prevBlock(){if(currentBlock>0)selectBlock(currentBlock-1)}
-function nextBlock(){if(currentBlock<blocks.length-1)selectBlock(currentBlock+1)}
-updateStreakDisplay();
-window.addEventListener('DOMContentLoaded',()=>{loadFromGist().catch(()=>loadEmbeddedSource())});
-const EMBEDDED_SOURCE = `
-import os       # os.path.exists
-import math     # math.log, math.exp
-import random   # random.seed, random.choices, random.gauss, random.shuffle
-random.seed(42) # Let there be order among chaos
-
-# Let there be an input dataset \`docs\`: list[str] of documents (e.g. a dataset of names)
-if not os.path.exists('input.txt'):
-    import urllib.request
-    names_url = 'https://raw.githubusercontent.com/karpathy/makemore/refs/heads/master/names.txt'
-    urllib.request.urlretrieve(names_url, 'input.txt')
-docs = [l.strip() for l in open('input.txt').read().strip().split('\\n') if l.strip()] # list[str] of documents
-random.shuffle(docs)
-print(f"num docs: {len(docs)}")
-
-# Let there be a Tokenizer to translate strings to discrete symbols and back
-uchars = sorted(set(''.join(docs))) # unique characters in the dataset become token ids 0..n-1
-BOS = len(uchars) # token id for the special Beginning of Sequence (BOS) token
-vocab_size = len(uchars) + 1 # total number of unique tokens, +1 is for BOS
-print(f"vocab size: {vocab_size}")
-
-# Let there be an Autograd to apply the chain rule recursively across a computation graph
-class Value:
-    """Stores a single scalar value and its gradient, as a node in a computation graph."""
-
-    def __init__(self, data, children=(), local_grads=()):
-        self.data = data
-        self.grad = 0
-        self._children = children
-        self._local_grads = local_grads
-
-    def __add__(self, other):
-        other = other if isinstance(other, Value) else Value(other)
-        return Value(self.data + other.data, (self, other), (1, 1))
-
-    def __mul__(self, other):
-        other = other if isinstance(other, Value) else Value(other)
-        return Value(self.data * other.data, (self, other), (other.data, self.data))
-
-    def __pow__(self, other): return Value(self.data**other, (self,), (other * self.data**(other-1),))
-    def log(self): return Value(math.log(self.data), (self,), (1/self.data,))
-    def exp(self): return Value(math.exp(self.data), (self,), (math.exp(self.data),))
-    def relu(self): return Value(max(0, self.data), (self,), (float(self.data > 0),))
-    def __neg__(self): return self * -1
-    def __radd__(self, other): return self + other
-    def __sub__(self, other): return self + (-other)
-    def __rsub__(self, other): return other + (-self)
-    def __rmul__(self, other): return self * other
-    def __truediv__(self, other): return self * other**-1
-    def __rtruediv__(self, other): return other * self**-1
-
-    def backward(self):
-        topo = []
-        visited = set()
-        def build_topo(v):
-            if v not in visited:
-                visited.add(v)
-                for child in v._children:
-                    build_topo(child)
-                topo.append(v)
-        build_topo(self)
-        self.grad = 1
-        for v in reversed(topo):
-            for child, local_grad in zip(v._children, v._local_grads):
-                child.grad += local_grad * v.grad
-
-# Initialize the parameters, to store the knowledge of the model.
-n_embd = 16     # embedding dimension
-n_head = 4      # number of attention heads
-n_layer = 1     # number of layers
-block_size = 8  # maximum sequence length
-head_dim = n_embd // n_head # dimension of each head
-matrix = lambda nout, nin, std=0.02: [[Value(random.gauss(0, std)) for _ in range(nin)] for _ in range(nout)]
-state_dict = {'wte': matrix(vocab_size, n_embd), 'wpe': matrix(block_size, n_embd), 'lm_head': matrix(vocab_size, n_embd)}
-for i in range(n_layer):
-    state_dict[f'layer{i}.attn_wq'] = matrix(n_embd, n_embd)
-    state_dict[f'layer{i}.attn_wk'] = matrix(n_embd, n_embd)
-    state_dict[f'layer{i}.attn_wv'] = matrix(n_embd, n_embd)
-    state_dict[f'layer{i}.attn_wo'] = matrix(n_embd, n_embd, std=0)
-    state_dict[f'layer{i}.mlp_fc1'] = matrix(4 * n_embd, n_embd)
-    state_dict[f'layer{i}.mlp_fc2'] = matrix(n_embd, 4 * n_embd, std=0)
-params = [p for mat in state_dict.values() for row in mat for p in row]
-print(f"num params: {len(params)}")
-
-# Define the model architecture
-def linear(x, w):
-    return [sum(wi * xi for wi, xi in zip(wo, x)) for wo in w]
-
-def softmax(logits):
-    max_val = max(val.data for val in logits)
-    exps = [(val - max_val).exp() for val in logits]
-    total = sum(exps)
-    return [e / total for e in exps]
-
-def rmsnorm(x):
-    ms = sum(xi * xi for xi in x) / len(x)
-    scale = (ms + 1e-5) ** -0.5
-    return [xi * scale for xi in x]
-
-def gpt(token_id, pos_id, keys, values):
-    tok_emb = state_dict['wte'][token_id]
-    pos_emb = state_dict['wpe'][pos_id]
-    x = [t + p for t, p in zip(tok_emb, pos_emb)]
-    x = rmsnorm(x)
-
-    for li in range(n_layer):
-        x_residual = x
-        x = rmsnorm(x)
-        q = linear(x, state_dict[f'layer{li}.attn_wq'])
-        k = linear(x, state_dict[f'layer{li}.attn_wk'])
-        v = linear(x, state_dict[f'layer{li}.attn_wv'])
-        keys[li].append(k)
-        values[li].append(v)
-        x_attn = []
-        for h in range(n_head):
-            hs = h * head_dim
-            q_h = q[hs:hs+head_dim]
-            k_h = [ki[hs:hs+head_dim] for ki in keys[li]]
-            v_h = [vi[hs:hs+head_dim] for vi in values[li]]
-            attn_logits = [sum(q_h[j] * k_h[t][j] for j in range(head_dim)) / head_dim**0.5 for t in range(len(k_h))]
-            attn_weights = softmax(attn_logits)
-            head_out = [sum(attn_weights[t] * v_h[t][j] for t in range(len(v_h))) for j in range(head_dim)]
-            x_attn.extend(head_out)
-        x = linear(x_attn, state_dict[f'layer{li}.attn_wo'])
-        x = [a + b for a, b in zip(x, x_residual)]
-        x_residual = x
-        x = rmsnorm(x)
-        x = linear(x, state_dict[f'layer{li}.mlp_fc1'])
-        x = [xi.relu() ** 2 for xi in x]
-        x = linear(x, state_dict[f'layer{li}.mlp_fc2'])
-        x = [a + b for a, b in zip(x, x_residual)]
-
-    logits = linear(x, state_dict['lm_head'])
-    return logits
-
-# Let there be Adam, the blessed optimizer and its buffers
-learning_rate, beta1, beta2, eps_adam = 1e-2, 0.9, 0.95, 1e-8
-m = [0.0] * len(params)
-v = [0.0] * len(params)
-
-# Repeat in sequence
-num_steps = 500
-for step in range(num_steps):
-
-    doc = docs[step % len(docs)]
-    tokens = [BOS] + [uchars.index(ch) for ch in doc] + [BOS]
-    n = min(block_size, len(tokens) - 1)
-
-    keys, values = [[] for _ in range(n_layer)], [[] for _ in range(n_layer)]
-    losses = []
-    for pos_id in range(n):
-        token_id, target_id = tokens[pos_id], tokens[pos_id + 1]
-        logits = gpt(token_id, pos_id, keys, values)
-        probs = softmax(logits)
-        loss_t = -probs[target_id].log()
-        losses.append(loss_t)
-    loss = (1 / n) * sum(losses)
-
-    loss.backward()
-
-    lr_t = learning_rate * 0.5 * (1 + math.cos(math.pi * step / num_steps))
-    for i, p in enumerate(params):
-        m[i] = beta1 * m[i] + (1 - beta1) * p.grad
-        v[i] = beta2 * v[i] + (1 - beta2) * p.grad ** 2
-        m_hat = m[i] / (1 - beta1 ** (step + 1))
-        v_hat = v[i] / (1 - beta2 ** (step + 1))
-        p.data -= lr_t * m_hat / (v_hat ** 0.5 + eps_adam)
-        p.grad = 0
-
-    print(f"step {step+1:4d} / {num_steps:4d} | loss {loss.data:.4f}")
-
-# Inference: may the model babble back to us
-temperature = 0.5
-print("\\n--- inference ---")
-for sample_idx in range(20):
-    keys, values = [[] for _ in range(n_layer)], [[] for _ in range(n_layer)]
-    token_id = BOS
-    sample = []
-    for pos_id in range(block_size):
-        logits = gpt(token_id, pos_id, keys, values)
-        probs = softmax([l / temperature for l in logits])
-        token_id = random.choices(range(vocab_size), weights=[p.data for p in probs])[0]
-        if token_id == BOS:
-            break
-        sample.append(uchars[token_id])
-    print(f"sample {sample_idx+1:2d}: {''.join(sample)}")`;
-</script></body></html>
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.section-link');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.section-link[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
