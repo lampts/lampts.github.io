@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monte Carlo Retirement: 1000 Possible Futures</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['IBM Plex Mono', 'monospace'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                        serif: ['IBM Plex Serif', 'serif'],
+                    },
+                    colors: {
+                        background: '#ffffff',
+                        foreground: '#000000',
+                        muted: '#666666',
+                        accent: '#FBD45B',
+                        positive: '#16a34a',
+                        negative: '#dc2626',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .shadow-brutal { box-shadow: 3px 3px 0px #000; }
+        .shadow-brutal-sm { box-shadow: 2px 2px 0px #000; }
+        .result-panel { display: none; }
+        .result-panel.show { display: block; }
+        canvas { display: block; }
+    </style>
+</head>
+<body class="bg-background text-foreground font-sans text-sm leading-relaxed">
+<div class="max-w-xl mx-auto px-4 py-8">
+
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="text-[10px] text-muted uppercase tracking-widest mb-1">lampt.org / monte carlo series</div>
+        <h1 class="font-serif text-2xl font-bold mb-2">Will You Have Enough to Retire?</h1>
+        <p class="text-xs text-muted">1,000 simulated lifetimes. One question. The Monte Carlo way.</p>
+    </div>
+
+    <!-- Nav dots -->
+    <div class="flex items-center gap-1.5 mb-8" id="nav-dots">
+        <button class="nav-dot w-2.5 h-2.5 border border-black bg-black" onclick="navigateModule(0)"></button>
+        <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(1)"></button>
+        <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(2)"></button>
+        <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(3)"></button>
+        <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(4)"></button>
+        <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(5)"></button>
+    </div>
+
+    <!-- ==================== MODULE 0: The Setup ==================== -->
+    <div class="module-section" id="module0">
+        <div class="text-[10px] text-muted uppercase tracking-wider mb-4">Module 0 / 5 — The Problem</div>
+        <h2 class="font-serif text-xl font-bold mb-4">The Question Everyone Asks</h2>
+
+        <p class="text-xs mb-4">You're 30 years old. You have $50,000 saved. You invest $500 every month. The stock market averages about 7% per year. Will you have enough to retire at 65?</p>
+
+        <p class="text-xs mb-3">❌ <strong>Wrong approach:</strong> Plug 7% into a compound interest calculator and get one number. That number is a lie — the market doesn't return 7% every year.</p>
+        <p class="text-xs mb-4">✅ <strong>Right approach:</strong> Some years are up 20%. Others are down 15%. The <em>sequence</em> matters. A crash at 60 hurts far more than a crash at 32. You need to simulate the randomness.</p>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-2">The Monte Carlo Setup</div>
+            <div class="space-y-1.5 text-xs">
+                <div><span class="px-1 bg-accent border border-black text-[10px] font-bold">Ω</span> All possible sequences of 35 annual returns</div>
+                <div><span class="px-1 bg-accent border border-black text-[10px] font-bold">f</span> Compound portfolio forward: apply returns, add contributions each year</div>
+                <div><span class="px-1 bg-accent border border-black text-[10px] font-bold">xᵢ</span> One random sequence: [+12%, -8%, +22%, ...] for 35 years</div>
+                <div><span class="px-1 bg-accent border border-black text-[10px] font-bold">N</span> 1,000 simulated lifetimes</div>
+                <div><span class="px-1 bg-accent border border-black text-[10px] font-bold">Ê</span> Distribution of final portfolio values → P(enough to retire)</div>
+            </div>
+        </div>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Why Not Just Use 7%?</div>
+            <p class="text-xs text-muted mb-3">Because the deterministic answer hides a critical truth: the spread of outcomes. Two people with identical savings plans can end up $1M apart because of when crashes happen.</p>
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="border border-gray-200 p-2">
+                    <div class="text-[10px] text-muted">Deterministic (7% flat)</div>
+                    <div class="font-bold text-lg" id="det-result">—</div>
+                    <div class="text-[10px] text-muted">One number. No uncertainty.</div>
+                </div>
+                <div class="border border-gray-200 p-2">
+                    <div class="text-[10px] text-muted">Monte Carlo (7% avg, 15% std)</div>
+                    <div class="font-bold text-lg" id="mc-range">—</div>
+                    <div class="text-[10px] text-muted">Range of 1,000 futures.</div>
+                </div>
+            </div>
+            <button onclick="compareDetVsMC()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white mt-3">Compare</button>
+        </div>
+
+        <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+            <p class="text-xs font-semibold">THE MARKET AVERAGES 7%. IT NEVER RETURNS 7%. THAT GAP IS EVERYTHING.</p>
+        </div>
+
+        <div class="flex justify-end">
+            <button onclick="navigateModule(1)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">Next: One Path →</button>
+        </div>
+    </div>
+
+    <!-- ==================== MODULE 1: One Path ==================== -->
+    <div class="module-section hidden" id="module1">
+        <div class="text-[10px] text-muted uppercase tracking-wider mb-4">Module 1 / 5 — One Simulated Life</div>
+        <h2 class="font-serif text-xl font-bold mb-1">Your Random Financial Life</h2>
+        <p class="text-xs text-muted italic mb-4">"Each year's return is a random draw — on average 7%, but it swings up or down."</p>
+
+        <p class="text-xs mb-3">❌ <strong>Wrong:</strong> Thinking one simulation tells you anything. It's one roll of a 35-year die.</p>
+        <p class="text-xs mb-4">✅ <strong>Right:</strong> One path shows the <em>mechanism</em>. How annual randomness compounds into wildly different outcomes. Click multiple times — each life is different.</p>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal">
+            <div class="flex justify-between items-center mb-3">
+                <span class="font-semibold text-xs">Exercise: Live One Financial Life</span>
+                <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">PRACTICE</span>
+            </div>
+            <p class="text-xs text-muted mb-3">Each click draws 35 random annual returns and compounds your portfolio. Click multiple times to see how different each life turns out.</p>
+            <button onclick="simulateOnePath()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white mb-3">Simulate One Life</button>
+            <canvas id="one-path-canvas" width="540" height="280" class="border border-gray-200 w-full mb-2"></canvas>
+            <div class="result-panel border-t border-gray-200 pt-3" id="one-path-results"></div>
+        </div>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Key Insight</div>
+            <code class="text-xs bg-white border border-gray-300 px-2 py-1 block">Year-by-year return: r ~ N(μ=7%, σ=15%)</code>
+            <p class="text-xs text-muted mt-2">Each year: balance = balance × (1 + r) + annual_contribution. The returns are random. The compounding is deterministic. Randomness × compounding = massive spread over 35 years.</p>
+        </div>
+
+        <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+            <p class="text-xs font-semibold">ONE SIMULATION IS AN ANECDOTE. YOU NEED A THOUSAND TO SEE THE PATTERN.</p>
+        </div>
+
+        <div class="flex justify-between">
+            <button onclick="navigateModule(0)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">← Back</button>
+            <button onclick="navigateModule(2)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">Next: 1,000 Paths →</button>
+        </div>
+    </div>
+
+    <!-- ==================== MODULE 2: Spaghetti Plot ==================== -->
+    <div class="module-section hidden" id="module2">
+        <div class="text-[10px] text-muted uppercase tracking-wider mb-4">Module 2 / 5 — A Thousand Futures</div>
+        <h2 class="font-serif text-xl font-bold mb-1">Watch the Paths Spread</h2>
+        <p class="text-xs text-muted italic mb-4">"Each line represents one possible version of your financial journey."</p>
+
+        <p class="text-xs mb-3">❌ <strong>Wrong:</strong> Looking at the average path. The average person doesn't exist.</p>
+        <p class="text-xs mb-4">✅ <strong>Right:</strong> The <em>spread</em> is the insight. Some paths get lucky early with strong returns. Others hit rough markets. Over time, the paths fan out — showing the full range of what could happen.</p>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal">
+            <div class="flex justify-between items-center mb-3">
+                <span class="font-semibold text-xs">Exercise: 1,000 Simulated Lifetimes</span>
+                <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+            </div>
+            <p class="text-xs text-muted mb-3">Watch 1,000 paths diverge from the same starting point. The fan shape IS the uncertainty.</p>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Starting savings</label>
+                    <input type="number" id="sp-start" value="50000" step="10000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Monthly ($)</label>
+                    <input type="number" id="sp-monthly" value="500" step="100" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Years</label>
+                    <input type="number" id="sp-years" value="35" min="5" max="50" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Avg return (%)</label>
+                    <input type="number" id="sp-mean" value="7" step="0.5" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Volatility (%)</label>
+                    <input type="number" id="sp-std" value="15" step="1" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Simulations</label>
+                    <input type="number" id="sp-n" value="1000" min="100" max="5000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+            </div>
+            <button onclick="runSpaghettiPlot()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white mb-3">Run 1,000 Simulations</button>
+            <canvas id="spaghetti-canvas" width="540" height="340" class="border border-gray-200 w-full mb-2"></canvas>
+            <div class="result-panel border-t border-gray-200 pt-3" id="spaghetti-results"></div>
+        </div>
+
+        <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+            <p class="text-xs font-semibold">THE FAN IS THE ANSWER. NARROW FAN = PREDICTABLE. WIDE FAN = BUCKLE UP.</p>
+        </div>
+
+        <div class="flex justify-between">
+            <button onclick="navigateModule(1)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">← Back</button>
+            <button onclick="navigateModule(3)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">Next: Distribution →</button>
+        </div>
+    </div>
+
+    <!-- ==================== MODULE 3: Distribution ==================== -->
+    <div class="module-section hidden" id="module3">
+        <div class="text-[10px] text-muted uppercase tracking-wider mb-4">Module 3 / 5 — The Distribution of Outcomes</div>
+        <h2 class="font-serif text-xl font-bold mb-1">Answering Practical Questions</h2>
+        <p class="text-xs text-muted italic mb-4">"What's the typical outcome? What's the probability of reaching $800K?"</p>
+
+        <p class="text-xs mb-3">❌ <strong>Wrong:</strong> Reporting just the average. Averages hide the tails that ruin or make you.</p>
+        <p class="text-xs mb-4">✅ <strong>Right:</strong> Report the full distribution. The median (typical), the 10th percentile (bad luck), the 90th percentile (good luck), and the probability of hitting your target.</p>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Key Insight</div>
+            <code class="text-xs bg-white border border-gray-300 px-2 py-1 block">P(goal) = count(final ≥ goal) / N</code>
+            <p class="text-xs text-muted mt-2">MC converts impossible probability calculations into simple counting. "What fraction of my 1,000 simulated lifetimes hit the target?" That fraction IS the probability.</p>
+        </div>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal">
+            <div class="flex justify-between items-center mb-3">
+                <span class="font-semibold text-xs">Exercise: Read Your Future</span>
+                <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">MASTERY</span>
+            </div>
+            <p class="text-xs text-muted mb-3">Same simulation, but now we slice the distribution to answer real questions.</p>
+            <div class="grid grid-cols-2 gap-2 mb-3">
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Starting savings ($)</label>
+                    <input type="number" id="dist-start" value="50000" step="10000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Monthly ($)</label>
+                    <input type="number" id="dist-monthly" value="500" step="100" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Avg return (%)</label>
+                    <input type="number" id="dist-mean" value="7" step="0.5" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Volatility (%)</label>
+                    <input type="number" id="dist-std" value="15" step="1" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Years</label>
+                    <input type="number" id="dist-years" value="35" min="5" max="50" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Retirement goal ($)</label>
+                    <input type="number" id="dist-goal" value="800000" step="100000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+            </div>
+            <button onclick="runDistribution()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white mb-3">Simulate 1,000 Futures</button>
+            <canvas id="dist-canvas" width="540" height="240" class="border border-gray-200 w-full mb-2"></canvas>
+            <div class="result-panel border-t border-gray-200 pt-3" id="dist-results"></div>
+        </div>
+
+        <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+            <p class="text-xs font-semibold">MONTE CARLO TURNS "WILL I HAVE ENOUGH?" INTO "THERE'S A 75% CHANCE I'LL HAVE ENOUGH." THAT'S A BETTER QUESTION AND A BETTER ANSWER.</p>
+        </div>
+
+        <div class="flex justify-between">
+            <button onclick="navigateModule(2)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">← Back</button>
+            <button onclick="navigateModule(4)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">Next: What-If →</button>
+        </div>
+    </div>
+
+    <!-- ==================== MODULE 4: Sensitivity ==================== -->
+    <div class="module-section hidden" id="module4">
+        <div class="text-[10px] text-muted uppercase tracking-wider mb-4">Module 4 / 5 — Sensitivity Analysis</div>
+        <h2 class="font-serif text-xl font-bold mb-1">Which Lever Matters Most?</h2>
+        <p class="text-xs text-muted italic mb-4">"Instead of guessing, we simulate."</p>
+
+        <p class="text-xs mb-3">❌ <strong>Wrong:</strong> Optimizing one variable in isolation. "If I just get better returns..."</p>
+        <p class="text-xs mb-4">✅ <strong>Right:</strong> MC lets you run controlled experiments on your future. Change one variable, hold others fixed, compare distributions. Find the lever with the highest marginal impact.</p>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Key Insight</div>
+            <code class="text-xs bg-white border border-gray-300 px-2 py-1 block">∂P(goal) / ∂lever — which lever moves the needle most?</code>
+            <p class="text-xs text-muted mt-2">You can only control: how much you save, how long you work, and your asset allocation (which affects both mean and volatility). MC tells you which matters.</p>
+        </div>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal">
+            <div class="flex justify-between items-center mb-3">
+                <span class="font-semibold text-xs">Exercise: The Lever Experiment</span>
+                <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+            </div>
+            <p class="text-xs text-muted mb-3">Baseline: $50K start, $500/mo, 35 years, 7% return, 15% vol. Each row changes ONE lever. Which lever produces the biggest improvement in P(≥ $800K)?</p>
+            <button onclick="runSensitivity()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white mb-3">Run All Scenarios</button>
+            <div class="result-panel border-t border-gray-200 pt-3" id="sensitivity-results"></div>
+        </div>
+
+        <!-- What-if playground -->
+        <div class="border border-black p-4 mb-6 shadow-brutal">
+            <div class="flex justify-between items-center mb-3">
+                <span class="font-semibold text-xs">Playground: Your Own What-If</span>
+                <span class="px-1.5 py-0.5 bg-gray-100 text-[10px] border border-black">PRACTICE</span>
+            </div>
+            <p class="text-xs text-muted mb-3">Tweak any parameter and instantly see the impact on your probability of hitting your goal.</p>
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Start ($)</label>
+                    <input type="number" id="play-start" value="50000" step="10000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Monthly ($)</label>
+                    <input type="number" id="play-monthly" value="500" step="100" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Years</label>
+                    <input type="number" id="play-years" value="35" min="5" max="50" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Return (%)</label>
+                    <input type="number" id="play-mean" value="7" step="0.5" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Volatility (%)</label>
+                    <input type="number" id="play-std" value="15" step="1" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+                <div>
+                    <label class="text-[10px] text-muted block mb-1">Goal ($)</label>
+                    <input type="number" id="play-goal" value="800000" step="100000" class="w-full border border-gray-300 px-2 py-1 text-xs">
+                </div>
+            </div>
+            <button onclick="runPlayground()" class="border border-black px-3 py-1 text-xs hover:bg-black hover:text-white">Simulate</button>
+            <div class="result-panel mt-4 border-t border-gray-200 pt-3" id="playground-results"></div>
+        </div>
+
+        <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+            <p class="text-xs font-semibold">YOU CAN'T CONTROL THE MARKET. YOU CAN CONTROL HOW MUCH YOU SAVE AND HOW LONG YOU STAY IN THE GAME. MC SHOWS WHICH ONE MATTERS MORE.</p>
+        </div>
+
+        <div class="flex justify-between">
+            <button onclick="navigateModule(3)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">← Back</button>
+            <button onclick="navigateModule(5)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">Next: Synthesis →</button>
+        </div>
+    </div>
+
+    <!-- ==================== MODULE 5: Synthesis ==================== -->
+    <div class="module-section hidden" id="module5">
+        <div class="text-[10px] text-muted uppercase tracking-wider mb-4">Module 5 / 5 — Synthesis</div>
+        <h2 class="font-serif text-xl font-bold mb-1">The Complete Machine</h2>
+        <p class="text-xs text-muted italic mb-4">"Instead of guessing, we simulate."</p>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-3">The Algorithm in 6 Lines</div>
+<pre class="text-xs bg-white border border-gray-300 p-3 overflow-x-auto"><code>for sim in 1..N:
+    balance = starting_savings
+    for year in 1..35:
+        r = random_normal(mean=0.07, std=0.15)
+        balance = balance * (1 + r) + annual_contribution
+    record(balance)
+report: median, percentiles, P(balance ≥ goal)</code></pre>
+            <p class="text-xs text-muted mt-2">That's it. The entire retirement Monte Carlo in 6 lines. The power isn't in complexity — it's in running it 1,000 times and reading the distribution.</p>
+        </div>
+
+        <div class="border border-black p-4 mb-6 shadow-brutal">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-3">What MC Told Us</div>
+            <div class="space-y-2 text-xs">
+                <div class="flex gap-2 items-start">
+                    <span class="text-positive font-bold shrink-0">→</span>
+                    <span>Typical outcome (median): ~$1.2M — but this is NOT guaranteed</span>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="text-positive font-bold shrink-0">→</span>
+                    <span>P(≥ $800K) ≈ 75% — three in four futures work out</span>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="text-negative font-bold shrink-0">→</span>
+                    <span>Worst cases: ~$400K — one in four futures underdeliver</span>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="text-positive font-bold shrink-0">→</span>
+                    <span>Monthly contribution has more reliable impact than chasing returns</span>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="text-positive font-bold shrink-0">→</span>
+                    <span>More years compounds both wealth AND uncertainty</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- The atom mapping -->
+        <div class="border border-black p-4 mb-6 shadow-brutal">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-3">Atom Mapping: Retirement Edition</div>
+            <table class="w-full text-xs">
+                <thead><tr class="border-b border-black"><th class="text-left py-1">Atom</th><th class="text-left py-1">Retirement</th><th class="text-left py-1">What you control</th></tr></thead>
+                <tbody>
+                    <tr class="border-b border-gray-200"><td class="py-1.5 font-bold">Ω</td><td>All 35-year return sequences</td><td class="text-muted">Asset allocation shifts Ω</td></tr>
+                    <tr class="border-b border-gray-200"><td class="py-1.5 font-bold">f(x)</td><td>Compound: balance × (1+r) + savings</td><td class="text-muted">Savings amount, start</td></tr>
+                    <tr class="border-b border-gray-200"><td class="py-1.5 font-bold">xᵢ</td><td>One random return sequence</td><td class="text-muted">Nothing (it's random)</td></tr>
+                    <tr class="border-b border-gray-200"><td class="py-1.5 font-bold">N</td><td>1,000 simulations</td><td class="text-muted">Compute budget</td></tr>
+                    <tr><td class="py-1.5 font-bold">Ê</td><td>Distribution of final values</td><td class="text-muted">The answer itself</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bayesian -->
+        <div class="border border-black p-4 mb-6 shadow-brutal bg-gray-50">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Bayesian Summary</div>
+            <code class="text-xs bg-white border border-gray-300 px-2 py-1 block mb-2">P(comfortable retirement) = P(save enough) × P(stay invested long enough) × P(don't panic sell in crashes)</code>
+            <p class="text-xs text-muted">MC can model the first two. The third is on you.</p>
+        </div>
+
+        <!-- Multi-resolution -->
+        <div class="border border-black p-4 mb-6 shadow-brutal">
+            <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Multi-Resolution Summary</div>
+            <div class="space-y-2 text-xs">
+                <div><strong>5 words:</strong> Simulate 1,000 financial lifetimes.</div>
+                <div><strong>15 words:</strong> Monte Carlo simulates random market returns over decades, converting "will I retire?" into probability distributions.</div>
+                <div><strong>30 words:</strong> By drawing random annual returns and compounding portfolios forward across 1,000 simulated lifetimes, MC reveals that $50K + $500/month over 35 years reaches $800K about 75% of the time — and that savings rate matters more than chasing returns.</div>
+            </div>
+        </div>
+
+        <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+            <p class="text-xs font-semibold">MONTE CARLO DOESN'T PREDICT THE FUTURE. IT MAPS THE SPACE OF POSSIBLE FUTURES SO YOU CAN MAKE BETTER DECISIONS NOW.</p>
+        </div>
+
+        <div class="flex justify-start">
+            <button onclick="navigateModule(4)" class="border border-black px-4 py-2 text-xs hover:bg-black hover:text-white shadow-brutal-sm">← Back</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-12 pt-4 border-t border-gray-200 text-[10px] text-muted">
+        <a href="https://lampt.org" class="hover:text-black">lampt.org</a> · Monte Carlo Retirement Simulator · Based on "Monte Carlo Simulation Explained Visually"
+    </div>
+</div>
+
+<script>
+// ====== UTILITIES ======
+function randn() {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+function fmt(v) {
+    if (v >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M';
+    if (v >= 1e3) return '$' + Math.round(v).toLocaleString();
+    return '$' + v.toFixed(0);
+}
+
+function simulatePath(start, monthly, years, mean, std) {
+    const path = [start];
+    let balance = start;
+    for (let y = 0; y < years; y++) {
+        const r = mean + std * randn();
+        balance = balance * (1 + r) + monthly * 12;
+        balance = Math.max(0, balance);
+        path.push(balance);
+    }
+    return path;
+}
+
+function runBatchSim(start, monthly, years, mean, std, N) {
+    const finals = [];
+    const paths = [];
+    for (let i = 0; i < N; i++) {
+        const path = simulatePath(start, monthly, years, mean, std);
+        finals.push(path[path.length - 1]);
+        paths.push(path);
+    }
+    finals.sort((a, b) => a - b);
+    return { finals, paths };
+}
+
+function percentile(sorted, p) {
+    return sorted[Math.floor(sorted.length * p)];
+}
+
+function navigateModule(idx) {
+    document.querySelectorAll('.module-section').forEach(s => s.classList.add('hidden'));
+    document.getElementById(`module${idx}`).classList.remove('hidden');
+    document.querySelectorAll('.nav-dot').forEach((d, i) => {
+        d.classList.toggle('bg-black', i <= idx);
+        d.classList.toggle('bg-white', i > idx);
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ====== CANVAS HELPERS ======
+function getCanvasCtx(id) {
+    const canvas = document.getElementById(id);
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    return { ctx, W: rect.width, H: rect.height };
+}
+
+const MARGIN = { top: 30, right: 16, bottom: 32, left: 60 };
+
+function drawAxes(ctx, W, H, years, maxVal) {
+    const plotW = W - MARGIN.left - MARGIN.right;
+    const plotH = H - MARGIN.top - MARGIN.bottom;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fafafa';
+    ctx.fillRect(MARGIN.left, MARGIN.top, plotW, plotH);
+
+    // Grid lines
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 0.5;
+    const nTicks = 5;
+    for (let i = 0; i <= nTicks; i++) {
+        const y = MARGIN.top + plotH * (1 - i / nTicks);
+        ctx.beginPath(); ctx.moveTo(MARGIN.left, y); ctx.lineTo(W - MARGIN.right, y); ctx.stroke();
+        const val = maxVal * i / nTicks;
+        ctx.fillStyle = '#666';
+        ctx.font = '9px IBM Plex Mono, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(fmt(val), MARGIN.left - 4, y + 3);
+    }
+
+    // X axis labels
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#666';
+    const step = years <= 20 ? 5 : 10;
+    for (let yr = 0; yr <= years; yr += step) {
+        const x = MARGIN.left + (yr / years) * plotW;
+        ctx.fillText(`Yr ${yr}`, x, H - MARGIN.bottom + 16);
+    }
+
+    // Axis labels
+    ctx.fillStyle = '#000';
+    ctx.font = '10px IBM Plex Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Portfolio Value', MARGIN.left + plotW / 2, 14);
+
+    return { plotW, plotH };
+}
+
+function toPlotCoords(yearIdx, value, years, maxVal, plotW, plotH) {
+    return {
+        x: MARGIN.left + (yearIdx / years) * plotW,
+        y: MARGIN.top + plotH * (1 - value / maxVal)
+    };
+}
+
+// ====== MODULE 0: Det vs MC ======
+function compareDetVsMC() {
+    const start = 50000, monthly = 500, years = 35, mean = 0.07;
+
+    // Deterministic
+    let det = start;
+    for (let y = 0; y < years; y++) det = det * 1.07 + monthly * 12;
+    document.getElementById('det-result').textContent = fmt(det);
+
+    // MC
+    const { finals } = runBatchSim(start, monthly, years, mean, 0.15, 1000);
+    const p10 = percentile(finals, 0.1);
+    const p90 = percentile(finals, 0.9);
+    document.getElementById('mc-range').innerHTML = `${fmt(p10)}<br><span class="text-xs text-muted">to</span><br>${fmt(p90)}`;
+}
+
+// ====== MODULE 1: One Path ======
+let onePathCount = 0;
+function simulateOnePath() {
+    onePathCount++;
+    const { ctx, W, H } = getCanvasCtx('one-path-canvas');
+    const years = 35, start = 50000, monthly = 500, mean = 0.07, std = 0.15;
+
+    const path = simulatePath(start, monthly, years, mean, std);
+    const maxVal = Math.max(...path) * 1.15;
+    const { plotW, plotH } = drawAxes(ctx, W, H, years, maxVal);
+
+    // Deterministic reference
+    const detPath = [start];
+    let d = start;
+    for (let y = 0; y < years; y++) { d = d * 1.07 + monthly * 12; detPath.push(d); }
+    ctx.strokeStyle = '#ccc';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    for (let i = 0; i <= years; i++) {
+        const { x, y } = toPlotCoords(i, detPath[i], years, maxVal, plotW, plotH);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Random path
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i <= years; i++) {
+        const { x, y } = toPlotCoords(i, path[i], years, maxVal, plotW, plotH);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // End dot
+    const end = toPlotCoords(years, path[years], years, maxVal, plotW, plotH);
+    ctx.fillStyle = '#FBD45B';
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(end.x, end.y, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+    // Legend
+    ctx.font = '9px IBM Plex Mono, monospace';
+    ctx.fillStyle = '#999'; ctx.textAlign = 'left';
+    ctx.fillText('— — dashed: deterministic 7%', MARGIN.left + 4, MARGIN.top + 14);
+    ctx.fillStyle = '#000';
+    ctx.fillText('——— solid: random path #' + onePathCount, MARGIN.left + 4, MARGIN.top + 26);
+
+    const final = path[years];
+    const el = document.getElementById('one-path-results');
+    el.innerHTML = `
+        <div class="text-xs space-y-1">
+            <div><strong>Path #${onePathCount}</strong> — Final: <strong>${fmt(final)}</strong></div>
+            <div class="text-muted">Deterministic (7% flat): ${fmt(detPath[years])}</div>
+            <div class="text-muted">Difference: ${final > detPath[years] ? '+' : ''}${fmt(final - detPath[years])}</div>
+            <div class="text-muted mt-1">↻ Click again for a different life. Same plan, different market luck.</div>
+        </div>`;
+    el.classList.add('show');
+}
+
+// ====== MODULE 2: Spaghetti Plot ======
+function runSpaghettiPlot() {
+    const start = parseFloat(document.getElementById('sp-start').value);
+    const monthly = parseFloat(document.getElementById('sp-monthly').value);
+    const years = parseInt(document.getElementById('sp-years').value);
+    const mean = parseFloat(document.getElementById('sp-mean').value) / 100;
+    const std = parseFloat(document.getElementById('sp-std').value) / 100;
+    const N = parseInt(document.getElementById('sp-n').value);
+
+    const { finals, paths } = runBatchSim(start, monthly, years, mean, std, N);
+    const { ctx, W, H } = getCanvasCtx('spaghetti-canvas');
+
+    // Find reasonable max (90th percentile path value × 1.1)
+    let maxPathVal = 0;
+    for (const p of paths) for (const v of p) if (v > maxPathVal) maxPathVal = v;
+    const p95Path = percentile(finals, 0.95);
+    const maxVal = Math.min(maxPathVal, p95Path * 1.5);
+
+    const { plotW, plotH } = drawAxes(ctx, W, H, years, maxVal);
+
+    // Draw all paths
+    for (let s = 0; s < N; s++) {
+        const path = paths[s];
+        const final = path[years];
+        // Color by outcome
+        const frac = Math.min(final / maxVal, 1);
+        const r = Math.round(220 - frac * 180);
+        const g = Math.round(100 + frac * 120);
+        const b = Math.round(100 - frac * 60);
+        ctx.strokeStyle = `rgba(${r},${g},${b},0.08)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i <= years; i++) {
+            const val = Math.min(path[i], maxVal);
+            const { x, y } = toPlotCoords(i, val, years, maxVal, plotW, plotH);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+    }
+
+    // Draw percentile bands
+    const pcts = [0.1, 0.25, 0.5, 0.75, 0.9];
+    const pctColors = ['#dc2626', '#f97316', '#000', '#22c55e', '#16a34a'];
+    const pctLabels = ['10th', '25th', 'Median', '75th', '90th'];
+
+    for (let pi = 0; pi < pcts.length; pi++) {
+        const pctPath = [];
+        for (let yr = 0; yr <= years; yr++) {
+            const yearVals = paths.map(p => p[yr]).sort((a, b) => a - b);
+            pctPath.push(percentile(yearVals, pcts[pi]));
+        }
+        ctx.strokeStyle = pctColors[pi];
+        ctx.lineWidth = pi === 2 ? 2.5 : 1.5;
+        ctx.setLineDash(pi === 2 ? [] : [3, 3]);
+        ctx.beginPath();
+        for (let i = 0; i <= years; i++) {
+            const val = Math.min(pctPath[i], maxVal);
+            const { x, y } = toPlotCoords(i, val, years, maxVal, plotW, plotH);
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        // Label at end
+        const endVal = Math.min(pctPath[years], maxVal);
+        const { x, y } = toPlotCoords(years, endVal, years, maxVal, plotW, plotH);
+        ctx.fillStyle = pctColors[pi];
+        ctx.font = '8px IBM Plex Mono, monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(pctLabels[pi], x - 32, y - 4);
+    }
+    ctx.setLineDash([]);
+
+    // Stats
+    const median = percentile(finals, 0.5);
+    const p10 = percentile(finals, 0.1);
+    const p90 = percentile(finals, 0.9);
+    const p800k = finals.filter(v => v >= 800000).length / N * 100;
+    const worst = finals[0];
+    const best = finals[finals.length - 1];
+
+    const el = document.getElementById('spaghetti-results');
+    el.innerHTML = `
+        <div class="text-xs space-y-2">
+            <div class="grid grid-cols-3 gap-2">
+                <div><span class="text-muted text-[10px]">Median</span><br><strong>${fmt(median)}</strong></div>
+                <div><span class="text-muted text-[10px]">10th %ile</span><br><strong class="text-negative">${fmt(p10)}</strong></div>
+                <div><span class="text-muted text-[10px]">90th %ile</span><br><strong class="text-positive">${fmt(p90)}</strong></div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+                <div><span class="text-muted text-[10px]">P(≥ $800K)</span><br><strong>${p800k.toFixed(0)}%</strong></div>
+                <div><span class="text-muted text-[10px]">Worst case</span><br><strong class="text-negative">${fmt(worst)}</strong></div>
+                <div><span class="text-muted text-[10px]">Best case</span><br><strong class="text-positive">${fmt(best)}</strong></div>
+            </div>
+            <div class="text-muted text-[10px]">Lines colored by final outcome: <span class="text-negative">red</span> = poor, <span class="text-positive">green</span> = strong. Bold lines = percentile tracks.</div>
+        </div>`;
+    el.classList.add('show');
+}
+
+// ====== MODULE 3: Distribution Histogram ======
+function runDistribution() {
+    const start = parseFloat(document.getElementById('dist-start').value);
+    const monthly = parseFloat(document.getElementById('dist-monthly').value);
+    const mean = parseFloat(document.getElementById('dist-mean').value) / 100;
+    const std = parseFloat(document.getElementById('dist-std').value) / 100;
+    const years = parseInt(document.getElementById('dist-years').value);
+    const goal = parseFloat(document.getElementById('dist-goal').value);
+    const N = 1000;
+
+    const { finals } = runBatchSim(start, monthly, years, mean, std, N);
+    const { ctx, W, H } = getCanvasCtx('dist-canvas');
+
+    // Histogram
+    const nBins = 40;
+    const minV = finals[0];
+    const maxV = percentile(finals, 0.98);
+    const binW = (maxV - minV) / nBins;
+    const bins = new Array(nBins).fill(0);
+    for (const v of finals) {
+        const bi = Math.min(Math.floor((v - minV) / binW), nBins - 1);
+        if (bi >= 0) bins[bi]++;
+    }
+    const maxBin = Math.max(...bins);
+
+    const plotLeft = 50, plotRight = W - 16, plotTop = 20, plotBot = H - 36;
+    const pW = plotRight - plotLeft;
+    const pH = plotBot - plotTop;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw bars
+    const barGap = 1;
+    const barW = (pW / nBins) - barGap;
+    for (let i = 0; i < nBins; i++) {
+        const barH = (bins[i] / maxBin) * pH;
+        const x = plotLeft + i * (barW + barGap);
+        const y = plotBot - barH;
+        const binCenter = minV + (i + 0.5) * binW;
+        ctx.fillStyle = binCenter >= goal ? 'rgba(22,163,74,0.6)' : 'rgba(0,0,0,0.15)';
+        ctx.fillRect(x, y, barW, barH);
+    }
+
+    // Goal line
+    const goalX = plotLeft + ((goal - minV) / (maxV - minV)) * pW;
+    if (goalX >= plotLeft && goalX <= plotRight) {
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(goalX, plotTop); ctx.lineTo(goalX, plotBot); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#dc2626';
+        ctx.font = '9px IBM Plex Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Goal: ${fmt(goal)}`, goalX, plotTop - 4);
+    }
+
+    // Median line
+    const median = percentile(finals, 0.5);
+    const medX = plotLeft + ((median - minV) / (maxV - minV)) * pW;
+    if (medX >= plotLeft && medX <= plotRight) {
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(medX, plotTop); ctx.lineTo(medX, plotBot); ctx.stroke();
+        ctx.fillStyle = '#000';
+        ctx.font = '9px IBM Plex Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Median: ${fmt(median)}`, medX, plotBot + 14);
+    }
+
+    // X axis
+    ctx.fillStyle = '#666';
+    ctx.font = '8px IBM Plex Mono, monospace';
+    ctx.textAlign = 'center';
+    for (let i = 0; i <= 4; i++) {
+        const val = minV + (maxV - minV) * i / 4;
+        const x = plotLeft + (i / 4) * pW;
+        ctx.fillText(fmt(val), x, plotBot + 26);
+    }
+
+    // Stats
+    const p10 = percentile(finals, 0.1);
+    const p90 = percentile(finals, 0.9);
+    const pGoal = finals.filter(v => v >= goal).length / N * 100;
+    const meanFinal = finals.reduce((a, b) => a + b, 0) / N;
+
+    const el = document.getElementById('dist-results');
+    el.innerHTML = `
+        <div class="text-xs space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+                <div><span class="text-muted text-[10px]">Median (typical)</span><br><strong>${fmt(median)}</strong></div>
+                <div><span class="text-muted text-[10px]">Mean</span><br><strong>${fmt(meanFinal)}</strong></div>
+                <div><span class="text-muted text-[10px]">10th %ile (bad luck)</span><br><strong class="text-negative">${fmt(p10)}</strong></div>
+                <div><span class="text-muted text-[10px]">90th %ile (good luck)</span><br><strong class="text-positive">${fmt(p90)}</strong></div>
+            </div>
+            <div class="border border-black p-3 bg-accent/10">
+                <div class="text-[10px] text-muted">Probability of reaching ${fmt(goal)}</div>
+                <div class="flex items-center gap-2 mt-1">
+                    <div class="flex-1 h-5 bg-gray-100 border border-gray-200">
+                        <div class="h-full ${pGoal > 50 ? 'bg-positive' : 'bg-negative'}" style="width: ${Math.min(pGoal, 100)}%"></div>
+                    </div>
+                    <span class="font-bold">${pGoal.toFixed(1)}%</span>
+                </div>
+            </div>
+            <div class="text-muted text-[10px]"><span class="text-positive">Green bars</span> = outcomes above goal. The fraction of green area IS your probability. MC converts integration into counting.</div>
+        </div>`;
+    el.classList.add('show');
+}
+
+// ====== MODULE 4: Sensitivity ======
+function runSensitivity() {
+    const N = 2000;
+    const goal = 800000;
+    const base = { start: 50000, monthly: 500, years: 35, mean: 0.07, std: 0.15 };
+
+    const scenarios = [
+        { label: 'Baseline', ...base },
+        { label: 'Double monthly ($1,000)', ...base, monthly: 1000 },
+        { label: 'Triple monthly ($1,500)', ...base, monthly: 1500 },
+        { label: 'Start with $100K', ...base, start: 100000 },
+        { label: 'Start with $150K', ...base, start: 150000 },
+        { label: 'Work 5 more years (40)', ...base, years: 40 },
+        { label: 'Work 5 fewer years (30)', ...base, years: 30 },
+        { label: 'Higher return (9%)', ...base, mean: 0.09 },
+        { label: 'Lower vol (10%)', ...base, std: 0.10 },
+        { label: 'Higher vol (20%)', ...base, std: 0.20 },
+    ];
+
+    let html = '<div class="text-xs"><table class="w-full"><thead><tr class="border-b border-black"><th class="text-left py-1">Scenario</th><th class="text-right py-1">Median</th><th class="text-right py-1">P(≥$800K)</th><th class="text-right py-1">Δ</th></tr></thead><tbody>';
+
+    let baseProb = 0;
+    for (let si = 0; si < scenarios.length; si++) {
+        const s = scenarios[si];
+        const { finals } = runBatchSim(s.start, s.monthly, s.years, s.mean, s.std, N);
+        const median = percentile(finals, 0.5);
+        const prob = finals.filter(v => v >= goal).length / N * 100;
+        if (si === 0) baseProb = prob;
+        const delta = prob - baseProb;
+        const deltaStr = si === 0 ? '—' : `<span class="${delta > 0 ? 'text-positive' : delta < 0 ? 'text-negative' : ''}">${delta > 0 ? '+' : ''}${delta.toFixed(1)}%</span>`;
+        const isBold = si === 0 ? 'font-bold bg-gray-50' : '';
+
+        html += `<tr class="border-b border-gray-200 ${isBold}">
+            <td class="py-1.5">${s.label}</td>
+            <td class="py-1.5 text-right">${fmt(median)}</td>
+            <td class="py-1.5 text-right">${prob.toFixed(1)}%</td>
+            <td class="py-1.5 text-right">${deltaStr}</td>
+        </tr>`;
+    }
+
+    html += '</tbody></table>';
+    html += '<p class="text-muted mt-3">Notice: doubling your monthly savings is often more impactful and more controllable than hoping for higher returns. Working longer compounds both contributions AND returns.</p></div>';
+
+    const el = document.getElementById('sensitivity-results');
+    el.innerHTML = html;
+    el.classList.add('show');
+}
+
+// ====== MODULE 4: Playground ======
+function runPlayground() {
+    const start = parseFloat(document.getElementById('play-start').value);
+    const monthly = parseFloat(document.getElementById('play-monthly').value);
+    const years = parseInt(document.getElementById('play-years').value);
+    const mean = parseFloat(document.getElementById('play-mean').value) / 100;
+    const std = parseFloat(document.getElementById('play-std').value) / 100;
+    const goal = parseFloat(document.getElementById('play-goal').value);
+    const N = 2000;
+
+    const { finals } = runBatchSim(start, monthly, years, mean, std, N);
+    const median = percentile(finals, 0.5);
+    const p10 = percentile(finals, 0.1);
+    const p90 = percentile(finals, 0.9);
+    const pGoal = finals.filter(v => v >= goal).length / N * 100;
+
+    // Probability bar
+    const targets = [500000, 800000, 1000000, 1500000, 2000000];
+    let bars = '';
+    for (const t of targets) {
+        const p = finals.filter(v => v >= t).length / N * 100;
+        bars += `<div class="flex items-center gap-2 mb-1">
+            <span class="w-14 text-right text-[10px] text-muted">${fmt(t)}</span>
+            <div class="flex-1 h-4 bg-gray-100 border border-gray-200">
+                <div class="h-full ${p > 50 ? 'bg-positive' : p > 25 ? 'bg-accent' : 'bg-negative'}" style="width: ${Math.min(p, 100)}%"></div>
+            </div>
+            <span class="w-10 text-right text-[10px] font-bold">${p.toFixed(0)}%</span>
+        </div>`;
+    }
+
+    const el = document.getElementById('playground-results');
+    el.innerHTML = `
+        <div class="text-xs space-y-3">
+            <div class="grid grid-cols-3 gap-2">
+                <div><span class="text-muted text-[10px]">Median</span><br><strong>${fmt(median)}</strong></div>
+                <div><span class="text-muted text-[10px]">Bad luck (10th)</span><br><strong class="text-negative">${fmt(p10)}</strong></div>
+                <div><span class="text-muted text-[10px]">Good luck (90th)</span><br><strong class="text-positive">${fmt(p90)}</strong></div>
+            </div>
+            <div class="border border-black p-3 bg-accent/10">
+                <div class="text-[10px] text-muted mb-1">P(reaching goal ${fmt(goal)})</div>
+                <div class="font-bold text-lg">${pGoal.toFixed(1)}%</div>
+            </div>
+            <div>
+                <div class="text-[10px] text-muted mb-1 uppercase tracking-wider">Probability by target</div>
+                ${bars}
+            </div>
+        </div>`;
+    el.classList.add('show');
+}
+</script>
+</body>
+</html>
