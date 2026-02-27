@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python ML Stack — Dependency Graph</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root[data-theme="dark"] {
+            --bg: #0a0e1a;
+            --bg-rgb: 10, 14, 26;
+            --fg: #ffffff;
+            --fg-secondary: #ccc;
+            --fg-muted: #888;
+            --fg-dim: #555;
+            --surface: rgba(10, 14, 26, 0.85);
+            --surface-solid: #0f1423;
+            --panel-bg: rgba(15, 20, 35, 0.95);
+            --border: #333;
+            --border-light: rgba(255,255,255,0.15);
+            --border-faint: rgba(255,255,255,0.1);
+            --grid-line: rgba(255,255,255,0.03);
+            --glow-center: rgba(30, 40, 80, 0.3);
+            --glow-edge: rgba(10, 14, 26, 0);
+            --edge-default: rgba(255,255,255,0.15);
+            --edge-dimmed: rgba(255,255,255,0.04);
+            --edge-active: rgba(255,255,255,0.6);
+            --edge-risk: rgba(239,68,68,0.7);
+            --edge-closed: rgba(245,158,11,0.6);
+            --edge-width: 0.8;
+            --edge-active-width: 2;
+            --tier-app: #ffffff;
+            --tier-framework: #a78bfa;
+            --tier-core: #4ade80;
+            --tier-compute: #38bdf8;
+            --tier-system: #f472b6;
+            --tier-risk: #ef4444;
+            --tier-closed: #f59e0b;
+            --tier-build: #6b7280;
+            --tier-build-text: #94a3b8;
+            --stat-label: #666;
+            --desc-color: #999;
+            --dep-tag-border: #333;
+            --dep-tag-color: #888;
+            --github-link: #4ade80;
+        }
+
+        :root[data-theme="light"] {
+            --bg: #f5f5f0;
+            --bg-rgb: 245, 245, 240;
+            --fg: #111111;
+            --fg-secondary: #333;
+            --fg-muted: #666;
+            --fg-dim: #999;
+            --surface: rgba(255, 255, 255, 0.92);
+            --surface-solid: #ffffff;
+            --panel-bg: rgba(255, 255, 255, 0.97);
+            --border: #ccc;
+            --border-light: rgba(0,0,0,0.12);
+            --border-faint: rgba(0,0,0,0.08);
+            --grid-line: rgba(0,0,0,0.05);
+            --glow-center: rgba(200, 210, 240, 0.25);
+            --glow-edge: rgba(245, 245, 240, 0);
+            --edge-default: rgba(0,0,0,0.12);
+            --edge-dimmed: rgba(0,0,0,0.04);
+            --edge-active: rgba(0,0,0,0.50);
+            --edge-risk: rgba(220,38,38,0.60);
+            --edge-closed: rgba(180,90,0,0.50);
+            --edge-width: 0.8;
+            --edge-active-width: 2;
+            --tier-app: #111111;
+            --tier-framework: #7c3aed;
+            --tier-core: #16a34a;
+            --tier-compute: #0284c7;
+            --tier-system: #db2777;
+            --tier-risk: #dc2626;
+            --tier-closed: #d97706;
+            --tier-build: #6b7280;
+            --tier-build-text: #4b5563;
+            --stat-label: #999;
+            --desc-color: #555;
+            --dep-tag-border: #ddd;
+            --dep-tag-color: #666;
+            --github-link: #16a34a;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--fg);
+            font-family: 'IBM Plex Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        #canvas-container { position: relative; width: 100%; height: 100%; cursor: grab; }
+        #canvas-container.dragging { cursor: grabbing; }
+
+        canvas#bg-canvas, canvas#lines-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        }
+        canvas#lines-canvas { pointer-events: none; }
+        #nodes-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        .node {
+            position: absolute;
+            padding: 6px 14px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            border: 2px solid;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.3s ease, color 0.3s ease;
+            white-space: nowrap;
+            user-select: none;
+            z-index: 10;
+            background: var(--surface);
+            backdrop-filter: blur(4px);
+        }
+        .node:hover { transform: scale(1.08); z-index: 20; }
+        .node.active { transform: scale(1.12); z-index: 30; }
+
+        .tier-app       { border-color: var(--tier-app); color: var(--tier-app); font-size: 16px; }
+        .tier-framework { border-color: var(--tier-framework); color: var(--tier-framework); }
+        .tier-core      { border-color: var(--tier-core); color: var(--tier-core); }
+        .tier-compute   { border-color: var(--tier-compute); color: var(--tier-compute); }
+        .tier-system    { border-color: var(--tier-system); color: var(--tier-system); }
+        .tier-risk      { border-color: var(--tier-risk); color: var(--tier-risk); animation: pulse-risk 2s ease-in-out infinite; }
+        .tier-closed    { border-color: var(--tier-closed); color: var(--tier-closed); border-style: dashed; }
+        .tier-build     { border-color: var(--tier-build); color: var(--tier-build-text); font-size: 11px; }
+
+        @keyframes pulse-risk {
+            0%, 100% { box-shadow: 0 0 8px rgba(239,68,68,0.2); }
+            50% { box-shadow: 0 0 18px rgba(239,68,68,0.5); }
+        }
+
+        /* Detail panel */
+        #detail-panel {
+            position: fixed; bottom: 24px; left: 50%;
+            transform: translateX(-50%) translateY(120%);
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-light);
+            padding: 20px 28px;
+            min-width: 420px; max-width: 520px;
+            z-index: 100;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
+            font-size: 12px; color: var(--fg);
+        }
+        #detail-panel.show { transform: translateX(-50%) translateY(0); }
+
+        #detail-panel .panel-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        #detail-panel .panel-name { font-size: 18px; font-weight: 700; font-family: 'IBM Plex Serif', serif; }
+        #detail-panel .panel-close {
+            cursor: pointer; font-size: 16px; padding: 2px 6px;
+            border: 1px solid var(--border); background: none; color: var(--fg-muted);
+        }
+        #detail-panel .panel-close:hover { color: var(--fg); border-color: var(--fg-muted); }
+
+        .panel-badge {
+            display: inline-block; padding: 2px 8px; font-size: 9px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px; border: 1px solid;
+            margin-left: 8px; position: relative; top: -2px;
+        }
+        .badge-risk   { border-color: #ef4444; color: #ef4444; background: rgba(239,68,68,0.1); }
+        .badge-safe   { border-color: #4ade80; color: #16a34a; background: rgba(74,222,128,0.1); }
+        .badge-closed { border-color: #f59e0b; color: #d97706; background: rgba(245,158,11,0.1); }
+        .badge-watch  { border-color: #f97316; color: #ea580c; background: rgba(249,115,22,0.1); }
+
+        .panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-bottom: 12px; }
+        .panel-stat { display: flex; flex-direction: column; }
+        .panel-stat-label { color: var(--stat-label); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+        .panel-stat-value { font-weight: 600; font-size: 14px; }
+        .panel-desc { color: var(--desc-color); font-size: 11px; line-height: 1.5; margin-bottom: 12px; }
+        .panel-deps { display: flex; flex-wrap: wrap; gap: 4px; }
+        .panel-dep-tag {
+            padding: 2px 8px; border: 1px solid var(--dep-tag-border);
+            font-size: 10px; color: var(--dep-tag-color); cursor: pointer;
+        }
+        .panel-dep-tag:hover { border-color: var(--fg-muted); color: var(--fg); }
+        .panel-github {
+            display: inline-block; margin-top: 12px; padding: 4px 12px;
+            border: 1px solid var(--github-link); color: var(--github-link);
+            font-size: 10px; text-decoration: none; letter-spacing: 0.5px;
+        }
+        .panel-github:hover { background: rgba(74,222,128,0.08); }
+
+        /* Legend */
+        #legend {
+            position: fixed; top: 16px; left: 16px; z-index: 50;
+            font-size: 10px; background: var(--surface); backdrop-filter: blur(8px);
+            border: 1px solid var(--border-faint); padding: 12px 16px;
+            transition: background 0.3s ease;
+        }
+        #legend h3 { font-family: 'IBM Plex Serif', serif; font-size: 11px; margin-bottom: 8px; color: var(--fg-secondary); }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; color: var(--fg-muted); }
+        .legend-dot { width: 10px; height: 10px; border: 2px solid; flex-shrink: 0; }
+
+        /* Title */
+        #title-bar { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 50; text-align: center; }
+        #title-bar h1 { font-family: 'IBM Plex Serif', serif; font-size: 16px; font-weight: 700; color: var(--fg); letter-spacing: 1px; transition: color 0.3s ease; }
+        #title-bar p { font-size: 10px; color: var(--fg-dim); margin-top: 2px; }
+
+        /* Controls */
+        #controls { position: fixed; bottom: 16px; right: 16px; z-index: 50; display: flex; flex-direction: column; gap: 4px; }
+        .ctrl-btn {
+            width: 32px; height: 32px; border: 1px solid var(--border);
+            background: var(--surface); color: var(--fg-muted); font-size: 16px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-family: 'IBM Plex Mono', monospace; transition: all 0.2s ease;
+        }
+        .ctrl-btn:hover { color: var(--fg); border-color: var(--fg-muted); }
+
+        /* Theme toggle */
+        #theme-toggle {
+            position: fixed; top: 16px; right: 210px; z-index: 50;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .toggle-track {
+            width: 44px; height: 24px; border: 1px solid var(--border);
+            background: var(--surface); cursor: pointer; position: relative;
+            padding: 0; transition: all 0.3s ease;
+        }
+        .toggle-track::after {
+            content: ''; position: absolute; top: 3px; left: 3px;
+            width: 16px; height: 16px; background: var(--fg-muted);
+            transition: all 0.3s ease;
+        }
+        [data-theme="light"] .toggle-track::after { left: 23px; background: var(--tier-closed); }
+        .toggle-label { font-size: 12px; color: var(--fg-dim); }
+
+        /* Search */
+        #search-bar { position: fixed; top: 16px; right: 16px; z-index: 50; }
+        #search-input {
+            background: var(--surface); border: 1px solid var(--border);
+            color: var(--fg); padding: 6px 12px; font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px; width: 180px; outline: none; backdrop-filter: blur(8px);
+            transition: all 0.3s ease;
+        }
+        #search-input::placeholder { color: var(--fg-dim); }
+        #search-input:focus { border-color: var(--tier-core); }
+    </style>
+</head>
+<body>
+
+<div id="canvas-container">
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="lines-canvas"></canvas>
+    <div id="nodes-layer"></div>
+</div>
+
+<div id="title-bar">
+    <h1>Python ML Stack Dependencies</h1>
+    <p>Click any node · Scroll to zoom · Drag to pan · Press T to toggle theme</p>
+</div>
+
+<div id="legend">
+    <h3>Layers</h3>
+    <div class="legend-item"><div class="legend-dot" style="border-color:var(--tier-framework)"></div> Framework</div>
+    <div class="legend-item"><div class="legend-dot" style="border-color:var(--tier-core)"></div> Core Library</div>
+    <div class="legend-item"><div class="legend-dot" style="border-color:var(--tier-compute)"></div> Compute</div>
+    <div class="legend-item"><div class="legend-dot" style="border-color:var(--tier-system)"></div> System / IO</div>
+    <div class="legend-item"><div class="legend-dot" style="border-color:var(--tier-risk)"></div> ⚠ XZ-Risk</div>
+    <div class="legend-item"><div class="legend-dot" style="border-color:var(--tier-closed); border-style:dashed"></div> Closed Source</div>
+    <div class="legend-item"><div class="legend-dot" style="border-color:var(--tier-build)"></div> Build Tool</div>
+</div>
+
+<div id="theme-toggle">
+    <span class="toggle-label">☀︎</span>
+    <button class="toggle-track" onclick="toggleTheme()" title="Toggle theme (T)"></button>
+    <span class="toggle-label">☾</span>
+</div>
+
+<div id="search-bar">
+    <input id="search-input" type="text" placeholder="Search packages..." oninput="filterNodes(this.value)">
+</div>
+
+<div id="controls">
+    <button class="ctrl-btn" onclick="zoomIn()">+</button>
+    <button class="ctrl-btn" onclick="zoomOut()">−</button>
+    <button class="ctrl-btn" onclick="resetView()" title="Reset">⟳</button>
+</div>
+
+<div id="detail-panel">
+    <div class="panel-header">
+        <div>
+            <span class="panel-name" id="panel-name"></span>
+            <span class="panel-badge" id="panel-badge"></span>
+        </div>
+        <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+    <p class="panel-desc" id="panel-desc"></p>
+    <div class="panel-grid">
+        <div class="panel-stat"><span class="panel-stat-label">GitHub</span><span class="panel-stat-value" id="panel-github-name"></span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Stars</span><span class="panel-stat-value" id="panel-stars"></span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Core Devs</span><span class="panel-stat-value" id="panel-devs"></span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Started</span><span class="panel-stat-value" id="panel-year"></span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Language</span><span class="panel-stat-value" id="panel-lang"></span></div>
+        <div class="panel-stat"><span class="panel-stat-label">Depends On</span><span class="panel-stat-value" id="panel-dep-count"></span></div>
+    </div>
+    <div class="panel-stat-label" style="margin-bottom:4px">Dependencies</div>
+    <div class="panel-deps" id="panel-deps"></div>
+    <a class="panel-github" id="panel-link" href="#" target="_blank">→ View on GitHub</a>
+</div>
+
+<script>
+let currentTheme = 'dark';
+
+function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    drawBackground();
+    drawLines();
+}
+
+function getCSS(prop) {
+    return getComputedStyle(document.documentElement).getPropertyValue(prop).trim();
+}
+
+const packages = {
+    "transformers": { tier:"framework",x:0.18,y:0.16, github:"huggingface/transformers",stars:"145k",devs:"~25",year:"2018", lang:"Python", deps:["tokenizers","safetensors","huggingface-hub","numpy","pytorch"], desc:"The standard interface for pretrained LLMs. Downloads and runs models from HF Hub." },
+    "scikit-learn": { tier:"framework",x:0.42,y:0.18, github:"scikit-learn/scikit-learn",stars:"62k",devs:"~15",year:"2007", lang:"Python/Cython", deps:["numpy","scipy","joblib","threadpoolctl"], desc:"Classical ML. Every fit/predict call flows through NumPy and SciPy underneath." },
+    "pandas": { tier:"framework",x:0.68,y:0.15, github:"pandas-dev/pandas",stars:"45k",devs:"~20",year:"2008", lang:"Python/Cython", deps:["numpy","python-dateutil","pytz"], desc:"DataFrames. The spreadsheet of Python. Every data pipeline starts here." },
+    "pytorch": { tier:"framework",x:0.30,y:0.30, github:"pytorch/pytorch",stars:"88k",devs:"~50+",year:"2016", lang:"Python/C++", deps:["numpy","OpenBLAS","CUDA","cuDNN","NCCL","sympy","filelock","jinja2","networkx"], desc:"Deep learning framework. Meta-funded. The gravity center of modern ML." },
+    "matplotlib": { tier:"framework",x:0.82,y:0.28, github:"matplotlib/matplotlib",stars:"21k",devs:"~10",year:"2003", lang:"Python/C++", deps:["numpy","Pillow","kiwisolver","cycler"], desc:"Plotting library. Every figure in every paper. Depends on kiwisolver (tiny maintainer team)." },
+    "numpy": { tier:"core",x:0.45,y:0.44, github:"numpy/numpy",stars:"29k",devs:"~15",year:"2005", lang:"Python/C", deps:["OpenBLAS","LAPACK"], desc:"The foundation. Every array in Python ML is a NumPy array. Delegates heavy math to OpenBLAS." },
+    "scipy": { tier:"core",x:0.28,y:0.46, github:"scipy/scipy",stars:"14k",devs:"~12",year:"2001", lang:"Python/C/Fortran", deps:["numpy","OpenBLAS","LAPACK"], desc:"Scientific computing. Optimization, stats, signal processing. Heavy Fortran/C underneath." },
+    "tokenizers": { tier:"core",x:0.06,y:0.28, github:"huggingface/tokenizers",stars:"9.5k",devs:"~5",year:"2019", lang:"Rust", deps:[], desc:"Fast tokenization in Rust. Ships compiled binary blobs. Every LLM inference starts here." },
+    "safetensors": { tier:"core",x:0.06,y:0.40, github:"huggingface/safetensors",stars:"3k",devs:"~3",year:"2022", lang:"Rust/Python", deps:[], desc:"Safe model weight format. No code execution. The antidote to pickle." },
+    "huggingface-hub": { tier:"core",x:0.12,y:0.50, github:"huggingface/huggingface_hub",stars:"2.5k",devs:"~8",year:"2020", lang:"Python", deps:["filelock"], desc:"Client for HF model/dataset hub. Downloads models. Trust boundary for model files." },
+    "OpenBLAS": { tier:"risk",x:0.48,y:0.60, github:"OpenMathLib/OpenBLAS",stars:"6.7k",devs:"~3",year:"2011", lang:"C/Fortran/ASM", deps:["LAPACK"], desc:"THE XZ of Python ML. ~3 active maintainers. Every matrix multiply in NumPy/SciPy/PyTorch CPU goes through it." },
+    "LAPACK": { tier:"risk",x:0.38,y:0.72, github:"Reference-LAPACK/lapack",stars:"1.8k",devs:"~3",year:"1992", lang:"Fortran", deps:[], desc:"Linear algebra in Fortran. Started in 1992. Ancient code that everything trusts." },
+    "joblib": { tier:"risk",x:0.55,y:0.30, github:"joblib/joblib",stars:"3.9k",devs:"~2",year:"2008", lang:"Python", deps:[], desc:"Parallelism engine for scikit-learn. 1-2 core maintainers. Every model.fit() with n_jobs>1." },
+    "threadpoolctl": { tier:"risk",x:0.62,y:0.38, github:"joblib/threadpoolctl",stars:"400",devs:"1",year:"2019", lang:"Python", deps:[], desc:"Controls thread pools across OpenBLAS/MKL. Single maintainer." },
+    "libjpeg": { tier:"risk",x:0.92,y:0.50, github:"libjpeg-turbo/libjpeg-turbo",stars:"3.9k",devs:"~2",year:"1991", lang:"C/ASM", deps:[], desc:"Decodes every JPEG in every vision pipeline. Started 1991. Thin maintainer bench." },
+    "python-dateutil": { tier:"risk",x:0.80,y:0.16, github:"dateutil/dateutil",stars:"2.4k",devs:"~2",year:"2003", lang:"Python", deps:[], desc:"Every datetime in pandas. Legacy project, minimal recent activity." },
+    "kiwisolver": { tier:"risk",x:0.92,y:0.38, github:"nucleic/kiwi",stars:"700",devs:"1-2",year:"2013", lang:"C++/Python", deps:[], desc:"Constraint solver for matplotlib layout. Very few contributors." },
+    "filelock": { tier:"risk",x:0.16,y:0.62, github:"tox-dev/filelock",stars:"750",devs:"~2",year:"2014", lang:"Python", deps:[], desc:"File locking for PyTorch and HF Hub. Small project, big blast radius." },
+    "sympy": { tier:"risk",x:0.18,y:0.35, github:"sympy/sympy",stars:"13.5k",devs:"~5 core",year:"2006", lang:"Python", deps:[], desc:"Symbolic math. PyTorch uses it for torch.compile shape inference." },
+    "CUDA": { tier:"closed",x:0.28,y:0.60, github:"NVIDIA (proprietary)",stars:"—",devs:"NVIDIA",year:"2007", lang:"C/C++", deps:[], desc:"GPU compute runtime. Closed source black box. You cannot audit it." },
+    "cuDNN": { tier:"closed",x:0.18,y:0.72, github:"NVIDIA (proprietary)",stars:"—",devs:"NVIDIA",year:"2014", lang:"C/C++", deps:["CUDA"], desc:"GPU neural network primitives. Every conv/matmul on GPU. Closed source." },
+    "NCCL": { tier:"closed",x:0.08,y:0.78, github:"NVIDIA/nccl",stars:"3.5k",devs:"NVIDIA",year:"2015", lang:"C/C++", deps:["CUDA"], desc:"Multi-GPU communication. Distributed training depends on it." },
+    "MKL": { tier:"closed",x:0.58,y:0.72, github:"Intel (proprietary)",stars:"—",devs:"Intel",year:"2003", lang:"C/Fortran/ASM", deps:[], desc:"Intel math library. Alternative to OpenBLAS. Faster on Intel. Closed source." },
+    "Pillow": { tier:"system",x:0.88,y:0.28, github:"python-pillow/Pillow",stars:"12.5k",devs:"~5",year:"1995", lang:"Python/C", deps:["libjpeg"], desc:"Image I/O. Every Image.open() in your pipeline." },
+    "jinja2": { tier:"system",x:0.38,y:0.34, github:"pallets/jinja",stars:"10.5k",devs:"~3",year:"2008", lang:"Python", deps:[], desc:"Template engine. PyTorch uses it for torch.compile code generation." },
+    "networkx": { tier:"system",x:0.40,y:0.22, github:"networkx/networkx",stars:"15k",devs:"~8",year:"2002", lang:"Python", deps:[], desc:"Graph algorithms. PyTorch uses it for computation graph analysis." },
+    "pytz": { tier:"system",x:0.76,y:0.24, github:"stub42/pytz",stars:"300",devs:"1",year:"2004", lang:"Python", deps:[], desc:"Timezone database for pandas. Single maintainer. Being replaced by zoneinfo." },
+    "cycler": { tier:"system",x:0.92,y:0.22, github:"matplotlib/cycler",stars:"300",devs:"1-2",year:"2015", lang:"Python", deps:[], desc:"Color cycle utility for matplotlib. Tiny project." },
+    "pip": { tier:"build",x:0.68,y:0.82, github:"pypa/pip",stars:"9.8k",devs:"~8",year:"2008", lang:"Python", deps:["setuptools"], desc:"Package installer. pip install = arbitrary code execution during build." },
+    "setuptools": { tier:"build",x:0.78,y:0.78, github:"pypa/setuptools",stars:"2.5k",devs:"~5",year:"2004", lang:"Python", deps:[], desc:"Build system. setup.py runs arbitrary Python." },
+    "Cython": { tier:"build",x:0.88,y:0.72, github:"cython/cython",stars:"9.5k",devs:"~3",year:"2007", lang:"Python/C", deps:[], desc:"Python-to-C compiler. Builds fast parts of NumPy, SciPy, scikit-learn." },
+    "CPython": { tier:"compute",x:0.55,y:0.86, github:"python/cpython",stars:"65k",devs:"~30 core",year:"1991", lang:"C", deps:["zlib","openssl","libffi"], desc:"The Python runtime itself. Well-maintained by PSF + corporate sponsors." },
+    "zlib": { tier:"build",x:0.44,y:0.92, github:"madler/zlib",stars:"5.8k",devs:"1-2",year:"1995", lang:"C", deps:[], desc:"Compression library. Used by CPython, pip. Very few active maintainers." },
+    "openssl": { tier:"build",x:0.56,y:0.94, github:"openssl/openssl",stars:"27k",devs:"~15",year:"1998", lang:"C", deps:[], desc:"TLS/crypto. Every pip install over HTTPS. Well-funded after Heartbleed." },
+    "libffi": { tier:"build",x:0.68,y:0.92, github:"libffi/libffi",stars:"3.4k",devs:"~2",year:"1996", lang:"C/ASM", deps:[], desc:"Foreign function interface. CPython ctypes depends on it." },
+    "uv": { tier:"build",x:0.78,y:0.88, github:"astral-sh/uv",stars:"55k",devs:"~8",year:"2024", lang:"Rust", deps:[], desc:"Blazing fast Python package installer by Astral. Written in Rust. Replacing pip/pip-tools/virtualenv. 10-100x faster than pip. The new default." },
+    "llm": { tier:"framework",x:0.60,y:0.11, github:"simonw/llm",stars:"6k",devs:"1",year:"2023", lang:"Python", deps:["openai","huggingface-hub"], desc:"CLI tool and Python library for LLMs by Simon Willison. Single author. Unix philosophy: one tool, one job. Plugin ecosystem for any model provider." },
+    "livekit": { tier:"system",x:0.74,y:0.44, github:"livekit/livekit",stars:"12k",devs:"~10",year:"2021", lang:"Go/Python", deps:["numpy"], desc:"Real-time audio/video infra. Powers voice agents in production. WebRTC server + Python SDK for AI agent pipelines." },
+    "YOLO": { tier:"framework",x:0.74,y:0.32, github:"ultralytics/ultralytics",stars:"38k",devs:"~8",year:"2023", lang:"Python", deps:["pytorch","numpy","Pillow","opencv"], desc:"Ultralytics YOLOv8+. Real-time object detection. Single import, train to deploy. Depends on OpenCV which pulls in massive C++ deps." },
+    "CLIP": { tier:"framework",x:0.56,y:0.18, github:"openai/CLIP",stars:"28k",devs:"~3 (archived)",year:"2021", lang:"Python", deps:["pytorch","numpy","Pillow","tokenizers"], desc:"OpenAI's vision-language model. Connects images and text. Archived repo — no active maintenance. Widely forked (open_clip). Foundation of multimodal AI." },
+    "opencv": { tier:"system",x:0.84,y:0.50, github:"opencv/opencv",stars:"82k",devs:"~15",year:"2000", lang:"C++/Python", deps:["numpy","libjpeg"], desc:"Computer vision library. 24 years old. Massive C++ codebase with Python bindings. YOLO and most vision pipelines depend on it." },
+    "openai": { tier:"system",x:0.72,y:0.52, github:"openai/openai-python",stars:"25k",devs:"~10",year:"2020", lang:"Python", deps:[], desc:"OpenAI API client. httpx + pydantic underneath. The SDK for GPT/DALL-E/Whisper." },
+    "Jupyter": { tier:"framework",x:0.32,y:0.12, github:"jupyter/notebook",stars:"12k",devs:"~12",year:"2014", lang:"Python/JS", deps:["IPython","numpy","tornado","pyzmq"], desc:"The notebook. Where 90% of data science happens. Browser-based REPL that runs arbitrary code. JupyterLab is the next-gen UI." },
+    "IPython": { tier:"core",x:0.22,y:0.24, github:"ipython/ipython",stars:"16.5k",devs:"~5",year:"2001", lang:"Python", deps:["traitlets","jedi"], desc:"Interactive Python shell. The kernel inside every Jupyter notebook. Fernando Pérez started it as a grad student. 24 years old." },
+    "tornado": { tier:"risk",x:0.24,y:0.56, github:"tornadoweb/tornado",stars:"11.8k",devs:"~2",year:"2009", lang:"Python/C", deps:[], desc:"Async web server. Jupyter's HTTP backbone. Ben Darnell maintains it mostly alone. Every notebook session runs on tornado." },
+    "pyzmq": { tier:"system",x:0.34,y:0.56, github:"zeromq/pyzmq",stars:"3.8k",devs:"~3",year:"2010", lang:"Python/C", deps:[], desc:"Python bindings for ZeroMQ. The messaging layer between Jupyter frontend and kernel. Every cell execution flows through it." },
+    "traitlets": { tier:"risk",x:0.12,y:0.36, github:"ipython/traitlets",stars:"600",devs:"~2",year:"2014", lang:"Python", deps:[], desc:"Configuration system for IPython/Jupyter. Tiny maintainer team. Every notebook config depends on it." },
+    "jedi": { tier:"system",x:0.14,y:0.22, github:"davidhalter/jedi",stars:"5.8k",devs:"1",year:"2012", lang:"Python", deps:[], desc:"Autocompletion engine. Powers tab-complete in IPython and most Python editors. Single primary author." },
+    "polars": { tier:"framework",x:0.80,y:0.08, github:"pola-rs/polars",stars:"32k",devs:"~8",year:"2020", lang:"Rust/Python", deps:[], desc:"The pandas killer. Written in Rust, zero-copy, multi-threaded by default. No NumPy dependency — it's a full rewrite of the dataframe concept. Arrow-native." },
+    "plotly": { tier:"framework",x:0.90,y:0.14, github:"plotly/plotly.py",stars:"17k",devs:"~10",year:"2014", lang:"Python/JS", deps:["numpy","pandas"], desc:"Interactive charts. Browser-rendered via Plotly.js. The default for dashboards (Dash). Heavier than matplotlib but interactive out of the box." },
+};
+
+let scale = 1, offsetX = 0, offsetY = 0;
+let isDragging = false, dragStartX, dragStartY;
+let activeNode = null;
+const nodeElements = {};
+
+function init() {
+    drawBackground();
+    createNodes();
+    drawLines();
+    setupPanZoom();
+    window.addEventListener('resize', () => { drawBackground(); drawLines(); });
+}
+
+function drawBackground() {
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    ctx.fillStyle = getCSS('--bg');
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = getCSS('--grid-line');
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+    for (let y = 0; y < canvas.height; y += 60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+
+    const grd = ctx.createRadialGradient(canvas.width/2,canvas.height/2,100,canvas.width/2,canvas.height/2,canvas.width*0.6);
+    grd.addColorStop(0, getCSS('--glow-center'));
+    grd.addColorStop(1, getCSS('--glow-edge'));
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+}
+
+function createNodes() {
+    const layer = document.getElementById('nodes-layer');
+    layer.innerHTML = '';
+    for (const [name, pkg] of Object.entries(packages)) {
+        const el = document.createElement('div');
+        el.className = `node tier-${pkg.tier}`;
+        el.textContent = name;
+        el.dataset.name = name;
+        el.style.left = (pkg.x * window.innerWidth) + 'px';
+        el.style.top = (pkg.y * window.innerHeight) + 'px';
+        el.style.transform = 'translate(-50%, -50%)';
+        el.addEventListener('click', (e) => { e.stopPropagation(); showDetail(name); });
+        layer.appendChild(el);
+        nodeElements[name] = el;
+    }
+    document.getElementById('canvas-container').addEventListener('click', (e) => {
+        if (['bg-canvas','lines-canvas','nodes-layer'].includes(e.target.id)) closePanel();
+    });
+}
+
+function drawLines() {
+    const canvas = document.getElementById('lines-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    const edgeDefault  = getCSS('--edge-default');
+    const edgeDimmed   = getCSS('--edge-dimmed');
+    const edgeActive   = getCSS('--edge-active');
+    const edgeRisk     = getCSS('--edge-risk');
+    const edgeClosed   = getCSS('--edge-closed');
+    const edgeW        = parseFloat(getCSS('--edge-width'));
+    const edgeAW       = parseFloat(getCSS('--edge-active-width'));
+
+    for (const [name, pkg] of Object.entries(packages)) {
+        const fx = pkg.x * canvas.width, fy = pkg.y * canvas.height;
+        for (const dep of pkg.deps) {
+            const t = packages[dep];
+            if (!t) continue;
+            const tx = t.x * canvas.width, ty = t.y * canvas.height;
+
+            let color = edgeDefault, width = edgeW;
+            if (activeNode) {
+                if (name === activeNode || dep === activeNode) {
+                    width = edgeAW;
+                    if (t.tier === 'risk') color = edgeRisk;
+                    else if (t.tier === 'closed') color = edgeClosed;
+                    else color = edgeActive;
+                } else {
+                    color = edgeDimmed;
+                }
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(fx, fy);
+            ctx.lineTo(tx, ty);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = width;
+            ctx.stroke();
+        }
+    }
+}
+
+function showDetail(name) {
+    const pkg = packages[name];
+    if (!pkg) return;
+    if (activeNode) { const p = nodeElements[activeNode]; if (p) p.classList.remove('active'); }
+    activeNode = name;
+    nodeElements[name].classList.add('active');
+    drawLines();
+
+    document.getElementById('panel-name').textContent = name;
+    const badge = document.getElementById('panel-badge');
+    if (pkg.tier==='risk') { badge.textContent='XZ-RISK'; badge.className='panel-badge badge-risk'; }
+    else if (pkg.tier==='closed') { badge.textContent='CLOSED'; badge.className='panel-badge badge-closed'; }
+    else if (parseInt(pkg.devs)<=3||pkg.devs.includes('1')||pkg.devs.includes('2')) { badge.textContent='WATCH'; badge.className='panel-badge badge-watch'; }
+    else { badge.textContent='HEALTHY'; badge.className='panel-badge badge-safe'; }
+
+    document.getElementById('panel-desc').textContent = pkg.desc;
+    document.getElementById('panel-github-name').textContent = pkg.github;
+    document.getElementById('panel-stars').textContent = pkg.stars;
+    document.getElementById('panel-devs').textContent = pkg.devs;
+    document.getElementById('panel-year').textContent = pkg.year;
+    document.getElementById('panel-lang').textContent = pkg.lang;
+    document.getElementById('panel-dep-count').textContent = pkg.deps.length + ' packages';
+
+    const dc = document.getElementById('panel-deps');
+    dc.innerHTML = pkg.deps.length > 0
+        ? pkg.deps.map(d => {
+            const dp = packages[d];
+            const tc = dp ? (dp.tier==='risk'?'var(--tier-risk)':dp.tier==='closed'?'var(--tier-closed)':'var(--dep-tag-border)') : 'var(--dep-tag-border)';
+            const txtC = dp && (dp.tier==='risk'||dp.tier==='closed') ? tc : 'var(--dep-tag-color)';
+            return `<span class="panel-dep-tag" style="border-color:${tc};color:${txtC}" onclick="showDetail('${d}')">${d}</span>`;
+        }).join('')
+        : '<span class="panel-dep-tag">None</span>';
+
+    const link = document.getElementById('panel-link');
+    if (pkg.github.includes('/')) { link.href = `https://github.com/${pkg.github}`; link.style.display='inline-block'; }
+    else { link.style.display='none'; }
+    document.getElementById('detail-panel').classList.add('show');
+}
+
+function closePanel() {
+    if (activeNode) { const e = nodeElements[activeNode]; if (e) e.classList.remove('active'); }
+    activeNode = null; drawLines();
+    document.getElementById('detail-panel').classList.remove('show');
+}
+
+function setupPanZoom() {
+    const c = document.getElementById('canvas-container');
+    c.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('node')) return;
+        isDragging=true; dragStartX=e.clientX-offsetX; dragStartY=e.clientY-offsetY; c.classList.add('dragging');
+    });
+    window.addEventListener('mousemove', (e) => { if(!isDragging) return; offsetX=e.clientX-dragStartX; offsetY=e.clientY-dragStartY; applyTransform(); });
+    window.addEventListener('mouseup', () => { isDragging=false; document.getElementById('canvas-container').classList.remove('dragging'); });
+    c.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const d = e.deltaY>0?0.92:1.08;
+        const ns = Math.max(0.3,Math.min(3,scale*d));
+        const r = c.getBoundingClientRect();
+        const mx=e.clientX-r.left, my=e.clientY-r.top;
+        offsetX=mx-(mx-offsetX)*(ns/scale); offsetY=my-(my-offsetY)*(ns/scale);
+        scale=ns; applyTransform();
+    }, {passive:false});
+}
+
+function applyTransform() {
+    const t = `translate(${offsetX}px,${offsetY}px) scale(${scale})`;
+    document.getElementById('nodes-layer').style.transform = t;
+    document.getElementById('nodes-layer').style.transformOrigin = '0 0';
+    document.getElementById('lines-canvas').style.transform = t;
+    document.getElementById('lines-canvas').style.transformOrigin = '0 0';
+}
+
+function zoomIn() { scale=Math.min(3,scale*1.2); applyTransform(); }
+function zoomOut() { scale=Math.max(0.3,scale*0.8); applyTransform(); }
+function resetView() { scale=1; offsetX=0; offsetY=0; applyTransform(); }
+
+function filterNodes(q) {
+    q = q.toLowerCase().trim();
+    for (const [n,el] of Object.entries(nodeElements)) {
+        if (!q) { el.style.opacity='1'; }
+        else if (n.toLowerCase().includes(q)||packages[n].lang.toLowerCase().includes(q)||packages[n].tier.includes(q)) { el.style.opacity='1'; }
+        else { el.style.opacity='0.15'; }
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key==='Escape') closePanel();
+    if (e.key==='t' && !e.target.matches('input')) toggleTheme();
+});
+
+init();
+</script>
+</body>
+</html>
