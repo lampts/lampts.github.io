@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animated Word Cloud</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f0f1a;
+    --fg: #e0e0e0;
+    --surface: #1a1a2e;
+    --border: #333;
+    --border-hover: #FBD45B;
+    --muted: #666;
+    --dimmed: #555;
+    --very-dim: #444;
+    --btn-secondary-bg: #2a2a40;
+    --btn-secondary-hover: #3a3a55;
+    --btn-shadow: #222;
+    --stat-bg: rgba(0,0,0,0.7);
+    --stat-fg: #aaa;
+    --word-badge-bg: rgba(0,0,0,0.8);
+    --word-badge-border: #FBD45B44;
+    --slider-track: #2a2a40;
+    --canvas-bg: #1a1a2e;
+  }
+
+  :root.light {
+    --bg: #f4f1eb;
+    --fg: #1a1a1a;
+    --surface: #ffffff;
+    --border: #ccc;
+    --border-hover: #c9a620;
+    --muted: #888;
+    --dimmed: #999;
+    --very-dim: #bbb;
+    --btn-secondary-bg: #e8e4dc;
+    --btn-secondary-hover: #ddd8ce;
+    --btn-shadow: #bbb;
+    --stat-bg: rgba(255,255,255,0.85);
+    --stat-fg: #555;
+    --word-badge-bg: rgba(255,255,255,0.9);
+    --word-badge-border: #c9a62044;
+    --slider-track: #ddd8ce;
+    --canvas-bg: #ffffff;
+  }
+
+  .light .stat-badge strong { color: #b8860b; }
+  .light .current-word-badge { color: #b8860b; }
+  .light h1 { color: #b8860b; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #FBD45B;
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  /* Input section */
+  .input-section {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  textarea {
+    flex: 1;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    color: var(--fg);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    padding: 12px;
+    resize: vertical;
+    min-height: 80px;
+    max-height: 200px;
+    border-radius: 0;
+    transition: border-color 0.15s, background 0.2s, color 0.2s;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--border-hover);
+  }
+
+  textarea::placeholder { color: var(--dimmed); }
+
+  .btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 2px solid #000;
+    cursor: pointer;
+    padding: 12px 24px;
+    box-shadow: 3px 3px 0px #000;
+    transition: all 0.1s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .btn:active {
+    box-shadow: 1px 1px 0px #000;
+    transform: translate(2px, 2px);
+  }
+
+  .btn-primary {
+    background: #FBD45B;
+    color: #000;
+  }
+
+  .btn-primary:hover { background: #fce588; }
+
+  .btn-secondary {
+    background: var(--btn-secondary-bg);
+    color: var(--fg);
+    border-color: var(--border);
+    box-shadow: 3px 3px 0px var(--btn-shadow);
+  }
+
+  .btn-secondary:hover { background: var(--btn-secondary-hover); }
+
+  .btn-small {
+    padding: 6px 14px;
+    font-size: 0.75rem;
+    box-shadow: 2px 2px 0px #000;
+  }
+
+  .btn-small:active {
+    box-shadow: 0px 0px 0px #000;
+    transform: translate(2px, 2px);
+  }
+
+  .sidebar-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Canvas area */
+  .canvas-wrapper {
+    position: relative;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .canvas-overlay {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .stat-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    background: var(--stat-bg);
+    color: var(--stat-fg);
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    pointer-events: auto;
+  }
+
+  .stat-badge strong { color: #FBD45B; }
+
+  .current-word-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    background: var(--word-badge-bg);
+    color: #FBD45B;
+    padding: 6px 14px;
+    border: 1px solid var(--word-badge-border);
+    pointer-events: auto;
+    max-width: 300px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+
+  .controls-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .timeline-slider {
+    flex: 1;
+    min-width: 100px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    background: var(--slider-track);
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  .timeline-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #FBD45B;
+    border: 2px solid #000;
+    cursor: grab;
+  }
+
+  .timeline-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #FBD45B;
+    border: 2px solid #000;
+    cursor: grab;
+    border-radius: 0;
+  }
+
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .speed-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .speed-slider {
+    width: 100px;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--slider-track);
+    border: 1px solid var(--border);
+  }
+
+  .speed-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #888;
+    border: 1px solid #000;
+  }
+
+  .speed-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #888;
+    border: 1px solid #000;
+    border-radius: 0;
+  }
+
+  .frame-info {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dimmed);
+    white-space: nowrap;
+  }
+
+  /* Empty state */
+  .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: var(--very-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.9rem;
+    text-align: center;
+    line-height: 1.8;
+  }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 3px;
+    background: var(--surface);
+    margin-bottom: 12px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: #FBD45B;
+    width: 0%;
+    transition: width 0.1s;
+  }
+
+  /* Pipeline stats */
+  .pipeline-stats {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 10px 14px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    margin-bottom: 12px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .pipe-stage {
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .pipe-num {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--fg);
+    line-height: 1;
+  }
+
+  .pipe-label {
+    font-size: 0.6rem;
+    color: var(--muted);
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
+  .pipe-arrow {
+    padding: 0 8px;
+    color: var(--very-dim);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    text-align: center;
+    position: relative;
+  }
+
+  .pipe-delta {
+    font-size: 0.6rem;
+    color: #e05555;
+    margin-top: 1px;
+    white-space: nowrap;
+  }
+
+  .light .pipe-delta { color: #c0392b; }
+
+  .pipe-sep {
+    padding: 0 6px;
+    color: var(--very-dim);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .pipe-live { color: #4ECDC4; }
+  .pipe-skip { color: #FF6B6B; }
+  .light .pipe-live { color: #00897b; }
+  .light .pipe-skip { color: #d63031; }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 768px) {
+    .input-section { flex-direction: column; }
+    .sidebar-btns { flex-direction: row; }
+    .controls { gap: 8px; }
+    .speed-control { order: 1; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Animated Word Cloud</h1>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+    <p class="subtitle">Paste text → watch the Archimedean spiral placement algorithm build a word cloud step by step</p>
+    <button class="btn btn-secondary btn-small" id="btnTheme" onclick="toggleTheme()" title="Toggle dark/light mode">☀</button>
+  </div>
+
+  <div class="input-section">
+    <textarea id="textInput" placeholder="Paste your text here..."></textarea>
+    <div class="sidebar-btns">
+      <button class="btn btn-primary" id="btnGenerate" onclick="generate()">Build</button>
+      <button class="btn btn-secondary btn-small" id="btnDownload" onclick="downloadPNG()" style="display:none">↓ PNG</button>
+    </div>
+  </div>
+
+  <div class="pipeline-stats hidden" id="pipelineStats">
+    <div class="pipe-stage">
+      <div class="pipe-num" id="pipeRaw">0</div>
+      <div class="pipe-label">raw tokens</div>
+    </div>
+    <div class="pipe-arrow">→<div class="pipe-delta" id="pipeDeltaLen"></div></div>
+    <div class="pipe-stage">
+      <div class="pipe-num" id="pipeLen">0</div>
+      <div class="pipe-label">after length</div>
+    </div>
+    <div class="pipe-arrow">→<div class="pipe-delta" id="pipeDeltaNum"></div></div>
+    <div class="pipe-stage">
+      <div class="pipe-num" id="pipeNum">0</div>
+      <div class="pipe-label">after numeric</div>
+    </div>
+    <div class="pipe-arrow">→<div class="pipe-delta" id="pipeDeltaStop"></div></div>
+    <div class="pipe-stage">
+      <div class="pipe-num" id="pipeStop">0</div>
+      <div class="pipe-label">after stop words</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-stage">
+      <div class="pipe-num" id="pipeUnique">0</div>
+      <div class="pipe-label">unique</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-stage">
+      <div class="pipe-num" id="pipeTop">0</div>
+      <div class="pipe-label">top N</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-stage">
+      <div class="pipe-num pipe-live" id="pipePlaced">—</div>
+      <div class="pipe-label">placed</div>
+    </div>
+    <div class="pipe-sep">/</div>
+    <div class="pipe-stage">
+      <div class="pipe-num pipe-skip" id="pipeSkipped">—</div>
+      <div class="pipe-label">skipped</div>
+    </div>
+  </div>
+
+  <div class="canvas-wrapper" id="canvasWrapper">
+    <div class="empty-state" id="emptyState">
+      Paste text above and click Build<br>to watch the algorithm work
+    </div>
+    <canvas id="cloud" width="1200" height="700" class="hidden"></canvas>
+    <div class="canvas-overlay hidden" id="overlay">
+      <div class="current-word-badge" id="currentWordBadge">—</div>
+      <div style="display:flex;gap:8px;">
+        <div class="stat-badge" id="statPlaced">Placed: <strong>0</strong></div>
+        <div class="stat-badge" id="statSkipped">Skipped: <strong>0</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="progress-bar" id="progressBar" style="display:none">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div class="controls hidden" id="controls">
+    <button class="btn btn-secondary btn-small" id="btnPlay" onclick="togglePlay()">▶</button>
+    <button class="btn btn-secondary btn-small" onclick="stepBackward()" title="Step back">◀◀</button>
+    <button class="btn btn-secondary btn-small" onclick="stepForward()" title="Step forward">▶▶</button>
+    <div class="controls-row">
+      <input type="range" class="timeline-slider" id="timeline" min="0" max="0" value="0" oninput="scrubTo(+this.value)">
+    </div>
+    <div class="speed-control">
+      <span class="speed-label">Speed</span>
+      <input type="range" class="speed-slider" id="speedSlider" min="0" max="100" value="30">
+      <span class="speed-label" id="speedDisplay">10/f</span>
+    </div>
+    <span class="frame-info" id="frameInfo">0 / 0</span>
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────
+const CANVAS_W = 1200, CANVAS_H = 700;
+const MIN_FONT = 12, MAX_FONT = 88;
+const MAX_WORDS = 200;
+const MIN_WORD_LEN = 3;
+const CELL_SIZE = 40;
+const PADDING = 3;
+const MARGIN = 4;
+const D_THETA = 0.15;
+const A_SPIRAL = 1.2;
+const MAX_STEPS_PER_WORD = 4000;
+
+function getBgColor() {
+  return document.documentElement.classList.contains('light') ? '#ffffff' : '#1a1a2e';
+}
+
+const PALETTE_DARK = [
+  '#FF6B6B','#4ECDC4','#FFE66D','#A78BFA','#6BCB77',
+  '#FF8C42','#00B4D8','#E056A0','#52B788','#F77F00'
+];
+
+const PALETTE_LIGHT = [
+  '#d63031','#00897b','#c49000','#6a1b9a','#2e7d32',
+  '#e65100','#0277bd','#ad1457','#1b5e20','#e65100'
+];
+
+function getPalette() {
+  return document.documentElement.classList.contains('light') ? PALETTE_LIGHT : PALETTE_DARK;
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const isLight = root.classList.toggle('light');
+  document.getElementById('btnTheme').textContent = isLight ? '☾' : '☀';
+  // Re-render current frame with new colors
+  if (data) {
+    const pal = getPalette();
+    data.words.forEach((wd, i) => { wd.color = pal[i % pal.length]; });
+    cachedBgFrame = -1;
+    render(currentFrame);
+  }
+}
+
+const STOP_WORDS = new Set([
+  "the","be","to","of","and","in","that","have","it","for","not","on","with",
+  "he","as","you","do","at","this","but","his","by","from","they","we","say",
+  "her","she","or","an","will","my","one","all","would","there","their","what",
+  "so","up","out","if","about","who","get","which","go","me","when","make",
+  "can","like","time","no","just","him","know","take","people","into","year",
+  "your","good","some","could","them","see","other","than","then","now","look",
+  "only","come","its","over","think","also","back","after","use","two","how",
+  "our","work","first","well","way","even","new","want","because","any","these",
+  "give","day","most","us","is","are","was","were","been","has","had","did",
+  "does","doing","being","am","more","very","much","too","here","where","why",
+  "each","such","should","own","same","may","still","must","got","made","don",
+  "didn","doesn","isn","aren","wasn","weren","won","let","thing","things",
+  "really","going","those","need","right","put","many","used","using","through",
+  "since","long","while","before","between","under","along","both","another",
+  "around","however","without","again","off","down","away","every","found",
+  "keep","might","left","part","point","last","different","end","set","three",
+  "few","help","start","show","world","next","began","head","turn","real",
+  "leave","great","old","big","small","large","high","little",
+  "it's","i'm","i've","i'll","don't","didn't","doesn't","isn't","that's",
+  "there's","they're","you're","we're","he's","she's","it'd","i'd","we'd",
+  "you'd","they'd","won't","wouldn't","couldn't","shouldn't","wasn't",
+  "weren't","aren't","hasn't","hadn't","can't","what's","who's","let's",
+  "ll","ve","re",
+  "http","https","www","com","org","net","html","htm","png","jpg","jpeg",
+  "gif","svg","css","pdf","class","style","width","height","div","span",
+  "href","src","nbsp","amp","quot","rel","nofollow"
+]);
+
+// ── Word counting ──────────────────────────────────────────────
+function countWords(text) {
+  const counts = {};
+  const tokens = text.split(/[^a-zA-Z0-9']+/).filter(t => t.length > 0);
+  const rawCount = tokens.length;
+  let afterLen = 0, afterNum = 0, afterStop = 0;
+
+  for (let t of tokens) {
+    const w = t.replace(/^'+|'+$/g, '').toLowerCase();
+    if (w.length < MIN_WORD_LEN) continue;
+    afterLen++;
+    if (/^\d+$/.test(w)) continue;
+    if (w.length === 6 && /^[0-9a-f]+$/.test(w)) continue;
+    afterNum++;
+    if (STOP_WORDS.has(w)) continue;
+    afterStop++;
+    counts[w] = (counts[w] || 0) + 1;
+  }
+
+  const uniqueCount = Object.keys(counts).length;
+  const sorted = Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, MAX_WORDS)
+    .map(([word, count]) => ({ word, count }));
+
+  return {
+    words: sorted,
+    stats: { rawCount, afterLen, afterNum, afterStop, uniqueCount, topN: sorted.length }
+  };
+}
+
+// ── Text measurement ───────────────────────────────────────────
+const measureCtx = document.createElement('canvas').getContext('2d');
+
+function measureText(word, fontSize) {
+  measureCtx.font = `bold ${fontSize}px 'IBM Plex Sans', sans-serif`;
+  const m = measureCtx.measureText(word);
+  const w = Math.ceil(m.actualBoundingBoxLeft + m.actualBoundingBoxRight) + 2;
+  const h = Math.ceil(m.actualBoundingBoxAscent + m.actualBoundingBoxDescent) + 2;
+  return { w: Math.max(w, 1), h: Math.max(h, 1), ascent: Math.ceil(m.actualBoundingBoxAscent) };
+}
+
+// ── SpatialGrid ────────────────────────────────────────────────
+class SpatialGrid {
+  constructor(width, height, cellSize) {
+    this.cellSize = cellSize;
+    this.cols = Math.ceil(width / cellSize);
+    this.rows = Math.ceil(height / cellSize);
+    this.cells = new Array(this.cols * this.rows);
+    for (let i = 0; i < this.cells.length; i++) this.cells[i] = [];
+    this.rects = [];
+  }
+
+  insert(x, y, w, h) {
+    const idx = this.rects.length;
+    this.rects.push([x, y, w, h]);
+    const c0 = Math.max(0, Math.floor(x / this.cellSize));
+    const c1 = Math.min(this.cols - 1, Math.floor((x + w) / this.cellSize));
+    const r0 = Math.max(0, Math.floor(y / this.cellSize));
+    const r1 = Math.min(this.rows - 1, Math.floor((y + h) / this.cellSize));
+    for (let r = r0; r <= r1; r++)
+      for (let c = c0; c <= c1; c++)
+        this.cells[r * this.cols + c].push(idx);
+  }
+
+  overlaps(x, y, w, h, pad) {
+    const px = x - pad, py = y - pad, pw = w + 2 * pad, ph = h + 2 * pad;
+    const c0 = Math.max(0, Math.floor(px / this.cellSize));
+    const c1 = Math.min(this.cols - 1, Math.floor((px + pw) / this.cellSize));
+    const r0 = Math.max(0, Math.floor(py / this.cellSize));
+    const r1 = Math.min(this.rows - 1, Math.floor((py + ph) / this.cellSize));
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        const cell = this.cells[r * this.cols + c];
+        for (let i = 0; i < cell.length; i++) {
+          const [rx, ry, rw, rh] = this.rects[cell[i]];
+          if (px < rx + rw && px + pw > rx && py < ry + rh && py + ph > ry)
+            return true;
+        }
+      }
+    }
+    return false;
+  }
+}
+
+// ── Pre-computation ────────────────────────────────────────────
+// Returns { words, placements, cumulativeFrames, totalFrames }
+function precompute(text) {
+  const { words: wordData, stats: pipeStats } = countWords(text);
+  if (wordData.length === 0) return null;
+
+  const maxCount = wordData[0].count;
+  const minCount = wordData[wordData.length - 1].count;
+  const logMax = Math.log(maxCount);
+  const logMin = Math.log(minCount);
+
+  const words = wordData.map((wd, i) => {
+    const ratio = logMax > logMin
+      ? (Math.log(wd.count) - logMin) / (logMax - logMin)
+      : 1;
+    const fontSize = MIN_FONT + ratio * (MAX_FONT - MIN_FONT);
+    const { w, h, ascent } = measureText(wd.word, fontSize);
+    return {
+      word: wd.word,
+      count: wd.count,
+      fontSize,
+      color: getPalette()[i % getPalette().length],
+      tw: w, th: h, ascent
+    };
+  });
+
+  const grid = new SpatialGrid(CANVAS_W, CANVAS_H, CELL_SIZE);
+  const cx = Math.floor(CANVAS_W / 2);
+  const cy = Math.floor(CANVAS_H / 2);
+  const maxRadius = Math.sqrt(CANVAS_W * CANVAS_W + CANVAS_H * CANVAS_H) / 2;
+
+  const placements = [];
+  const cumulativeFrames = [0];
+
+  for (let i = 0; i < words.length; i++) {
+    const wd = words[i];
+    const angleOffset = Math.random() * Math.PI * 2;
+    const maxSteps = Math.min(MAX_STEPS_PER_WORD,
+      Math.floor((maxRadius / A_SPIRAL) / D_THETA) + 2000);
+
+    let placed = false;
+    let fx = 0, fy = 0;
+    let stepsUsed = 0;
+
+    for (let step = 0; step < maxSteps; step++) {
+      const theta = step * D_THETA;
+      const r = A_SPIRAL * theta;
+      const angle = theta + angleOffset;
+      const x = cx + Math.round(r * Math.cos(angle)) - Math.floor(wd.tw / 2);
+      const y = cy + Math.round(r * Math.sin(angle)) - Math.floor(wd.th / 2);
+
+      stepsUsed = step + 1;
+
+      if (x < MARGIN || y < MARGIN ||
+          x + wd.tw > CANVAS_W - MARGIN ||
+          y + wd.th > CANVAS_H - MARGIN) {
+        if (r > maxRadius) break;
+        continue;
+      }
+
+      if (!grid.overlaps(x, y, wd.tw, wd.th, PADDING)) {
+        grid.insert(x, y, wd.tw, wd.th);
+        placed = true;
+        fx = x; fy = y;
+        break;
+      }
+    }
+
+    placements.push({ wordIdx: i, angleOffset, totalSteps: stepsUsed, placed, x: fx, y: fy });
+    cumulativeFrames.push(cumulativeFrames[cumulativeFrames.length - 1] + stepsUsed);
+  }
+
+  return {
+    words,
+    placements,
+    cumulativeFrames,
+    totalFrames: cumulativeFrames[cumulativeFrames.length - 1],
+    pipeStats
+  };
+}
+
+// ── Animation state ────────────────────────────────────────────
+let data = null;        // precomputed data
+let currentFrame = 0;
+let playing = false;
+let animId = null;
+let cachedBgFrame = -1; // which wordIdx the bg canvas is cached for
+const bgCanvas = document.createElement('canvas');
+bgCanvas.width = CANVAS_W;
+bgCanvas.height = CANVAS_H;
+const bgCtx = bgCanvas.getContext('2d');
+
+const canvas = document.getElementById('cloud');
+const ctx = canvas.getContext('2d');
+
+// ── Frame → word/step mapping ──────────────────────────────────
+function frameToWordStep(frame) {
+  if (!data) return { wordIdx: 0, step: 0 };
+  // Binary search for which word this frame belongs to
+  const cf = data.cumulativeFrames;
+  let lo = 0, hi = data.placements.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (cf[mid] <= frame) lo = mid;
+    else hi = mid - 1;
+  }
+  return { wordIdx: lo, step: frame - cf[lo] };
+}
+
+// ── Compute spiral position for a word at a given step ─────────
+function spiralPos(wordIdx, step) {
+  const pl = data.placements[wordIdx];
+  const wd = data.words[wordIdx];
+  const cx = Math.floor(CANVAS_W / 2);
+  const cy = Math.floor(CANVAS_H / 2);
+  const theta = step * D_THETA;
+  const r = A_SPIRAL * theta;
+  const angle = theta + pl.angleOffset;
+  const x = cx + Math.round(r * Math.cos(angle)) - Math.floor(wd.tw / 2);
+  const y = cy + Math.round(r * Math.sin(angle)) - Math.floor(wd.th / 2);
+  return { x, y };
+}
+
+// ── Render background (all placed words before wordIdx) ────────
+function renderBackground(upToWordIdx) {
+  bgCtx.fillStyle = getBgColor();
+  bgCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  for (let i = 0; i < upToWordIdx && i < data.placements.length; i++) {
+    const pl = data.placements[i];
+    if (!pl.placed) continue;
+    const wd = data.words[i];
+    bgCtx.font = `bold ${wd.fontSize}px 'IBM Plex Sans', sans-serif`;
+    bgCtx.fillStyle = wd.color;
+    bgCtx.fillText(wd.word, pl.x, pl.y + wd.ascent);
+  }
+  cachedBgFrame = upToWordIdx;
+}
+
+// ── Main render function ───────────────────────────────────────
+function render(frame) {
+  if (!data) return;
+  frame = Math.max(0, Math.min(frame, data.totalFrames - 1));
+  const { wordIdx, step } = frameToWordStep(frame);
+  const pl = data.placements[wordIdx];
+  const wd = data.words[wordIdx];
+
+  // Check if this is the final step (word placed or end of search)
+  const isLastStep = step === pl.totalSteps - 1;
+  const justPlaced = isLastStep && pl.placed;
+
+  // Render/cache background
+  if (cachedBgFrame !== wordIdx) renderBackground(wordIdx);
+
+  // If this word was just placed on this exact frame, include it in bg
+  if (justPlaced && cachedBgFrame === wordIdx) {
+    // Draw this word as placed in bg too
+    bgCtx.font = `bold ${wd.fontSize}px 'IBM Plex Sans', sans-serif`;
+    bgCtx.fillStyle = wd.color;
+    bgCtx.fillText(wd.word, pl.x, pl.y + wd.ascent);
+    cachedBgFrame = wordIdx + 1; // mark as including this word
+  }
+
+  // Composite bg → main canvas
+  ctx.drawImage(bgCanvas, 0, 0);
+
+  // Draw spiral trail for current word (last ~60 positions)
+  if (!justPlaced || cachedBgFrame <= wordIdx) {
+    const trailLen = Math.min(step + 1, 60);
+    for (let t = Math.max(0, step - trailLen + 1); t <= step; t++) {
+      const pos = spiralPos(wordIdx, t);
+      const alpha = 0.05 + 0.25 * ((t - (step - trailLen + 1)) / trailLen);
+      const isLight = document.documentElement.classList.contains('light');
+      const trailColor = isLight ? `rgba(180, 140, 0, ${alpha})` : `rgba(251, 212, 91, ${alpha})`;
+      ctx.fillStyle = trailColor;
+      ctx.fillRect(pos.x + wd.tw / 2 - 1, pos.y + wd.th / 2 - 1, 3, 3);
+    }
+  }
+
+  // Draw current word at current spiral position
+  if (!justPlaced) {
+    const pos = spiralPos(wordIdx, step);
+    const inBounds = pos.x >= MARGIN && pos.y >= MARGIN &&
+      pos.x + wd.tw <= CANVAS_W - MARGIN && pos.y + wd.th <= CANVAS_H - MARGIN;
+
+    if (inBounds) {
+      // Ghost word
+      ctx.globalAlpha = 0.35;
+      ctx.font = `bold ${wd.fontSize}px 'IBM Plex Sans', sans-serif`;
+      ctx.fillStyle = wd.color;
+      ctx.fillText(wd.word, pos.x, pos.y + wd.ascent);
+      ctx.globalAlpha = 1;
+
+      // Bounding box
+      ctx.strokeStyle = `${wd.color}44`;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(pos.x - PADDING, pos.y - PADDING,
+                     wd.tw + 2 * PADDING, wd.th + 2 * PADDING);
+    }
+  } else {
+    // Just placed — draw with a brief glow
+    ctx.shadowColor = wd.color;
+    ctx.shadowBlur = 12;
+    ctx.font = `bold ${wd.fontSize}px 'IBM Plex Sans', sans-serif`;
+    ctx.fillStyle = wd.color;
+    ctx.fillText(wd.word, pl.x, pl.y + wd.ascent);
+    ctx.shadowBlur = 0;
+  }
+
+  // Update UI
+  updateUI(wordIdx, step, isLastStep, justPlaced);
+}
+
+// ── UI updates ─────────────────────────────────────────────────
+function updateUI(wordIdx, step, isLastStep, justPlaced) {
+  const wd = data.words[wordIdx];
+  const pl = data.placements[wordIdx];
+
+  // Current word badge
+  let status = justPlaced ? '✓ placed' : (isLastStep && !pl.placed ? '✗ skipped' : `step ${step}`);
+  document.getElementById('currentWordBadge').innerHTML =
+    `<span style="color:${wd.color}">${wd.word}</span> <span style="color:#666;font-size:0.7rem">(×${wd.count}) ${status}</span>`;
+
+  // Placed / skipped counts
+  let placed = 0, skipped = 0;
+  for (let i = 0; i < wordIdx; i++) {
+    if (data.placements[i].placed) placed++; else skipped++;
+  }
+  if (isLastStep) { if (pl.placed) placed++; else skipped++; }
+
+  document.getElementById('statPlaced').innerHTML = `Placed: <strong>${placed}</strong>`;
+  document.getElementById('statSkipped').innerHTML = `Skipped: <strong>${skipped}</strong>`;
+  document.getElementById('pipePlaced').textContent = placed;
+  document.getElementById('pipeSkipped').textContent = skipped;
+
+  // Frame info
+  document.getElementById('frameInfo').textContent =
+    `Word ${wordIdx + 1}/${data.words.length} · Frame ${currentFrame}/${data.totalFrames - 1}`;
+
+  // Progress
+  const pct = data.totalFrames > 1 ? (currentFrame / (data.totalFrames - 1)) * 100 : 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  // Timeline slider (avoid feedback loop)
+  const timeline = document.getElementById('timeline');
+  if (document.activeElement !== timeline) {
+    timeline.value = currentFrame;
+  }
+}
+
+// ── Speed mapping (exponential for wide range) ─────────────────
+function getStepsPerFrame() {
+  const v = +document.getElementById('speedSlider').value;
+  // 0 → 1 step/frame, 50 → ~30, 100 → ~2000
+  if (v <= 0) return 1;
+  return Math.max(1, Math.round(Math.pow(10, v / 33.33)));
+}
+
+function updateSpeedDisplay() {
+  const spf = getStepsPerFrame();
+  document.getElementById('speedDisplay').textContent =
+    spf >= 1000 ? `${(spf/1000).toFixed(0)}k/f` : `${spf}/f`;
+}
+
+document.getElementById('speedSlider').addEventListener('input', updateSpeedDisplay);
+
+// ── Animation loop ─────────────────────────────────────────────
+function tick() {
+  if (!playing || !data) return;
+  const stepsPerFrame = getStepsPerFrame();
+  currentFrame = Math.min(currentFrame + stepsPerFrame, data.totalFrames - 1);
+  render(currentFrame);
+
+  if (currentFrame >= data.totalFrames - 1) {
+    playing = false;
+    document.getElementById('btnPlay').textContent = '▶';
+    return;
+  }
+
+  animId = requestAnimationFrame(tick);
+}
+
+function togglePlay() {
+  if (!data) return;
+  playing = !playing;
+  document.getElementById('btnPlay').textContent = playing ? '⏸' : '▶';
+  if (playing) {
+    if (currentFrame >= data.totalFrames - 1) {
+      currentFrame = 0;
+      cachedBgFrame = -1;
+    }
+    animId = requestAnimationFrame(tick);
+  } else {
+    cancelAnimationFrame(animId);
+  }
+}
+
+function stepForward() {
+  if (!data) return;
+  playing = false;
+  document.getElementById('btnPlay').textContent = '▶';
+  cancelAnimationFrame(animId);
+  currentFrame = Math.min(currentFrame + 1, data.totalFrames - 1);
+  render(currentFrame);
+}
+
+function stepBackward() {
+  if (!data) return;
+  playing = false;
+  document.getElementById('btnPlay').textContent = '▶';
+  cancelAnimationFrame(animId);
+  currentFrame = Math.max(currentFrame - 1, 0);
+  cachedBgFrame = -1; // force bg rebuild when going backward
+  render(currentFrame);
+}
+
+function scrubTo(frame) {
+  if (!data) return;
+  const wasPlaying = playing;
+  playing = false;
+  cancelAnimationFrame(animId);
+  currentFrame = Math.max(0, Math.min(frame, data.totalFrames - 1));
+  cachedBgFrame = -1;
+  render(currentFrame);
+  if (wasPlaying) {
+    playing = true;
+    document.getElementById('btnPlay').textContent = '⏸';
+    animId = requestAnimationFrame(tick);
+  }
+}
+
+// ── Generate ───────────────────────────────────────────────────
+function generate() {
+  const text = document.getElementById('textInput').value.trim();
+  if (!text) return;
+
+  // Persist in URL fragment
+  try {
+    history.replaceState(null, '', '#' + encodeURIComponent(text));
+  } catch (e) {}
+
+  // Pre-compute
+  data = precompute(text);
+  if (!data || data.words.length === 0) {
+    alert('No words found after filtering. Try more text.');
+    return;
+  }
+
+  // Reset state
+  currentFrame = 0;
+  playing = false;
+  cachedBgFrame = -1;
+  cancelAnimationFrame(animId);
+
+  // Show UI
+  document.getElementById('emptyState').classList.add('hidden');
+  canvas.classList.remove('hidden');
+  document.getElementById('overlay').classList.remove('hidden');
+  document.getElementById('controls').classList.remove('hidden');
+  document.getElementById('progressBar').style.display = '';
+  document.getElementById('btnDownload').style.display = '';
+  document.getElementById('btnPlay').textContent = '▶';
+
+  // Populate pipeline stats
+  const ps = data.pipeStats;
+  document.getElementById('pipelineStats').classList.remove('hidden');
+  document.getElementById('pipeRaw').textContent = ps.rawCount.toLocaleString();
+  document.getElementById('pipeLen').textContent = ps.afterLen.toLocaleString();
+  document.getElementById('pipeNum').textContent = ps.afterNum.toLocaleString();
+  document.getElementById('pipeStop').textContent = ps.afterStop.toLocaleString();
+  document.getElementById('pipeUnique').textContent = ps.uniqueCount.toLocaleString();
+  document.getElementById('pipeTop').textContent = ps.topN.toLocaleString();
+  document.getElementById('pipePlaced').textContent = '—';
+  document.getElementById('pipeSkipped').textContent = '—';
+  document.getElementById('pipeDeltaLen').textContent = `−${(ps.rawCount - ps.afterLen).toLocaleString()}`;
+  document.getElementById('pipeDeltaNum').textContent = `−${(ps.afterLen - ps.afterNum).toLocaleString()}`;
+  document.getElementById('pipeDeltaStop').textContent = `−${(ps.afterNum - ps.afterStop).toLocaleString()}`;
+
+  // Set timeline range
+  document.getElementById('timeline').max = data.totalFrames - 1;
+  document.getElementById('timeline').value = 0;
+
+  // Render first frame
+  render(0);
+
+  // Auto-play
+  setTimeout(() => { playing = true; document.getElementById('btnPlay').textContent = '⏸'; animId = requestAnimationFrame(tick); }, 300);
+}
+
+// ── Download PNG ───────────────────────────────────────────────
+function downloadPNG() {
+  if (!data) return;
+
+  // Render clean version (no ghost/trail) onto a temporary canvas
+  const dlCanvas = document.createElement('canvas');
+  dlCanvas.width = CANVAS_W;
+  dlCanvas.height = CANVAS_H;
+  const dlCtx = dlCanvas.getContext('2d');
+
+  dlCtx.fillStyle = getBgColor();
+  dlCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+  // Draw all words placed up to current frame
+  const { wordIdx } = frameToWordStep(currentFrame);
+  for (let i = 0; i < data.placements.length; i++) {
+    const pl = data.placements[i];
+    if (!pl.placed) continue;
+    // Only include words fully placed before or at current word
+    if (i > wordIdx) break;
+    // Check if this word's placement frame has been reached
+    if (data.cumulativeFrames[i] + pl.totalSteps - 1 > currentFrame) continue;
+    const wd = data.words[i];
+    dlCtx.font = `bold ${wd.fontSize}px 'IBM Plex Sans', sans-serif`;
+    dlCtx.fillStyle = wd.color;
+    dlCtx.fillText(wd.word, pl.x, pl.y + wd.ascent);
+  }
+
+  const link = document.createElement('a');
+  link.download = 'wordcloud.png';
+  link.href = dlCanvas.toDataURL('image/png');
+  link.click();
+}
+
+// ── URL fragment handling ──────────────────────────────────────
+function loadFromFragment() {
+  if (location.hash && location.hash.length > 1) {
+    try {
+      const text = decodeURIComponent(location.hash.slice(1));
+      if (text.trim()) {
+        document.getElementById('textInput').value = text;
+        // Small delay to let fonts load
+        setTimeout(generate, 200);
+      }
+    } catch (e) {}
+  }
+}
+
+// ── Keyboard shortcuts ─────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'TEXTAREA') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowRight') { e.preventDefault(); stepForward(); }
+  if (e.code === 'ArrowLeft') { e.preventDefault(); stepBackward(); }
+});
+
+// ── Init ───────────────────────────────────────────────────────
+updateSpeedDisplay();
+loadFromFragment();
+</script>
+</body>
+</html>
