@@ -154,6 +154,47 @@ textarea{resize:vertical}textarea::placeholder,input::placeholder{color:var(--ph
 .sys-msg-accent{border-color:var(--ac);color:var(--ac)}
 .reset-btn{font-size:10px;padding:2px 8px;border:1px solid var(--ibd);background:var(--ib);color:var(--fg);cursor:pointer;white-space:nowrap}
 .reset-btn:hover{background:var(--ac);color:#000;border-color:var(--bd)}
+
+/* === Extraction Panel === */
+.mode-tabs{display:flex;gap:0;margin-bottom:16px}
+.mode-tab{flex:1;padding:8px;font-size:11px;font-weight:600;text-align:center;border:1.5px solid var(--bd);cursor:pointer;background:var(--ib);color:var(--fg);transition:background .15s}
+.mode-tab:first-child{border-right:0}.mode-tab:hover{background:var(--hv)}
+.mode-tab.active{background:var(--ac);color:#000}
+.ext-panel{display:none}.ext-panel.show{display:block}
+.ext-src{border:1px solid var(--ibd);margin-bottom:8px;background:var(--cb)}
+.ext-src-hdr{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--ob);border-bottom:1px solid var(--ibd)}
+.ext-src-type{font-size:10px;padding:2px 8px;border:1px solid var(--ibd);background:var(--ib);color:var(--fg);font-family:'IBM Plex Mono',monospace}
+.ext-src-rm{background:none;border:none;font-size:14px;cursor:pointer;color:var(--mt);padding:0 4px}.ext-src-rm:hover{color:#dc2626}
+.ext-src textarea{width:100%;border:none;border-top:0;padding:10px;font-size:11px;font-family:'IBM Plex Mono',monospace;background:var(--ib);color:var(--fg);min-height:120px;resize:vertical;box-sizing:border-box}
+.ext-src textarea::placeholder{color:var(--ph)}
+.ext-add{width:100%;padding:6px;border:1px dashed var(--ibd);background:none;color:var(--mt);font-size:10px;cursor:pointer;margin-bottom:12px;font-family:'IBM Plex Mono',monospace}
+.ext-add:hover{border-color:var(--ac);color:var(--ac)}
+.ext-go{width:100%;border:2px solid var(--bd);background:var(--ac);color:#000;padding:10px;font-size:12px;font-weight:700;cursor:pointer;transition:background .15s;font-family:'IBM Plex Mono',monospace}
+.ext-go:hover{background:var(--fg);color:var(--ac)}.ext-go:disabled{opacity:.4;cursor:not-allowed}
+.ext-progress{margin-top:12px;display:none}.ext-progress.show{display:block}
+.ext-step{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:10px;color:var(--mt)}
+.ext-step.active{color:var(--ac);font-weight:600}.ext-step.done{color:#16a34a}
+.ext-step-dot{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor;flex-shrink:0}
+.ext-step.active .ext-step-dot{background:var(--ac);border-color:var(--ac);animation:pulse .8s infinite alternate}
+.ext-step.done .ext-step-dot{background:#16a34a;border-color:#16a34a}
+.ext-log{margin-top:8px;max-height:120px;overflow-y:auto;font-size:9px;color:var(--mt);background:var(--ib);border:1px solid var(--ibd);padding:6px 8px;line-height:1.6;white-space:pre-wrap;display:none}
+.ext-log.show{display:block}
+.ext-stats{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:10px;color:var(--mt)}
+.ext-stat{display:flex;align-items:center;gap:4px}
+.ext-stat-val{font-weight:600;color:var(--fg)}
+.ev-badge{font-size:8px;padding:1px 5px;border:1px solid var(--ac);color:var(--ac);margin-left:4px;vertical-align:middle;cursor:pointer;position:relative}
+.ev-badge:hover{background:var(--ac);color:#000}
+.ev-tip{display:none;position:absolute;bottom:100%;left:0;background:var(--fg);color:var(--bg);font-size:9px;padding:6px 8px;width:280px;z-index:50;white-space:pre-wrap;word-wrap:break-word;box-shadow:2px 2px 0 var(--sc);margin-bottom:4px}
+.ev-badge:hover .ev-tip{display:block}
+
+/* === Work model selector === */
+.work-model{display:flex;align-items:center;gap:6px;padding:8px 0;margin-bottom:8px;font-size:10px}
+.work-model-label{color:var(--mt);white-space:nowrap;font-weight:600}
+.wm-tabs{display:flex;gap:0}
+.wm-tab{padding:3px 10px;font-size:10px;border:1.5px solid var(--bd);background:var(--ib);color:var(--fg);cursor:pointer;transition:background .15s}
+.wm-tab:not(:last-child){border-right:0}
+.wm-tab:hover{background:var(--hv)}.wm-tab.active{background:var(--ac);color:#000;font-weight:600}
+.wm-model-name{font-size:9px;color:var(--mt);margin-left:4px}
 </style>
 </head>
 <body>
@@ -171,6 +212,64 @@ textarea{resize:vertical}textarea::placeholder,input::placeholder{color:var(--ph
 </div>
 <p class="text-xs lb mb-1" data-i18n="subtitle">22 questions. 5 minutes. Your AI twin.</p>
 <p class="text-[10px] lb mb-4"><a href="#" onclick="loadExample();return false" class="underline" data-i18n="loadEx">Load worked example (Dara Khosrowshahi, Uber CEO)</a></p>
+
+<!-- Mode Tabs -->
+<div class="mode-tabs">
+<button class="mode-tab active" id="modeManual" onclick="switchMode('manual')">&#9998; Manual</button>
+<button class="mode-tab" id="modeExtract" onclick="switchMode('extract')">&#9881; Extract from Sources</button>
+</div>
+
+<!-- Extraction Panel -->
+<div class="ext-panel" id="extPanel">
+<p class="text-[10px] lb mb-3">Paste podcasts, emails, writing, interviews. The LLM extracts personality traits, decision patterns, and voice — then pre-fills all 22 fields with evidence.</p>
+<div id="extSources">
+<div class="ext-src" data-src-idx="0">
+<div class="ext-src-hdr">
+<div class="flex items-center gap-2">
+<select class="ext-src-type" data-src-type="0">
+<option value="podcast">Podcast / Interview</option>
+<option value="email">Emails</option>
+<option value="writing">Writing / Blog</option>
+<option value="meeting">Meeting Notes</option>
+<option value="other">Other</option>
+</select>
+<span class="text-[9px] lb" id="srcWc0">0 words</span>
+</div>
+<button class="ext-src-rm" onclick="removeSource(0)" title="Remove">&times;</button>
+</div>
+<textarea placeholder="Paste transcript, emails, or writing here..." oninput="updateSrcWc(0)"></textarea>
+</div>
+</div>
+<button class="ext-add" onclick="addSource()">+ Add another source</button>
+<div class="ext-stats" id="extStats" style="display:none">
+<div class="ext-stat">Sources: <span class="ext-stat-val" id="extStatSrc">0</span></div>
+<div class="ext-stat">Words: <span class="ext-stat-val" id="extStatWords">0</span></div>
+<div class="ext-stat">Chunks: <span class="ext-stat-val" id="extStatChunks">0</span></div>
+<div class="ext-stat">Est. calls: <span class="ext-stat-val" id="extStatCalls">0</span></div>
+</div>
+<div class="work-model">
+<span class="work-model-label">Model:</span>
+<div class="wm-tabs">
+<button class="wm-tab active" onclick="switchWorkVendor('claude')" id="wm-claude">Claude</button>
+<button class="wm-tab" onclick="switchWorkVendor('gpt')" id="wm-gpt">GPT</button>
+<button class="wm-tab" onclick="switchWorkVendor('gemini')" id="wm-gemini">Gemini</button>
+</div>
+<span class="wm-model-name" id="wmModelName"></span>
+<button class="tb" onclick="openSettings()" title="Settings" style="width:22px;height:22px;font-size:11px;min-width:22px">&#9881;</button>
+</div>
+<button class="ext-go" onclick="runExtraction()" id="extGoBtn">EXTRACT PERSONALITY &#10140;</button>
+<div class="ext-progress" id="extProgress">
+<div class="ext-step" id="extStep1"><span class="ext-step-dot"></span> Chunking sources</div>
+<div class="ext-step" id="extStep2"><span class="ext-step-dot"></span> Extracting traits from chunks <span id="extChunkProgress"></span></div>
+<div class="ext-step" id="extStep3"><span class="ext-step-dot"></span> Synthesizing across sources</div>
+<div class="ext-step" id="extStep4"><span class="ext-step-dot"></span> Generating calibration responses</div>
+<div class="ext-step" id="extStep5"><span class="ext-step-dot"></span> Pre-filling fields</div>
+</div>
+<div class="ext-log" id="extLog"></div>
+</div>
+
+<!-- Manual mode content wrapper -->
+<div id="manualPanel">
 <div class="flex items-center gap-3 mb-2">
 <div class="flex gap-1" id="stepDots"></div>
 <span class="text-[10px] lb" id="stepLabel"></span>
@@ -286,6 +385,7 @@ textarea{resize:vertical}textarea::placeholder,input::placeholder{color:var(--ph
 </div>
 </div></div>
 </div>
+</div><!-- close manualPanel -->
 
 <!-- Buttons -->
 <div class="mb-6 flex gap-2">
@@ -349,7 +449,7 @@ textarea{resize:vertical}textarea::placeholder,input::placeholder{color:var(--ph
 <div class="chat-msgs" id="chatMsgs">
 <div class="text-center text-[10px] lb py-8" id="chatEmpty" data-i18n="chatEmpty">Send a message to test your agent clone</div>
 </div>
-<div class="refine-bar" id="refineBar"><div class="rb-hdr"><span><strong data-i18n="refineTitle">Corrections</strong> <span style="font-size:10px;color:var(--mt)" id="refineCount">(0)</span> <span class="vb" id="versionBadge">v1</span></span></div><div class="rb-list" id="refineList"></div><div class="rb-acts"><button class="rb-p" onclick="refinePrompt()" id="refineBtn" data-i18n="refineBtn">Refine Prompt</button><button class="rb-s" onclick="clearCorrections()" data-i18n="clearCorr">Clear</button></div></div>
+<div class="refine-bar" id="refineBar"><div class="rb-hdr"><span><strong data-i18n="refineTitle">Corrections</strong> <span style="font-size:10px;color:var(--mt)" id="refineCount">(0)</span> <span class="vb" id="versionBadge">v1</span></span></div><div class="rb-list" id="refineList"></div><div class="rb-acts"><span class="text-[9px] lb" id="refineModel" style="margin-right:2px"></span><button class="rb-p" onclick="refinePrompt()" id="refineBtn" data-i18n="refineBtn">Refine Prompt</button><button class="rb-s" onclick="clearCorrections()" data-i18n="clearCorr">Clear</button></div></div>
 <div class="chat-input-row">
 <textarea class="chat-input" id="chatInput" rows="1" placeholder="" data-i18n-ph="ph_chatInput" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
 <button class="chat-send" onclick="sendMessage()" id="chatSendBtn" data-i18n="sendBtn">Send</button>
@@ -555,7 +655,7 @@ for(var i=0;i<SECTIONS.length;i++){(function(idx){
 var dot=document.createElement('button');dot.className='w-2.5 h-2.5 border dc';
 dot.style.background=(idx===0)?'var(--fg)':'var(--bg)';dot.onclick=function(){toggleSection(idx);};dot.id='dot'+idx;dc.appendChild(dot);
 })(i);}
-applyLocale();updateProgress();updateModelLabel();
+applyLocale();updateProgress();updateModelLabel();updateWorkModelLabel();
 }
 
 function toggleSection(idx){
@@ -788,6 +888,28 @@ else{panel.classList.add('show');arrow.innerHTML='&#9650;';}
 
 // ===== CHAT ENGINE =====
 var currentVendor='claude';var chatHistory={claude:[],gpt:[],gemini:[]};var systemPromptText='';var chatBusy=false;
+
+// Work model — used for extraction + refinement (independent from chat vendor)
+var workVendor='claude';
+
+function getWorkVendor(){return workVendor;}
+
+function switchWorkVendor(v){
+workVendor=v;
+document.querySelectorAll('.wm-tab').forEach(function(t){t.classList.remove('active');});
+var tab=document.getElementById('wm-'+v);if(tab)tab.classList.add('active');
+updateWorkModelLabel();
+}
+
+function updateWorkModelLabel(){
+var s=getSettings();
+var m={claude:s.claudeModel||'claude-sonnet-4-5-20250929',gpt:s.gptModel||'gpt-4o',gemini:s.geminiModel||'gemini-2.5-flash'};
+var label=document.getElementById('wmModelName');
+if(label)label.textContent=m[workVendor];
+// Also update refine bar indicator
+var ri=document.getElementById('refineModel');
+if(ri)ri.textContent='via '+m[workVendor];
+}
 function getSettings(){try{return JSON.parse(localStorage.getItem('agentCloneSettings')||'{}');}catch(e){return {};}}
 function setSettings(s){try{localStorage.setItem('agentCloneSettings',JSON.stringify(s));}catch(e){}}
 function openSettings(){
@@ -801,7 +923,7 @@ document.getElementById('settingsModal').classList.add('show');
 function closeSettings(){document.getElementById('settingsModal').classList.remove('show');}
 function saveSettings(){
 setSettings({anthropicKey:document.getElementById('set_anthropicKey').value.trim(),openaiKey:document.getElementById('set_openaiKey').value.trim(),googleKey:document.getElementById('set_googleKey').value.trim(),claudeModel:document.getElementById('set_claudeModel').value,gptModel:document.getElementById('set_gptModel').value,geminiModel:document.getElementById('set_geminiModel').value});
-closeSettings();updateModelLabel();showToast(I[LANG].settingsSaved);
+closeSettings();updateModelLabel();updateWorkModelLabel();showToast(I[LANG].settingsSaved);
 }
 function updateModelLabel(){
 var s=getSettings();var m={claude:s.claudeModel||'claude-sonnet-4-5-20250929',gpt:s.gptModel||'gpt-4o',gemini:s.geminiModel||'gemini-2.5-flash'};
@@ -909,31 +1031,31 @@ callLLM(currentVendor,systemPromptText,chatHistory[currentVendor],s)
 }
 
 // ===== LLM APIS =====
-function callLLM(v,sys,msgs,s){if(v==='claude')return callClaude(sys,msgs,s);if(v==='gpt')return callGPT(sys,msgs,s);return callGemini(sys,msgs,s);}
+function callLLM(v,sys,msgs,s,maxTok){if(v==='claude')return callClaude(sys,msgs,s,maxTok);if(v==='gpt')return callGPT(sys,msgs,s,maxTok);return callGemini(sys,msgs,s,maxTok);}
 
-function callClaude(sys,msgs,s){
+function callClaude(sys,msgs,s,maxTok){
 return fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':s.anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-body:JSON.stringify({model:s.claudeModel||'claude-sonnet-4-5-20250929',max_tokens:2048,system:sys,messages:msgs.map(function(m){return{role:m.role,content:m.content};})})
+body:JSON.stringify({model:s.claudeModel||'claude-sonnet-4-5-20250929',max_tokens:maxTok||2048,system:sys,messages:msgs.map(function(m){return{role:m.role,content:m.content};})})
 }).then(function(r){if(!r.ok)return r.text().then(function(t){try{var e=JSON.parse(t);throw new Error(e.error?e.error.message:'Claude error '+r.status);}catch(pe){if(pe.message&&pe.message.indexOf('Claude error')!==-1)throw pe;throw new Error('Claude error '+r.status+': '+t.substring(0,200));}});return r.json();
 }).then(function(d){if(!d.content||!d.content.length)throw new Error('Empty Claude response');return d.content.map(function(c){return c.text||'';}).join('');});
 }
 
-function callGPT(sys,msgs,s){
+function callGPT(sys,msgs,s,maxTok){
 var model=s.gptModel||'gpt-4o';
 var tokParam=model.indexOf('4.1')!==-1||model.indexOf('o1')!==-1||model.indexOf('o3')!==-1?'max_completion_tokens':'max_tokens';
 var body={model:model,messages:[{role:'system',content:sys}].concat(msgs.map(function(m){return{role:m.role,content:m.content};}))};
-body[tokParam]=2048;
+body[tokParam]=maxTok||2048;
 return fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+s.openaiKey},
 body:JSON.stringify(body)
 }).then(function(r){if(!r.ok)return r.text().then(function(t){try{var e=JSON.parse(t);throw new Error(e.error?e.error.message:'GPT error '+r.status);}catch(pe){if(pe.message&&pe.message.indexOf('GPT error')!==-1)throw pe;throw new Error('GPT error '+r.status+': '+t.substring(0,200));}});return r.json();
 }).then(function(d){if(!d.choices||!d.choices[0])throw new Error('Empty GPT response');return d.choices[0].message.content;});
 }
 
-function callGemini(sys,msgs,s){
+function callGemini(sys,msgs,s,maxTok){
 var model=s.geminiModel||'gemini-2.5-flash';
 var contents=msgs.map(function(m){return{role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]};});
 return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+s.googleKey,{method:'POST',headers:{'Content-Type':'application/json'},
-body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:contents,generationConfig:{maxOutputTokens:2048}})
+body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:contents,generationConfig:{maxOutputTokens:maxTok||2048}})
 }).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.error?e.error.message:'Gemini error '+r.status);});return r.json();
 }).then(function(d){if(d.candidates&&d.candidates[0]&&d.candidates[0].content)return d.candidates[0].content.parts.map(function(p){return p.text||'';}).join('');throw new Error('No Gemini response');});
 }
@@ -1097,7 +1219,8 @@ return null; // No match found
 function refinePrompt(){
 if(corrections.length<1||chatBusy)return;
 var s=getSettings();var km={claude:'anthropicKey',gpt:'openaiKey',gemini:'googleKey'};
-if(!s[km[currentVendor]]){showToast(I[LANG].noKey);openSettings();return;}
+var wv=getWorkVendor();
+if(!s[km[wv]]){showToast(I[LANG].noKey+' ('+wv+')');openSettings();return;}
 var ct=corrections.map(function(c,i){return'#'+(i+1)+'\nAsked: "'+c.q+'"\nClone said: "'+c.r+'"\nFeedback: "'+c.fb+'"';}).join('\n\n');
 
 // IMPROVED LLM PROMPT — asks for section-aware edits with flexible matching
@@ -1121,7 +1244,8 @@ ${parseSections(systemPromptText).map(function(s){return s.headerRaw;}).join('\n
 var rmsg='Current persona prompt:\n\n'+systemPromptText+'\n\n---\nUser corrections from testing:\n\n'+ct+'\n\n---\nReturn a JSON array of surgical edits. Each edit targets a specific section.';
 
 chatBusy=true;var btn=document.getElementById('refineBtn');btn.textContent=I[LANG].refining||'...';btn.disabled=true;
-callLLM(currentVendor,rsys,[{role:'user',content:rmsg}],s)
+logExt('Refining via '+wv+'...');
+callLLM(wv,rsys,[{role:'user',content:rmsg}],s,4096)
 .then(function(reply){
 var clean=reply.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
 try{
@@ -1340,6 +1464,529 @@ return'words changed (same length)';
 }
 
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// ===== MODE SWITCHING =====
+function switchMode(mode){
+document.getElementById('modeManual').classList.toggle('active',mode==='manual');
+document.getElementById('modeExtract').classList.toggle('active',mode==='extract');
+document.getElementById('manualPanel').style.display=mode==='manual'?'':'none';
+document.getElementById('extPanel').classList.toggle('show',mode==='extract');
+}
+
+// ===== SOURCE MANAGEMENT =====
+var srcCounter=1;
+
+function addSource(){
+var container=document.getElementById('extSources');
+var idx=srcCounter++;
+var div=document.createElement('div');div.className='ext-src';div.setAttribute('data-src-idx',idx);
+div.innerHTML='<div class="ext-src-hdr"><div class="flex items-center gap-2">'
++'<select class="ext-src-type" data-src-type="'+idx+'">'
++'<option value="podcast">Podcast / Interview</option><option value="email">Emails</option>'
++'<option value="writing">Writing / Blog</option><option value="meeting">Meeting Notes</option>'
++'<option value="other">Other</option></select>'
++'<span class="text-[9px] lb" id="srcWc'+idx+'">0 words</span>'
++'</div><button class="ext-src-rm" onclick="removeSource('+idx+')" title="Remove">&times;</button></div>'
++'<textarea placeholder="Paste transcript, emails, or writing here..." oninput="updateSrcWc('+idx+')"></textarea>';
+container.appendChild(div);
+}
+
+function removeSource(idx){
+var el=document.querySelector('[data-src-idx="'+idx+'"]');
+if(el&&document.querySelectorAll('.ext-src').length>1)el.remove();
+}
+
+function updateSrcWc(idx){
+var src=document.querySelector('[data-src-idx="'+idx+'"] textarea');
+var wc=src?src.value.trim().split(/\s+/).filter(function(w){return w;}).length:0;
+var label=document.getElementById('srcWc'+idx);
+if(label)label.textContent=wc+' words';
+updateExtStats();
+}
+
+function getSources(){
+var sources=[];
+document.querySelectorAll('.ext-src').forEach(function(el){
+var idx=el.getAttribute('data-src-idx');
+var type=el.querySelector('.ext-src-type').value;
+var text=el.querySelector('textarea').value.trim();
+if(text)sources.push({type:type,text:text,idx:idx});
+});
+return sources;
+}
+
+function updateExtStats(){
+var sources=getSources();
+var totalWords=0;
+sources.forEach(function(s){totalWords+=s.text.split(/\s+/).length;});
+var chunks=Math.max(1,Math.ceil(totalWords/MAX_CHUNK_WORDS));
+var calls=chunks+2; // chunk extractions + synthesis + calibration
+document.getElementById('extStats').style.display=sources.length?'flex':'none';
+document.getElementById('extStatSrc').textContent=sources.length;
+document.getElementById('extStatWords').textContent=totalWords.toLocaleString();
+document.getElementById('extStatChunks').textContent=chunks;
+document.getElementById('extStatCalls').textContent=calls;
+}
+
+// ===== CHUNKING ENGINE (semantic, 16K tokens ≈ 12K words) =====
+//
+// 200K context = plenty of room. Chunk large to preserve semantic coherence.
+// ~1.3 tokens/word for English → 16K tokens ≈ 12K words.
+// System prompt + JSON schema ≈ 1.5K tokens overhead → safe at 12K.
+//
+// Split hierarchy per source type:
+//   email   → individual emails (From:/Subject:/Date: boundaries)
+//   podcast → topic blocks (interviewer questions, [timestamp], ###)
+//   writing → section headers (##, ---, ===)
+//   other   → paragraph groups
+// Within each: pack segments into chunks up to MAX_CHUNK_WORDS.
+
+var MAX_CHUNK_WORDS=12000;
+
+function countWords(s){return s.trim()?s.trim().split(/\s+/).length:0;}
+
+// Detect semantic boundaries based on source type
+function splitSemanticSegments(text,sourceType){
+var segments=[];
+
+if(sourceType==='email'){
+// Split on email boundaries: "From:", "Subject:", "Date:", "On ... wrote:", "---Original Message---"
+// Keep each email thread together as one segment
+var emailPattern=/(?=^(?:From:|Subject:|Date:|On\s.+wrote:|[-]{3,}\s*Original Message|[-]{3,}\s*Forwarded))/mi;
+var parts=text.split(emailPattern).filter(function(p){return p.trim();});
+if(parts.length>1){
+// Group From+Subject+Date+Body as single emails
+var currentEmail=[];
+for(var i=0;i<parts.length;i++){
+var p=parts[i].trim();
+// If this starts a new email header and we have content
+if(/^(?:From:|On\s.+wrote:|[-]{3,}\s*Original)/i.test(p)&&currentEmail.length>0){
+segments.push(currentEmail.join('\n'));
+currentEmail=[];
+}
+currentEmail.push(p);
+}
+if(currentEmail.length>0)segments.push(currentEmail.join('\n'));
+}
+if(segments.length<=1)segments=splitByBlankLines(text);
+
+}else if(sourceType==='podcast'||sourceType==='meeting'){
+// Split on: interviewer questions, speaker labels, timestamps, topic headers
+// Speaker labels: "Name:", "Q:", "Host:", "[00:12:34]"
+var lines=text.split('\n');
+var currentBlock=[];var lastWasSpeaker=false;
+
+for(var i=0;i<lines.length;i++){
+var line=lines[i];
+var isSpeakerBoundary=
+/^\s*\[?\d{1,2}:\d{2}/.test(line)|| // [12:34] or 12:34
+/^[A-Z][a-zA-Z\s]{0,30}:\s/.test(line)|| // "Speaker Name: "
+/^(?:Q|Host|Interviewer|Moderator)\s*:/i.test(line)|| // Q: Host:
+/^#{1,3}\s/.test(line); // ### topic headers
+
+// Start new segment on speaker change, but only if current block is substantial
+if(isSpeakerBoundary&&currentBlock.length>0&&countWords(currentBlock.join('\n'))>200){
+segments.push(currentBlock.join('\n'));
+currentBlock=[];
+}
+currentBlock.push(line);
+}
+if(currentBlock.length>0)segments.push(currentBlock.join('\n'));
+if(segments.length<=1)segments=splitByBlankLines(text);
+
+}else if(sourceType==='writing'){
+// Split on: markdown headers, horizontal rules, ===, ---
+var headerPattern=/(?=^(?:#{1,3}\s|[-=]{3,}\s*$))/m;
+var parts=text.split(headerPattern).filter(function(p){return p.trim();});
+if(parts.length>1){
+segments=parts;
+}else{
+segments=splitByBlankLines(text);
+}
+
+}else{
+segments=splitByBlankLines(text);
+}
+
+// Filter empties and return
+return segments.filter(function(s){return s.trim();});
+}
+
+// Fallback: split on double newlines (paragraph groups)
+function splitByBlankLines(text){
+return text.split(/\n\s*\n/).filter(function(p){return p.trim();});
+}
+
+// Main chunking function: pack semantic segments into chunks up to maxWords
+function chunkText(text,sourceType,maxWords){
+maxWords=maxWords||MAX_CHUNK_WORDS;
+var segments=splitSemanticSegments(text,sourceType);
+
+// If entire text fits in one chunk, just return it
+var totalWords=countWords(text);
+if(totalWords<=maxWords){
+return [{text:text.trim(),words:totalWords,sourceType:sourceType}];
+}
+
+var chunks=[];
+var current=[];var currentWords=0;
+
+for(var i=0;i<segments.length;i++){
+var seg=segments[i].trim();
+var segWords=countWords(seg);
+
+// If single segment exceeds max, split it by sentences
+if(segWords>maxWords){
+// Flush current buffer first
+if(current.length>0){
+chunks.push({text:current.join('\n\n'),words:currentWords,sourceType:sourceType});
+current=[];currentWords=0;
+}
+// Sentence-level splitting for oversized segments
+var sentences=seg.split(/(?<=[.!?])\s+/);
+var sentBuf=[];var sentWords=0;
+for(var j=0;j<sentences.length;j++){
+var sw=countWords(sentences[j]);
+if(sentWords+sw>maxWords&&sentBuf.length>0){
+chunks.push({text:sentBuf.join(' '),words:sentWords,sourceType:sourceType});
+sentBuf=[];sentWords=0;
+}
+sentBuf.push(sentences[j]);sentWords+=sw;
+}
+if(sentBuf.length>0)chunks.push({text:sentBuf.join(' '),words:sentWords,sourceType:sourceType});
+continue;
+}
+
+// Would adding this segment overflow? Flush current chunk.
+if(currentWords+segWords>maxWords&&current.length>0){
+chunks.push({text:current.join('\n\n'),words:currentWords,sourceType:sourceType});
+current=[];currentWords=0;
+}
+
+current.push(seg);
+currentWords+=segWords;
+}
+
+if(current.length>0){
+chunks.push({text:current.join('\n\n'),words:currentWords,sourceType:sourceType});
+}
+
+return chunks;
+}
+
+// ===== EXTRACTION PIPELINE =====
+var extLog=[];
+function logExt(msg){
+extLog.push('['+new Date().toLocaleTimeString()+'] '+msg);
+var el=document.getElementById('extLog');
+el.textContent=extLog.join('\n');el.scrollTop=el.scrollHeight;
+}
+
+function setStep(n,state){
+for(var i=1;i<=5;i++){
+var el=document.getElementById('extStep'+i);
+el.classList.remove('active','done');
+if(i<n)el.classList.add('done');
+else if(i===n)el.classList.add(state||'active');
+}
+}
+
+// All 22 field keys with extraction categories
+// identity: factual, short values (name, title)
+// personality: behavioral traits, voice, frameworks
+// meta: user-defined preferences — only extract if explicitly stated
+var EXTRACT_FIELDS={
+name:{label:'Name',desc:'Full name of the person',cat:'identity'},
+titleCo:{label:'Title & Company',desc:'Job title and organization',cat:'identity'},
+reality:{label:'Operating Reality',desc:'What the org does, scale, defining constraint',cat:'identity'},
+cred:{label:'Credibility',desc:'Career trajectory, achievements, why people listen',cat:'identity'},
+stakes:{label:'Current Stakes',desc:'Current bet, transition, what is at risk',cat:'personality'},
+decision:{label:'Decision-Making',desc:'How they make hard decisions, step by step process',cat:'personality'},
+frameworks:{label:'Frameworks',desc:'Mental models, analogies, recurring frameworks they use',cat:'personality'},
+uncertainty:{label:'Uncertainty',desc:'How much certainty needed, relationship with being wrong',cat:'personality'},
+greenlight:{label:'Greenlight Question',desc:'The question they always ask before saying yes',cat:'personality'},
+dontknow:{label:'Handling Unknown',desc:'What they say when they do not have the answer',cat:'personality'},
+style:{label:'Communication Style',desc:'How they sound in meetings, verbal patterns',cat:'personality'},
+badnews:{label:'Bad News Delivery',desc:'How they deliver bad news to different audiences',cat:'personality'},
+signatures:{label:'Signature Phrases',desc:'Recurring phrases, metaphors, verbal habits',cat:'personality'},
+neverComm:{label:'Communication Anti-Patterns',desc:'What they never do, what triggers them',cat:'personality'},
+contrarian:{label:'Contrarian Views',desc:'Strong opinions most peers do not share',cat:'personality'},
+obsession:{label:'Current Obsession',desc:'What consumes their attention right now',cat:'personality'},
+conflict:{label:'Conflict Handling',desc:'How they handle disagreement with powerful people',cat:'personality'},
+motivate:{label:'Motivation Style',desc:'How they rally and motivate teams',cat:'personality'},
+human:{label:'Human Layer',desc:'Personal life, surprises, what makes them human',cat:'personality'},
+guardrails:{label:'Guardrails',desc:'Lines they explicitly say they never cross, topics they always defer. ONLY extract if the person explicitly states a boundary.',cat:'meta'},
+confidential:{label:'Confidential Areas',desc:'Topics they explicitly say are off-limits. ONLY extract if explicitly mentioned.',cat:'meta'}
+};
+
+// Calibration fields handled separately in Pass 4
+var CAL_FIELDS=['cal1','cal2','cal3'];
+
+async function runExtraction(){
+var sources=getSources();
+if(sources.length===0){showToast('Add at least one source');return;}
+
+var s=getSettings();var km={claude:'anthropicKey',gpt:'openaiKey',gemini:'googleKey'};
+var wv=getWorkVendor();
+if(!s[km[wv]]){showToast(I[LANG].noKey+' ('+wv+')');openSettings();return;}
+
+// Disable button, show progress
+var btn=document.getElementById('extGoBtn');btn.disabled=true;btn.textContent='Extracting via '+wv+'...';
+document.getElementById('extProgress').classList.add('show');
+document.getElementById('extLog').classList.add('show');
+extLog=[];
+
+try{
+// === STEP 1: Chunk all sources ===
+setStep(1,'active');logExt('Chunking '+sources.length+' source(s)...');
+
+var allChunks=[];
+sources.forEach(function(src){
+var chunks=chunkText(src.text,src.type);
+allChunks=allChunks.concat(chunks);
+logExt('  '+src.type+': '+chunks.length+' chunks ('+src.text.split(/\s+/).length+' words)');
+});
+logExt('Total: '+allChunks.length+' chunks');
+setStep(1,'done');
+
+// === STEP 2: Extract traits from each chunk ===
+setStep(2,'active');
+var fieldKeys=Object.keys(EXTRACT_FIELDS);
+var allExtractions=[]; // [{field, evidence, source_type, chunk_idx}]
+
+for(var ci=0;ci<allChunks.length;ci++){
+var chunk=allChunks[ci];
+document.getElementById('extChunkProgress').textContent='('+( ci+1)+'/'+allChunks.length+')';
+logExt('Extracting chunk '+(ci+1)+'/'+allChunks.length+' ('+chunk.sourceType+', '+chunk.words+' words)...');
+
+var extractSys=`You extract personality traits from text for building an AI agent clone.
+
+Given a chunk of text (from a ${chunk.sourceType}), extract evidence for these fields:
+
+IDENTITY FIELDS (factual — extract as short factual values):
+${fieldKeys.filter(function(k){return EXTRACT_FIELDS[k].cat==='identity';}).map(function(k){return k+': '+EXTRACT_FIELDS[k].desc;}).join('\n')}
+
+PERSONALITY FIELDS (behavioral — extract patterns, voice, decision-making):
+${fieldKeys.filter(function(k){return EXTRACT_FIELDS[k].cat==='personality';}).map(function(k){return k+': '+EXTRACT_FIELDS[k].desc;}).join('\n')}
+
+META FIELDS (only if person EXPLICITLY states a boundary):
+${fieldKeys.filter(function(k){return EXTRACT_FIELDS[k].cat==='meta';}).map(function(k){return k+': '+EXTRACT_FIELDS[k].desc;}).join('\n')}
+
+OUTPUT: A JSON object where keys are field names and values are objects with:
+- "insight": The extracted trait/pattern/fact (1-3 sentences, in your own words)
+- "quote": A direct supporting quote from the text (verbatim, max 50 words)
+
+RULES:
+- ONLY include fields where you found clear evidence. Skip fields with no evidence.
+- For identity fields: insight should be the factual value (e.g., "Dara Khosrowshahi", "CEO, Uber")
+- For personality fields: insight should describe the behavioral pattern observed
+- For meta fields: ONLY extract if the person explicitly states a boundary or off-limits topic. Do NOT infer.
+- Do NOT hallucinate. If you're unsure, skip the field.
+No commentary. No markdown fences. Raw JSON only.`;
+
+var extractMsg='SOURCE TYPE: '+chunk.sourceType+'\n\nTEXT:\n'+chunk.text;
+
+var reply=await callLLM(wv,extractSys,[{role:'user',content:extractMsg}],s,4096);
+var clean=reply.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+
+try{
+var extracted=JSON.parse(clean);
+for(var fk in extracted){
+if(EXTRACT_FIELDS[fk]&&extracted[fk]&&extracted[fk].insight){
+allExtractions.push({
+field:fk,
+insight:extracted[fk].insight,
+quote:extracted[fk].quote||'',
+sourceType:chunk.sourceType,
+chunkIdx:ci
+});
+}
+}
+var foundCount=Object.keys(extracted).length;
+logExt('  Found '+foundCount+' fields in chunk '+(ci+1));
+}catch(pe){
+logExt('  Parse error on chunk '+(ci+1)+', skipping');
+}
+}
+
+document.getElementById('extChunkProgress').textContent='';
+logExt('Extraction complete: '+allExtractions.length+' total evidence items');
+setStep(2,'done');
+
+// === STEP 3: Synthesize across chunks ===
+setStep(3,'active');
+logExt('Synthesizing across all sources...');
+
+// Group extractions by field
+var byField={};
+allExtractions.forEach(function(e){
+if(!byField[e.field])byField[e.field]=[];
+byField[e.field].push(e);
+});
+
+// Build synthesis prompt with all evidence
+var evidenceSummary=fieldKeys.map(function(k){
+var items=byField[k]||[];
+if(items.length===0)return k+': NO EVIDENCE FOUND';
+return k+':\n'+items.map(function(it,i){
+return '  ('+(i+1)+') ['+it.sourceType+'] '+it.insight+(it.quote?' | Quote: "'+it.quote+'"':'');
+}).join('\n');
+}).join('\n\n');
+
+var synthSys=`You are synthesizing extracted personality evidence into coherent persona descriptions.
+
+FIELD CATEGORIES — treat each differently:
+
+IDENTITY FIELDS (name, titleCo, reality, cred): Output factual, concise values.
+- "name" → just the full name (e.g., "Dara Khosrowshahi")
+- "titleCo" → title and company (e.g., "CEO, Uber")
+- "reality" → 2-3 sentence factual description of org
+- "cred" → bullet points of key achievements
+
+PERSONALITY FIELDS: Combine evidence into rich, natural-sounding descriptions.
+- Write as if the person is describing themselves — direct, specific, concrete examples.
+- Where evidence conflicts (e.g., public podcast voice ≠ private email tone), note the tension.
+- Preserve their actual phrases, verbal tics, and frameworks.
+
+META FIELDS (guardrails, confidential): Only fill if there was explicit evidence. Otherwise empty string.
+
+OUTPUT: A JSON object where keys are field names and values are the synthesized text (string).
+For fields with NO EVIDENCE, set value to empty string "".
+No markdown fences. Raw JSON only.`;
+
+var synthMsg='EVIDENCE BY FIELD:\n\n'+evidenceSummary;
+var synthReply=await callLLM(wv,synthSys,[{role:'user',content:synthMsg}],s,8192);
+var synthClean=synthReply.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+var synthesized={};
+
+try{
+synthesized=JSON.parse(synthClean);
+var filledCount=Object.keys(synthesized).filter(function(k){return synthesized[k];}).length;
+logExt('Synthesized '+filledCount+' fields');
+}catch(pe){
+logExt('Synthesis parse error — attempting recovery');
+// Try to extract partial JSON
+try{
+var partialMatch=synthClean.match(/\{[\s\S]*\}/);
+if(partialMatch)synthesized=JSON.parse(partialMatch[0]);
+}catch(pe2){logExt('Recovery failed');}
+}
+setStep(3,'done');
+
+// === STEP 4: Generate calibration responses ===
+setStep(4,'active');
+logExt('Generating calibration responses...');
+
+// Build persona summary for calibration
+var personaSummary=fieldKeys.map(function(k){
+return EXTRACT_FIELDS[k].label+': '+(synthesized[k]||'[unknown]');
+}).join('\n\n');
+
+var calSys=`You are generating calibration responses for an AI agent clone. Based on the personality profile below, respond to 3 scenarios AS THIS PERSON WOULD — in their voice, using their frameworks, with their characteristic directness or style.
+
+PERSONALITY PROFILE:
+${personaSummary}
+
+OUTPUT: A JSON object with keys "cal1", "cal2", "cal3" containing the persona's response to each scenario.
+Write authentically in first person as this person. Use their signature phrases and frameworks.
+No markdown fences. Raw JSON only.`;
+
+var calMsg='Respond as this person to:\n\ncal1: "We have a major opportunity but the team is split on the right approach."\n\ncal2: "We missed our target this quarter. The board is asking what happened."\n\ncal3: "I\'m a high performer but I\'m thinking about leaving. Convince me to stay."';
+
+var calReply=await callLLM(wv,calSys,[{role:'user',content:calMsg}],s,4096);
+var calClean=calReply.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+
+try{
+var calData=JSON.parse(calClean);
+if(calData.cal1)synthesized.cal1=calData.cal1;
+if(calData.cal2)synthesized.cal2=calData.cal2;
+if(calData.cal3)synthesized.cal3=calData.cal3;
+logExt('Calibration responses generated');
+}catch(pe){logExt('Calibration parse error');}
+setStep(4,'done');
+
+// === STEP 5: Pre-fill fields ===
+setStep(5,'active');
+logExt('Pre-filling form fields...');
+
+// Store evidence map for badges
+window._extractEvidence=byField;
+
+var filledN=0;
+for(var fk in synthesized){
+if(!synthesized[fk])continue;
+var el=document.querySelector('[data-field="'+fk+'"]');
+if(el){
+el.value=synthesized[fk];
+filledN++;
+// Add evidence badge
+addEvidenceBadge(fk,byField[fk]||[]);
+}
+}
+
+logExt('Pre-filled '+filledN+' fields');
+setStep(5,'done');
+
+// Switch to manual mode to show filled fields
+switchMode('manual');
+updateProgress();
+
+// Expand ALL sections so user can review everything
+for(var si=0;si<SECTIONS.length;si++){
+var body=document.querySelectorAll('.section-body')[si];
+if(body)body.classList.add('expanded');
+}
+
+// Highlight generate button as next action
+var genBtnEl=document.querySelector('.gb');
+if(genBtnEl){
+genBtnEl.style.animation='pulse 0.8s infinite alternate';
+genBtnEl.style.boxShadow='0 0 12px var(--ac)';
+// Clear highlight after click
+var origClick=genBtnEl.onclick;
+genBtnEl.onclick=function(){
+genBtnEl.style.animation='';genBtnEl.style.boxShadow='';
+genBtnEl.onclick=origClick;
+if(origClick)origClick.call(genBtnEl);
+};
+}
+
+showToast(filledN+' fields extracted — review then click GENERATE');
+
+}catch(err){
+logExt('ERROR: '+(err.message||err));
+showToast('Extraction error — check log');
+}finally{
+btn.disabled=false;btn.textContent='EXTRACT PERSONALITY \u2794';
+}
+}
+
+// Add evidence badge next to field label
+function addEvidenceBadge(fieldKey,evidenceItems){
+if(!evidenceItems||evidenceItems.length===0)return;
+var el=document.querySelector('[data-field="'+fieldKey+'"]');
+if(!el)return;
+var label=el.previousElementSibling||el.parentElement.querySelector('label');
+if(!label)return;
+
+// Remove existing badge
+var existing=label.querySelector('.ev-badge');
+if(existing)existing.remove();
+
+var badge=document.createElement('span');
+badge.className='ev-badge';
+badge.textContent=evidenceItems.length+' src'+(evidenceItems.length>1?'s':'');
+
+// Build tooltip
+var tipText=evidenceItems.map(function(e,i){
+return '['+(i+1)+'] '+e.sourceType.toUpperCase()+'\n'+e.insight+(e.quote?'\n\u201c'+e.quote+'\u201d':'');
+}).join('\n\n');
+var tip=document.createElement('span');
+tip.className='ev-tip';
+tip.textContent=tipText;
+badge.appendChild(tip);
+label.appendChild(badge);
+}
 
 init();
 </script>
