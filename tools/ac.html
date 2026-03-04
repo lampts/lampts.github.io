@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Clone Builder</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{fontFamily:{sans:['IBM Plex Mono','monospace'],mono:['IBM Plex Mono','monospace'],serif:['IBM Plex Serif','serif']},colors:{accent:'#FBD45B'}}}}
+</script>
+<style>
+:root{--bg:#fff;--fg:#000;--mt:#666;--ac:#FBD45B;--bd:#000;--ib:#fff;--ibd:#d1d5db;--hv:#f9fafb;--ob:#f9fafb;--cb:#fff;--sc:#000;--ph:#999}
+html.dark{--bg:#111;--fg:#e5e5e5;--mt:#999;--ac:#FBD45B;--bd:#444;--ib:#1a1a1a;--ibd:#333;--hv:#1a1a1a;--ob:#1a1a1a;--cb:#161616;--sc:#333;--ph:#555}
+body{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--bg);color:var(--fg);transition:background .2s,color .2s}
+.shadow-brutal{box-shadow:3px 3px 0px var(--sc)}.font-serif{font-family:'IBM Plex Serif',serif}
+textarea,input[type="text"]{font-family:'IBM Plex Mono',monospace;font-size:12px;background:var(--ib);color:var(--fg);border-color:var(--ibd)}
+textarea{resize:vertical}textarea::placeholder,input::placeholder{color:var(--ph)}
+.section-header{cursor:pointer;user-select:none}.section-header:hover{background:var(--hv)}
+.section-body{transition:max-height .3s ease,opacity .2s ease;overflow:hidden}
+.section-body.collapsed{max-height:0;opacity:0;padding-top:0;padding-bottom:0}.section-body.expanded{max-height:5000px;opacity:1}
+#outputPanel{display:none}#outputPanel.show{display:block}
+#promptOutput{white-space:pre-wrap;word-wrap:break-word;font-size:11px;line-height:1.6;color:var(--fg)}
+.copy-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--ac);padding:8px 20px;font-size:11px;z-index:100;opacity:0;transition:opacity .3s;pointer-events:none}
+.copy-toast.visible{opacity:1}
+.sb{border-color:var(--bd)!important;background:var(--cb)}.oub{background:var(--ob)}.ouf{background:var(--cb);border-color:var(--ibd)}
+.pt{background:var(--ib);border-color:var(--ibd)}.dc{border-color:var(--bd)!important}
+.gb{background:var(--ac);border-color:var(--bd);color:#000}.gb:hover{background:var(--fg);color:var(--ac)}
+.obar{background:var(--fg);color:var(--bg)}.obb{border-color:var(--bg);color:var(--bg)}.obb:hover{background:var(--bg);color:var(--fg)}
+.lb{color:var(--mt)}.cm{color:var(--mt)}.cp{color:var(--ac)}.sp{border-color:var(--ibd)}
+.tb{min-width:32px;height:32px;border:1.5px solid var(--bd);background:var(--ib);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;color:var(--fg);line-height:1;padding:0 6px;white-space:nowrap}
+.tb:hover{background:var(--ac);color:#000}.tb-icon{font-size:15px}
+.chat-panel{display:none;border-color:var(--bd);background:var(--cb)}.chat-panel.show{display:block}
+.chat-tab{padding:4px 12px;font-size:11px;border:1.5px solid var(--bd);background:var(--ib);color:var(--fg);cursor:pointer;transition:background .15s}
+.chat-tab:hover{background:var(--hv)}.chat-tab.active{background:var(--ac);color:#000;font-weight:600}
+.chat-msgs{height:360px;overflow-y:auto;padding:12px;background:var(--ob)}
+.chat-msg{margin-bottom:12px;font-size:12px;line-height:1.6}.chat-msg .role{font-size:10px;font-weight:600;margin-bottom:2px}
+.chat-msg.user .role{color:var(--ac)}.chat-msg.assistant .role{color:var(--mt)}
+.chat-msg .body{white-space:pre-wrap;word-wrap:break-word}
+.chat-input-row{display:flex;gap:6px;padding:8px 12px;border-top:1px solid var(--ibd);background:var(--cb)}
+.chat-input{flex:1;border:1px solid var(--ibd);padding:8px;font-size:12px;font-family:'IBM Plex Mono',monospace;background:var(--ib);color:var(--fg);resize:none;min-height:36px;max-height:100px}
+.chat-input::placeholder{color:var(--ph)}
+.chat-send{border:1.5px solid var(--bd);background:var(--ac);color:#000;padding:0 14px;font-size:11px;font-weight:600;cursor:pointer;transition:background .15s;white-space:nowrap}
+.chat-send:hover{background:var(--fg);color:var(--ac)}.chat-send:disabled{opacity:.4;cursor:not-allowed}
+.chip{font-size:10px;border:1px solid var(--ibd);padding:3px 8px;cursor:pointer;background:var(--ib);color:var(--fg);transition:background .15s}
+.chip:hover{background:var(--ac);color:#000;border-color:var(--bd)}
+.chat-sys-badge{font-size:10px;padding:4px 8px;background:var(--ob);color:var(--mt);border-bottom:1px solid var(--ibd);cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.chat-sys-badge:hover{background:var(--hv)}
+.chat-loading{display:inline-block;width:6px;height:6px;background:var(--ac);animation:pulse .8s infinite alternate}
+@keyframes pulse{from{opacity:.3}to{opacity:1}}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;justify-content:center;align-items:center}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--cb);border:2px solid var(--bd);box-shadow:4px 4px 0px var(--sc);max-width:420px;width:90%;max-height:85vh;overflow-y:auto;padding:20px;position:relative}
+.modal-box h3{font-family:'IBM Plex Serif',serif;font-size:16px;font-weight:700;margin-bottom:16px}
+.modal-box label{display:block;font-size:10px;color:var(--mt);margin-bottom:3px;margin-top:12px}
+.modal-box input,.modal-box select{width:100%;border:1px solid var(--ibd);padding:6px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;background:var(--ib);color:var(--fg)}
+.modal-box input::placeholder{color:var(--ph)}
+.modal-save{width:100%;margin-top:16px;border:1.5px solid var(--bd);background:var(--ac);color:#000;padding:8px;font-size:11px;font-weight:600;cursor:pointer}
+.modal-save:hover{background:var(--fg);color:var(--ac)}
+.modal-close{position:absolute;top:12px;right:16px;background:none;border:none;font-size:18px;cursor:pointer;color:var(--fg)}
+.msec{border-top:1px solid var(--ibd);margin-top:14px;padding-top:10px}
+.cb-badge{background:var(--ac);border-color:var(--bd);color:#000}
+.test-btn{background:var(--fg);color:var(--bg);min-width:110px}
+.test-btn:hover{background:var(--ac);color:#000}
+
+.fb-row{display:flex;gap:4px;margin-top:6px;align-items:center}
+.fb-btn{width:28px;height:24px;border:1px solid var(--ibd);background:var(--ib);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:background .15s;color:var(--fg);padding:0}
+.fb-btn:hover{background:var(--hv)}.fb-btn.sel{border-color:var(--ac);background:var(--ac);color:#000}
+.fb-corr{margin-top:6px;display:none;gap:4px}.fb-corr.show{display:flex}
+.fb-corr textarea{flex:1;border:1px solid var(--ibd);padding:6px;font-size:11px;font-family:'IBM Plex Mono',monospace;background:var(--ib);color:var(--fg);resize:none;min-height:32px}
+.fb-sub{border:1px solid var(--bd);background:var(--ac);color:#000;padding:4px 10px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap}
+.fb-sub:hover{background:var(--fg);color:var(--ac)}
+.refine-bar{display:none;padding:8px 12px;border-top:1px solid var(--ibd);background:var(--ob);font-size:11px}
+.refine-bar.show{display:block}
+.rb-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.rb-list{font-size:10px;color:var(--mt);max-height:80px;overflow-y:auto;margin-bottom:8px}
+.rb-list div{padding:2px 0;border-bottom:1px dotted var(--ibd)}
+.rb-acts{display:flex;gap:6px}
+.rb-p{border:1.5px solid var(--bd);background:var(--ac);color:#000;padding:5px 14px;font-size:10px;font-weight:600;cursor:pointer}
+.rb-p:hover{background:var(--fg);color:var(--ac)}
+.rb-s{border:1.5px solid var(--ibd);background:var(--ib);color:var(--fg);padding:5px 14px;font-size:10px;cursor:pointer}
+.rb-s:hover{background:var(--hv)}
+.diff-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:300;justify-content:center;align-items:center}
+.diff-ov.show{display:flex}
+.diff-bx{background:var(--cb);border:2px solid var(--bd);box-shadow:4px 4px 0px var(--sc);max-width:640px;width:95%;max-height:85vh;overflow-y:auto;position:relative}
+.diff-hd{padding:12px 16px;border-bottom:1px solid var(--ibd);display:flex;justify-content:space-between;align-items:center}
+.diff-hd h3{font-family:'IBM Plex Serif',serif;font-size:14px;font-weight:700}
+.diff-sec{padding:12px 16px;border-bottom:1px solid var(--ibd)}
+.diff-st{font-size:11px;font-weight:600;margin-bottom:6px;color:var(--ac)}
+.diff-old{font-size:10px;color:var(--mt);background:var(--ib);padding:6px 8px;margin-bottom:4px;border-left:3px solid #dc2626;white-space:pre-wrap;word-wrap:break-word;max-height:100px;overflow-y:auto}
+.diff-new{font-size:10px;color:var(--fg);background:var(--ib);padding:6px 8px;margin-bottom:6px;border-left:3px solid #16a34a;white-space:pre-wrap;word-wrap:break-word;max-height:100px;overflow-y:auto}
+.diff-da{border:1px solid #16a34a;background:#16a34a;color:#fff;padding:3px 10px;font-size:10px;font-weight:600;cursor:pointer}
+.diff-dr{border:1px solid #dc2626;background:transparent;color:#dc2626;padding:3px 10px;font-size:10px;font-weight:600;cursor:pointer}
+.diff-da:hover{opacity:.8}.diff-dr:hover{background:#dc2626;color:#fff}
+.diff-add{background:#16a34a22;color:#16a34a;font-weight:600;padding:0 2px;border-radius:2px}
+.diff-del{background:#dc262622;color:#dc2626;text-decoration:line-through;padding:0 2px;border-radius:2px}
+.diff-same{opacity:.5}
+.diff-summary{font-size:9px;color:var(--mt);margin-bottom:4px;font-style:italic}
+.diff-ft{padding:12px 16px;display:flex;justify-content:flex-end;gap:6px}
+.vb{font-size:9px;padding:1px 6px;border:1px solid var(--ac);color:var(--ac);margin-left:6px}
+.prompt-stats{display:flex;align-items:center;gap:8px;padding:6px 16px;border-bottom:1px solid var(--ibd);background:var(--ob);font-size:10px;color:var(--mt);flex-wrap:wrap}
+.prompt-stats .ps-badge{font-size:9px;padding:1px 8px;font-weight:600;border:1.5px solid}
+.ps-new{border-color:var(--ac)!important;color:var(--ac);background:transparent}
+.ps-updated{border-color:#16a34a!important;color:#16a34a;background:transparent}
+.ps-sep{color:var(--ibd)}
+
+/* === NEW: Match diagnostics === */
+.diff-match{font-size:9px;padding:2px 6px;border-radius:2px;margin-left:6px;font-weight:600}
+.diff-match-exact{background:#16a34a22;color:#16a34a}
+.diff-match-fuzzy{background:#f59e0b22;color:#f59e0b}
+.diff-match-section{background:#3b82f622;color:#3b82f6}
+.diff-match-fail{background:#dc262622;color:#dc2626}
+
+/* === NEW: Bulk actions bar in diff modal === */
+.diff-bulk{padding:8px 16px;border-bottom:1px solid var(--ibd);display:flex;justify-content:space-between;align-items:center;background:var(--ob)}
+.diff-bulk-btn{font-size:10px;padding:3px 10px;cursor:pointer;border:1px solid var(--ibd);background:var(--ib);color:var(--fg);font-weight:600}
+.diff-bulk-btn:hover{background:var(--ac);color:#000;border-color:var(--bd)}
+.diff-bulk-btn.active{background:var(--ac);color:#000;border-color:var(--bd)}
+.diff-count{font-size:10px;color:var(--mt)}
+
+/* === NEW: Version history panel === */
+.vh-panel{display:none;border-top:1px solid var(--ibd);background:var(--ob)}
+.vh-panel.show{display:block}
+.vh-hdr{padding:8px 16px;font-size:11px;font-weight:600;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.vh-hdr:hover{background:var(--hv)}
+.vh-body{display:none;padding:0 16px 12px}
+.vh-body.show{display:block}
+.vh-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px dotted var(--ibd);font-size:10px}
+.vh-item:last-child{border-bottom:none}
+.vh-item-info{color:var(--mt)}
+.vh-item-acts{display:flex;gap:4px}
+.vh-act{font-size:9px;padding:2px 8px;border:1px solid var(--ibd);background:var(--ib);color:var(--fg);cursor:pointer}
+.vh-act:hover{background:var(--ac);color:#000;border-color:var(--bd)}
+.vh-act-active{background:var(--ac);color:#000;border-color:var(--bd)}
+
+/* === NEW: Full diff overlay === */
+.full-diff-panel{display:none;border-top:1px solid var(--ibd);background:var(--ob);max-height:300px;overflow-y:auto;padding:12px 16px;font-size:10px;line-height:1.6;white-space:pre-wrap;word-wrap:break-word}
+.full-diff-panel.show{display:block}
+.full-diff-hdr{padding:6px 16px;font-size:10px;font-weight:600;cursor:pointer;border-top:1px solid var(--ibd);display:flex;justify-content:space-between;align-items:center;background:var(--ob)}
+.full-diff-hdr:hover{background:var(--hv)}
+.full-diff-hdr.show+.full-diff-panel{display:block}
+
+/* === NEW: Apply results toast === */
+.apply-results{padding:8px 16px;font-size:10px;border-bottom:1px solid var(--ibd);background:var(--ob)}
+.apply-ok{color:#16a34a}.apply-fail{color:#dc2626}.apply-skip{color:var(--mt)}
+
+/* === Prompt updated notification in chat === */
+.sys-notify{display:none;padding:8px 12px;border-bottom:1.5px solid var(--ac);background:var(--ac);color:#000;font-size:10px;font-weight:600;align-items:center;justify-content:space-between;gap:8px}
+.sys-notify.show{display:flex}
+.sys-notify-btn{border:1.5px solid #000;background:#000;color:var(--ac);padding:4px 12px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s}
+.sys-notify-btn:hover{background:#333}
+.sys-notify-dismiss{background:none;border:none;font-size:14px;cursor:pointer;color:#000;padding:0 2px;line-height:1}
+.sys-msg{text-align:center;padding:8px;margin:8px 0;font-size:10px;color:var(--mt);border:1px dashed var(--ibd);background:var(--ob)}
+.sys-msg-accent{border-color:var(--ac);color:var(--ac)}
+.reset-btn{font-size:10px;padding:2px 8px;border:1px solid var(--ibd);background:var(--ib);color:var(--fg);cursor:pointer;white-space:nowrap}
+.reset-btn:hover{background:var(--ac);color:#000;border-color:var(--bd)}
+</style>
+</head>
+<body>
+<div class="copy-toast" id="toast"></div>
+<div class="max-w-xl mx-auto px-4 py-8">
+
+<!-- Header -->
+<div class="mb-8">
+<div class="flex justify-between items-center mb-1">
+<h1 class="font-serif text-2xl font-bold" data-i18n="title">Agent Clone Builder</h1>
+<div class="flex gap-1.5">
+<button class="tb" onclick="toggleLocale()" id="localeBtn" style="font-size:11px;font-weight:600">VN</button>
+<button class="tb" onclick="toggleTheme()" id="themeBtn"><span class="tb-icon">&#9790;</span></button>
+</div>
+</div>
+<p class="text-xs lb mb-1" data-i18n="subtitle">22 questions. 5 minutes. Your AI twin.</p>
+<p class="text-[10px] lb mb-4"><a href="#" onclick="loadExample();return false" class="underline" data-i18n="loadEx">Load worked example (Dara Khosrowshahi, Uber CEO)</a></p>
+<div class="flex items-center gap-3 mb-2">
+<div class="flex gap-1" id="stepDots"></div>
+<span class="text-[10px] lb" id="stepLabel"></span>
+</div>
+<div class="flex items-center gap-2">
+<div class="flex-1 h-1.5 border pt"><div class="h-full transition-all duration-300" style="background:var(--fg);width:0%" id="progressBar"></div></div>
+<span class="text-[10px] lb w-20 text-right" id="progressText">0/22</span>
+</div>
+</div>
+
+<!-- S0: IDENTITY -->
+<div class="border mb-3 sb" data-section="0">
+<div class="section-header flex justify-between items-center px-4 py-3" onclick="toggleSection(0)">
+<span class="text-xs font-semibold" data-i18n="sec0">IDENTITY</span>
+<div class="flex items-center gap-2"><span class="text-[10px] cm" id="count0">0/5</span><span class="text-xs" id="arrow0">&#9660;</span></div>
+</div>
+<div class="section-body expanded px-4 pb-4" id="body0"><div class="space-y-4">
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_name">Name</label>
+<input type="text" data-field="name" data-i18n-ph="ph_name" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_titleCo">Title & Company</label>
+<input type="text" data-field="titleCo" data-i18n-ph="ph_titleCo" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_reality">Your operating reality in 2 sentences: what your org does, its scale, and the defining constraint you work under.</label>
+<textarea data-field="reality" data-i18n-ph="ph_reality" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_cred">Career trajectory that gives you credibility &mdash; 3-5 facts that explain why people listen to you.</label>
+<textarea data-field="cred" data-i18n-ph="ph_cred" rows="4" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_stakes">What's at stake right now? The bet you're making, the transition you're navigating.</label>
+<textarea data-field="stakes" data-i18n-ph="ph_stakes" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+</div></div>
+</div>
+
+<!-- S1: HOW YOU THINK -->
+<div class="border mb-3 sb" data-section="1">
+<div class="section-header flex justify-between items-center px-4 py-3" onclick="toggleSection(1)">
+<span class="text-xs font-semibold" data-i18n="sec1">HOW YOU THINK</span>
+<div class="flex items-center gap-2"><span class="text-[10px] cm" id="count1">0/5</span><span class="text-xs" id="arrow1">&#9654;</span></div>
+</div>
+<div class="section-body collapsed px-4 pb-4" id="body1"><div class="space-y-4 pt-2">
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_decision">Walk me through the last hard decision you made. What did you do first, second, third?</label>
+<textarea data-field="decision" data-i18n-ph="ph_decision" rows="4" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_frameworks">When you explain your reasoning to others, what analogies or frameworks do you keep reaching for?</label>
+<textarea data-field="frameworks" data-i18n-ph="ph_frameworks" rows="4" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_uncertainty">How much certainty do you need before you act? What's your relationship with being wrong?</label>
+<textarea data-field="uncertainty" data-i18n-ph="ph_uncertainty" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_greenlight">What's the ONE question you always ask before saying yes to something?</label>
+<textarea data-field="greenlight" data-i18n-ph="ph_greenlight" rows="2" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_dontknow">When you don't have the answer, what do you actually say?</label>
+<textarea data-field="dontknow" data-i18n-ph="ph_dontknow" rows="2" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+</div></div>
+</div>
+
+<!-- S2: HOW YOU COMMUNICATE -->
+<div class="border mb-3 sb" data-section="2">
+<div class="section-header flex justify-between items-center px-4 py-3" onclick="toggleSection(2)">
+<span class="text-xs font-semibold" data-i18n="sec2">HOW YOU COMMUNICATE</span>
+<div class="flex items-center gap-2"><span class="text-[10px] cm" id="count2">0/4</span><span class="text-xs" id="arrow2">&#9654;</span></div>
+</div>
+<div class="section-body collapsed px-4 pb-4" id="body2"><div class="space-y-4 pt-2">
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_style">If someone recorded you in a meeting, what would stand out about how you talk?</label>
+<textarea data-field="style" data-i18n-ph="ph_style" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_badnews">How do you deliver bad news &mdash; to your team vs to the board vs to a customer?</label>
+<textarea data-field="badnews" data-i18n-ph="ph_badnews" rows="4" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_signatures">Signature phrases, verbal habits, recurring metaphors, or language patterns people associate with you?</label>
+<textarea data-field="signatures" data-i18n-ph="ph_signatures" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_never_comm">What do you NEVER do in communication &mdash; and what triggers you when others do it?</label>
+<textarea data-field="neverComm" data-i18n-ph="ph_neverComm" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+</div></div>
+</div>
+
+<!-- S3: WHAT DRIVES YOU -->
+<div class="border mb-3 sb" data-section="3">
+<div class="section-header flex justify-between items-center px-4 py-3" onclick="toggleSection(3)">
+<span class="text-xs font-semibold" data-i18n="sec3">WHAT DRIVES YOU</span>
+<div class="flex items-center gap-2"><span class="text-[10px] cm" id="count3">0/5</span><span class="text-xs" id="arrow3">&#9654;</span></div>
+</div>
+<div class="section-body collapsed px-4 pb-4" id="body3"><div class="space-y-4 pt-2">
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_contrarian">What do you have strong opinions about that most people in your position don't?</label>
+<textarea data-field="contrarian" data-i18n-ph="ph_contrarian" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_obsession">What's consuming your attention right now and why?</label>
+<textarea data-field="obsession" data-i18n-ph="ph_obsession" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_conflict">When you disagree with someone powerful &mdash; a board member, a peer, a regulator &mdash; how do you handle it?</label>
+<textarea data-field="conflict" data-i18n-ph="ph_conflict" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_motivate">How do you motivate people &mdash; what do you actually do or say when the team needs to rally?</label>
+<textarea data-field="motivate" data-i18n-ph="ph_motivate" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_human">Outside work &mdash; what makes you human? What would surprise people who only know you professionally?</label>
+<textarea data-field="human" data-i18n-ph="ph_human" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+</div></div>
+</div>
+
+<!-- S4: GUARDRAILS & CALIBRATION -->
+<div class="border mb-3 sb" data-section="4">
+<div class="section-header flex justify-between items-center px-4 py-3" onclick="toggleSection(4)">
+<span class="text-xs font-semibold" data-i18n="sec4">GUARDRAILS & CALIBRATION</span>
+<div class="flex items-center gap-2"><span class="text-[10px] cm" id="count4">0/5</span><span class="text-xs" id="arrow4">&#9654;</span></div>
+</div>
+<div class="section-body collapsed px-4 pb-4" id="body4"><div class="space-y-4 pt-2">
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_guardrails">What lines does your clone never cross? What topics always get redirected to someone else?</label>
+<textarea data-field="guardrails" data-i18n-ph="ph_guardrails" rows="3" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_confidential">What's off-limits? Areas your clone must treat as confidential.</label>
+<textarea data-field="confidential" data-i18n-ph="ph_confidential" rows="2" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div class="border-t pt-4 mt-4 sp">
+<div class="flex items-center gap-2 mb-4">
+<span class="px-1.5 py-0.5 text-[10px] border font-medium cb-badge" data-i18n="calBadge">CALIBRATION</span>
+<span class="text-[10px] lb" data-i18n="calDesc">Answer as yourself. These train your clone's voice.</span>
+</div>
+<div class="space-y-4">
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_cal1">"We have a major opportunity but the team is split on the right approach."</label>
+<textarea data-field="cal1" data-i18n-ph="ph_cal1" rows="4" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_cal2">"We missed our target this quarter. The board is asking what happened."</label>
+<textarea data-field="cal2" data-i18n-ph="ph_cal2" rows="4" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+<div><label class="text-[10px] lb block mb-1" data-i18n="l_cal3">"I'm a high performer but I'm thinking about leaving. Convince me to stay."</label>
+<textarea data-field="cal3" data-i18n-ph="ph_cal3" rows="4" class="w-full border px-2 py-1.5 field" placeholder="" oninput="onFieldChange()"></textarea></div>
+</div>
+</div>
+</div></div>
+</div>
+
+<!-- Buttons -->
+<div class="mb-6 flex gap-2">
+<button onclick="generatePrompt()" class="flex-1 border-2 px-4 py-3 text-xs font-semibold shadow-brutal transition-colors gb sb" data-i18n="genBtn">GENERATE AGENT CLONE PROMPT</button>
+<button onclick="openChat()" class="border-2 px-4 py-3 text-xs font-semibold shadow-brutal transition-colors sb test-btn" data-i18n="testBtn">TEST CLONE &#9654;</button>
+</div>
+
+<!-- Output -->
+<div id="outputPanel" class="border-2 mb-8 shadow-brutal sb">
+<div class="flex justify-between items-center px-4 py-3 obar">
+<span class="text-xs font-semibold" data-i18n="outTitle">YOUR AGENT CLONE PROMPT</span>
+<div class="flex gap-2">
+<button onclick="copyPrompt()" class="border px-2 py-0.5 text-[10px] transition-colors obb" data-i18n="copyBtn">Copy</button>
+<button onclick="downloadPrompt()" class="border px-2 py-0.5 text-[10px] transition-colors obb" data-i18n="dlBtn">Download .md</button>
+</div>
+</div>
+<!-- Version history -->
+<div class="vh-panel" id="vhPanel">
+<div class="vh-hdr" onclick="toggleVH()"><span>&#9776; Version History <span id="vhCount"></span></span><span id="vhArrow">&#9654;</span></div>
+<div class="vh-body" id="vhBody"></div>
+</div>
+<!-- Full diff view -->
+<div class="full-diff-hdr" id="fullDiffHdr" onclick="toggleFullDiff()" style="display:none"><span>&#9650; Changes from last refinement</span><span id="fullDiffArrow">&#9660;</span></div>
+<div class="full-diff-panel" id="fullDiffPanel"></div>
+<!-- Stats -->
+<div class="p-4 oub max-h-[500px] overflow-auto"><div class="prompt-stats" id="promptStats" style="display:none"><span class="ps-badge ps-new" id="psVersion">v1</span><span class="ps-badge ps-new" id="psStatus" data-i18n="psNew">NEW</span><span class="ps-sep">|</span><span id="psWords">0 words</span><span class="ps-sep">&middot;</span><span id="psChars">0 chars</span><span class="ps-sep">&middot;</span><span id="psLines">0 lines</span></div><pre id="promptOutput"></pre></div>
+<div class="px-4 py-2 border-t ouf"><p class="text-[10px] lb" data-i18n="outHint">Paste as system prompt, userPreferences, or into a Claude Project.</p></div>
+</div>
+
+<!-- Chat Panel -->
+<div id="chatPanel" class="chat-panel border-2 mb-8 shadow-brutal">
+<div class="flex justify-between items-center px-3 py-2" style="border-bottom:1px solid var(--ibd)">
+<div class="flex gap-1">
+<button class="chat-tab active" onclick="switchVendor('claude')" id="tab-claude">Claude</button>
+<button class="chat-tab" onclick="switchVendor('gpt')" id="tab-gpt">GPT</button>
+<button class="chat-tab" onclick="switchVendor('gemini')" id="tab-gemini">Gemini</button>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[10px] lb" id="chatModel"></span>
+<button class="reset-btn" onclick="resetChat()" id="resetChatBtn" title="Reset conversation">&#8635; Reset</button>
+<button class="tb" onclick="openSettings()" title="Settings" style="width:28px;height:28px;font-size:13px">&#9881;</button>
+</div>
+</div>
+<div class="chat-sys-badge" onclick="toggleSysPrompt()">
+<span>&#9679; <span data-i18n="sysBadgeLabel">System prompt loaded</span> <span id="sysName"></span></span>
+<span id="sysArrow">&#9654;</span>
+</div>
+<div id="sysPreview" style="display:none;padding:8px 12px;background:var(--ob);font-size:10px;color:var(--mt);max-height:120px;overflow-y:auto;white-space:pre-wrap;border-bottom:1px solid var(--ibd)"></div>
+<div class="sys-notify" id="sysNotify">
+<span id="sysNotifyText">System prompt updated to v2</span>
+<div class="flex gap-2 items-center">
+<button class="sys-notify-btn" onclick="resetChat()">Reset & Test</button>
+<button class="sys-notify-dismiss" onclick="dismissNotify()">&times;</button>
+</div>
+</div>
+<div class="flex flex-wrap gap-1.5 px-3 py-2" style="border-bottom:1px solid var(--ibd)">
+<button class="chip" onclick="sendChip(this)" data-i18n="chip1">"Team is split on the approach"</button>
+<button class="chip" onclick="sendChip(this)" data-i18n="chip2">"We missed our target"</button>
+<button class="chip" onclick="sendChip(this)" data-i18n="chip3">"I'm thinking about leaving"</button>
+</div>
+<div class="chat-msgs" id="chatMsgs">
+<div class="text-center text-[10px] lb py-8" id="chatEmpty" data-i18n="chatEmpty">Send a message to test your agent clone</div>
+</div>
+<div class="refine-bar" id="refineBar"><div class="rb-hdr"><span><strong data-i18n="refineTitle">Corrections</strong> <span style="font-size:10px;color:var(--mt)" id="refineCount">(0)</span> <span class="vb" id="versionBadge">v1</span></span></div><div class="rb-list" id="refineList"></div><div class="rb-acts"><button class="rb-p" onclick="refinePrompt()" id="refineBtn" data-i18n="refineBtn">Refine Prompt</button><button class="rb-s" onclick="clearCorrections()" data-i18n="clearCorr">Clear</button></div></div>
+<div class="chat-input-row">
+<textarea class="chat-input" id="chatInput" rows="1" placeholder="" data-i18n-ph="ph_chatInput" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+<button class="chat-send" onclick="sendMessage()" id="chatSendBtn" data-i18n="sendBtn">Send</button>
+</div>
+</div>
+
+<!-- Footer -->
+<div class="pt-4 border-t text-center sp"><p class="text-[10px] lb"><a href="https://lampt.org" class="underline">lampt.org</a></p></div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+<div class="modal-box">
+<button class="modal-close" onclick="closeSettings()">&times;</button>
+<h3>Settings</h3>
+<p class="text-[10px] lb" data-i18n="settingsHint">API keys stored in your browser only.</p>
+<div class="msec">
+<label>Anthropic API Key</label>
+<input type="password" id="set_anthropicKey" placeholder="sk-ant-api03-...">
+<label style="margin-top:8px">Claude Model</label>
+<select id="set_claudeModel"><option value="claude-sonnet-4-5-20250929">claude-sonnet-4-5</option><option value="claude-haiku-4-5-20251001">claude-haiku-4-5</option></select>
+</div>
+<div class="msec">
+<label>OpenAI API Key</label>
+<input type="password" id="set_openaiKey" placeholder="sk-...">
+<label style="margin-top:8px">GPT Model</label>
+<select id="set_gptModel"><option value="gpt-4o">gpt-4o</option><option value="gpt-4o-mini">gpt-4o-mini</option><option value="gpt-4.1">gpt-4.1</option><option value="gpt-4.1-mini">gpt-4.1-mini</option></select>
+</div>
+<div class="msec">
+<label>Google AI API Key</label>
+<input type="password" id="set_googleKey" placeholder="AIza...">
+<label style="margin-top:8px">Gemini Model</label>
+<select id="set_geminiModel"><option value="gemini-2.5-flash">gemini-2.5-flash</option><option value="gemini-2.5-pro">gemini-2.5-pro</option><option value="gemini-2.0-flash">gemini-2.0-flash</option></select>
+</div>
+<button class="modal-save" onclick="saveSettings()" data-i18n="saveSettings">Save Settings</button>
+</div>
+</div>
+
+<!-- Diff Modal (redesigned) -->
+<div class="diff-ov" id="diffOv" onclick="if(event.target===this)closeDiff()">
+<div class="diff-bx">
+<div class="diff-hd">
+<h3 data-i18n="diffTitle">Prompt Refinement</h3>
+<button style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--fg)" onclick="closeDiff()">&times;</button>
+</div>
+<div class="diff-bulk" id="diffBulk">
+<div class="flex gap-4">
+<button class="diff-bulk-btn active" onclick="bulkToggle(true)">Accept All</button>
+<button class="diff-bulk-btn" onclick="bulkToggle(false)">Reject All</button>
+</div>
+<span class="diff-count" id="diffBulkCount"></span>
+</div>
+<div id="diffSecs"></div>
+<div class="diff-ft">
+<button class="rb-s" onclick="closeDiff()" data-i18n="diffCancel">Cancel</button>
+<button class="rb-p" onclick="applyDiff()" data-i18n="diffApply">Apply Changes</button>
+</div>
+</div>
+</div>
+
+<script>
+// ===== I18N =====
+var LANG='en';
+var I={
+en:{
+title:'Agent Clone Builder',subtitle:'22 questions. 5 minutes. Your AI twin.',
+sec0:'IDENTITY',sec1:'HOW YOU THINK',sec2:'HOW YOU COMMUNICATE',sec3:'WHAT DRIVES YOU',sec4:'GUARDRAILS & CALIBRATION',
+steps:['Identity','Think','Communicate','Drives','Guardrails'],
+l_name:'Name',l_titleCo:'Title & Company',
+l_reality:'Your operating reality in 2 sentences: what your org does, its scale, and the defining constraint you work under.',
+l_cred:'Career trajectory that gives you credibility \u2014 3-5 facts that explain why people listen to you.',
+l_stakes:'What\u2019s at stake right now? The bet you\u2019re making, the transition you\u2019re navigating.',
+l_decision:'Walk me through the last hard decision you made. What did you do first, second, third?',
+l_frameworks:'When you explain your reasoning to others, what analogies or frameworks do you keep reaching for?',
+l_uncertainty:'How much certainty do you need before you act? What\u2019s your relationship with being wrong?',
+l_greenlight:'What\u2019s the ONE question you always ask before saying yes to something?',
+l_dontknow:'When you don\u2019t have the answer, what do you actually say?',
+l_style:'If someone recorded you in a meeting, what would stand out about how you talk?',
+l_badnews:'How do you deliver bad news \u2014 to your team vs to the board vs to a customer?',
+l_signatures:'Signature phrases, verbal habits, recurring metaphors, or language patterns people associate with you?',
+l_never_comm:'What do you NEVER do in communication \u2014 and what triggers you when others do it?',
+l_contrarian:'What do you have strong opinions about that most people in your position don\u2019t?',
+l_obsession:'What\u2019s consuming your attention right now and why?',
+l_conflict:'When you disagree with someone powerful \u2014 a board member, a peer, a regulator \u2014 how do you handle it?',
+l_motivate:'How do you motivate people \u2014 what do you actually do or say when the team needs to rally?',
+l_human:'Outside work \u2014 what makes you human? What would surprise people who only know you professionally?',
+l_guardrails:'What lines does your clone never cross? What topics always get redirected to someone else?',
+l_confidential:'What\u2019s off-limits? Areas your clone must treat as confidential.',
+calBadge:'CALIBRATION',calDesc:'Answer as yourself. These train your clone\u2019s voice.',
+l_cal1:'\u201cWe have a major opportunity but the team is split on the right approach.\u201d',
+l_cal2:'\u201cWe missed our target this quarter. The board is asking what happened.\u201d',
+l_cal3:'\u201cI\u2019m a high performer but I\u2019m thinking about leaving. Convince me to stay.\u201d',
+genBtn:'GENERATE AGENT CLONE PROMPT',testBtn:'TEST CLONE \u25b6',
+outTitle:'YOUR AGENT CLONE PROMPT',copyBtn:'Copy',dlBtn:'Download .md',
+outHint:'Paste as system prompt, userPreferences, or into a Claude Project.',
+loadEx:'Load worked example (Dara Khosrowshahi, Uber CEO)',exLoaded:'Loaded Dara example',
+toastCopy:'Copied to clipboard',
+sysBadgeLabel:'System prompt loaded',
+chip1:'\u201cTeam is split on the approach\u201d',chip2:'\u201cWe missed our target\u201d',chip3:'\u201cI\u2019m thinking about leaving\u201d',
+chatEmpty:'Send a message to test your agent clone',sendBtn:'Send',ph_chatInput:'Type a message...',
+settingsHint:'API keys stored in your browser only.',saveSettings:'Save Settings',
+noKey:'Set API key in Settings first',noPrompt:'Generate a prompt first',settingsSaved:'Settings saved',refineTitle:'Corrections',refineBtn:'Refine Prompt',clearCorr:'Clear',diffTitle:'Prompt Refinement',diffCancel:'Cancel',diffApply:'Apply Changes',fbPh:'What was wrong? How should it sound?',fbSaved:'Correction saved',refining:'Refining...',noChanges:'No changes needed',psNew:'NEW',psUpdated:'UPDATED',statWords:'words',statChars:'chars',statLines:'lines',
+ph_name:'e.g. Dara Khosrowshahi',
+ph_titleCo:'e.g. CEO, Uber',
+ph_reality:'e.g. World\u2019s largest mobility and delivery platform...',
+ph_cred:'e.g.\n- Turned Uber from -$3B/year to $9.8B free cash flow\n- CEO of Expedia 12 years...',
+ph_stakes:'e.g. Betting that Uber becomes the platform for autonomous vehicles...',
+ph_decision:'e.g. When I joined Uber in 2017...',
+ph_frameworks:'e.g. 1) Linear vs exponential...',
+ph_uncertainty:'e.g. Error-preference framework...',
+ph_greenlight:'e.g. Who is leading this?...',
+ph_dontknow:'e.g. I just say it...',
+ph_style:'e.g. I answer the actual question...',
+ph_badnews:'e.g. To the team: lead with the truth...',
+ph_signatures:'e.g. \u201cNext.\u201d...',
+ph_neverComm:'e.g. Never dodge a direct question...',
+ph_contrarian:'e.g. Most CEOs think bigger companies should take less risk...',
+ph_obsession:'e.g. Applied AI across every surface of Uber...',
+ph_conflict:'e.g. I go direct. No backchannels...',
+ph_motivate:'e.g. I make the stakes concrete and personal...',
+ph_human:'e.g. Father of four...',
+ph_guardrails:'e.g. Never sugarcoat a loss...',
+ph_confidential:'e.g. Active M&A negotiations...',
+ph_cal1:'e.g. I hear both sides...',
+ph_cal2:'e.g. Start with the truth...',
+ph_cal3:'e.g. First, I\u2019d be honest...'
+},
+vi:{
+title:'X\u00e2y D\u1ef1ng Agent Clone',subtitle:'22 c\u00e2u h\u1ecfi. 5 ph\u00fat. B\u1ea3n sao AI c\u1ee7a b\u1ea1n.',
+sec0:'NH\u1eacN D\u1ea0NG',sec1:'C\u00c1CH T\u01af DUY',sec2:'C\u00c1CH GIAO TI\u1ebeP',sec3:'\u0110\u1ed8NG L\u1ef0C',sec4:'RANH GI\u1edcI & HI\u1ec6U CHU\u1ea8N',
+steps:['Nh\u1eadn d\u1ea1ng','T\u01b0 duy','Giao ti\u1ebfp','\u0110\u1ed9ng l\u1ef1c','Ranh gi\u1edbi'],
+l_name:'T\u00ean',l_titleCo:'Ch\u1ee9c danh & C\u00f4ng ty',
+l_reality:'Th\u1ef1c t\u1ebf v\u1eadn h\u00e0nh trong 2 c\u00e2u.',
+l_cred:'Qu\u00e1 tr\u00ecnh s\u1ef1 nghi\u1ec7p t\u1ea1o uy t\u00edn.',
+l_stakes:'\u0110ang \u0111\u1eb7t c\u01b0\u1ee3c v\u00e0o \u0111i\u1ec1u g\u00ec?',
+l_decision:'Quy\u1ebft \u0111\u1ecbnh kh\u00f3 g\u1ea7n \u0111\u00e2y nh\u1ea5t.',
+l_frameworks:'Framework/v\u00ed d\u1ee5 hay d\u00f9ng.',
+l_uncertainty:'C\u1ea7n bao nhi\u00eau ch\u1eafc ch\u1eafn?',
+l_greenlight:'C\u00e2u h\u1ecfi lu\u00f4n h\u1ecfi tr\u01b0\u1edbc khi \u0111\u1ed3ng \u00fd?',
+l_dontknow:'Khi kh\u00f4ng bi\u1ebft, n\u00f3i g\u00ec?',
+l_style:'N\u1ed5i b\u1eadt g\u00ec v\u1ec1 c\u00e1ch n\u00f3i?',
+l_badnews:'Truy\u1ec1n tin x\u1ea5u th\u1ebf n\u00e0o?',
+l_signatures:'C\u1ee5m t\u1eeb \u0111\u1eb7c tr\u01b0ng?',
+l_never_comm:'KH\u00d4NG BAO GI\u1ede l\u00e0m g\u00ec?',
+l_contrarian:'Quan \u0111i\u1ec3m kh\u00e1c bi\u1ec7t?',
+l_obsession:'\u0110ang b\u1ecb cu\u1ed1n v\u00e0o g\u00ec?',
+l_conflict:'X\u1eed l\u00fd b\u1ea5t \u0111\u1ed3ng th\u1ebf n\u00e0o?',
+l_motivate:'T\u1ea1o \u0111\u1ed9ng l\u1ef1c th\u1ebf n\u00e0o?',
+l_human:'\u0110i\u1ec1u g\u00ec khi\u1ebfn b\u1ea1n l\u00e0 con ng\u01b0\u1eddi?',
+l_guardrails:'Gi\u1edbi h\u1ea1n n\u00e0o?',
+l_confidential:'B\u1ea3o m\u1eadt g\u00ec?',
+calBadge:'HI\u1ec6U CHU\u1ea8N',calDesc:'Tr\u1ea3 l\u1eddi nh\u01b0 ch\u00ednh b\u1ea1n.',
+l_cal1:'\u201cTeam b\u1ea5t \u0111\u1ed3ng c\u00e1ch ti\u1ebfp c\u1eadn.\u201d',
+l_cal2:'\u201cKh\u00f4ng \u0111\u1ea1t target.\u201d',
+l_cal3:'\u201c\u0110ang ngh\u0129 r\u1eddi \u0111i.\u201d',
+genBtn:'T\u1ea0O PROMPT',testBtn:'TH\u1eec CLONE \u25b6',
+outTitle:'PROMPT AGENT CLONE',copyBtn:'Sao ch\u00e9p',dlBtn:'T\u1ea3i .md',
+outHint:'D\u00e1n l\u00e0m system prompt, userPreferences, ho\u1eb7c v\u00e0o Claude Project.',
+loadEx:'T\u1ea3i v\u00ed d\u1ee5 m\u1eabu (Dara Khosrowshahi)',exLoaded:'\u0110\u00e3 t\u1ea3i v\u00ed d\u1ee5',
+toastCopy:'\u0110\u00e3 sao ch\u00e9p',sysBadgeLabel:'System prompt \u0111\u00e3 t\u1ea3i',
+chip1:'\u201cTeam b\u1ea5t \u0111\u1ed3ng\u201d',chip2:'\u201cKh\u00f4ng \u0111\u1ea1t target\u201d',chip3:'\u201c\u0110ang ngh\u0129 r\u1eddi \u0111i\u201d',
+chatEmpty:'G\u1eedi tin \u0111\u1ec3 th\u1eed clone',sendBtn:'G\u1eedi',ph_chatInput:'Nh\u1eadp tin nh\u1eafn...',
+settingsHint:'API key ch\u1ec9 l\u01b0u trong tr\u00ecnh duy\u1ec7t.',saveSettings:'L\u01b0u',
+noKey:'C\u00e0i API key tr\u01b0\u1edbc',noPrompt:'T\u1ea1o prompt tr\u01b0\u1edbc',settingsSaved:'\u0110\u00e3 l\u01b0u',
+refineTitle:'G\u00f3p \u00fd',refineBtn:'Tinh ch\u1ec9nh',clearCorr:'X\u00f3a',diffTitle:'Tinh ch\u1ec9nh Prompt',diffCancel:'H\u1ee7y',diffApply:'\u00c1p d\u1ee5ng',fbPh:'Sai ch\u1ed7 n\u00e0o?',fbSaved:'\u0110\u00e3 l\u01b0u',refining:'\u0110ang...',noChanges:'Kh\u00f4ng \u0111\u1ed5i',psNew:'M\u1edaI',psUpdated:'C\u1eacP NH\u1eacT',statWords:'t\u1eeb',statChars:'k\u00fd t\u1ef1',statLines:'d\u00f2ng',
+ph_name:'vd. Dara Khosrowshahi',ph_titleCo:'vd. CEO, Uber',
+ph_reality:'vd. N\u1ec1n t\u1ea3ng di chuy\u1ec3n l\u1edbn nh\u1ea5t TG...',ph_cred:'vd. Uber t\u1eeb -$3B l\u00ean $9.8B...',ph_stakes:'vd. C\u01b0\u1ee3c Uber th\u00e0nh n\u1ec1n t\u1ea3ng AV...',
+ph_decision:'vd. Khi nh\u1eadp Uber 2017...',ph_frameworks:'vd. Tuy\u1ebfn t\u00ednh vs h\u00e0m m\u0169...',ph_uncertainty:'vd. Framework \u01b0u ti\u00ean sai l\u1ea7m...',
+ph_greenlight:'vd. Ai d\u1eabn?...',ph_dontknow:'vd. N\u00f3i th\u1eb3ng...',ph_style:'vd. Tr\u1ea3 l\u1eddi \u0111\u00fang c\u00e2u h\u1ecfi...',
+ph_badnews:'vd. Team: th\u1eadt. Board: +fix...',ph_signatures:'vd. \u201cNext.\u201d...',ph_neverComm:'vd. Kh\u00f4ng n\u00e9 c\u00e2u h\u1ecfi...',
+ph_contrarian:'vd. C\u00f4ng ty l\u1edbn n\u00ean NHI\u1ec0U risk h\u01a1n...',ph_obsession:'vd. AI kh\u1eafp Uber...',
+ph_conflict:'vd. \u0110i th\u1eb3ng...',ph_motivate:'vd. Stakes c\u1ee5 th\u1ec3...',ph_human:'vd. B\u1ed1 4 con...',
+ph_guardrails:'vd. Kh\u00f4ng t\u00f4 v\u1ebd loss...',ph_confidential:'vd. M&A \u0111ang deal...',
+ph_cal1:'vd. Nghe hai b\u00ean...',ph_cal2:'vd. B\u1eaft \u0111\u1ea7u b\u1eb1ng th\u1eadt...',ph_cal3:'vd. N\u1ebfu \u0111\u00e3 quy\u1ebft...'
+}
+};
+
+// ===== SECTIONS =====
+var SECTIONS=[
+{fields:['name','titleCo','reality','cred','stakes']},
+{fields:['decision','frameworks','uncertainty','greenlight','dontknow']},
+{fields:['style','badnews','signatures','neverComm']},
+{fields:['contrarian','obsession','conflict','motivate','human']},
+{fields:['guardrails','confidential','cal1','cal2','cal3']}
+];
+
+// ===== CORE UI =====
+function applyLocale(){
+var t=I[LANG];
+document.querySelectorAll('[data-i18n]').forEach(function(el){var k=el.getAttribute('data-i18n');if(t[k]!==undefined)el.textContent=t[k];});
+document.querySelectorAll('[data-i18n-ph]').forEach(function(el){var k=el.getAttribute('data-i18n-ph');if(t[k]!==undefined)el.placeholder=t[k];});
+document.getElementById('localeBtn').textContent=LANG==='en'?'VN':'EN';
+document.documentElement.lang=LANG;
+var oi=0;document.querySelectorAll('.section-body').forEach(function(b,i){if(b.classList.contains('expanded'))oi=i;});
+document.getElementById('stepLabel').textContent=t.steps[oi];
+}
+function toggleLocale(){LANG=(LANG==='en')?'vi':'en';applyLocale();}
+function toggleTheme(){var d=document.documentElement.classList.toggle('dark');document.getElementById('themeBtn').innerHTML=d?'<span class="tb-icon">&#9788;</span>':'<span class="tb-icon">&#9790;</span>';}
+
+function init(){
+var dc=document.getElementById('stepDots');
+for(var i=0;i<SECTIONS.length;i++){(function(idx){
+var dot=document.createElement('button');dot.className='w-2.5 h-2.5 border dc';
+dot.style.background=(idx===0)?'var(--fg)':'var(--bg)';dot.onclick=function(){toggleSection(idx);};dot.id='dot'+idx;dc.appendChild(dot);
+})(i);}
+applyLocale();updateProgress();updateModelLabel();
+}
+
+function toggleSection(idx){
+for(var i=0;i<SECTIONS.length;i++){
+var body=document.getElementById('body'+i);var arrow=document.getElementById('arrow'+i);
+if(i===idx&&body.classList.contains('collapsed')){body.classList.remove('collapsed');body.classList.add('expanded');arrow.innerHTML='&#9660;';}
+else if(i!==idx){body.classList.remove('expanded');body.classList.add('collapsed');arrow.innerHTML='&#9654;';}
+}
+for(var i=0;i<SECTIONS.length;i++){var dot=document.getElementById('dot'+i);dot.className='w-2.5 h-2.5 border dc';dot.style.background=(i<=idx)?'var(--fg)':'var(--bg)';}
+document.getElementById('stepLabel').textContent=I[LANG].steps[idx];
+}
+
+function onFieldChange(){updateProgress();}
+function updateProgress(){
+var totalFilled=0,totalFields=0;
+SECTIONS.forEach(function(sec,sIdx){var filled=0;
+sec.fields.forEach(function(fn){totalFields++;var el=document.querySelector('[data-field="'+fn+'"]');if(el&&el.value.trim().length>0){filled++;totalFilled++;}});
+var c=document.getElementById('count'+sIdx);c.textContent=filled+'/'+sec.fields.length;
+if(filled===sec.fields.length){c.classList.add('cp');c.classList.remove('cm');}else{c.classList.remove('cp');c.classList.add('cm');}
+});
+document.getElementById('progressBar').style.width=Math.round((totalFilled/totalFields)*100)+'%';
+document.getElementById('progressText').textContent=totalFilled+'/'+totalFields;
+}
+function f(n){var el=document.querySelector('[data-field="'+n+'"]');return el?el.value.trim():'';}
+
+// ===== LOAD EXAMPLE =====
+function loadExample(){
+var D={
+name:'Dara Khosrowshahi',titleCo:'CEO, Uber',
+reality:"World\u2019s largest mobility and delivery platform \u2014 9.5 million drivers and couriers, 40 million trips per day. Defining constraint: navigating the autonomous vehicle transition while protecting 9 million driver livelihoods.",
+cred:"- Turned Uber from losing $3B/year to generating $9.8B free cash flow\n- CEO of Expedia for 12 years (stock +550%)\n- 8 years investment banking at Allen & Company\n- 90% of Uber engineers now use AI tools, 30% are power users",
+stakes:"Betting that Uber becomes THE platform for autonomous vehicles rather than getting disrupted by them. Simultaneously pushing AI into every surface while Waymo partnership scales.",
+decision:"When I joined Uber in 2017, losing $3B/year with toxic culture. First: went to source \u2014 talked to engineers and drivers, not executives. Second: radical transparency \u2014 told everyone the truth. Third: acted immediately on top 3 problems. Negative momentum compounds exponentially.",
+frameworks:"1) Linear vs exponential \u2014 humans project straight lines, tech moves in hockey sticks. 2) Jevons paradox \u2014 make something radically cheaper, market expands beyond calculation. 3) Companies as machines \u2014 CEO engineers the pieces to achieve goals.",
+uncertainty:"Error-preference framework: if I must make a mistake, where do I want to make it? I\u2019d rather err telling the truth. Act at 70% certainty when momentum is negative.",
+greenlight:"Who is leading this? Are they the best team executing the fastest? I always bet on people.",
+dontknow:"I just say it. What will 9M drivers do when AVs arrive? I don\u2019t know. I\u2019d rather answer honestly than pivot to corporate BS.",
+style:"I answer the actual question \u2014 a CNBC anchor said she liked me because I don\u2019t dodge. Direct, conversational but intense. Specific numbers and personal stories.",
+badnews:"Team: \u2018They won, we lost. Here\u2019s why. Next.\u2019 Board: same honesty but with recovery plan already built. Customers: own it completely, no deflection.",
+signatures:"\u201cNext.\u201d \u2014 after any loss.\n\u201cThey won, we lost. Next.\u201d\n\u201cShots on goal\u201d\n\u201cEmbrace the grind\u201d\n\u201cDon\u2019t plan. Work hard. Let the world change you.\u201d",
+neverComm:"Never dodge a direct question. Never use generic values like \u2018teamwork.\u2019 Triggers: people burying bad news in qualifiers, giving me the version they think I want to hear.",
+contrarian:"Bigger companies should take MORE risk, not less. Hard work is a learnable skill that compounds, not a fixed personality trait.",
+obsession:"Applied AI across every surface of Uber. Pushing 25%+ engineer productivity gains. AV transition \u2014 Waymo partnership scaling.",
+conflict:"I go direct. No backchannels. If a board member disagrees, I lay out data and ask: what evidence would change your mind?",
+motivate:"Make stakes concrete: \u20189.5 million people\u2019s livelihoods depend on us.\u2019 Lead by example \u2014 no one outworks me. \u2018They\u2019re winning right now. Be hungry, not scared.\u2019",
+human:"Father of four \u2014 family dinners 6-8pm are sacred. Iranian heritage \u2014 family lost everything in 1978 revolution. Working on being less conflict-avoidant at home. Drive to make my late father proud.",
+guardrails:"Never sugarcoat a loss. Never dodge with PR pivot. Never promise AV timelines. Never trash founding team.\nDefer: legal \u2192 CLO, eng arch \u2192 CTO, HR \u2192 head of people, financials \u2192 CFO.",
+confidential:"Active M&A negotiations. Internal proprietary tools. Unreleased product roadmap. Unpublished financial metrics.",
+cal1:"I hear both sides but don\u2019t let splits linger. Who has the best data? What\u2019s the cost of being wrong each direction? Move fast and be correctable. Once decided, tell the losing side why. \u2018Disagree and commit, or tell me now.\u2019",
+cal2:"Start with truth: \u2018We missed by X. Here\u2019s what happened.\u2019 Separate controllable from uncontrollable. Own internal failures completely. Present what we\u2019ve already changed. Never bring a problem without a fix. Boards handle bad news. They can\u2019t handle surprises.",
+cal3:"If you\u2019ve decided, I won\u2019t beg. But if undecided: you\u2019d be walking away from $9.8B cash flow, the biggest transportation transition in history, and real agency. Don\u2019t leave for a plan. Leave if the work doesn\u2019t excite you. Stay if it does."
+};
+for(var key in D){var el=document.querySelector('[data-field="'+key+'"]');if(el)el.value=D[key];}
+updateProgress();showToast(I[LANG].exLoaded);
+}
+
+// ===== PROMPT SECTIONS MAP (for section-based matching) =====
+var PROMPT_SECTIONS=[
+{header:'# AGENT IDENTITY',key:'identity'},
+{header:'## OPERATING CONTEXT',key:'context'},
+{header:'### Credibility & Background',key:'cred'},
+{header:'### Current Stakes',key:'stakes'},
+{header:'## PROCESSING DNA',key:'processing'},
+{header:'### Decision-Making Sequence',key:'decision'},
+{header:'### Frameworks & Analogies',key:'frameworks'},
+{header:'### Uncertainty & Being Wrong',key:'uncertainty'},
+{header:'### Greenlight Question',key:'greenlight'},
+{header:'### Handling "I Don\'t Know"',key:'dontknow'},
+{header:'## COMMUNICATION PROTOCOL',key:'communication'},
+{header:'### Voice & Style',key:'style'},
+{header:'### Delivering Bad News',key:'badnews'},
+{header:'### Signature Patterns',key:'signatures'},
+{header:'### Anti-Patterns & Triggers',key:'antipatterns'},
+{header:'## WHAT DRIVES YOU',key:'drives'},
+{header:'### Contrarian Convictions',key:'contrarian'},
+{header:'### Current Obsession',key:'obsession'},
+{header:'### Handling Disagreement with Power',key:'conflict'},
+{header:'### How You Rally People',key:'motivate'},
+{header:'### The Human Layer',key:'human'},
+{header:'## GUARDRAILS',key:'guardrails'},
+{header:'### Boundaries & Deferrals',key:'boundaries'},
+{header:'### Confidential',key:'confidential'},
+{header:'## CALIBRATION EXAMPLES',key:'calibration'},
+{header:'### Q: "We have a major opportunity',key:'cal1'},
+{header:'### Q: "We missed our target',key:'cal2'},
+{header:'### Q: "I\'m a high performer',key:'cal3'}
+];
+
+// ===== GENERATE PROMPT =====
+function updatePromptPanel(text,isNew){
+document.getElementById('promptOutput').textContent=text;
+systemPromptText=text;
+var stats=document.getElementById('promptStats');stats.style.display='flex';
+var words=text.trim().split(/\s+/).length;
+var chars=text.length;
+var lines=text.split('\n').length;
+document.getElementById('psWords').textContent=words.toLocaleString()+' '+(I[LANG].statWords||'words');
+document.getElementById('psChars').textContent=chars.toLocaleString()+' '+(I[LANG].statChars||'chars');
+document.getElementById('psLines').textContent=lines+' '+(I[LANG].statLines||'lines');
+var vEl=document.getElementById('psVersion');vEl.textContent='v'+promptVersion;
+var sEl=document.getElementById('psStatus');
+if(isNew){sEl.textContent=I[LANG].psNew||'NEW';sEl.className='ps-badge ps-new';vEl.className='ps-badge ps-new';}
+else{sEl.textContent=I[LANG].psUpdated||'UPDATED';sEl.className='ps-badge ps-updated';vEl.className='ps-badge ps-updated';}
+document.getElementById('sysPreview').textContent=text.substring(0,800)+(text.length>800?'...':'');
+updateVHPanel();
+}
+
+function generatePrompt(){
+promptVersion=1;corrections=[];promptHistory=[];chatHistory={claude:[],gpt:[],gemini:[]};
+dismissNotify();
+var nm=f('name')||'[Name]';var tc=f('titleCo')||'[Title, Company]';
+var p='# AGENT IDENTITY\nYou are an AI agent clone of '+nm+' \u2014 '+tc+'. You think, reason, and communicate exactly as '+nm+' would.\n\n'
++'## OPERATING CONTEXT\n'+(f('reality')||'[Operating reality]')+'\n\n'
++'### Credibility & Background\n'+(f('cred')||'[Career trajectory]')+'\n\n'
++'### Current Stakes\n'+(f('stakes')||'[What\u2019s at stake]')+'\n\n'
++'## PROCESSING DNA\n\n'
++'### Decision-Making Sequence\n'+(f('decision')||'[How you make hard decisions]')+'\n\n'
++'### Frameworks & Analogies\n'+(f('frameworks')||'[Your go-to mental models]')+'\n\n'
++'### Uncertainty & Being Wrong\n'+(f('uncertainty')||'[Your relationship with uncertainty]')+'\n\n'
++'### Greenlight Question\n'+(f('greenlight')||'[What you always ask before saying yes]')+'\n\n'
++'### Handling "I Don\'t Know"\n'+(f('dontknow')||'[What you actually say when you don\u2019t know]')+'\n\n'
++'## COMMUNICATION PROTOCOL\n\n'
++'### Voice & Style\n'+(f('style')||'[How you sound in a meeting]')+'\n\n'
++'### Delivering Bad News\n'+(f('badnews')||'[How you deliver bad news to team vs board vs customer]')+'\n\n'
++'### Signature Patterns\n'+(f('signatures')||'[Phrases, metaphors, language patterns]')+'\n\n'
++'### Anti-Patterns & Triggers\n'+(f('neverComm')||'[What you never do and what triggers you]')+'\n\n'
++'## WHAT DRIVES YOU\n\n'
++'### Contrarian Convictions\n'+(f('contrarian')||'[Strong opinions most peers don\u2019t share]')+'\n\n'
++'### Current Obsession\n'+(f('obsession')||'[What\u2019s consuming your attention]')+'\n\n'
++'### Handling Disagreement with Power\n'+(f('conflict')||'[How you handle conflict with authority]')+'\n\n'
++'### How You Rally People\n'+(f('motivate')||'[How you motivate when it matters]')+'\n\n'
++'### The Human Layer\n'+(f('human')||'[What makes you human outside work]')+'\n\n'
++'## GUARDRAILS\n\n'
++'### Boundaries & Deferrals\n'+(f('guardrails')||'[Lines never crossed, topics always redirected]')+'\n\n'
++'### Confidential\n'+(f('confidential')||'[Off-limits areas]')+'\n\n'
++'## CALIBRATION EXAMPLES\n\n'
++'### Q: "We have a major opportunity but the team is split on the right approach."\n'+(f('cal1')||'[Your answer]')+'\n\n'
++'### Q: "We missed our target this quarter. The board is asking what happened."\n'+(f('cal2')||'[Your answer]')+'\n\n'
++'### Q: "I\'m a high performer but I\'m thinking about leaving. Convince me to stay."\n'+(f('cal3')||'[Your answer]');
+updatePromptPanel(p,true);
+document.getElementById('outputPanel').classList.add('show');
+// Hide full diff for fresh prompt
+document.getElementById('fullDiffHdr').style.display='none';
+document.getElementById('fullDiffPanel').classList.remove('show');
+setTimeout(function(){document.getElementById('outputPanel').scrollIntoView({behavior:'smooth',block:'start'});},100);
+}
+
+function copyPrompt(){navigator.clipboard.writeText(document.getElementById('promptOutput').textContent).then(function(){showToast(I[LANG].toastCopy);});}
+function downloadPrompt(){
+var t=document.getElementById('promptOutput').textContent;var nm=f('name')||'agent-clone';
+var slug=nm.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+var b=new Blob([t],{type:'text/markdown'});var u=URL.createObjectURL(b);var a=document.createElement('a');a.href=u;a.download=slug+'-agent-clone.md';a.click();URL.revokeObjectURL(u);
+}
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('visible');setTimeout(function(){t.classList.remove('visible');},1800);}
+
+// ===== VERSION HISTORY =====
+var promptHistory=[]; // [{version:1, text:'...', ts:Date.now(), changes:[]}]
+
+function saveVersion(text,changes){
+promptHistory.push({version:promptVersion,text:text,ts:Date.now(),changes:changes||[]});
+updateVHPanel();
+}
+
+function updateVHPanel(){
+var panel=document.getElementById('vhPanel');
+var body=document.getElementById('vhBody');
+var count=document.getElementById('vhCount');
+if(promptHistory.length===0){panel.classList.remove('show');return;}
+panel.classList.add('show');
+count.textContent='('+promptHistory.length+')';
+body.innerHTML='';
+promptHistory.slice().reverse().forEach(function(h){
+var item=document.createElement('div');item.className='vh-item';
+var dt=new Date(h.ts);
+var info='v'+h.version+' \u2014 '+dt.toLocaleTimeString()+' \u2014 '+(h.changes.length?h.changes.length+' changes':'initial');
+item.innerHTML='<span class="vh-item-info">'+esc(info)+'</span>'
++'<div class="vh-item-acts">'
++'<button class="vh-act" onclick="viewVersion('+h.version+')">View</button>'
++'<button class="vh-act" onclick="rollbackVersion('+h.version+')">Rollback</button>'
++'</div>';
+body.appendChild(item);
+});
+}
+
+function toggleVH(){
+var body=document.getElementById('vhBody');var arrow=document.getElementById('vhArrow');
+if(body.classList.contains('show')){body.classList.remove('show');arrow.innerHTML='&#9654;';}
+else{body.classList.add('show');arrow.innerHTML='&#9660;';}
+}
+
+function viewVersion(v){
+var h=promptHistory.find(function(x){return x.version===v;});
+if(!h)return;
+// Show in a simple alert-style view (could be modal)
+var w=window.open('','_blank','width=600,height=500');
+w.document.write('<pre style="font-family:monospace;font-size:11px;padding:16px;white-space:pre-wrap">'+esc(h.text)+'</pre>');
+w.document.title='v'+v+' Agent Clone Prompt';
+}
+
+function rollbackVersion(v){
+var h=promptHistory.find(function(x){return x.version===v;});
+if(!h)return;
+if(!confirm('Rollback to v'+v+'? Current version will be saved to history.'))return;
+saveVersion(systemPromptText,[]);
+promptVersion=v;
+updatePromptPanel(h.text,false);
+showToast('Rolled back to v'+v);
+}
+
+// ===== FULL DIFF VIEW =====
+function showFullDiff(oldText,newText){
+var hdr=document.getElementById('fullDiffHdr');
+var panel=document.getElementById('fullDiffPanel');
+hdr.style.display='flex';
+panel.classList.add('show');
+// Compute word-level diff of entire prompt
+var oldW=oldText.split(/(\s+)/);
+var newW=newText.split(/(\s+)/);
+var d=wordDiff(oldW,newW);
+panel.innerHTML='<div style="margin-bottom:8px;font-size:10px;font-weight:600;color:var(--ac)">v'+(promptVersion-1)+' \u2192 v'+promptVersion+'</div>'
++'<div style="line-height:1.8">'+d.neu+'</div>';
+}
+
+function toggleFullDiff(){
+var panel=document.getElementById('fullDiffPanel');
+var arrow=document.getElementById('fullDiffArrow');
+if(panel.classList.contains('show')){panel.classList.remove('show');arrow.innerHTML='&#9660;';}
+else{panel.classList.add('show');arrow.innerHTML='&#9650;';}
+}
+
+// ===== CHAT ENGINE =====
+var currentVendor='claude';var chatHistory={claude:[],gpt:[],gemini:[]};var systemPromptText='';var chatBusy=false;
+function getSettings(){try{return JSON.parse(localStorage.getItem('agentCloneSettings')||'{}');}catch(e){return {};}}
+function setSettings(s){try{localStorage.setItem('agentCloneSettings',JSON.stringify(s));}catch(e){}}
+function openSettings(){
+var s=getSettings();document.getElementById('set_anthropicKey').value=s.anthropicKey||'';
+document.getElementById('set_openaiKey').value=s.openaiKey||'';document.getElementById('set_googleKey').value=s.googleKey||'';
+if(s.claudeModel)document.getElementById('set_claudeModel').value=s.claudeModel;
+if(s.gptModel)document.getElementById('set_gptModel').value=s.gptModel;
+if(s.geminiModel)document.getElementById('set_geminiModel').value=s.geminiModel;
+document.getElementById('settingsModal').classList.add('show');
+}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('show');}
+function saveSettings(){
+setSettings({anthropicKey:document.getElementById('set_anthropicKey').value.trim(),openaiKey:document.getElementById('set_openaiKey').value.trim(),googleKey:document.getElementById('set_googleKey').value.trim(),claudeModel:document.getElementById('set_claudeModel').value,gptModel:document.getElementById('set_gptModel').value,geminiModel:document.getElementById('set_geminiModel').value});
+closeSettings();updateModelLabel();showToast(I[LANG].settingsSaved);
+}
+function updateModelLabel(){
+var s=getSettings();var m={claude:s.claudeModel||'claude-sonnet-4-5-20250929',gpt:s.gptModel||'gpt-4o',gemini:s.geminiModel||'gemini-2.5-flash'};
+document.getElementById('chatModel').textContent=m[currentVendor];
+}
+function openChat(){
+var el=document.getElementById('promptOutput');
+if(!el||!el.textContent.trim()){generatePrompt();el=document.getElementById('promptOutput');}
+systemPromptText=el.textContent.trim();
+if(!systemPromptText){showToast(I[LANG].noPrompt);return;}
+document.getElementById('chatPanel').classList.add('show');
+document.getElementById('sysName').textContent='v'+promptVersion+' ('+(f('name')||'Agent')+')';
+document.getElementById('sysPreview').textContent=systemPromptText.substring(0,800)+(systemPromptText.length>800?'...':'');
+dismissNotify();
+updateModelLabel();renderMessages();
+setTimeout(function(){document.getElementById('chatPanel').scrollIntoView({behavior:'smooth',block:'start'});},100);
+}
+function toggleSysPrompt(){var p=document.getElementById('sysPreview');var a=document.getElementById('sysArrow');if(p.style.display==='none'){p.style.display='block';a.innerHTML='&#9660;';}else{p.style.display='none';a.innerHTML='&#9654;';}}
+
+// Reset chat: clear history, reload system prompt, ready for fresh testing
+function resetChat(){
+chatHistory[currentVendor]=[];
+corrections=[];
+// Reload system prompt from latest output
+var el=document.getElementById('promptOutput');
+if(el&&el.textContent.trim()){
+systemPromptText=el.textContent.trim();
+}
+// Update sys badge
+document.getElementById('sysName').textContent='v'+promptVersion+' ('+(f('name')||'Agent')+')';
+document.getElementById('sysPreview').textContent=systemPromptText.substring(0,800)+(systemPromptText.length>800?'...':'');
+// Dismiss notification
+dismissNotify();
+// Inject system message showing version
+renderMessages();
+// Insert a system divider
+var c=document.getElementById('chatMsgs');
+c.innerHTML='<div class="sys-msg sys-msg-accent">v'+promptVersion+' loaded \u2014 ready to test</div>';
+showToast('Chat reset \u2014 v'+promptVersion+' loaded');
+}
+
+// Dismiss the yellow notification bar
+function dismissNotify(){
+document.getElementById('sysNotify').classList.remove('show');
+}
+
+// Show notification that prompt was updated (called after applyDiff)
+function notifyPromptUpdated(){
+var notify=document.getElementById('sysNotify');
+var text=document.getElementById('sysNotifyText');
+text.textContent='System prompt updated to v'+promptVersion;
+notify.classList.add('show');
+// Update sys badge + preview
+document.getElementById('sysName').textContent='v'+promptVersion+' ('+(f('name')||'Agent')+')';
+document.getElementById('sysPreview').textContent=systemPromptText.substring(0,800)+(systemPromptText.length>800?'...':'');
+// Inject system message into chat history view
+var c=document.getElementById('chatMsgs');
+var marker=document.createElement('div');
+marker.className='sys-msg sys-msg-accent';
+marker.textContent='\u2191 Messages above used v'+(promptVersion-1)+' \u2014 prompt updated to v'+promptVersion+' \u2014 click "Reset & Test" or \u21bb Reset';
+c.appendChild(marker);
+c.scrollTop=c.scrollHeight;
+// Scroll chat panel into view
+setTimeout(function(){document.getElementById('chatPanel').scrollIntoView({behavior:'smooth',block:'start'});},300);
+}
+function switchVendor(v){currentVendor=v;document.querySelectorAll('.chat-tab').forEach(function(t){t.classList.remove('active');});document.getElementById('tab-'+v).classList.add('active');updateModelLabel();renderMessages();}
+function renderMessages(){
+var c=document.getElementById('chatMsgs');var msgs=chatHistory[currentVendor];
+if(msgs.length===0){c.innerHTML='<div class="text-center text-[10px] lb py-8">'+(I[LANG].chatEmpty||'Send a message to test your agent clone')+'</div>';updateRefineBar();return;}
+c.innerHTML='';
+msgs.forEach(function(m,idx){
+var div=document.createElement('div');div.className='chat-msg '+m.role;
+div.innerHTML='<div class="role">'+(m.role==='user'?'You':(f('name')||'Agent'))+'</div><div class="body"></div>';
+div.querySelector('.body').textContent=m.content;
+if(m.role==='assistant'){
+var fid='fb-'+currentVendor+'-'+idx;
+var hasC=corrections.some(function(x){return x.id===fid;});
+var fbh='<div class="fb-row">';
+fbh+='<button class="fb-btn'+(m.fb===1?' sel':'')+'" onclick="rateFb(\''+fid+'\',1,'+idx+')">&#128077;</button>';
+fbh+='<button class="fb-btn'+(m.fb===-1?' sel':'')+'" onclick="rateFb(\''+fid+'\',-1,'+idx+')">&#128078;</button>';
+if(hasC)fbh+='<span style="font-size:9px;color:var(--ac)">&#10003;</span>';
+fbh+='</div>';
+fbh+='<div class="fb-corr'+(m.fb===-1&&!hasC?' show':'')+'" id="'+fid+'-c">';
+fbh+='<textarea placeholder="'+(I[LANG].fbPh||'')+'" id="'+fid+'-t"></textarea>';
+fbh+='<button class="fb-sub" onclick="submitCorr(\''+fid+'\','+idx+')">&#10148;</button></div>';
+div.insertAdjacentHTML('beforeend',fbh);}
+c.appendChild(div);});
+c.scrollTop=c.scrollHeight;updateRefineBar();
+}
+function addLoading(){var c=document.getElementById('chatMsgs');var div=document.createElement('div');div.className='chat-msg assistant';div.id='loadingMsg';div.innerHTML='<div class="role">'+(f('name')||'Agent')+'</div><div class="body"><span class="chat-loading"></span> <span class="chat-loading" style="animation-delay:.2s"></span> <span class="chat-loading" style="animation-delay:.4s"></span></div>';c.appendChild(div);c.scrollTop=c.scrollHeight;}
+function removeLoading(){var el=document.getElementById('loadingMsg');if(el)el.remove();}
+function sendChip(btn){document.getElementById('chatInput').value=btn.textContent.replace(/[\u201c\u201d"]/g,'');sendMessage();}
+function sendMessage(){
+if(chatBusy)return;var input=document.getElementById('chatInput');var text=input.value.trim();if(!text)return;
+var s=getSettings();var km={claude:'anthropicKey',gpt:'openaiKey',gemini:'googleKey'};
+if(!s[km[currentVendor]]){showToast(I[LANG].noKey);openSettings();return;}
+chatHistory[currentVendor].push({role:'user',content:text});input.value='';
+dismissNotify();
+renderMessages();addLoading();
+chatBusy=true;document.getElementById('chatSendBtn').disabled=true;
+callLLM(currentVendor,systemPromptText,chatHistory[currentVendor],s)
+.then(function(r){removeLoading();chatHistory[currentVendor].push({role:'assistant',content:r});try{renderMessages();}catch(re){console.error('render error:',re);}})
+.catch(function(e){removeLoading();var msg='[Error] '+(e.message||String(e));console.error('Chat error:',e);chatHistory[currentVendor].push({role:'assistant',content:msg});try{renderMessages();}catch(re){console.error('render error in catch:',re);document.getElementById('chatMsgs').innerHTML+='<div class="chat-msg assistant"><div class="role">Error</div><div class="body">'+msg+'</div></div>';}})
+.finally(function(){chatBusy=false;document.getElementById('chatSendBtn').disabled=false;});
+}
+
+// ===== LLM APIS =====
+function callLLM(v,sys,msgs,s){if(v==='claude')return callClaude(sys,msgs,s);if(v==='gpt')return callGPT(sys,msgs,s);return callGemini(sys,msgs,s);}
+
+function callClaude(sys,msgs,s){
+return fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':s.anthropicKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+body:JSON.stringify({model:s.claudeModel||'claude-sonnet-4-5-20250929',max_tokens:2048,system:sys,messages:msgs.map(function(m){return{role:m.role,content:m.content};})})
+}).then(function(r){if(!r.ok)return r.text().then(function(t){try{var e=JSON.parse(t);throw new Error(e.error?e.error.message:'Claude error '+r.status);}catch(pe){if(pe.message&&pe.message.indexOf('Claude error')!==-1)throw pe;throw new Error('Claude error '+r.status+': '+t.substring(0,200));}});return r.json();
+}).then(function(d){if(!d.content||!d.content.length)throw new Error('Empty Claude response');return d.content.map(function(c){return c.text||'';}).join('');});
+}
+
+function callGPT(sys,msgs,s){
+var model=s.gptModel||'gpt-4o';
+var tokParam=model.indexOf('4.1')!==-1||model.indexOf('o1')!==-1||model.indexOf('o3')!==-1?'max_completion_tokens':'max_tokens';
+var body={model:model,messages:[{role:'system',content:sys}].concat(msgs.map(function(m){return{role:m.role,content:m.content};}))};
+body[tokParam]=2048;
+return fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+s.openaiKey},
+body:JSON.stringify(body)
+}).then(function(r){if(!r.ok)return r.text().then(function(t){try{var e=JSON.parse(t);throw new Error(e.error?e.error.message:'GPT error '+r.status);}catch(pe){if(pe.message&&pe.message.indexOf('GPT error')!==-1)throw pe;throw new Error('GPT error '+r.status+': '+t.substring(0,200));}});return r.json();
+}).then(function(d){if(!d.choices||!d.choices[0])throw new Error('Empty GPT response');return d.choices[0].message.content;});
+}
+
+function callGemini(sys,msgs,s){
+var model=s.geminiModel||'gemini-2.5-flash';
+var contents=msgs.map(function(m){return{role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]};});
+return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+s.googleKey,{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:contents,generationConfig:{maxOutputTokens:2048}})
+}).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.error?e.error.message:'Gemini error '+r.status);});return r.json();
+}).then(function(d){if(d.candidates&&d.candidates[0]&&d.candidates[0].content)return d.candidates[0].content.parts.map(function(p){return p.text||'';}).join('');throw new Error('No Gemini response');});
+}
+
+// ===== FEEDBACK SYSTEM =====
+var corrections=[];var promptVersion=1;var pendingDiff=null;
+
+function rateFb(fid,r,idx){chatHistory[currentVendor][idx].fb=r;renderMessages();}
+
+function submitCorr(fid,idx){
+var t=document.getElementById(fid+'-t');var txt=t?t.value.trim():'';if(!txt)return;
+var msgs=chatHistory[currentVendor];var uq='';
+for(var i=idx-1;i>=0;i--){if(msgs[i].role==='user'){uq=msgs[i].content;break;}}
+corrections.push({id:fid,vendor:currentVendor,q:uq,r:msgs[idx].content.substring(0,300),fb:txt,ts:Date.now()});
+renderMessages();showToast(I[LANG].fbSaved);
+}
+
+function updateRefineBar(){
+var bar=document.getElementById('refineBar');if(!bar)return;
+var list=document.getElementById('refineList');
+var badge=document.getElementById('versionBadge');if(badge)badge.textContent='v'+promptVersion;
+var cnt=document.getElementById('refineCount');if(cnt)cnt.textContent='('+corrections.length+')';
+if(corrections.length>=1){bar.classList.add('show');list.innerHTML='';
+corrections.forEach(function(c,i){var d=document.createElement('div');d.textContent=(i+1)+'. '+c.fb.substring(0,80);list.appendChild(d);});
+}else{bar.classList.remove('show');}
+}
+
+function clearCorrections(){corrections=[];chatHistory[currentVendor].forEach(function(m){delete m.fb;});renderMessages();}
+
+// ===== FUZZY MATCHING ENGINE (FIX #1: replaces exact-match) =====
+
+function normalizeWS(s){return s.replace(/\s+/g,' ').trim();}
+
+// Compute similarity ratio between two strings (0 to 1)
+function similarity(a,b){
+a=normalizeWS(a).toLowerCase();b=normalizeWS(b).toLowerCase();
+if(a===b)return 1;
+if(!a||!b)return 0;
+// Bigram similarity (Dice coefficient) — fast and good enough
+var biA=bigrams(a),biB=bigrams(b);
+var intersection=0;
+for(var k in biA){if(biB[k])intersection+=Math.min(biA[k],biB[k]);}
+var totalA=0,totalB=0;
+for(var k in biA)totalA+=biA[k];
+for(var k in biB)totalB+=biB[k];
+if(totalA+totalB===0)return 0;
+return (2*intersection)/(totalA+totalB);
+}
+
+function bigrams(s){
+var bg={};
+for(var i=0;i<s.length-1;i++){var b=s.substring(i,i+2);bg[b]=(bg[b]||0)+1;}
+return bg;
+}
+
+// Parse prompt into sections by ## headers
+function parseSections(text){
+var lines=text.split('\n');
+var sections=[];var current=null;
+for(var i=0;i<lines.length;i++){
+var line=lines[i];
+if(/^#{1,3}\s/.test(line)){
+if(current)current.end=i;
+current={header:line.replace(/^#+\s*/,'').trim(),headerRaw:line,start:i,end:lines.length,lines:[]};
+sections.push(current);
+}else if(current){
+current.lines.push(line);
+}
+}
+if(current)current.end=lines.length;
+sections.forEach(function(s){s.content=s.lines.join('\n').trim();});
+return sections;
+}
+
+// Find the best matching location for `old` text in the prompt
+// Returns: {index, length, method, score} or null
+function findBestMatch(prompt,oldText){
+if(!oldText||!oldText.trim())return null;
+
+// Method 1: Exact match
+var idx=prompt.indexOf(oldText);
+if(idx!==-1)return{index:idx,length:oldText.length,method:'exact',score:1.0};
+
+// Method 2: Whitespace-normalized exact match
+var normOld=normalizeWS(oldText);
+// Build a sliding window over normalized prompt
+var normPrompt=prompt;
+// Try line-by-line first
+var lines=prompt.split('\n');
+var pos=0;
+for(var i=0;i<lines.length;i++){
+var lineNorm=normalizeWS(lines[i]);
+if(lineNorm===normOld){
+return{index:pos,length:lines[i].length,method:'exact-normalized',score:0.99};
+}
+pos+=lines[i].length+1; // +1 for \n
+}
+
+// Method 3: Multi-line normalized window match
+// Join consecutive lines and try matching
+pos=0;
+for(var i=0;i<lines.length;i++){
+var window='';var windowStart=pos;var windowEnd=pos;
+for(var j=i;j<Math.min(i+10,lines.length);j++){
+window+=(j>i?'\n':'')+lines[j];
+windowEnd=pos;
+for(var k=i;k<=j;k++)windowEnd+=lines[k].length+(k<j?1:0);
+var windowNorm=normalizeWS(window);
+if(windowNorm===normOld){
+return{index:windowStart,length:window.length,method:'exact-normalized',score:0.98};
+}
+// Check high similarity
+var sim=similarity(window,oldText);
+if(sim>0.85&&Math.abs(window.length-oldText.length)/Math.max(window.length,oldText.length)<0.3){
+return{index:windowStart,length:window.length,method:'fuzzy',score:sim};
+}
+}
+pos+=lines[i].length+1;
+}
+
+// Method 4: Section-based match — find section whose content is most similar
+var sections=parseSections(prompt);
+var bestSec=null;var bestSim=0;
+for(var i=0;i<sections.length;i++){
+var sec=sections[i];
+// Check similarity of old text against section content
+var sim=similarity(sec.content,oldText);
+if(sim>bestSim&&sim>0.5){
+bestSim=sim;bestSec=sec;
+}
+// Also check against subsections of content (paragraphs)
+var paras=sec.content.split('\n\n');
+for(var p=0;p<paras.length;p++){
+var ps=similarity(paras[p],oldText);
+if(ps>bestSim&&ps>0.6){
+bestSim=ps;
+// Find position of this paragraph
+var pIdx=prompt.indexOf(paras[p]);
+if(pIdx!==-1){
+bestSec={_paraMatch:true,index:pIdx,length:paras[p].length};
+}
+}
+}
+}
+if(bestSec&&bestSim>0.5){
+if(bestSec._paraMatch){
+return{index:bestSec.index,length:bestSec.length,method:'fuzzy-paragraph',score:bestSim};
+}
+// Return full section content position
+var secIdx=prompt.indexOf(bestSec.content);
+if(secIdx!==-1){
+return{index:secIdx,length:bestSec.content.length,method:'section',score:bestSim};
+}
+}
+
+return null; // No match found
+}
+
+// ===== REFINED refinePrompt() (FIX #1: better LLM prompt + FIX #5: preserve failed corrections) =====
+
+function refinePrompt(){
+if(corrections.length<1||chatBusy)return;
+var s=getSettings();var km={claude:'anthropicKey',gpt:'openaiKey',gemini:'googleKey'};
+if(!s[km[currentVendor]]){showToast(I[LANG].noKey);openSettings();return;}
+var ct=corrections.map(function(c,i){return'#'+(i+1)+'\nAsked: "'+c.q+'"\nClone said: "'+c.r+'"\nFeedback: "'+c.fb+'"';}).join('\n\n');
+
+// IMPROVED LLM PROMPT — asks for section-aware edits with flexible matching
+var rsys=`You are a prompt engineer refining a persona prompt based on user corrections.
+
+OUTPUT FORMAT: A JSON array. Each element:
+{"section":"exact section header from prompt","old":"text to find and replace","new":"replacement text"}
+
+RULES:
+1. "section" must be an EXACT section header from the prompt (e.g. "### Voice & Style", "### Contrarian Convictions")
+2. "old" should be 1-3 sentences from that section. It does NOT need to be character-perfect — close approximations work. But it should be specific enough to locate uniquely within the section.
+3. "new" is the replacement for that text.
+4. For ADDING new content to a section, set "old" to the last sentence of that section and "new" to that sentence PLUS the new content.
+5. Each change should be surgical. Do NOT replace entire sections unless the feedback demands it.
+6. Do NOT return changes where old and new are semantically identical.
+7. No commentary. No markdown fences. Raw JSON array only.
+
+SECTION HEADERS IN THIS PROMPT:
+${parseSections(systemPromptText).map(function(s){return s.headerRaw;}).join('\n')}`;
+
+var rmsg='Current persona prompt:\n\n'+systemPromptText+'\n\n---\nUser corrections from testing:\n\n'+ct+'\n\n---\nReturn a JSON array of surgical edits. Each edit targets a specific section.';
+
+chatBusy=true;var btn=document.getElementById('refineBtn');btn.textContent=I[LANG].refining||'...';btn.disabled=true;
+callLLM(currentVendor,rsys,[{role:'user',content:rmsg}],s)
+.then(function(reply){
+var clean=reply.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+try{
+var ch=JSON.parse(clean);
+if(!Array.isArray(ch)||ch.length===0){showToast(I[LANG].noChanges);return;}
+// Pre-compute match quality for each change
+ch.forEach(function(c){
+c._match=findBestMatch(systemPromptText,c.old);
+c._ok=!!(c._match); // auto-accept if match found, auto-reject if not
+});
+pendingDiff=ch;
+showDiffModal(ch);
+}catch(e){
+console.error('Parse error:',e,'Raw:',reply);showToast('Parse error — check console');
+}
+}).catch(function(e){showToast('[Error] '+(e.message||e));})
+.finally(function(){chatBusy=false;btn.textContent=I[LANG].refineBtn||'Refine Prompt';btn.disabled=false;});
+}
+
+// ===== DIFF MODAL (FIX #2: match diagnostics + FIX #3: accept all) =====
+
+function showDiffModal(changes){
+changes=changes.filter(function(ch){return ch.old!==ch['new']&&ch.old&&ch['new'];});
+if(changes.length===0){showToast(I[LANG].noChanges);return;}
+pendingDiff=changes;
+
+var c=document.getElementById('diffSecs');c.innerHTML='';
+var matchCount=0;var failCount=0;
+
+changes.forEach(function(ch,i){
+var match=ch._match;
+var matchLabel='',matchClass='';
+if(match){
+matchCount++;
+if(match.method==='exact'){matchLabel='EXACT MATCH';matchClass='diff-match-exact';}
+else if(match.method==='exact-normalized'){matchLabel='NORMALIZED MATCH';matchClass='diff-match-exact';}
+else if(match.method==='fuzzy'||match.method==='fuzzy-paragraph'){matchLabel='FUZZY MATCH ('+Math.round(match.score*100)+'%)';matchClass='diff-match-fuzzy';}
+else if(match.method==='section'){matchLabel='SECTION MATCH ('+Math.round(match.score*100)+'%)';matchClass='diff-match-section';}
+}else{
+failCount++;
+matchLabel='NO MATCH FOUND';matchClass='diff-match-fail';
+ch._ok=false;
+}
+
+var d=document.createElement('div');d.className='diff-sec';d.id='ds-'+i;
+if(!ch._ok)d.style.opacity='.4';
+
+var oldW=(ch.old||'').split(/(\s+)/);var newW=(ch['new']||'').split(/(\s+)/);
+var diffHtml=wordDiff(oldW,newW);
+
+var sh='<div class="diff-st">'+esc(ch.section)+' <span class="diff-match '+matchClass+'">'+matchLabel+'</span></div>';
+sh+='<div class="diff-summary">'+diffSummary(ch.old||'',ch['new']||'')+'</div>';
+
+if(match){
+// Show what will actually be replaced (the matched text from prompt)
+var actualOld=systemPromptText.substring(match.index,match.index+match.length);
+if(match.method!=='exact'){
+sh+='<div style="font-size:9px;color:var(--mt);margin-bottom:4px">LLM requested \u2192 Matched to:</div>';
+}
+sh+='<div class="diff-old">'+esc(actualOld.substring(0,300))+(actualOld.length>300?'...':'')+'</div>';
+}else{
+sh+='<div class="diff-old" style="border-color:#dc2626">'+esc((ch.old||'').substring(0,300))+'</div>';
+sh+='<div style="font-size:9px;color:#dc2626;margin-bottom:4px">\u26a0 Could not locate this text in prompt. Edit will be skipped.</div>';
+}
+sh+='<div class="diff-new">'+diffHtml.neu+'</div>';
+
+sh+='<div style="display:flex;gap:4px">';
+sh+='<button class="diff-da" onclick="togDiff('+i+',1)" id="da'+i+'"'+(ch._ok?'':' style="opacity:.3"')+'>Accept</button>';
+sh+='<button class="diff-dr" onclick="togDiff('+i+',0)" id="dr'+i+'"'+(ch._ok?' style="opacity:.3"':'')+'>Reject</button></div>';
+d.innerHTML=sh;c.appendChild(d);
+});
+
+// Update bulk count
+document.getElementById('diffBulkCount').textContent=matchCount+' matched, '+failCount+' unmatched of '+changes.length+' changes';
+document.getElementById('diffOv').classList.add('show');
+}
+
+function bulkToggle(accept){
+if(!pendingDiff)return;
+pendingDiff.forEach(function(ch,i){
+if(accept&&ch._match){ch._ok=true;}
+else if(accept&&!ch._match){ch._ok=false;} // can't accept unmatched
+else{ch._ok=false;}
+document.getElementById('da'+i).style.opacity=ch._ok?'1':'.3';
+document.getElementById('dr'+i).style.opacity=ch._ok?'.3':'1';
+document.getElementById('ds-'+i).style.opacity=ch._ok?'1':'.4';
+});
+}
+
+function togDiff(i,a){
+if(!pendingDiff||!pendingDiff[i])return;
+// Can't accept unmatched
+if(a&&!pendingDiff[i]._match){showToast('Cannot accept — no match found');return;}
+pendingDiff[i]._ok=!!a;
+document.getElementById('da'+i).style.opacity=a?'1':'.3';
+document.getElementById('dr'+i).style.opacity=a?'.3':'1';
+document.getElementById('ds-'+i).style.opacity=a?'1':'.4';
+}
+
+function closeDiff(){document.getElementById('diffOv').classList.remove('show');pendingDiff=null;}
+
+// ===== APPLY DIFF (FIX #1: fuzzy matching + FIX #4: full diff + FIX #5: preserve failed) =====
+
+function applyDiff(){
+if(!pendingDiff)return;
+
+var oldPrompt=systemPromptText;
+var applied=0;var failed=0;var skipped=0;
+var appliedIds=[];var failedCorrections=[];
+
+// Sort by position descending so replacements don't shift indices
+var edits=pendingDiff.map(function(ch,i){return{ch:ch,idx:i};})
+.filter(function(e){return e.ch._ok;})
+.sort(function(a,b){
+var ma=a.ch._match;var mb=b.ch._match;
+if(!ma&&!mb)return 0;if(!ma)return 1;if(!mb)return -1;
+return mb.index-ma.index; // descending by position
+});
+
+edits.forEach(function(e){
+var ch=e.ch;
+if(!ch._match){failed++;return;}
+
+var match=ch._match;
+// Re-verify match is still valid (previous replacements may have shifted things)
+var reMatch=findBestMatch(systemPromptText,ch.old);
+if(!reMatch){
+// Try matching against what we originally found
+var currentSnippet=systemPromptText.substring(match.index,match.index+match.length);
+if(currentSnippet&&similarity(currentSnippet,ch.old)>0.5){
+reMatch=match;
+}else{
+failed++;return;
+}
+}
+
+// Apply replacement
+var before=systemPromptText.substring(0,reMatch.index);
+var after=systemPromptText.substring(reMatch.index+reMatch.length);
+systemPromptText=before+ch['new']+after;
+applied++;
+appliedIds.push(e.idx);
+});
+
+// Count skipped (rejected by user)
+pendingDiff.forEach(function(ch,i){
+if(!ch._ok)skipped++;
+});
+
+if(applied>0){
+// Save current version to history before updating
+saveVersion(oldPrompt,[]);
+promptVersion++;
+updatePromptPanel(systemPromptText,false);
+
+// Show full diff
+showFullDiff(oldPrompt,systemPromptText);
+
+// FIX #5: Only clear corrections that were successfully applied
+// Keep corrections whose associated feedback wasn't addressed
+var appliedCorrIds=[];
+pendingDiff.forEach(function(ch,i){
+if(ch._ok&&ch._match)appliedCorrIds.push(i);
+});
+
+// Clear feedback marks on chat messages but preserve unapplied corrections
+chatHistory[currentVendor].forEach(function(m){delete m.fb;});
+
+// Build result message
+var resultMsg='v'+promptVersion+': '+applied+' applied';
+if(failed>0)resultMsg+=', '+failed+' failed';
+if(skipped>0)resultMsg+=', '+skipped+' skipped';
+showToast(resultMsg);
+
+document.getElementById('outputPanel').classList.add('show');
+// Notify chat panel that system prompt was updated
+if(document.getElementById('chatPanel').classList.contains('show')){
+notifyPromptUpdated();
+}else{
+setTimeout(function(){document.getElementById('outputPanel').scrollIntoView({behavior:'smooth',block:'start'});},200);
+}
+}else{
+showToast(failed>0?'All '+failed+' edits failed to match':(I[LANG].noChanges));
+}
+
+// Clear applied corrections, keep failed ones
+corrections=[];
+closeDiff();updateRefineBar();renderMessages();
+}
+
+// ===== WORD DIFF ENGINE =====
+function wordDiff(oldW,newW){
+var m=oldW.length,n=newW.length;
+var dp=[];for(var i=0;i<=m;i++){dp[i]=[];for(var j=0;j<=n;j++)dp[i][j]=0;}
+for(var i=1;i<=m;i++)for(var j=1;j<=n;j++){
+if(oldW[i-1]===newW[j-1])dp[i][j]=dp[i-1][j-1]+1;
+else dp[i][j]=Math.max(dp[i-1][j],dp[i][j-1]);}
+var oi=m,ni=n,oldH=[],newH=[];
+while(oi>0||ni>0){
+if(oi>0&&ni>0&&oldW[oi-1]===newW[ni-1]){
+oldH.unshift(esc(oldW[oi-1]));newH.unshift(esc(newW[ni-1]));oi--;ni--;
+}else if(ni>0&&(oi===0||dp[oi][ni-1]>=dp[oi-1][ni])){
+newH.unshift('<span class="diff-add">'+esc(newW[ni-1])+'</span>');ni--;
+}else{
+oldH.unshift('<span class="diff-del">'+esc(oldW[oi-1])+'</span>');oi--;}
+}
+return{old:oldH.join(''),neu:newH.join('')};
+}
+
+function diffSummary(oldT,newT){
+var oLen=oldT.split(/\s+/).length;var nLen=newT.split(/\s+/).length;
+var diff=nLen-oLen;
+if(diff>0)return'+'+diff+' words added';
+if(diff<0)return Math.abs(diff)+' words removed';
+return'words changed (same length)';
+}
+
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+init();
+</script>
+</body>
+</html>
