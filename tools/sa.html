@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tục Ngữ Tài Chính — Nguyên Tắc Bất Biến</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%23FBD45B'/><text x='50' y='76' font-family='serif' font-size='72' font-weight='bold' text-anchor='middle' fill='%23000'>λ</text></svg>">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-VC31GENS6S');
+function trackEvent(action, params) { try { gtag('event', action, params); } catch(e) {} }
+</script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['IBM Plex Mono', 'monospace'],
+        mono: ['IBM Plex Mono', 'monospace'],
+        serif: ['IBM Plex Serif', 'serif'],
+      },
+      colors: {
+        background: '#ffffff',
+        foreground: '#000000',
+        muted: '#666666',
+        accent: '#FBD45B',
+        positive: '#16a34a',
+        negative: '#dc2626',
+      }
+    }
+  }
+}
+</script>
+<style>
+:root {
+  --bg: #ffffff; --fg: #000000; --muted: #666666; --border: #000000;
+  --surface: #f9fafb; --surface2: #f3f4f6; --surface3: #e5e7eb;
+  --input-bg: #ffffff; --shadow-color: #000000;
+}
+[data-theme="dark"] {
+  --bg: #0f0f0f; --fg: #e5e5e5; --muted: #999999; --border: #555555;
+  --surface: #1a1a1a; --surface2: #222222; --surface3: #333333;
+  --input-bg: #1a1a1a; --shadow-color: #000000;
+}
+body { background: var(--bg); color: var(--fg); transition: background 0.2s, color 0.2s; }
+.shadow-brutal { box-shadow: 3px 3px 0px var(--shadow-color); }
+.shadow-brutal-sm { box-shadow: 2px 2px 0px var(--shadow-color); }
+.result-panel { display: none; }
+.result-panel.show { display: block; }
+canvas { max-width: 100%; }
+[data-theme="dark"] .border-black { border-color: var(--border) !important; }
+[data-theme="dark"] .bg-white { background: var(--bg) !important; }
+[data-theme="dark"] .bg-gray-50 { background: var(--surface) !important; }
+[data-theme="dark"] .bg-gray-100 { background: var(--surface2) !important; }
+[data-theme="dark"] .text-muted { color: var(--muted) !important; }
+[data-theme="dark"] .border-gray-300, [data-theme="dark"] .border-gray-200 { border-color: var(--surface3) !important; }
+[data-theme="dark"] .hover\:bg-black:hover { background: #FBD45B !important; color: #000 !important; }
+[data-theme="dark"] textarea, [data-theme="dark"] input, [data-theme="dark"] select { background: var(--input-bg); color: var(--fg); border-color: var(--border); }
+[data-theme="dark"] .border-t, [data-theme="dark"] .border-b { border-color: var(--surface3); }
+</style>
+</head>
+<body class="text-xs leading-relaxed">
+
+<div class="max-w-xl mx-auto px-4 py-6">
+
+<!-- HEADER -->
+<header class="flex items-center justify-between mb-8 border-b border-black pb-3" style="border-color:var(--border);">
+  <div>
+    <h1 class="font-serif text-lg font-bold">Tục Ngữ Tài Chính</h1>
+    <p class="text-[10px] text-muted mt-0.5">7 nguyên tắc bất biến · Chứng minh bằng simulation</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <button id="themeToggle" onclick="toggleTheme()" title="Toggle dark/light (D)"
+      style="width:32px;height:32px;border:2px solid var(--border);background:var(--bg);color:var(--fg);
+      cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;">☀</button>
+  </div>
+</header>
+
+<!-- NAV DOTS -->
+<div class="flex items-center justify-center gap-1.5 mb-6" id="navDots">
+  <button class="nav-dot w-2.5 h-2.5 border border-black bg-black" onclick="navigateModule(0)" style="border-color:var(--border);"></button>
+  <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(1)" style="border-color:var(--border);"></button>
+  <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(2)" style="border-color:var(--border);"></button>
+  <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(3)" style="border-color:var(--border);"></button>
+  <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(4)" style="border-color:var(--border);"></button>
+  <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(5)" style="border-color:var(--border);"></button>
+  <button class="nav-dot w-2.5 h-2.5 border border-black bg-white" onclick="navigateModule(6)" style="border-color:var(--border);"></button>
+</div>
+
+<!-- ==================== MODULE 0: LANDING ==================== -->
+<div class="module-section" id="module0">
+  <div class="text-center mb-8">
+    <p class="font-serif text-2xl font-bold mb-2">Ca dao là axiom.</p>
+    <p class="font-serif text-2xl font-bold mb-4">Toán học là proof.</p>
+    <p class="text-muted text-xs mb-6">Ông bà ta đã mã hóa nguyên tắc tài chính bất biến vào tục ngữ. Mỗi câu là một axiom — hard to vary, không thể bỏ bất kỳ phần nào mà không phá vỡ ý nghĩa.</p>
+  </div>
+
+  <div class="space-y-3 mb-8">
+    <div class="border border-black p-3 shadow-brutal-sm" style="background:var(--surface);">
+      <span class="text-accent font-bold">01</span> <span class="font-serif font-semibold">Buôn tài không bằng dài vốn</span>
+      <span class="text-[10px] text-muted block mt-1">DCA · Position sizing · Survival</span>
+    </div>
+    <div class="border border-black p-3 shadow-brutal-sm" style="background:var(--surface);">
+      <span class="text-accent font-bold">02</span> <span class="font-serif font-semibold">Kiến tha lâu đầy tổ</span>
+      <span class="text-[10px] text-muted block mt-1">Compound interest · Exponential growth</span>
+    </div>
+    <div class="border border-black p-3 shadow-brutal-sm" style="background:var(--surface);">
+      <span class="text-accent font-bold">03</span> <span class="font-serif font-semibold">Đừng bỏ trứng vào một giỏ</span>
+      <span class="text-[10px] text-muted block mt-1">Diversification · Correlation · Portfolio theory</span>
+    </div>
+    <div class="border border-black p-3 shadow-brutal-sm" style="background:var(--surface);">
+      <span class="text-accent font-bold">04</span> <span class="font-serif font-semibold">Có thực mới vực được đạo</span>
+      <span class="text-[10px] text-muted block mt-1">Cash flow · Liquidity · Survival bias</span>
+    </div>
+    <div class="border border-black p-3 shadow-brutal-sm" style="background:var(--surface);">
+      <span class="text-accent font-bold">05</span> <span class="font-serif font-semibold">Ăn chắc mặc bền</span>
+      <span class="text-[10px] text-muted block mt-1">Margin of safety · Value investing</span>
+    </div>
+    <div class="border border-black p-3 shadow-brutal-sm" style="background:var(--surface);">
+      <span class="text-accent font-bold">06</span> <span class="font-serif font-semibold">Liệu cơm gắp mắm</span>
+      <span class="text-[10px] text-muted block mt-1">Position sizing · Kelly criterion · Risk of ruin</span>
+    </div>
+  </div>
+
+  <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+    <p class="text-xs font-semibold">MỖI NGUYÊN TẮC CÓ 3 PHẦN: TỤC NGỮ → CÔNG THỨC → SIMULATION.</p>
+    <p class="text-xs font-semibold mt-1">BẠN SẼ TỰ CHỨNG MINH TÍNH ĐÚNG ĐẮN BẰNG TAY.</p>
+  </div>
+
+  <div class="flex justify-end">
+    <button onclick="navigateModule(1)" class="border-2 border-black px-4 py-2 text-xs font-bold hover:bg-black hover:text-white shadow-brutal">Bắt đầu →</button>
+  </div>
+</div>
+
+<!-- ==================== MODULE 1: BUÔN TÀI KHÔNG BẰNG DÀI VỐN ==================== -->
+<div class="module-section hidden" id="module1">
+  <div class="text-[10px] text-muted mb-1">Module 1 / 6</div>
+  <h2 class="font-serif text-xl font-bold mb-1">Buôn tài không bằng dài vốn</h2>
+  <p class="text-muted italic mb-4 text-[11px]">"Trading skill matters less than capital depth"</p>
+
+  <!-- Problem -->
+  <div class="mb-4">
+    <span class="text-negative font-bold text-[10px]">❌ SAI:</span>
+    <span class="text-xs"> "Tôi giỏi chọn cổ phiếu, chỉ cần all-in đúng thời điểm."</span>
+  </div>
+  <div class="mb-6">
+    <span class="text-positive font-bold text-[10px]">✅ ĐÚNG:</span>
+    <span class="text-xs"> "Tôi giữ đạn dự phòng để mua thêm khi thị trường giảm, trung bình giá xuống."</span>
+  </div>
+
+  <!-- Insight -->
+  <div class="border border-black p-4 mb-6 shadow-brutal" style="background:var(--surface);">
+    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Nguyên tắc toán học</div>
+    <code class="text-xs border px-2 py-1 block mb-2" style="background:var(--bg);border-color:var(--surface3);">
+      Avg_Price = Σ(Qᵢ × Pᵢ) / Σ(Qᵢ)
+    </code>
+    <p class="text-xs text-muted mt-2">Khi bạn mua thêm ở giá thấp hơn, giá trung bình <strong>luôn</strong> nằm giữa giá cao nhất và giá thấp nhất bạn đã mua. Dài vốn = khả năng kéo trung bình xuống.</p>
+    <code class="text-xs border px-2 py-1 block mt-2" style="background:var(--bg);border-color:var(--surface3);">
+      Breakeven = Avg_Price × (1 + fees)
+    </code>
+    <p class="text-xs text-muted mt-2">Hard-to-vary: bỏ bất kỳ lần mua nào ở giá thấp → trung bình tăng → breakeven xa hơn → cần rally lớn hơn để hòa vốn.</p>
+  </div>
+
+  <!-- Exercise -->
+  <div class="border border-black p-4 mb-6 shadow-brutal">
+    <div class="flex justify-between items-center mb-3">
+      <span class="font-semibold text-xs">DCA Simulator</span>
+      <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+    </div>
+    <p class="text-xs text-muted mb-4">So sánh: All-in vs DCA 2 lần. Cổ phiếu giảm rồi hồi — ai hòa vốn trước?</p>
+
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Giá mua lần 1 (₫k)</label>
+        <input type="number" id="m1_p1" value="20" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Số lượng lần 1</label>
+        <input type="number" id="m1_q1" value="1000" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Giá mua lần 2 (₫k)</label>
+        <input type="number" id="m1_p2" value="10" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Số lượng lần 2</label>
+        <input type="number" id="m1_q2" value="1000" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+    </div>
+
+    <button onclick="calcModule1(); trackEvent('exercise_submit',{module_index:1,exercise_id:'dca_sim'})"
+      class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">Calculate</button>
+
+    <div class="result-panel mt-4 border-t pt-3" style="border-color:var(--surface3);" id="m1_results"></div>
+  </div>
+
+  <!-- Monte Carlo extension -->
+  <div class="border border-black p-4 mb-6 shadow-brutal">
+    <div class="flex justify-between items-center mb-3">
+      <span class="font-semibold text-xs">Monte Carlo: 1000 thị trường ngẫu nhiên</span>
+      <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">MASTERY</span>
+    </div>
+    <p class="text-xs text-muted mb-4">Chạy 1000 kịch bản random walk. So sánh tỷ lệ có lời sau 12 tháng: All-in vs DCA monthly.</p>
+
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Vốn tổng (triệu ₫)</label>
+        <input type="number" id="m1_mc_capital" value="120" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Volatility (%/tháng)</label>
+        <input type="number" id="m1_mc_vol" value="8" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+    </div>
+
+    <button onclick="calcMC1(); trackEvent('exercise_submit',{module_index:1,exercise_id:'mc_dca'})"
+      class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">Run 1000 Simulations</button>
+
+    <div class="result-panel mt-4 border-t pt-3" style="border-color:var(--surface3);" id="m1_mc_results"></div>
+  </div>
+
+  <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+    <p class="text-xs font-semibold">DÀI VỐN = QUYỀN ĐƯỢC SAI. QUYỀN ĐƯỢC SAI = SỐNG SÓT. SỐNG SÓT = THẮNG.</p>
+  </div>
+
+  <div class="flex justify-between">
+    <button onclick="navigateModule(0)" class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">← Về</button>
+    <button onclick="navigateModule(2)" class="border-2 border-black px-4 py-2 text-xs font-bold hover:bg-black hover:text-white shadow-brutal">Tiếp →</button>
+  </div>
+</div>
+
+<!-- ==================== MODULE 2: KIẾN THA LÂU ĐẦY TỔ ==================== -->
+<div class="module-section hidden" id="module2">
+  <div class="text-[10px] text-muted mb-1">Module 2 / 6</div>
+  <h2 class="font-serif text-xl font-bold mb-1">Kiến tha lâu đầy tổ</h2>
+  <p class="text-muted italic mb-4 text-[11px]">"Ants carry long enough, the nest fills" = Compound interest</p>
+
+  <div class="mb-4">
+    <span class="text-negative font-bold text-[10px]">❌ SAI:</span>
+    <span class="text-xs"> "Tiết kiệm 5 triệu/tháng chẳng đáng bao nhiêu."</span>
+  </div>
+  <div class="mb-6">
+    <span class="text-positive font-bold text-[10px]">✅ ĐÚNG:</span>
+    <span class="text-xs"> "5 triệu/tháng × 12%/năm × 20 năm = 4.94 tỷ. Con kiến không cần phải to."</span>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal" style="background:var(--surface);">
+    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Công thức lãi kép với đóng góp đều</div>
+    <code class="text-xs border px-2 py-1 block" style="background:var(--bg);border-color:var(--surface3);">
+      FV = PMT × [(1+r)ⁿ - 1] / r
+    </code>
+    <p class="text-xs text-muted mt-2">Hard-to-vary: bỏ r (lãi suất) → tuyến tính, không bùng nổ. Bỏ n (thời gian) → không tích lũy. Bỏ PMT (đều đặn) → không có gì để compound. Cả 3 yếu tố đều cần thiết.</p>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal">
+    <div class="flex justify-between items-center mb-3">
+      <span class="font-semibold text-xs">Compound Calculator</span>
+      <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">PRACTICE</span>
+    </div>
+
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Góp/tháng (tr₫)</label>
+        <input type="number" id="m2_pmt" value="5" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Lãi (%/năm)</label>
+        <input type="number" id="m2_rate" value="12" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Số năm</label>
+        <input type="number" id="m2_years" value="20" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+    </div>
+
+    <button onclick="calcModule2(); trackEvent('exercise_submit',{module_index:2,exercise_id:'compound'})"
+      class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">Calculate</button>
+
+    <div class="result-panel mt-4 border-t pt-3" style="border-color:var(--surface3);" id="m2_results"></div>
+  </div>
+
+  <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+    <p class="text-xs font-semibold">THỜI GIAN × ĐỀU ĐẶN × LÃI KÉP = MAGIC. THIẾU MỘT = TUYẾN TÍNH. ĐỦ BA = MŨ.</p>
+  </div>
+
+  <div class="flex justify-between">
+    <button onclick="navigateModule(1)" class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">← Về</button>
+    <button onclick="navigateModule(3)" class="border-2 border-black px-4 py-2 text-xs font-bold hover:bg-black hover:text-white shadow-brutal">Tiếp →</button>
+  </div>
+</div>
+
+<!-- ==================== MODULE 3: ĐỪNG BỎ TRỨNG VÀO MỘT GIỎ ==================== -->
+<div class="module-section hidden" id="module3">
+  <div class="text-[10px] text-muted mb-1">Module 3 / 6</div>
+  <h2 class="font-serif text-xl font-bold mb-1">Đừng bỏ trứng vào một giỏ</h2>
+  <p class="text-muted italic mb-4 text-[11px]">"Don't put all eggs in one basket" = Markowitz diversification</p>
+
+  <div class="mb-4">
+    <span class="text-negative font-bold text-[10px]">❌ SAI:</span>
+    <span class="text-xs"> "All-in cổ phiếu A vì tin chắc nó sẽ tăng."</span>
+  </div>
+  <div class="mb-6">
+    <span class="text-positive font-bold text-[10px]">✅ ĐÚNG:</span>
+    <span class="text-xs"> "Chia vào nhiều tài sản có tương quan thấp → cùng return, ít risk hơn."</span>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal" style="background:var(--surface);">
+    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Portfolio variance</div>
+    <code class="text-xs border px-2 py-1 block" style="background:var(--bg);border-color:var(--surface3);">
+      σ²_p = w₁²σ₁² + w₂²σ₂² + 2·w₁·w₂·ρ·σ₁·σ₂
+    </code>
+    <p class="text-xs text-muted mt-2">Khi ρ (tương quan) < 1, rủi ro portfolio LUÔN nhỏ hơn trung bình cộng rủi ro từng tài sản. ρ = -1 → có thể triệt tiêu rủi ro hoàn toàn. Hard-to-vary: bỏ ρ khỏi phương trình → mất lý do diversify.</p>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal">
+    <div class="flex justify-between items-center mb-3">
+      <span class="font-semibold text-xs">Diversification Simulator</span>
+      <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+    </div>
+    <p class="text-xs text-muted mb-4">2 tài sản, cùng return 10%, cùng volatility 20%. Thay đổi correlation và xem risk giảm.</p>
+
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Weight A (%)</label>
+        <input type="number" id="m3_w" value="50" min="0" max="100" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Correlation ρ</label>
+        <input type="number" id="m3_rho" value="0.3" min="-1" max="1" step="0.1" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Volatility (%)</label>
+        <input type="number" id="m3_vol" value="20" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+    </div>
+
+    <button onclick="calcModule3(); trackEvent('exercise_submit',{module_index:3,exercise_id:'diversify'})"
+      class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">Calculate</button>
+
+    <div class="result-panel mt-4 border-t pt-3" style="border-color:var(--surface3);" id="m3_results"></div>
+  </div>
+
+  <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+    <p class="text-xs font-semibold">SỐ GIỎ KHÔNG QUAN TRỌNG. TƯƠNG QUAN GIỮA CÁC GIỎ MỚI QUAN TRỌNG.</p>
+  </div>
+
+  <div class="flex justify-between">
+    <button onclick="navigateModule(2)" class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">← Về</button>
+    <button onclick="navigateModule(4)" class="border-2 border-black px-4 py-2 text-xs font-bold hover:bg-black hover:text-white shadow-brutal">Tiếp →</button>
+  </div>
+</div>
+
+<!-- ==================== MODULE 4: CÓ THỰC MỚI VỰC ĐƯỢC ĐẠO ==================== -->
+<div class="module-section hidden" id="module4">
+  <div class="text-[10px] text-muted mb-1">Module 4 / 6</div>
+  <h2 class="font-serif text-xl font-bold mb-1">Có thực mới vực được đạo</h2>
+  <p class="text-muted italic mb-4 text-[11px]">"Only with food can you sustain the way" = Cash is oxygen</p>
+
+  <div class="mb-4">
+    <span class="text-negative font-bold text-[10px]">❌ SAI:</span>
+    <span class="text-xs"> "All-in, tôi có thể chờ."</span>
+  </div>
+  <div class="mb-6">
+    <span class="text-positive font-bold text-[10px]">✅ ĐÚNG:</span>
+    <span class="text-xs"> "Giữ 6 tháng chi tiêu bằng tiền mặt. Không liquidity = forced sell ở đáy."</span>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal" style="background:var(--surface);">
+    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Survival probability</div>
+    <code class="text-xs border px-2 py-1 block" style="background:var(--bg);border-color:var(--surface3);">
+      P(survive) = P(không forced sell) = P(cash ≥ expenses trong mọi tháng)
+    </code>
+    <p class="text-xs text-muted mt-2">Mỗi tháng thiếu cash là một lần tung đồng xu sinh tử. Buffer = số lần bạn được tung mà vẫn sống. Hard-to-vary: bỏ buffer → P(forced sell) tăng phi tuyến theo thời gian.</p>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal">
+    <div class="flex justify-between items-center mb-3">
+      <span class="font-semibold text-xs">Liquidity Stress Test</span>
+      <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+    </div>
+    <p class="text-xs text-muted mb-4">Mô phỏng: vốn đầu tư 100%, không giữ cash. Xác suất phải bán lỗ khi có emergency?</p>
+
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Chi/tháng (tr₫)</label>
+        <input type="number" id="m4_expense" value="15" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Cash buffer (tháng)</label>
+        <input type="number" id="m4_buffer" value="6" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">P(emergency)/tháng %</label>
+        <input type="number" id="m4_pemg" value="5" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+    </div>
+
+    <button onclick="calcModule4(); trackEvent('exercise_submit',{module_index:4,exercise_id:'liquidity'})"
+      class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">Simulate 5 Years</button>
+
+    <div class="result-panel mt-4 border-t pt-3" style="border-color:var(--surface3);" id="m4_results"></div>
+  </div>
+
+  <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+    <p class="text-xs font-semibold">CASH KHÔNG SINH LỜI. NHƯNG CASH NGĂN BẠN CHẾT. CÁI GÌ NGĂN BẠN CHẾT LÀ TÀI SẢN GIÁ TRỊ NHẤT.</p>
+  </div>
+
+  <div class="flex justify-between">
+    <button onclick="navigateModule(3)" class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">← Về</button>
+    <button onclick="navigateModule(5)" class="border-2 border-black px-4 py-2 text-xs font-bold hover:bg-black hover:text-white shadow-brutal">Tiếp →</button>
+  </div>
+</div>
+
+<!-- ==================== MODULE 5: ĂN CHẮC MẶC BỀN ==================== -->
+<div class="module-section hidden" id="module5">
+  <div class="text-[10px] text-muted mb-1">Module 5 / 6</div>
+  <h2 class="font-serif text-xl font-bold mb-1">Ăn chắc mặc bền</h2>
+  <p class="text-muted italic mb-4 text-[11px]">"Eat solid, wear durable" = Margin of Safety (Benjamin Graham)</p>
+
+  <div class="mb-4">
+    <span class="text-negative font-bold text-[10px]">❌ SAI:</span>
+    <span class="text-xs"> "Cổ phiếu đáng giá 30₫ thì mua ở 30₫."</span>
+  </div>
+  <div class="mb-6">
+    <span class="text-positive font-bold text-[10px]">✅ ĐÚNG:</span>
+    <span class="text-xs"> "Đáng giá 30₫ thì chỉ mua ở 20₫ trở xuống. Buffer 33% cho sai lầm phân tích."</span>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal" style="background:var(--surface);">
+    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Margin of Safety formula</div>
+    <code class="text-xs border px-2 py-1 block" style="background:var(--bg);border-color:var(--surface3);">
+      MoS = (Intrinsic Value - Purchase Price) / Intrinsic Value
+    </code>
+    <code class="text-xs border px-2 py-1 block mt-1" style="background:var(--bg);border-color:var(--surface3);">
+      P(profit) = P(valuation correct) + P(valuation wrong) × P(MoS covers error)
+    </code>
+    <p class="text-xs text-muted mt-2">Hard-to-vary: nếu MoS = 0, bạn cần đúng 100%. Mỗi % margin tăng = giảm yêu cầu độ chính xác. Ăn chắc = chấp nhận miss cơ hội để tránh mất vốn.</p>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal">
+    <div class="flex justify-between items-center mb-3">
+      <span class="font-semibold text-xs">Margin of Safety Simulator</span>
+      <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">CHALLENGE</span>
+    </div>
+    <p class="text-xs text-muted mb-4">Giả sử đánh giá giá trị thật có sai số ±X%. Xác suất lời ở các mức margin khác nhau?</p>
+
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Giá trị thật (₫k)</label>
+        <input type="number" id="m5_iv" value="30" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Sai số ± (%)</label>
+        <input type="number" id="m5_err" value="30" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Simulations</label>
+        <input type="number" id="m5_nsim" value="10000" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+    </div>
+
+    <button onclick="calcModule5(); trackEvent('exercise_submit',{module_index:5,exercise_id:'margin_safety'})"
+      class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">Run Simulation</button>
+
+    <div class="result-panel mt-4 border-t pt-3" style="border-color:var(--surface3);" id="m5_results"></div>
+  </div>
+
+  <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+    <p class="text-xs font-semibold">BẠN KHÔNG CẦN ĐÚNG. BẠN CẦN KHÔNG SAI QUÁ NHIỀU. MARGIN = BẢO HIỂM CHO SỰ NGU DỐT.</p>
+  </div>
+
+  <div class="flex justify-between">
+    <button onclick="navigateModule(4)" class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">← Về</button>
+    <button onclick="navigateModule(6)" class="border-2 border-black px-4 py-2 text-xs font-bold hover:bg-black hover:text-white shadow-brutal">Tiếp →</button>
+  </div>
+</div>
+
+<!-- ==================== MODULE 6: LIỆU CƠM GẮP MẮM ==================== -->
+<div class="module-section hidden" id="module6">
+  <div class="text-[10px] text-muted mb-1">Module 6 / 6</div>
+  <h2 class="font-serif text-xl font-bold mb-1">Liệu cơm gắp mắm</h2>
+  <p class="text-muted italic mb-4 text-[11px]">"Measure rice, pick sauce" = Kelly Criterion / Position Sizing</p>
+
+  <div class="mb-4">
+    <span class="text-negative font-bold text-[10px]">❌ SAI:</span>
+    <span class="text-xs"> "Cơ hội tốt → bet lớn."</span>
+  </div>
+  <div class="mb-6">
+    <span class="text-positive font-bold text-[10px]">✅ ĐÚNG:</span>
+    <span class="text-xs"> "Bet size tối ưu phụ thuộc vào edge VÀ bankroll. Bet quá lớn → risk of ruin."</span>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal" style="background:var(--surface);">
+    <div class="text-[10px] font-medium uppercase tracking-wider mb-2">Kelly Criterion</div>
+    <code class="text-xs border px-2 py-1 block" style="background:var(--bg);border-color:var(--surface3);">
+      f* = (p × b - q) / b
+    </code>
+    <code class="text-xs border px-2 py-1 block mt-1" style="background:var(--bg);border-color:var(--surface3);">
+      p = P(win), q = 1-p, b = odds (win/loss ratio)
+    </code>
+    <p class="text-xs text-muted mt-2">f* = fraction tối ưu của bankroll để bet. Bet > f* = giảm growth rate. Bet >> f* = risk of ruin. Hard-to-vary: bỏ p hoặc b → không tính được, bỏ q → bỏ qua rủi ro → phá sản.</p>
+  </div>
+
+  <div class="border border-black p-4 mb-6 shadow-brutal">
+    <div class="flex justify-between items-center mb-3">
+      <span class="font-semibold text-xs">Kelly & Risk of Ruin Simulator</span>
+      <span class="px-1.5 py-0.5 bg-accent text-[10px] border border-black">MASTERY</span>
+    </div>
+    <p class="text-xs text-muted mb-4">100 bets. So sánh Kelly vs 2×Kelly vs Half-Kelly. Ai sống sót, ai phá sản?</p>
+
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div>
+        <label class="text-[10px] text-muted block mb-1">P(win) %</label>
+        <input type="number" id="m6_p" value="55" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Win/Loss ratio</label>
+        <input type="number" id="m6_b" value="1" step="0.1" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+      <div>
+        <label class="text-[10px] text-muted block mb-1">Bankroll ban đầu</label>
+        <input type="number" id="m6_bank" value="100" class="w-full border px-2 py-1.5 text-xs" style="border-color:var(--surface3);background:var(--input-bg);color:var(--fg);">
+      </div>
+    </div>
+
+    <button onclick="calcModule6(); trackEvent('exercise_submit',{module_index:6,exercise_id:'kelly'})"
+      class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">Run 1000 Paths</button>
+
+    <div class="result-panel mt-4 border-t pt-3" style="border-color:var(--surface3);" id="m6_results"></div>
+  </div>
+
+  <!-- SYNTHESIS -->
+  <div class="border-2 border-black p-4 mb-6 shadow-brutal" style="background:var(--surface);">
+    <div class="text-[10px] font-medium uppercase tracking-wider mb-3">Tổng hợp: 6 Axiom bất biến</div>
+    <table class="w-full text-[10px]">
+      <thead><tr class="border-b" style="border-color:var(--surface3);">
+        <th class="text-left py-1 font-semibold">Tục ngữ</th>
+        <th class="text-left py-1 font-semibold">Axiom</th>
+        <th class="text-left py-1 font-semibold">Formula</th>
+      </tr></thead>
+      <tbody>
+        <tr class="border-b" style="border-color:var(--surface3);"><td class="py-1.5">Buôn tài ≤ dài vốn</td><td>DCA + Reserves</td><td>Avg = ΣQP/ΣQ</td></tr>
+        <tr class="border-b" style="border-color:var(--surface3);"><td class="py-1.5">Kiến tha lâu đầy tổ</td><td>Compound growth</td><td>FV = PMT×[(1+r)ⁿ-1]/r</td></tr>
+        <tr class="border-b" style="border-color:var(--surface3);"><td class="py-1.5">Đừng bỏ trứng 1 giỏ</td><td>Diversification</td><td>σ²_p = f(ρ)</td></tr>
+        <tr class="border-b" style="border-color:var(--surface3);"><td class="py-1.5">Có thực vực đạo</td><td>Cash = oxygen</td><td>P(survive) = f(buffer)</td></tr>
+        <tr class="border-b" style="border-color:var(--surface3);"><td class="py-1.5">Ăn chắc mặc bền</td><td>Margin of safety</td><td>MoS ≥ error margin</td></tr>
+        <tr><td class="py-1.5">Liệu cơm gắp mắm</td><td>Position sizing</td><td>f* = (pb-q)/b</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="border-l-2 border-black pl-4 mb-6 py-2 bg-accent/20">
+    <p class="text-xs font-semibold">LIỆU CƠM GẮP MẮM = BIẾT GIỚI HẠN BẢN THÂN. KELLY NÓI: TỐI ƯU ≠ TỐI ĐA. BET VỪA ĐỦ, KHÔNG HƠN.</p>
+  </div>
+
+  <div class="flex justify-between">
+    <button onclick="navigateModule(5)" class="border border-black px-3 py-1.5 text-xs hover:bg-black hover:text-white">← Về</button>
+    <button onclick="navigateModule(0)" class="border-2 border-black px-4 py-2 text-xs font-bold hover:bg-black hover:text-white shadow-brutal">↩ Landing</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="mt-12 pt-4 border-t text-center text-[10px] text-muted" style="border-color:var(--surface3);">
+  <p>Built with λ · <a href="https://lampt.org" class="underline">lampt.org</a></p>
+  <p class="mt-1">Ca dao là axiom. Toán học là proof. Simulation là court.</p>
+</footer>
+
+</div>
+
+<script>
+// ===== THEME =====
+function toggleTheme() {
+  const h = document.documentElement;
+  const isDark = h.getAttribute('data-theme') === 'dark';
+  isDark ? h.removeAttribute('data-theme') : h.setAttribute('data-theme', 'dark');
+  document.getElementById('themeToggle').textContent = isDark ? '☀' : '☾';
+  trackEvent('toggle_theme', { theme: isDark ? 'light' : 'dark' });
+}
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'd') toggleTheme();
+});
+
+// ===== NAVIGATION =====
+function navigateModule(idx) {
+  document.querySelectorAll('.module-section').forEach(s => s.classList.add('hidden'));
+  document.getElementById('module' + idx).classList.remove('hidden');
+  document.querySelectorAll('.nav-dot').forEach((d, i) => {
+    d.style.background = i <= idx ? 'var(--fg)' : 'var(--bg)';
+  });
+  trackEvent('page_view_module', { module_index: idx });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== HELPERS =====
+function fmt(n) { return n.toLocaleString('vi-VN', {maximumFractionDigits: 1}); }
+function fmtPct(n) { return (n * 100).toFixed(1) + '%'; }
+
+function barHTML(label, value, maxVal, color) {
+  const pct = Math.min(100, Math.max(0, (value / maxVal) * 100));
+  return `<div class="flex items-center gap-2 mb-1">
+    <span class="w-24 text-[10px] text-muted truncate">${label}</span>
+    <div class="flex-1 h-3 border" style="background:var(--surface2);border-color:var(--surface3);">
+      <div class="h-full" style="width:${pct}%;background:${color};"></div>
+    </div>
+    <span class="w-16 text-right text-[10px]">${typeof value === 'string' ? value : fmt(value)}</span>
+  </div>`;
+}
+
+// Normal random (Box-Muller)
+function randn() {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+// ===== MODULE 1: DCA =====
+function calcModule1() {
+  const p1 = +document.getElementById('m1_p1').value;
+  const q1 = +document.getElementById('m1_q1').value;
+  const p2 = +document.getElementById('m1_p2').value;
+  const q2 = +document.getElementById('m1_q2').value;
+
+  const allInCost = p1 * q1;
+  const allInQty = q1;
+  const allInAvg = p1;
+
+  const dcaCost = p1 * q1 + p2 * q2;
+  const dcaQty = q1 + q2;
+  const dcaAvg = dcaCost / dcaQty;
+
+  const el = document.getElementById('m1_results');
+  el.classList.add('show');
+  el.innerHTML = `
+    <div class="text-[10px] font-bold uppercase tracking-wider mb-2">Kết quả</div>
+    ${barHTML('All-in avg', allInAvg, Math.max(allInAvg, dcaAvg) * 1.2, '#dc2626')}
+    ${barHTML('DCA avg', dcaAvg, Math.max(allInAvg, dcaAvg) * 1.2, '#16a34a')}
+    <div class="mt-3 p-2 border text-[10px]" style="background:var(--surface);border-color:var(--surface3);">
+      <strong>All-in:</strong> ${fmt(allInQty)} cổ × ${fmt(allInAvg)}₫ = ${fmt(allInCost)}₫ tổng. Breakeven = ${fmt(allInAvg)}₫<br>
+      <strong>DCA:</strong> ${fmt(dcaQty)} cổ × ${fmt(dcaAvg)}₫ = ${fmt(dcaCost)}₫ tổng. Breakeven = ${fmt(dcaAvg)}₫<br>
+      <strong>Advantage:</strong> DCA breakeven thấp hơn ${fmt(allInAvg - dcaAvg)}₫ (${fmtPct((allInAvg - dcaAvg)/allInAvg)})<br>
+      <strong>Ở giá ${fmt(dcaAvg + 1)}₫:</strong> DCA lời ${fmt(dcaQty * 1)}₫, All-in lỗ ${fmt(allInQty * (allInAvg - dcaAvg - 1))}₫
+    </div>
+    <p class="text-[10px] text-muted mt-2">→ Dài vốn = hạ breakeven = tăng P(profit). Không cần đoán đúng đáy.</p>
+  `;
+}
+
+// Monte Carlo DCA
+function calcMC1() {
+  const capital = +document.getElementById('m1_mc_capital').value;
+  const vol = +document.getElementById('m1_mc_vol').value / 100;
+  const N = 1000;
+  const months = 12;
+  const monthlyDCA = capital / months;
+
+  let allInWins = 0, dcaWins = 0;
+  let allInReturns = [], dcaReturns = [];
+
+  for (let sim = 0; sim < N; sim++) {
+    // Generate price path
+    let prices = [100];
+    for (let m = 1; m <= months; m++) {
+      const drift = 0.005; // slight positive drift
+      prices.push(prices[m-1] * Math.exp(drift + vol * randn()));
+    }
+
+    // All-in: buy everything at month 0
+    const allInShares = capital / prices[0];
+    const allInFinal = allInShares * prices[months];
+    const allInReturn = (allInFinal - capital) / capital;
+    allInReturns.push(allInReturn);
+    if (allInReturn > 0) allInWins++;
+
+    // DCA: buy monthly
+    let dcaShares = 0;
+    for (let m = 0; m < months; m++) {
+      dcaShares += monthlyDCA / prices[m];
+    }
+    const dcaFinal = dcaShares * prices[months];
+    const dcaReturn = (dcaFinal - capital) / capital;
+    dcaReturns.push(dcaReturn);
+    if (dcaReturn > 0) dcaWins++;
+  }
+
+  const avgAllIn = allInReturns.reduce((a,b)=>a+b,0) / N;
+  const avgDCA = dcaReturns.reduce((a,b)=>a+b,0) / N;
+
+  // Worst case (5th percentile)
+  allInReturns.sort((a,b) => a-b);
+  dcaReturns.sort((a,b) => a-b);
+  const allIn5 = allInReturns[Math.floor(N * 0.05)];
+  const dca5 = dcaReturns[Math.floor(N * 0.05)];
+
+  const el = document.getElementById('m1_mc_results');
+  el.classList.add('show');
+  el.innerHTML = `
+    <div class="text-[10px] font-bold uppercase tracking-wider mb-2">${N} simulations · ${months} tháng · vol ${(vol*100).toFixed(0)}%/tháng</div>
+    ${barHTML('All-in P(lời)', fmtPct(allInWins/N), 1, '#dc2626')}
+    ${barHTML('DCA P(lời)', fmtPct(dcaWins/N), 1, '#16a34a')}
+    <div class="mt-3 grid grid-cols-2 gap-2">
+      <div class="border p-2 text-[10px]" style="background:var(--surface);border-color:var(--surface3);">
+        <strong>All-in</strong><br>
+        Avg return: ${fmtPct(avgAllIn)}<br>
+        Worst 5%: ${fmtPct(allIn5)}<br>
+        Win rate: ${fmtPct(allInWins/N)}
+      </div>
+      <div class="border p-2 text-[10px]" style="background:var(--surface);border-color:var(--surface3);">
+        <strong>DCA</strong><br>
+        Avg return: ${fmtPct(avgDCA)}<br>
+        Worst 5%: ${fmtPct(dca5)}<br>
+        Win rate: ${fmtPct(dcaWins/N)}
+      </div>
+    </div>
+    <p class="text-[10px] text-muted mt-2">→ DCA thường có avg return thấp hơn (cost of safety), nhưng worst case tốt hơn đáng kể. Dài vốn = mua bảo hiểm chống phá sản.</p>
+  `;
+}
+
+// ===== MODULE 2: COMPOUND =====
+function calcModule2() {
+  const pmt = +document.getElementById('m2_pmt').value;
+  const rate = +document.getElementById('m2_rate').value / 100;
+  const years = +document.getElementById('m2_years').value;
+
+  const r_monthly = rate / 12;
+  const n = years * 12;
+  const fv = pmt * ((Math.pow(1 + r_monthly, n) - 1) / r_monthly);
+  const totalContrib = pmt * n;
+  const interestEarned = fv - totalContrib;
+  const multiplier = fv / totalContrib;
+
+  // Compare: no interest
+  const noInterest = totalContrib;
+  // Compare: half the time
+  const halfN = Math.floor(years / 2) * 12;
+  const halfFV = pmt * ((Math.pow(1 + r_monthly, halfN) - 1) / r_monthly);
+
+  // Year by year for visualization
+  let yearData = [];
+  for (let y = 1; y <= years; y++) {
+    const nm = y * 12;
+    const fvy = pmt * ((Math.pow(1 + r_monthly, nm) - 1) / r_monthly);
+    yearData.push({ year: y, fv: fvy, contrib: pmt * nm });
+  }
+
+  const el = document.getElementById('m2_results');
+  el.classList.add('show');
+
+  let sparkline = yearData.map((d, i) => {
+    const pct = (d.fv / fv * 100).toFixed(0);
+    const cpct = (d.contrib / fv * 100).toFixed(0);
+    return `<div class="flex items-center gap-1 mb-0.5">
+      <span class="w-8 text-[9px] text-muted">Y${d.year}</span>
+      <div class="flex-1 h-2 relative" style="background:var(--surface2);">
+        <div class="h-full absolute" style="width:${cpct}%;background:#999;"></div>
+        <div class="h-full absolute" style="width:${pct}%;background:#16a34a;opacity:0.5;"></div>
+      </div>
+      <span class="w-16 text-[9px] text-right">${fmt(d.fv / 1000)}B</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="text-[10px] font-bold uppercase tracking-wider mb-2">Kết quả sau ${years} năm</div>
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <div class="border p-2 text-[10px]" style="background:var(--surface);border-color:var(--surface3);">
+        <span class="text-muted">Tổng góp</span><br>
+        <strong>${fmt(totalContrib)} tr₫</strong>
+      </div>
+      <div class="border p-2 text-[10px]" style="background:var(--surface);border-color:var(--surface3);">
+        <span class="text-muted">Tổng nhận</span><br>
+        <strong class="text-positive">${fmt(fv)} tr₫</strong>
+      </div>
+      <div class="border p-2 text-[10px]" style="background:var(--surface);border-color:var(--surface3);">
+        <span class="text-muted">Lãi kép sinh ra</span><br>
+        <strong>${fmt(interestEarned)} tr₫</strong>
+      </div>
+      <div class="border p-2 text-[10px]" style="background:var(--surface);border-color:var(--surface3);">
+        <span class="text-muted">Multiplier</span><br>
+        <strong>${multiplier.toFixed(1)}×</strong>
+      </div>
+    </div>
+    <div class="text-[10px] font-bold mb-1">Growth over time <span class="text-muted font-normal">(xám = vốn góp, xanh = tổng)</span></div>
+    ${sparkline}
+    <p class="text-[10px] text-muted mt-2">→ Nửa đầu (Y1-${Math.floor(years/2)}): ${fmt(halfFV)} tr₫. Nửa sau: ${fmt(fv - halfFV)} tr₫. Phần lớn wealth tạo ra ở cuối — kiến phải tha ĐỦ LÂU.</p>
+  `;
+}
+
+// ===== MODULE 3: DIVERSIFICATION =====
+function calcModule3() {
+  const w1 = +document.getElementById('m3_w').value / 100;
+  const w2 = 1 - w1;
+  const rho = +document.getElementById('m3_rho').value;
+  const vol = +document.getElementById('m3_vol').value / 100;
+
+  const sigma1 = vol, sigma2 = vol;
+  const portVar = w1*w1*sigma1*sigma1 + w2*w2*sigma2*sigma2 + 2*w1*w2*rho*sigma1*sigma2;
+  const portVol = Math.sqrt(portVar);
+  const avgVol = w1 * sigma1 + w2 * sigma2; // weighted avg vol (if rho=1)
+
+  // Sweep rho from -1 to 1
+  let sweepData = [];
+  for (let r = -1; r <= 1; r += 0.1) {
+    const pv = w1*w1*sigma1*sigma1 + w2*w2*sigma2*sigma2 + 2*w1*w2*r*sigma1*sigma2;
+    sweepData.push({ rho: r.toFixed(1), vol: Math.sqrt(pv) });
+  }
+
+  const el = document.getElementById('m3_results');
+  el.classList.add('show');
+
+  let sweep = sweepData.map(d => {
+    const pct = (d.vol / vol * 100).toFixed(0);
+    const isActive = Math.abs(d.rho - rho) < 0.05;
+    return `<div class="flex items-center gap-1 mb-0.5">
+      <span class="w-8 text-[9px] ${isActive ? 'font-bold' : 'text-muted'}">${d.rho}</span>
+      <div class="flex-1 h-2" style="background:var(--surface2);">
+        <div class="h-full" style="width:${pct}%;background:${isActive ? '#FBD45B' : '#16a34a'};"></div>
+      </div>
+      <span class="w-12 text-[9px] text-right ${isActive ? 'font-bold' : ''}">${(d.vol*100).toFixed(1)}%</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="text-[10px] font-bold uppercase tracking-wider mb-2">Portfolio risk analysis</div>
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div class="border p-2 text-[10px] text-center" style="background:var(--surface);border-color:var(--surface3);">
+        <span class="text-muted">Single asset</span><br>
+        <strong>${(vol*100).toFixed(1)}%</strong>
+      </div>
+      <div class="border p-2 text-[10px] text-center" style="background:var(--surface);border-color:var(--surface3);">
+        <span class="text-muted">Portfolio</span><br>
+        <strong class="text-positive">${(portVol*100).toFixed(1)}%</strong>
+      </div>
+      <div class="border p-2 text-[10px] text-center" style="background:var(--surface);border-color:var(--surface3);">
+        <span class="text-muted">Risk giảm</span><br>
+        <strong class="text-positive">${((1 - portVol/vol)*100).toFixed(1)}%</strong>
+      </div>
+    </div>
+    <div class="text-[10px] font-bold mb-1">Portfolio vol vs Correlation (vàng = hiện tại)</div>
+    ${sweep}
+    <p class="text-[10px] text-muted mt-2">→ ρ=1: diversification vô nghĩa (${(vol*100).toFixed(1)}%). ρ=0: giảm ~${((1 - Math.sqrt(0.5))*100).toFixed(0)}% risk. ρ=-1: triệt tiêu risk. Ông bà nói "đừng bỏ trứng 1 giỏ" — nhưng phải là giỏ KHÁC NHAU THẬT SỰ.</p>
+  `;
+}
+
+// ===== MODULE 4: LIQUIDITY =====
+function calcModule4() {
+  const expense = +document.getElementById('m4_expense').value;
+  const buffer = +document.getElementById('m4_buffer').value;
+  const pemg = +document.getElementById('m4_pemg').value / 100;
+
+  const N = 10000;
+  const months = 60; // 5 years
+
+  let results = {};
+  [0, 3, 6, 12].forEach(buf => {
+    let forcedSells = 0;
+    for (let sim = 0; sim < N; sim++) {
+      let cash = buf * expense;
+      let forcedSell = false;
+      for (let m = 0; m < months; m++) {
+        if (Math.random() < pemg) {
+          // Emergency: need 2-4 months expense
+          const emergencyCost = expense * (2 + Math.random() * 2);
+          cash -= emergencyCost;
+          if (cash < 0) {
+            forcedSell = true;
+            break;
+          }
+        }
+        // Monthly income replenishes some cash
+        cash += expense * 0.3; // save 30% of income
+        cash = Math.min(cash, buf * expense * 1.5); // cap buffer
+      }
+      if (forcedSell) forcedSells++;
+    }
+    results[buf] = forcedSells / N;
+  });
+
+  const el = document.getElementById('m4_results');
+  el.classList.add('show');
+
+  let bars = Object.entries(results).map(([buf, prob]) => {
+    const color = prob > 0.3 ? '#dc2626' : prob > 0.1 ? '#FBD45B' : '#16a34a';
+    return barHTML(`${buf} tháng buffer`, fmtPct(prob) + ' ruin', 1, color);
+  }).join('');
+
+  el.innerHTML = `
+    <div class="text-[10px] font-bold uppercase tracking-wider mb-2">${N.toLocaleString()} simulations · 5 năm · P(emergency)=${(pemg*100).toFixed(0)}%/tháng</div>
+    <div class="text-[10px] font-bold mb-1">P(forced sell) theo buffer size</div>
+    ${bars}
+    <p class="text-[10px] text-muted mt-2">→ 0 tháng buffer: ${fmtPct(results[0])} bị forced sell. 6 tháng: ${fmtPct(results[6])}. Cash buffer giảm P(ruin) phi tuyến — vài tháng đầu có impact lớn nhất.</p>
+    <p class="text-[10px] text-muted mt-1">→ Có thực (cash) mới vực được đạo (strategy). Không có cash = strategy vô nghĩa khi cần tiền gấp.</p>
+  `;
+}
+
+// ===== MODULE 5: MARGIN OF SAFETY =====
+function calcModule5() {
+  const iv = +document.getElementById('m5_iv').value;
+  const errPct = +document.getElementById('m5_err').value / 100;
+  const nsim = +document.getElementById('m5_nsim').value;
+
+  // Test different margin levels
+  const margins = [0, 10, 20, 30, 40, 50];
+  let results = {};
+
+  margins.forEach(margin => {
+    const buyPrice = iv * (1 - margin/100);
+    let wins = 0;
+    let totalReturn = 0;
+
+    for (let i = 0; i < nsim; i++) {
+      // True value is IV ± error (uniform distribution)
+      const trueValue = iv * (1 + (Math.random() * 2 - 1) * errPct);
+      const ret = (trueValue - buyPrice) / buyPrice;
+      totalReturn += ret;
+      if (trueValue > buyPrice) wins++;
+    }
+
+    results[margin] = {
+      winRate: wins / nsim,
+      avgReturn: totalReturn / nsim,
+      buyPrice: buyPrice
+    };
+  });
+
+  const el = document.getElementById('m5_results');
+  el.classList.add('show');
+
+  let rows = margins.map(m => {
+    const r = results[m];
+    const color = r.winRate > 0.8 ? '#16a34a' : r.winRate > 0.6 ? '#FBD45B' : '#dc2626';
+    return `<div class="flex items-center gap-2 mb-1">
+      <span class="w-20 text-[10px] ${m === 0 ? 'text-negative' : ''}">${m}% margin</span>
+      <div class="flex-1 h-3 border" style="background:var(--surface2);border-color:var(--surface3);">
+        <div class="h-full" style="width:${(r.winRate*100).toFixed(0)}%;background:${color};"></div>
+      </div>
+      <span class="w-20 text-[10px] text-right">P=${fmtPct(r.winRate)}</span>
+      <span class="w-16 text-[10px] text-right">${fmtPct(r.avgReturn)}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="text-[10px] font-bold uppercase tracking-wider mb-2">${nsim.toLocaleString()} simulations · IV=${iv}₫ · Error ±${(errPct*100).toFixed(0)}%</div>
+    <div class="flex gap-2 mb-1"><span class="w-20 text-[10px] font-bold">Margin</span><span class="flex-1 text-[10px] font-bold">Win rate</span><span class="w-20 text-[10px] text-right font-bold">P(win)</span><span class="w-16 text-[10px] text-right font-bold">Avg ret</span></div>
+    ${rows}
+    <p class="text-[10px] text-muted mt-3">→ Margin 0%: P(win) = ~${fmtPct(results[0].winRate)} (coin flip). Margin 30%: P(win) = ~${fmtPct(results[30].winRate)}. Margin không chỉ bảo vệ — nó TĂNG expected value.</p>
+    <p class="text-[10px] text-muted mt-1">→ Ăn chắc mặc bền: chấp nhận return trung bình thấp hơn để P(loss) thấp hơn nhiều.</p>
+  `;
+}
+
+// ===== MODULE 6: KELLY =====
+function calcModule6() {
+  const p = +document.getElementById('m6_p').value / 100;
+  const b = +document.getElementById('m6_b').value;
+  const bankroll = +document.getElementById('m6_bank').value;
+  const q = 1 - p;
+
+  const kelly = (p * b - q) / b;
+  const halfKelly = kelly / 2;
+  const doubleKelly = kelly * 2;
+
+  const N = 1000; // simulations
+  const bets = 100;
+  const strategies = [
+    { name: 'Half Kelly', frac: halfKelly, color: '#16a34a' },
+    { name: 'Full Kelly', frac: kelly, color: '#FBD45B' },
+    { name: '2× Kelly', frac: Math.min(doubleKelly, 0.99), color: '#dc2626' }
+  ];
+
+  let results = {};
+  strategies.forEach(s => {
+    let finals = [];
+    let busts = 0;
+
+    for (let sim = 0; sim < N; sim++) {
+      let bank = bankroll;
+      let busted = false;
+      for (let i = 0; i < bets; i++) {
+        const betSize = bank * Math.max(0, s.frac);
+        if (Math.random() < p) {
+          bank += betSize * b;
+        } else {
+          bank -= betSize;
+        }
+        if (bank < 1) { busted = true; break; }
+      }
+      if (busted) busts++;
+      finals.push(busted ? 0 : bank);
+    }
+
+    finals.sort((a,b) => a-b);
+    const median = finals[Math.floor(N/2)];
+    const p10 = finals[Math.floor(N * 0.1)];
+    const p90 = finals[Math.floor(N * 0.9)];
+
+    results[s.name] = {
+      frac: s.frac,
+      bustRate: busts / N,
+      median: median,
+      p10: p10,
+      p90: p90,
+      color: s.color
+    };
+  });
+
+  const el = document.getElementById('m6_results');
+  el.classList.add('show');
+
+  let rows = Object.entries(results).map(([name, r]) => {
+    return `<div class="border p-2 text-[10px] mb-2" style="border-color:var(--surface3);background:var(--surface);">
+      <div class="flex justify-between items-center mb-1">
+        <span class="font-bold">${name}</span>
+        <span style="color:${r.color};">bet ${fmtPct(r.frac)}/hand</span>
+      </div>
+      <div class="grid grid-cols-4 gap-1 text-[9px]">
+        <div>Bust: <strong class="${r.bustRate > 0.1 ? 'text-negative' : ''}">${fmtPct(r.bustRate)}</strong></div>
+        <div>P10: <strong>${fmt(r.p10)}</strong></div>
+        <div>Median: <strong>${fmt(r.median)}</strong></div>
+        <div>P90: <strong>${fmt(r.p90)}</strong></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="text-[10px] font-bold uppercase tracking-wider mb-2">Kelly f* = ${fmtPct(kelly)} · P(win)=${fmtPct(p)} · odds=${b}:1 · ${bets} bets × ${N} paths</div>
+    ${rows}
+    <p class="text-[10px] text-muted mt-2">→ Full Kelly: growth rate tối ưu nhưng volatility cao. Half Kelly: ~75% growth, ~50% volatility. 2× Kelly: ${fmtPct(results['2× Kelly'].bustRate)} phá sản.</p>
+    <p class="text-[10px] text-muted mt-1">→ Liệu cơm (bankroll) gắp mắm (bet size). Biết edge chưa đủ — phải size đúng.</p>
+  `;
+}
+</script>
+
+</body>
+</html>
