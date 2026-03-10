@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VN Legal Doc Viewer</title>
+<title>LexMark</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='12' fill='%23FBD45B'/><text x='50' y='76' font-family='serif' font-size='72' font-weight='bold' text-anchor='middle' fill='%23000'>λ</text></svg>">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
 <script>
@@ -252,6 +252,79 @@ function trackEvent(action, params) { try { gtag('event', action, params); } cat
     margin-bottom: 12px;
   }
 
+  /* === Confirm dialog === */
+  .confirm-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 600;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+    animation: fadeIn 0.15s ease-out;
+  }
+  .confirm-overlay.hidden { display: none; }
+  .confirm-box {
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    box-shadow: 6px 6px 0px var(--border);
+    max-width: 360px; width: 100%;
+    animation: slideUp 0.2s ease-out;
+  }
+  .confirm-header {
+    background: #000; color: #fff;
+    padding: 10px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .confirm-body {
+    padding: 20px 16px;
+    font-family: 'IBM Plex Serif', serif;
+    font-size: 14px; line-height: 1.6;
+  }
+  .confirm-body .confirm-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 28px; font-weight: 700;
+    color: var(--text);
+    display: block; margin-bottom: 8px;
+  }
+  .confirm-body .confirm-warn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    margin-top: 8px;
+  }
+  .confirm-actions {
+    display: flex; gap: 0;
+    border-top: 2px solid var(--border);
+  }
+  .confirm-actions button {
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; font-weight: 600;
+    padding: 12px;
+    border: none; cursor: pointer;
+    transition: all 0.12s;
+  }
+  .confirm-actions button + button {
+    border-left: 2px solid var(--border);
+  }
+  .confirm-actions .confirm-cancel {
+    background: var(--card-bg); color: var(--text);
+  }
+  .confirm-actions .confirm-cancel:hover {
+    background: var(--code-bg);
+  }
+  .confirm-actions .confirm-danger {
+    background: #c0392b; color: #fff;
+  }
+  .confirm-actions .confirm-danger:hover {
+    background: #a93226;
+  }
+  [data-theme="dark"] .confirm-actions .confirm-danger {
+    background: #e74c3c;
+  }
+  [data-theme="dark"] .confirm-actions .confirm-danger:hover {
+    background: #c0392b;
+  }
+
   /* === TOOLBAR === */
   .toolbar {
     position: sticky; top: 0; z-index: 100;
@@ -328,7 +401,61 @@ function trackEvent(action, params) { try { gtag('event', action, params); } cat
   .article .indent-1 { margin-left: 20px; }
   .article .indent-2 { margin-left: 40px; }
 
-  mark { background: var(--accent); color: #000; padding: 0 2px; }
+  /* Search highlights (ephemeral) */
+  mark.search-hit { background: #b3e5fc; color: #000; padding: 0 2px; }
+  [data-theme="dark"] mark.search-hit { background: #1a4a5e; color: #e8e8e8; }
+  /* Annotation highlights (persistent) */
+  mark.ann-highlight {
+    background: var(--accent); color: #000; padding: 0 2px;
+    cursor: pointer; border-radius: 1px;
+    transition: box-shadow 0.15s;
+  }
+  mark.ann-highlight:hover { box-shadow: 0 2px 0 0 #000; }
+
+  /* Annotation context menu */
+  .ann-context-menu {
+    position: absolute; z-index: 210;
+    display: none;
+    background: var(--card-bg);
+    border: 2px solid var(--border);
+    box-shadow: var(--shadow);
+    font-family: 'IBM Plex Mono', monospace;
+    animation: popIn 0.15s ease-out;
+    min-width: 200px;
+  }
+  .ann-context-menu .acm-header {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ann-context-menu .acm-header .acm-badge {
+    font-size: 9px; font-weight: 400; color: var(--muted);
+    margin-left: 4px;
+  }
+  .ann-context-menu .acm-actions {
+    display: flex; gap: 0;
+  }
+  .ann-context-menu .acm-actions button {
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 6px 8px; border: none; cursor: pointer;
+    background: var(--card-bg); color: var(--text);
+    border-top: none; transition: background 0.12s;
+    white-space: nowrap;
+  }
+  .ann-context-menu .acm-actions button + button {
+    border-left: 1px solid var(--border);
+  }
+  .ann-context-menu .acm-actions button:hover {
+    background: var(--accent); color: #000;
+  }
+  .ann-context-menu .acm-actions button.acm-remove:hover {
+    background: #fdf0ef; color: #c0392b;
+  }
+  [data-theme="dark"] .ann-context-menu .acm-actions button.acm-remove:hover {
+    background: #3a1a1a; color: #e74c3c;
+  }
 
   .toc {
     margin: 20px 0; padding: 20px;
@@ -354,16 +481,38 @@ function trackEvent(action, params) { try { gtag('event', action, params); } cat
     display: flex; justify-content: space-between;
   }
 
-  /* === LLM Explainer === */
-  .explain-trigger {
+  /* === Selection Toolbar (two-button) === */
+  .selection-toolbar {
     position: absolute; z-index: 200;
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-    padding: 3px 10px; background: var(--accent); color: #000;
-    border: 2px solid #000; box-shadow: 2px 2px 0px #000;
-    cursor: pointer; display: none; animation: popIn 0.15s ease-out;
+    display: none; flex-direction: row; gap: 0;
+    animation: popIn 0.15s ease-out;
   }
-  .explain-trigger:hover { transform: translate(1px,1px); box-shadow: 1px 1px 0px #000; }
+  .selection-toolbar button {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    padding: 3px 10px; color: #000;
+    border: 2px solid #000; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .selection-toolbar button:first-child { border-right: 1px solid #000; }
+  .selection-toolbar button:last-child { border-left: 1px solid #000; }
+  .selection-toolbar button.btn-highlight {
+    background: var(--accent); box-shadow: 2px 2px 0px #000;
+  }
+  .selection-toolbar button.btn-explain {
+    background: #fff; box-shadow: 2px 2px 0px #000;
+  }
+  .selection-toolbar button:hover { transform: translate(1px,1px); box-shadow: 1px 1px 0px #000; }
+  .selection-toolbar.warn button {
+    background: #fff3cd; cursor: default;
+    animation: shake 0.3s ease-out;
+  }
+  [data-theme="dark"] .selection-toolbar.warn button { background: #3d3520; color: #FBD45B; }
+  [data-theme="dark"] .selection-toolbar button.btn-explain { background: var(--card-bg); color: var(--text); }
+
+  /* === LLM Explainer === */
+  /* explain-trigger replaced by .selection-toolbar above */
   @keyframes popIn { from { opacity:0; transform:scale(0.9); } to { opacity:1; transform:scale(1); } }
+  @keyframes shake { 0%,100% { transform:translateX(0); } 25% { transform:translateX(-4px); } 75% { transform:translateX(4px); } }
 
   .explain-overlay {
     position: fixed; inset: 0; z-index: 300;
@@ -458,6 +607,134 @@ function trackEvent(action, params) { try { gtag('event', action, params); } cat
     display: none;
   }
 
+  /* === ANNOTATION SIDE PANEL === */
+  .anno-panel {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: 340px; z-index: 90;
+    background: var(--card-bg);
+    border-left: 2px solid var(--border);
+    box-shadow: -4px 0 12px rgba(0,0,0,0.08);
+    display: flex; flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+  }
+  .anno-panel.open { transform: translateX(0); }
+  body.panel-open .container { margin-right: 340px; transition: margin-right 0.25s ease; }
+  body.panel-open .toolbar { padding-right: 352px; }
+  body.panel-open .status-bar { right: 340px; }
+
+  .anno-panel-header {
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    background: #000; color: #fff;
+  }
+  .anno-panel-header .aph-title {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .anno-panel-header .aph-count {
+    font-size: 10px; padding: 1px 6px;
+    background: var(--accent); color: #000;
+    font-weight: 600;
+  }
+  .anno-panel-header button {
+    background: none; border: none; color: #fff;
+    cursor: pointer; font-size: 16px; padding: 0 2px;
+  }
+  .anno-panel-header button:hover { color: var(--accent); }
+
+  .anno-panel-actions {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .anno-panel-actions button {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    padding: 3px 8px; border: 1px solid var(--border);
+    background: var(--card-bg); color: var(--text);
+    cursor: pointer; transition: all 0.12s;
+  }
+  .anno-panel-actions button:hover { background: var(--accent); color: #000; }
+
+  .anno-panel-list {
+    flex: 1; overflow-y: auto;
+    padding: 8px 0;
+  }
+  .anno-panel-empty {
+    text-align: center; padding: 40px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: var(--muted);
+  }
+
+  /* Annotation card */
+  .anno-card {
+    margin: 0 10px 8px; padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    background: var(--card-bg);
+    transition: background 0.12s;
+    cursor: default;
+  }
+  .anno-card:hover { background: var(--code-bg); }
+  .anno-card-header {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+  }
+  .anno-card-text {
+    font-family: 'IBM Plex Serif', serif; font-size: 13px;
+    font-weight: 600; line-height: 1.4;
+    word-break: break-word;
+  }
+  .anno-card-meta {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: var(--muted); margin-top: 4px;
+  }
+  .anno-card-meta a {
+    color: var(--muted); text-decoration: underline; cursor: pointer;
+  }
+  .anno-card-meta a:hover { color: var(--text); }
+  .anno-card-actions {
+    display: flex; gap: 4px; flex-shrink: 0;
+  }
+  .anno-card-actions button {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    padding: 1px 5px; border: 1px solid var(--border);
+    background: var(--card-bg); color: var(--text);
+    cursor: pointer; line-height: 1.4;
+  }
+  .anno-card-actions button:hover { background: var(--accent); color: #000; }
+  .anno-card-actions button.acrd-remove:hover { background: #fdf0ef; color: #c0392b; }
+  [data-theme="dark"] .anno-card-actions button.acrd-remove:hover { background: #3a1a1a; color: #e74c3c; }
+
+  /* Collapsible explanation tree */
+  .anno-explain-toggle {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: var(--muted); cursor: pointer; margin-top: 6px;
+    display: inline-block; user-select: none;
+  }
+  .anno-explain-toggle:hover { color: var(--text); }
+  .anno-explain-tree {
+    display: none; margin-top: 6px;
+    border-top: 1px dashed var(--muted);
+    padding-top: 6px;
+  }
+  .anno-explain-tree.open { display: block; }
+  .anno-explain-row {
+    margin-bottom: 6px; font-size: 12px; line-height: 1.5;
+  }
+  .anno-explain-row .aer-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #000; background: var(--accent);
+    display: inline-block; padding: 0 5px; margin-bottom: 2px;
+  }
+  [data-theme="dark"] .anno-explain-row .aer-label { color: #000; }
+  .anno-explain-row p {
+    font-family: 'IBM Plex Serif', serif; font-size: 12px;
+    color: var(--text); margin: 0; line-height: 1.5;
+  }
+
   @media (max-width: 640px) {
     .container { padding: 20px 12px 80px; }
     .toolbar-title { max-width: 160px; }
@@ -465,6 +742,10 @@ function trackEvent(action, params) { try { gtag('event', action, params); } cat
     .landing-card { padding: 24px 16px; }
     .toolbar { flex-wrap: wrap; padding: 8px 12px; }
     .toolbar-left, .toolbar-right { flex-wrap: wrap; }
+    .anno-panel { width: 100%; }
+    body.panel-open .container { margin-right: 0; }
+    body.panel-open .toolbar { padding-right: 20px; }
+    body.panel-open .status-bar { right: 0; }
   }
 </style>
 </head>
@@ -510,8 +791,34 @@ function trackEvent(action, params) { try { gtag('event', action, params); } cat
         </select>
       </div>
 
+      <div class="provider-block">
+        <div class="provider-name">Highlight Limits</div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1">
+            <label style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:2px;display:block">Max words</label>
+            <input type="number" id="settMaxWords" min="5" max="200" step="5" value="50">
+          </div>
+          <div style="flex:1">
+            <label style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:2px;display:block">Max chars</label>
+            <input type="number" id="settMaxChars" min="50" max="2000" step="50" value="800">
+          </div>
+        </div>
+      </div>
+
       <button class="modal-save-btn" onclick="saveSettings()">Save Settings</button>
       <button class="modal-save-btn" onclick="clearSettings()" style="background:var(--bg);color:var(--text);margin-top:8px;font-weight:400;">Clear All Keys</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONFIRM DIALOG ============ -->
+<div id="confirmDialog" class="confirm-overlay hidden">
+  <div class="confirm-box">
+    <div class="confirm-header" id="confirm-title"></div>
+    <div class="confirm-body" id="confirm-body"></div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" onclick="resolveConfirm(false)">Cancel</button>
+      <button class="confirm-danger" id="confirm-action-btn" onclick="resolveConfirm(true)"></button>
     </div>
   </div>
 </div>
@@ -523,8 +830,8 @@ function trackEvent(action, params) { try { gtag('event', action, params); } cat
     <button onclick="toggleTheme()" title="Toggle theme">◐</button>
   </div>
   <div class="landing-card">
-    <h1>VN Legal Doc Viewer</h1>
-    <div class="subtitle">Parse Vietnamese legal documents from any URL via Jina Reader + DOM parsing. Instant structuring (no LLM needed). Multi-LLM term explainer (Claude, GPT, Gemini) via text highlight.</div>
+    <h1>LexMark</h1>
+    <div class="subtitle">Parse, highlight, explain. Legal docs from URL or paste — structured instantly, no LLM needed. Select any term → AI explains it in context. Annotations persist, export as Markdown.</div>
 
     <div class="input-mode-tabs">
       <button id="tab-url" class="active" onclick="setInputMode('url')">URL</button>
@@ -575,7 +882,10 @@ function trackEvent(action, params) { try { gtag('event', action, params); } cat
       <button onclick="toggleToc()">TOC</button>
       <button onclick="toggleRawPreview()">Raw</button>
       <button onclick="backToLanding()">← New</button>
-      <span style="font-size:10px;color:var(--muted);white-space:nowrap">highlight → ⚡ explain</span>
+      <button onclick="AnnotationStore.undo()" title="Undo (Ctrl+Z)">↩</button>
+      <button onclick="AnnotationStore.redo()" title="Redo (Ctrl+Y)">↪</button>
+      <span style="font-size:10px;color:var(--muted);white-space:nowrap">select → 🖍 / ⚡</span>
+      <button onclick="toggleAnnotationPanel()" id="btn-notes">Notes <span id="anno-count" style="font-size:10px;padding:0 4px;background:var(--accent);color:#000;font-weight:600;display:none"></span></button>
     </div>
     <div class="toolbar-right">
       <span class="provider-badge" id="active-provider-badge"></span>
@@ -588,7 +898,34 @@ function trackEvent(action, params) { try { gtag('event', action, params); } cat
 
   <div class="container" id="doc-container"></div>
 
-  <button class="explain-trigger" id="explain-trigger" onclick="explainSelection()">⚡ Giải thích</button>
+  <!-- Annotation side panel -->
+  <div class="anno-panel" id="anno-panel">
+    <div class="anno-panel-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="aph-title">Annotations</span>
+        <span class="aph-count" id="anno-panel-count">0</span>
+      </div>
+      <button onclick="toggleAnnotationPanel()" title="Close panel">✕</button>
+    </div>
+    <div class="anno-panel-actions">
+      <button onclick="AnnotationStore.undo()" title="Undo">↩ Undo</button>
+      <button onclick="AnnotationStore.redo()" title="Redo">↪ Redo</button>
+      <button onclick="copyAnnotationsMarkdown()" title="Copy as Markdown">📋 Copy MD</button>
+      <button onclick="downloadAnnotationsMarkdown()" title="Download Markdown">⬇ Download</button>
+      <button onclick="clearAllAnnotations()" title="Clear all">🗑 Clear</button>
+    </div>
+    <div class="anno-panel-list" id="anno-panel-list">
+      <div class="anno-panel-empty">No annotations yet.<br>Select text → 🖍 Highlight</div>
+    </div>
+  </div>
+
+  <!-- Phase 3: Two-button selection toolbar -->
+  <div class="selection-toolbar" id="selection-toolbar">
+    <button class="btn-highlight" id="btn-highlight">🖍 Highlight</button>
+    <button class="btn-explain" id="btn-explain">⚡ Explain</button>
+  </div>
+  <!-- Annotation context menu (click on existing highlight) -->
+  <div class="ann-context-menu" id="ann-context-menu"></div>
   <div class="explain-overlay" id="explain-overlay" style="display:none" onclick="closeExplain(event)"></div>
 
   <div class="status-bar">
@@ -615,7 +952,6 @@ const LLM = {
   abortController: null,
   isArtifact: null,
 
-  // ── Persistence ──────────────────────────────────────────────
   save() {
     try {
       const data = {
@@ -625,9 +961,10 @@ const LLM = {
           google:    { key: this.settings.google.key, model: this.settings.google.model },
         },
         activeProvider: this.activeProvider,
+        highlightLimits: { maxWords: SELECTION_MAX_WORDS, maxChars: SELECTION_MAX_CHARS },
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) { /* localStorage unavailable (e.g. artifact sandbox) — silent fail */ }
+    } catch (e) {}
   },
 
   load() {
@@ -644,10 +981,13 @@ const LLM = {
         }
       }
       if (data.activeProvider) this.activeProvider = data.activeProvider;
-    } catch (e) { /* corrupt or unavailable — use defaults */ }
+      if (data.highlightLimits) {
+        if (data.highlightLimits.maxWords) SELECTION_MAX_WORDS = data.highlightLimits.maxWords;
+        if (data.highlightLimits.maxChars) SELECTION_MAX_CHARS = data.highlightLimits.maxChars;
+      }
+    } catch (e) {}
   },
 
-  // ── Artifact detection ───────────────────────────────────────
   detectArtifact() {
     if (this.isArtifact !== null) return this.isArtifact;
     try {
@@ -655,12 +995,11 @@ const LLM = {
       const onArtifactOrigin = /claude\.ai|anthropic\.com|artifacts/.test(location.hostname);
       this.isArtifact = inIframe || onArtifactOrigin;
     } catch (e) {
-      this.isArtifact = true; // cross-origin iframe
+      this.isArtifact = true;
     }
     return this.isArtifact;
   },
 
-  // ── Provider availability ────────────────────────────────────
   getAvailableProviders() {
     const p = [];
     if (this.settings.anthropic.key || this.detectArtifact()) p.push('anthropic');
@@ -675,7 +1014,6 @@ const LLM = {
     return available[0] || 'anthropic';
   },
 
-  // ── Unified call ─────────────────────────────────────────────
   async call(systemPrompt, userPrompt, opts = {}) {
     const provider = opts.provider || this.getActiveProvider();
     const maxTokens = opts.maxTokens || 4096;
@@ -684,18 +1022,12 @@ const LLM = {
     const signal = this.abortController.signal;
 
     if (provider === 'anthropic') {
-      // Two modes:
-      // 1. Artifact (keyless): proxy handles auth. ONLY Content-Type header.
-      //    Extra headers trigger CORS preflight that proxy can't handle.
-      // 2. Direct browser (with key): all headers required.
       const headers = { 'Content-Type': 'application/json' };
-
       if (s.key) {
         headers['x-api-key'] = s.key;
         headers['anthropic-version'] = '2023-06-01';
         headers['anthropic-dangerous-direct-browser-access'] = 'true';
       }
-
       const r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST', signal, headers,
         body: JSON.stringify({
@@ -714,12 +1046,10 @@ const LLM = {
 
     if (provider === 'openai') {
       if (!s.key) throw new Error('OpenAI API key required. Go to ⚙ Settings.');
-      // GPT-4.1+ and o-series use max_completion_tokens, older models use max_tokens
       const isNewModel = /^(gpt-4\.1|gpt-4o|o[1-9])/.test(s.model);
       const tokenParam = isNewModel
         ? { max_completion_tokens: maxTokens }
         : { max_tokens: maxTokens };
-
       const r = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST', signal,
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.key },
@@ -768,11 +1098,9 @@ const LLM = {
 
   cancel() { if (this.abortController) this.abortController.abort(); },
 
-  // ── Preflight validation ─────────────────────────────────────
   preflight(provider) {
     provider = provider || this.getActiveProvider();
     const s = this.settings[provider];
-
     if (provider === 'anthropic') {
       if (!s.key && !this.detectArtifact()) {
         return { ok: false, error: 'Anthropic API key required when running outside Claude artifacts. Add key in ⚙ Settings, or switch provider.' };
@@ -805,19 +1133,710 @@ const LLM = {
 let docData = null;
 let sourceUrl = '';
 let rawText = '';
-let inputMode = 'url'; // 'url' | 'paste'
+let inputMode = 'url';
 
 // ================================================================
-// SETTINGS — with localStorage persistence
+// PHASE 1: ANNOTATION STORE — data model + localStorage CRUD
+// ================================================================
+const ANNO_STORAGE_KEY = 'vnlegal_annotations';
+
+const AnnotationStore = {
+  annotations: [],   // current document annotations
+  undoStack: [],     // for undo (max 50)
+  redoStack: [],     // for redo
+
+  // ── Persistence ──────────────────────────────────────────────
+  _storageKey() {
+    return ANNO_STORAGE_KEY + ':' + (sourceUrl || 'unknown');
+  },
+
+  save() {
+    try {
+      localStorage.setItem(this._storageKey(), JSON.stringify(this.annotations));
+    } catch (e) { /* localStorage unavailable */ }
+  },
+
+  load() {
+    this.annotations = [];
+    this.undoStack = [];
+    this.redoStack = [];
+    try {
+      const raw = localStorage.getItem(this._storageKey());
+      if (raw) this.annotations = JSON.parse(raw);
+    } catch (e) { /* corrupt or unavailable */ }
+  },
+
+  // ── CRUD ─────────────────────────────────────────────────────
+  add(ann) {
+    // Check for duplicate: same text + same articleId + overlapping offset
+    const dup = this.annotations.find(a =>
+      a.articleId === ann.articleId &&
+      a.textOffset.start === ann.textOffset.start &&
+      a.textOffset.end === ann.textOffset.end
+    );
+    if (dup) return dup; // return existing instead of creating duplicate
+
+    this.annotations.push(ann);
+    this.undoStack.push({ action: 'add', annotation: ann });
+    if (this.undoStack.length > 50) this.undoStack.shift();
+    this.redoStack = [];
+    this.save();
+    this._notify();
+    return ann;
+  },
+
+  remove(id) {
+    const idx = this.annotations.findIndex(a => a.id === id);
+    if (idx === -1) return;
+    const removed = this.annotations.splice(idx, 1)[0];
+    this.undoStack.push({ action: 'remove', annotation: removed });
+    if (this.undoStack.length > 50) this.undoStack.shift();
+    this.redoStack = [];
+    this.save();
+    this._notify();
+    return removed;
+  },
+
+  update(id, updates) {
+    const ann = this.annotations.find(a => a.id === id);
+    if (!ann) return null;
+    const before = { ...ann };
+    Object.assign(ann, updates);
+    this.undoStack.push({ action: 'update', before, after: { ...ann } });
+    if (this.undoStack.length > 50) this.undoStack.shift();
+    this.redoStack = [];
+    this.save();
+    this._notify();
+    return ann;
+  },
+
+  undo() {
+    const entry = this.undoStack.pop();
+    if (!entry) return;
+    if (entry.action === 'add') {
+      const idx = this.annotations.findIndex(a => a.id === entry.annotation.id);
+      if (idx !== -1) this.annotations.splice(idx, 1);
+    } else if (entry.action === 'remove') {
+      this.annotations.push(entry.annotation);
+    } else if (entry.action === 'update') {
+      const idx = this.annotations.findIndex(a => a.id === entry.before.id);
+      if (idx !== -1) this.annotations[idx] = { ...entry.before };
+    }
+    this.redoStack.push(entry);
+    this.save();
+    this._notify();
+  },
+
+  redo() {
+    const entry = this.redoStack.pop();
+    if (!entry) return;
+    if (entry.action === 'add') {
+      this.annotations.push(entry.annotation);
+    } else if (entry.action === 'remove') {
+      const idx = this.annotations.findIndex(a => a.id === entry.annotation.id);
+      if (idx !== -1) this.annotations.splice(idx, 1);
+    } else if (entry.action === 'update') {
+      const idx = this.annotations.findIndex(a => a.id === entry.after.id);
+      if (idx !== -1) this.annotations[idx] = { ...entry.after };
+    }
+    this.undoStack.push(entry);
+    this.save();
+    this._notify();
+  },
+
+  getByArticle(articleId) {
+    return this.annotations.filter(a => a.articleId === articleId);
+  },
+
+  getAll() {
+    return [...this.annotations].sort((a, b) => a.createdAt - b.createdAt);
+  },
+
+  // ── Notification ─────────────────────────────────────────────
+  _listeners: [],
+  onChange(fn) { this._listeners.push(fn); },
+  _notify() { this._listeners.forEach(fn => fn()); },
+};
+
+// ================================================================
+// PHASE 2: HIGHLIGHT RENDERING ENGINE
+// ================================================================
+
+// Compute character offset of a Range within an article's text nodes
+function getArticleTextOffset(articleEl, range) {
+  const walker = document.createTreeWalker(articleEl, NodeFilter.SHOW_TEXT, null);
+  let charCount = 0;
+  let start = -1, end = -1;
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    // Skip article-title div
+    if (node.parentElement.closest('.article-title')) continue;
+
+    const nodeLen = node.textContent.length;
+
+    if (node === range.startContainer) {
+      start = charCount + range.startOffset;
+    }
+    if (node === range.endContainer) {
+      end = charCount + range.endOffset;
+      break;
+    }
+    charCount += nodeLen;
+  }
+  return (start >= 0 && end >= 0) ? { start, end } : null;
+}
+
+// Render highlights for a single article by walking text nodes
+function renderArticleHighlights(articleId) {
+  const articleEl = document.getElementById(articleId);
+  if (!articleEl) return;
+
+  // 1. Strip existing annotation marks from this article
+  articleEl.querySelectorAll('mark.ann-highlight').forEach(m => {
+    const parent = m.parentNode;
+    while (m.firstChild) parent.insertBefore(m.firstChild, m);
+    parent.removeChild(m);
+    parent.normalize(); // merge adjacent text nodes
+  });
+
+  // 2. Get annotations for this article, sorted by offset
+  const annos = AnnotationStore.getByArticle(articleId)
+    .filter(a => a.textOffset)
+    .sort((a, b) => a.textOffset.start - b.textOffset.start);
+  if (annos.length === 0) return;
+
+  // 3. Build a flat list of text nodes (excluding article-title)
+  const textNodes = [];
+  const walker = document.createTreeWalker(articleEl, NodeFilter.SHOW_TEXT, null);
+  while (walker.nextNode()) {
+    if (!walker.currentNode.parentElement.closest('.article-title')) {
+      textNodes.push(walker.currentNode);
+    }
+  }
+
+  // 4. For each annotation, find the text nodes that span its offset range and wrap
+  let globalOffset = 0;
+  let nodeIdx = 0;
+  const nodeOffsets = []; // [{node, start, end}]
+  for (const node of textNodes) {
+    nodeOffsets.push({ node, start: globalOffset, end: globalOffset + node.textContent.length });
+    globalOffset += node.textContent.length;
+  }
+
+  // Process annotations in reverse order to not invalidate offsets
+  for (let i = annos.length - 1; i >= 0; i--) {
+    const ann = annos[i];
+    const { start: aStart, end: aEnd } = ann.textOffset;
+
+    // Verify text still matches (fuzzy guard)
+    if (ann.textVerify) {
+      const fullText = textNodes.map(n => n.textContent).join('');
+      const slice = fullText.slice(aStart, aEnd);
+      if (slice.slice(0, 20) !== ann.textVerify.head) {
+        // Text drifted — try fuzzy recovery
+        const searchFor = ann.textVerify.head + ann.textVerify.tail;
+        const fuzzyIdx = fullText.indexOf(ann.text);
+        if (fuzzyIdx >= 0) {
+          ann.textOffset.start = fuzzyIdx;
+          ann.textOffset.end = fuzzyIdx + ann.text.length;
+          AnnotationStore.save(); // persist recovered offset
+        } else {
+          continue; // orphaned — skip rendering
+        }
+      }
+    }
+
+    // Find which text nodes overlap [aStart, aEnd)
+    // Re-read nodeOffsets since we're going in reverse and prior wraps
+    // may have changed nodes — but since we go reverse, earlier nodes are stable
+    wrapRange(articleEl, ann);
+  }
+}
+
+function wrapRange(articleEl, ann) {
+  const { start: aStart, end: aEnd } = ann.textOffset;
+
+  // Rebuild text node map (needed because prior wraps may have split nodes)
+  const textNodes = [];
+  const walker = document.createTreeWalker(articleEl, NodeFilter.SHOW_TEXT, null);
+  while (walker.nextNode()) {
+    if (!walker.currentNode.parentElement.closest('.article-title') &&
+        !walker.currentNode.parentElement.closest('mark.ann-highlight')) {
+      textNodes.push(walker.currentNode);
+    }
+  }
+  // Also include text inside existing marks (for overlapping future support)
+  articleEl.querySelectorAll('mark.ann-highlight').forEach(m => {
+    const tw = document.createTreeWalker(m, NodeFilter.SHOW_TEXT, null);
+    // We skip these for now — no overlapping highlights
+  });
+
+  let offset = 0;
+  for (const node of textNodes) {
+    const nStart = offset;
+    const nEnd = offset + node.textContent.length;
+    offset = nEnd;
+
+    // No overlap
+    if (nEnd <= aStart || nStart >= aEnd) continue;
+
+    // Calculate local offsets within this text node
+    const localStart = Math.max(0, aStart - nStart);
+    const localEnd = Math.min(node.textContent.length, aEnd - nStart);
+
+    // Split the text node and wrap the middle
+    const before = node.textContent.slice(0, localStart);
+    const middle = node.textContent.slice(localStart, localEnd);
+    const after = node.textContent.slice(localEnd);
+
+    const mark = document.createElement('mark');
+    mark.className = 'ann-highlight';
+    mark.dataset.annId = ann.id;
+    mark.textContent = middle;
+    mark.title = ann.note || ann.text;
+    mark.onclick = (e) => { e.stopPropagation(); showAnnotationMenu(ann.id, e); };
+
+    const parent = node.parentNode;
+    if (after) parent.insertBefore(document.createTextNode(after), node.nextSibling);
+    parent.insertBefore(mark, node.nextSibling);
+    if (before) {
+      node.textContent = before;
+    } else {
+      parent.removeChild(node);
+    }
+
+    // If this node fully contains the annotation, we're done
+    if (nStart <= aStart && nEnd >= aEnd) break;
+    // Otherwise continue to next node (multi-node span)
+  }
+}
+
+function renderAllHighlights() {
+  // 1. Strip ALL annotation marks from entire document (covers undo-to-zero)
+  const container = document.getElementById('doc-container');
+  if (container) {
+    container.querySelectorAll('mark.ann-highlight').forEach(m => {
+      const parent = m.parentNode;
+      while (m.firstChild) parent.insertBefore(m.firstChild, m);
+      parent.removeChild(m);
+    });
+    // Normalize text nodes globally after stripping
+    container.normalize();
+  }
+
+  // 2. Re-render only articles that have annotations
+  const articleIds = [...new Set(AnnotationStore.getAll().map(a => a.articleId))];
+  articleIds.forEach(id => renderArticleHighlights(id));
+  updateAnnotationCount();
+}
+
+function updateAnnotationCount() {
+  const badge = document.getElementById('anno-count');
+  if (!badge) return;
+  const count = AnnotationStore.getAll().length;
+  badge.textContent = count > 0 ? count : '';
+  badge.style.display = count > 0 ? 'inline-block' : 'none';
+}
+
+// ── Annotation context menu ────────────────────────────────────
+function showAnnotationMenu(annId, event) {
+  const ann = AnnotationStore.annotations.find(a => a.id === annId);
+  if (!ann) return;
+
+  const menu = document.getElementById('ann-context-menu');
+  const hasExplanation = !!ann.explanation;
+  const truncated = ann.text.length > 30 ? ann.text.slice(0, 28) + '…' : ann.text;
+
+  menu.innerHTML = `
+    <div class="acm-header">
+      "${esc(truncated)}"
+      ${hasExplanation ? '<span class="acm-badge">✓ explained</span>' : ''}
+    </div>
+    <div class="acm-actions">
+      ${hasExplanation
+        ? `<button onclick="viewAnnotationExplanation('${annId}')">👁 View</button>`
+        : `<button onclick="explainExistingAnnotation('${annId}')">⚡ Explain</button>`
+      }
+      <button class="acm-remove" onclick="removeAnnotationFromMenu('${annId}')">✕ Remove</button>
+    </div>`;
+
+  // Position near the clicked mark
+  const rect = event.target.getBoundingClientRect();
+  menu.style.top = (window.scrollY + rect.bottom + 4) + 'px';
+  menu.style.left = (window.scrollX + rect.left) + 'px';
+  menu.style.display = 'block';
+
+  // Dismiss selection toolbar if visible
+  const selToolbar = document.getElementById('selection-toolbar');
+  if (selToolbar) selToolbar.style.display = 'none';
+}
+
+function hideAnnotationMenu() {
+  const menu = document.getElementById('ann-context-menu');
+  if (menu) menu.style.display = 'none';
+}
+
+function removeAnnotationFromMenu(annId) {
+  hideAnnotationMenu();
+  AnnotationStore.remove(annId);
+}
+
+function viewAnnotationExplanation(annId) {
+  hideAnnotationMenu();
+  const ann = AnnotationStore.annotations.find(a => a.id === annId);
+  if (!ann || !ann.explanation) return;
+  const provider = LLM.getActiveProvider();
+  const overlay = document.getElementById('explain-overlay');
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `<div class="explain-popup"></div>`;
+  renderExplanation(ann.text, ann.explanation, provider);
+}
+
+async function explainExistingAnnotation(annId) {
+  hideAnnotationMenu();
+  const ann = AnnotationStore.annotations.find(a => a.id === annId);
+  if (!ann) return;
+
+  const overlay = document.getElementById('explain-overlay');
+  const provider = LLM.getActiveProvider();
+  const cacheKey = ann.text.toLowerCase().slice(0, 80) + ':' + provider;
+
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <div class="explain-popup">
+      <div class="explain-popup-header">
+        <div>
+          <div class="term-label">Giải thích thuật ngữ</div>
+          <div class="term-text">${esc(ann.text)}</div>
+        </div>
+        <button class="explain-popup-close" onclick="closeExplainBtn()">×</button>
+      </div>
+      <div class="explain-popup-body">
+        <div class="explain-loading"><div class="spinner"></div><p>Đang phân tích (${provider})...</p></div>
+      </div>
+    </div>`;
+
+  // Check cache
+  if (explainCache[cacheKey]) {
+    AnnotationStore.update(ann.id, { explanation: explainCache[cacheKey] });
+    renderExplanation(ann.text, explainCache[cacheKey], provider);
+    return;
+  }
+
+  try {
+    // Grab context from article
+    const articleEl = document.getElementById(ann.articleId);
+    const context = articleEl ? articleEl.textContent.trim().slice(0, 600) : '';
+
+    const docTitle = docData?.header?.title || 'legal document';
+    const docType = docData?.header?.doc_type || '';
+    const systemWithContext = EXPLAIN_SYSTEM_PROMPT.replace(
+      'Vietnamese banking compliance teams',
+      `Vietnamese banking compliance teams. They are reading: "${docTitle}" (${docType})`
+    );
+
+    const response = await LLM.call(
+      systemWithContext,
+      `Term: "${ann.text}"\n\nContext from the document:\n"${context.slice(0, 500)}"`,
+      { provider, maxTokens: 1000 }
+    );
+
+    const result = JSON.parse(response.replace(/```json|```/g, '').trim());
+    explainCache[cacheKey] = result;
+    AnnotationStore.update(ann.id, { explanation: result });
+    renderExplanation(ann.text, result, provider);
+    trackEvent('explain_existing', { term: ann.text.slice(0, 40), provider });
+
+  } catch (err) {
+    renderExplainError(ann.text, err.message);
+  }
+}
+
+// ── Dismiss context menu on click outside / Escape ─────────────
+document.addEventListener('mousedown', (e) => {
+  if (!e.target.closest('.ann-context-menu')) {
+    hideAnnotationMenu();
+  }
+}, true);  // capture phase so it fires before mark.onclick
+
+// Listen for store changes → re-render highlights + panel
+AnnotationStore.onChange(() => {
+  renderAllHighlights();
+  renderAnnotationPanel();
+});
+
+// ================================================================
+// PHASE 4+7: ANNOTATION SIDE PANEL + COLLAPSIBLE EXPLANATION TREE
+// ================================================================
+let panelOpen = false;
+
+function toggleAnnotationPanel() {
+  panelOpen = !panelOpen;
+  document.getElementById('anno-panel').classList.toggle('open', panelOpen);
+  document.body.classList.toggle('panel-open', panelOpen);
+  if (panelOpen) renderAnnotationPanel();
+  trackEvent('toggle_panel', { open: panelOpen });
+}
+
+function renderAnnotationPanel() {
+  const list = document.getElementById('anno-panel-list');
+  const countEl = document.getElementById('anno-panel-count');
+  if (!list) return;
+
+  const annos = AnnotationStore.getAll();
+  if (countEl) countEl.textContent = annos.length;
+
+  if (annos.length === 0) {
+    list.innerHTML = '<div class="anno-panel-empty">No annotations yet.<br>Select text → 🖍 Highlight</div>';
+    return;
+  }
+
+  // Group by articleId
+  const groups = {};
+  annos.forEach(a => {
+    if (!groups[a.articleId]) groups[a.articleId] = [];
+    groups[a.articleId].push(a);
+  });
+
+  let html = '';
+  for (const [articleId, items] of Object.entries(groups)) {
+    // Find article title from docData
+    let articleTitle = articleId;
+    if (docData) {
+      for (const ch of docData.chapters) {
+        const art = ch.articles.find(a => a.article_id === articleId);
+        if (art) { articleTitle = art.title; break; }
+      }
+    }
+    html += `<div style="padding:4px 14px 2px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px">${esc(articleTitle.slice(0, 50))}</div>`;
+
+    items.forEach(ann => {
+      const truncText = ann.text.length > 50 ? ann.text.slice(0, 48) + '…' : ann.text;
+      const hasExp = !!ann.explanation;
+      const treeId = 'tree-' + ann.id;
+
+      html += `<div class="anno-card" id="card-${ann.id}">`;
+      html += `<div class="anno-card-header">`;
+      html += `<div class="anno-card-text" onclick="scrollToHighlight('${ann.id}')" style="cursor:pointer" title="Click to scroll to highlight">"${esc(truncText)}"</div>`;
+      html += `<div class="anno-card-actions">`;
+      if (hasExp) {
+        html += `<button onclick="viewAnnotationExplanation('${ann.id}')" title="View explanation">👁</button>`;
+      } else {
+        html += `<button onclick="explainExistingAnnotation('${ann.id}')" title="Explain with AI">⚡</button>`;
+      }
+      html += `<button class="acrd-remove" onclick="AnnotationStore.remove('${ann.id}')" title="Remove">✕</button>`;
+      html += `</div></div>`;
+
+      // Meta: article link + timestamp
+      html += `<div class="anno-card-meta">`;
+      html += `<a onclick="scrollToEl('${ann.articleId}')">${esc(ann.articleId)}</a>`;
+      html += ` · ${new Date(ann.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
+      if (hasExp) html += ' · ✓ explained';
+      html += `</div>`;
+
+      // Phase 7: Collapsible explanation tree
+      if (hasExp) {
+        html += `<div class="anno-explain-toggle" onclick="toggleExplainTree('${treeId}')">▸ Xem giải thích</div>`;
+        html += `<div class="anno-explain-tree" id="${treeId}">`;
+        html += renderExplainTreeHTML(ann.explanation);
+        html += `</div>`;
+      }
+
+      html += `</div>`; // .anno-card
+    });
+  }
+
+  list.innerHTML = html;
+}
+
+function toggleExplainTree(treeId) {
+  const tree = document.getElementById(treeId);
+  if (!tree) return;
+  const isOpen = tree.classList.toggle('open');
+  // Update toggle text
+  const toggle = tree.previousElementSibling;
+  if (toggle) toggle.textContent = (isOpen ? '▾' : '▸') + ' Xem giải thích';
+}
+
+function renderExplainTreeHTML(exp) {
+  if (!exp) return '';
+  const fields = [
+    { key: 'plain_vi',       label: '🇻🇳 Tiếng Việt' },
+    { key: 'plain_en',       label: '🇬🇧 English' },
+    { key: 'analogy',        label: '💡 Ví von' },
+    { key: 'scenario',       label: '🏦 Tình huống' },
+    { key: 'input',          label: '↗ Input' },
+    { key: 'output',         label: '↘ Output' },
+    { key: 'why_it_matters', label: '⚠️ Quan trọng' },
+    { key: 'related_articles', label: '📎 Điều liên quan' },
+  ];
+  let html = '';
+  fields.forEach(f => {
+    if (exp[f.key]) {
+      html += `<div class="anno-explain-row">`;
+      html += `<span class="aer-label">${f.label}</span>`;
+      html += `<p>${esc(exp[f.key])}</p>`;
+      html += `</div>`;
+    }
+  });
+  return html;
+}
+
+// Scroll panel to a specific annotation card
+function scrollToAnnotationInPanel(id) {
+  if (!panelOpen) toggleAnnotationPanel();
+  setTimeout(() => {
+    const card = document.getElementById('card-' + id);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.style.background = 'var(--accent)';
+      setTimeout(() => { card.style.background = ''; }, 1200);
+    }
+  }, 100);
+}
+
+// Scroll document to a specific highlight mark
+function scrollToHighlight(annId) {
+  const mark = document.querySelector(`mark.ann-highlight[data-ann-id="${annId}"]`);
+  if (mark) {
+    mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Flash effect
+    const orig = mark.style.boxShadow;
+    mark.style.boxShadow = '0 0 0 3px #000';
+    setTimeout(() => { mark.style.boxShadow = orig; }, 1200);
+  }
+}
+
+// ================================================================
+// PHASE 8: EXPORT MARKDOWN + COPY
+// ================================================================
+function buildAnnotationsMarkdown() {
+  const annos = AnnotationStore.getAll();
+  if (annos.length === 0) return '';
+
+  const title = docData?.header?.title || 'Legal Document';
+  let md = `# Annotations: ${title}\n`;
+  md += `Source: ${sourceUrl}\n`;
+  md += `Exported: ${new Date().toISOString().slice(0, 10)}\n`;
+  md += `Total: ${annos.length} annotations\n\n`;
+
+  // Group by articleId
+  const groups = {};
+  annos.forEach(a => {
+    if (!groups[a.articleId]) groups[a.articleId] = [];
+    groups[a.articleId].push(a);
+  });
+
+  for (const [articleId, items] of Object.entries(groups)) {
+    let articleTitle = articleId;
+    if (docData) {
+      for (const ch of docData.chapters) {
+        const art = ch.articles.find(a => a.article_id === articleId);
+        if (art) { articleTitle = art.title; break; }
+      }
+    }
+    md += `## ${articleTitle}\n\n`;
+
+    items.forEach(ann => {
+      md += `### "${ann.text}"\n\n`;
+
+      if (ann.explanation) {
+        const exp = ann.explanation;
+        if (exp.plain_vi) md += `> 🇻🇳 ${exp.plain_vi}\n\n`;
+        if (exp.plain_en) md += `> 🇬🇧 ${exp.plain_en}\n\n`;
+        if (exp.analogy) md += `> 💡 ${exp.analogy}\n\n`;
+        if (exp.scenario) md += `> 🏦 ${exp.scenario}\n\n`;
+        if (exp.input) md += `> ↗ Input: ${exp.input}\n\n`;
+        if (exp.output) md += `> ↘ Output: ${exp.output}\n\n`;
+        if (exp.why_it_matters) md += `> ⚠️ ${exp.why_it_matters}\n\n`;
+        if (exp.related_articles) md += `> 📎 ${exp.related_articles}\n\n`;
+      } else {
+        md += `*No explanation attached*\n\n`;
+      }
+
+      if (ann.note) md += `*Note: ${ann.note}*\n\n`;
+      md += `---\n\n`;
+    });
+  }
+
+  return md;
+}
+
+function copyAnnotationsMarkdown() {
+  const md = buildAnnotationsMarkdown();
+  if (!md) return;
+  navigator.clipboard.writeText(md).then(() => {
+    // Flash feedback on button
+    const btn = document.querySelector('.anno-panel-actions button[onclick*="copy"]');
+    if (btn) { const orig = btn.textContent; btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = orig, 1500); }
+  });
+  trackEvent('export_annotations', { format: 'clipboard', count: AnnotationStore.getAll().length });
+}
+
+function downloadAnnotationsMarkdown() {
+  const md = buildAnnotationsMarkdown();
+  if (!md) return;
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'annotations-' + new Date().toISOString().slice(0, 10) + '.md';
+  a.click();
+  trackEvent('export_annotations', { format: 'download', count: AnnotationStore.getAll().length });
+}
+
+// ── Custom confirm dialog ──────────────────────────────────────
+let _confirmResolve = null;
+
+function showConfirm({ title, body, actionLabel }) {
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    document.getElementById('confirm-title').textContent = title || 'Confirm';
+    document.getElementById('confirm-body').innerHTML = body || '';
+    document.getElementById('confirm-action-btn').textContent = actionLabel || 'Confirm';
+    document.getElementById('confirmDialog').classList.remove('hidden');
+  });
+}
+
+function resolveConfirm(value) {
+  document.getElementById('confirmDialog').classList.add('hidden');
+  if (_confirmResolve) { _confirmResolve(value); _confirmResolve = null; }
+}
+
+async function clearAllAnnotations() {
+  const count = AnnotationStore.getAll().length;
+  if (count === 0) return;
+
+  const confirmed = await showConfirm({
+    title: '⚠ Clear all annotations',
+    body: `<span class="confirm-count">${count}</span>`
+        + `annotation${count > 1 ? 's' : ''} will be permanently removed.`
+        + `<div class="confirm-warn">This cannot be undone.</div>`,
+    actionLabel: `Remove ${count}`,
+  });
+
+  if (!confirmed) return;
+
+  AnnotationStore.annotations = [];
+  AnnotationStore.undoStack = [];
+  AnnotationStore.redoStack = [];
+  AnnotationStore.save();
+  AnnotationStore._notify();
+  trackEvent('clear_annotations', { count });
+}
+
+// ================================================================
+// SETTINGS
 // ================================================================
 function openSettings() {
-  // Populate form fields from current LLM.settings
   document.getElementById('settAnthropicKey').value = LLM.settings.anthropic.key;
   document.getElementById('settAnthropicModel').value = LLM.settings.anthropic.model;
   document.getElementById('settOpenaiKey').value = LLM.settings.openai.key;
   document.getElementById('settOpenaiModel').value = LLM.settings.openai.model;
   document.getElementById('settGoogleKey').value = LLM.settings.google.key;
   document.getElementById('settGoogleModel').value = LLM.settings.google.model;
+  document.getElementById('settMaxWords').value = SELECTION_MAX_WORDS;
+  document.getElementById('settMaxChars').value = SELECTION_MAX_CHARS;
   document.getElementById('settingsModal').classList.remove('hidden');
 }
 function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
@@ -830,22 +1849,23 @@ function saveSettings() {
   LLM.settings.google.key = document.getElementById('settGoogleKey').value.trim();
   LLM.settings.google.model = document.getElementById('settGoogleModel').value;
 
-  // Persist to localStorage
-  LLM.save();
+  // Highlight limits
+  const mw = parseInt(document.getElementById('settMaxWords').value) || 50;
+  const mc = parseInt(document.getElementById('settMaxChars').value) || 800;
+  SELECTION_MAX_WORDS = Math.max(5, Math.min(200, mw));
+  SELECTION_MAX_CHARS = Math.max(50, Math.min(2000, mc));
 
-  // Auto-select best available provider
+  LLM.save();
   const avail = LLM.getAvailableProviders();
   if (avail.length > 0 && !avail.includes(LLM.activeProvider)) {
     LLM.activeProvider = avail[0];
   }
-
-  // Sync landing dropdown
   const sel = document.getElementById('provider-select');
   if (sel) sel.value = LLM.activeProvider;
   updateProviderBadge();
   updateProviderStatus();
   closeSettings();
-  trackEvent('settings_save', { providers: avail.join(',') });
+  trackEvent('settings_save', { providers: avail.join(','), maxWords: SELECTION_MAX_WORDS });
 }
 
 function clearSettings() {
@@ -853,11 +1873,14 @@ function clearSettings() {
   LLM.settings.openai.key = '';
   LLM.settings.google.key = '';
   LLM.activeProvider = 'anthropic';
+  SELECTION_MAX_WORDS = 50;
+  SELECTION_MAX_CHARS = 800;
   LLM.save();
-  // Clear form fields
   document.getElementById('settAnthropicKey').value = '';
   document.getElementById('settOpenaiKey').value = '';
   document.getElementById('settGoogleKey').value = '';
+  document.getElementById('settMaxWords').value = 50;
+  document.getElementById('settMaxChars').value = 800;
   const sel = document.getElementById('provider-select');
   if (sel) sel.value = 'anthropic';
   updateProviderBadge();
@@ -877,7 +1900,7 @@ function updateProviderBadge() {
 function onProviderChange() {
   const sel = document.getElementById('provider-select');
   LLM.activeProvider = sel.value;
-  LLM.save(); // persist selection
+  LLM.save();
   updateProviderStatus();
 }
 
@@ -890,10 +1913,8 @@ function updateProviderStatus() {
   el.style.color = status.color;
 }
 
-// Initialize: load persisted settings, sync UI
 document.addEventListener('DOMContentLoaded', () => {
   LLM.load();
-  // Sync provider dropdown with loaded activeProvider
   const sel = document.getElementById('provider-select');
   if (sel) sel.value = LLM.activeProvider;
   updateProviderStatus();
@@ -923,6 +1944,8 @@ function toggleTheme() {
 }
 
 function backToLanding() {
+  // Close panel if open
+  if (panelOpen) toggleAnnotationPanel();
   document.getElementById('screen-viewer').style.display = 'none';
   document.getElementById('screen-landing').style.display = 'flex';
 }
@@ -951,8 +1974,6 @@ async function startParse() {
   const errEl = document.getElementById('landing-error');
   const progEl = document.getElementById('landing-progress');
   errEl.style.display = 'none';
-
-  // No LLM preflight needed — parsing is pure DOM, no API calls
   progEl.style.display = 'block';
   btn.disabled = true;
   btn.textContent = 'Parsing...';
@@ -965,34 +1986,27 @@ async function startParse() {
       const url = document.getElementById('url-input').value.trim();
       if (!url) throw new Error('Enter a URL.');
       sourceUrl = url;
-
       setStep('step-fetch', 'active');
       html = await fetchHTML(url);
       if (html.length < 200) throw new Error('Could not fetch page. May require login or Jina could not parse it.');
       setStep('step-fetch', 'done');
-
     } else {
-      // Paste mode — user pastes raw text, wrap in minimal HTML
       const text = document.getElementById('paste-input').value.trim();
       if (text.length < 100) throw new Error('Paste at least 100 characters of legal text.');
       sourceUrl = 'pasted-text';
-      // Wrap in HTML so the parser can handle it uniformly
       html = `<html><body><div class="content-doc">${text.replace(/\n/g, '<br>')}</div></body></html>`;
     }
 
-    // Step 2: Parse DOM into structured document
     setStep('step-parse', 'active');
     docData = LegalDocParser.parse(html);
     rawText = LegalDocParser.lastRawText || '';
 
-    // Show stats
     const words = rawText.split(/\s+/).filter(Boolean).length;
     const totalArticles = docData.chapters.reduce((sum, ch) => sum + ch.articles.length, 0);
     const parseText = document.getElementById('step-parse-text');
     if (parseText) parseText.textContent = `Parsed: ${totalArticles} điều · ${docData.chapters.length} chương · ${words.toLocaleString()} words · ${rawText.length.toLocaleString()} chars`;
     setStep('step-parse', 'done');
 
-    // Step 3: Render
     setStep('step-render', 'active');
     renderDocument(docData);
     setStep('step-render', 'done');
@@ -1015,7 +2029,6 @@ async function startParse() {
 
 // ================================================================
 // FETCH HTML VIA JINA READER
-// X-Return-Format: html returns cleaned DOM, not markdown
 // ================================================================
 async function fetchHTML(url) {
   const jinaUrl = `https://r.jina.ai/${url}`;
@@ -1032,10 +2045,8 @@ async function fetchHTML(url) {
       }
     });
     clearTimeout(timer);
-
     if (!resp.ok) throw new Error(`Jina returned HTTP ${resp.status}`);
     return await resp.text();
-
   } catch (e) {
     clearTimeout(timer);
     if (e.name === 'AbortError') throw new Error('Jina Reader timed out (30s). Try pasting the text directly.');
@@ -1044,54 +2055,32 @@ async function fetchHTML(url) {
 }
 
 // ================================================================
-// LEGAL DOCUMENT PARSER — pure DOM + regex, zero LLM
-// Vietnamese legal docs follow strict patterns:
-//   Chương I, II, III...     → chapters
-//   Điều 1, 2, 3...          → articles
-//   1., 2., 3...              → clauses (indent 0)
-//   a), b), c)...             → sub-clauses (indent 1)
-//   (i), (ii)...              → sub-sub (indent 2)
+// LEGAL DOCUMENT PARSER
 // ================================================================
 const LegalDocParser = {
   lastRawText: '',
 
   parse(html) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
-
-    // Extract raw text for display/export
     const contentEl = this.findContentElement(doc);
     const root = contentEl || doc.body;
     this.lastRawText = this.getTextContent(root);
-
-    // Extract text lines preserving structure
     const lines = this.lastRawText.split('\n').map(l => l.trim()).filter(Boolean);
-
-    // Parse header metadata
     const header = this.parseHeader(lines);
-
-    // Parse chapters and articles
     const chapters = this.parseChapters(lines);
-
-    // If no chapters found, wrap everything in a single chapter
     if (chapters.length === 0) {
       chapters.push({
-        chapter_id: 'ch1',
-        chapter_number: 'I',
-        title: 'Nội dung',
+        chapter_id: 'ch1', chapter_number: 'I', title: 'Nội dung',
         articles: this.parseArticlesFromLines(lines, 0, lines.length),
       });
     }
-
     return { header, chapters };
   },
 
-  // DOMParser doesn't support innerText (no layout engine).
-  // Walk DOM, insert \n before block elements, then use textContent.
   getTextContent(el) {
     if (!el) return '';
     const clone = el.cloneNode(true);
     clone.querySelectorAll('script, style, noscript, iframe, svg').forEach(s => s.remove());
-    // Insert newlines before block elements
     const blocks = 'p, div, br, h1, h2, h3, h4, h5, h6, li, tr, dt, dd, blockquote, section, article, header, footer, pre';
     clone.querySelectorAll(blocks).forEach(b => {
       b.insertAdjacentText('beforebegin', '\n');
@@ -1099,7 +2088,6 @@ const LegalDocParser = {
     return (clone.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
   },
 
-  // Find the main content element
   findContentElement(doc) {
     const selectors = [
       '.content-doc', '.law-content', '.content-law',
@@ -1110,7 +2098,6 @@ const LegalDocParser = {
       const el = doc.querySelector(sel);
       if (el && (el.textContent || '').length > 300) return el;
     }
-    // Fallback: find largest block with "Điều" mentions
     let best = null, bestScore = 0;
     doc.querySelectorAll('div, article, section, main').forEach(el => {
       const text = el.textContent || '';
@@ -1121,21 +2108,17 @@ const LegalDocParser = {
     return best;
   },
 
-  // Extract text lines preserving structure
   extractLines(el) {
     return this.getTextContent(el).split('\n').map(l => l.trim()).filter(Boolean);
   },
 
-  // Parse document header/metadata from first lines
   parseHeader(lines) {
     const header = {
       issuing_body: '', doc_number: '', doc_type: '', title: '',
       date: '', status: '', effective_date: '', tags: [],
     };
-
     const fullText = lines.slice(0, 30).join(' ');
 
-    // Issuing body
     const bodies = [
       'NGÂN HÀNG NHÀ NƯỚC VIỆT NAM', 'NGÂN HÀNG NHÀ NƯỚC',
       'BỘ TÀI CHÍNH', 'BỘ CÔNG THƯƠNG', 'CHÍNH PHỦ',
@@ -1146,11 +2129,9 @@ const LegalDocParser = {
       if (fullText.includes(b)) { header.issuing_body = b; break; }
     }
 
-    // Doc number: Số: XX/YYYY/TT-NHNN
     const numMatch = fullText.match(/Số[:\s]*([^\n]+?(?:TT|NĐ|QĐ|QH|CP|BTC|NHNN)[^\s]*)/i);
     if (numMatch) header.doc_number = numMatch[1].trim();
 
-    // Doc type
     const types = [
       { re: /dự\s*thảo\s*thông\s*tư/i, type: 'Dự thảo Thông tư' },
       { re: /thông\s*tư/i, type: 'Thông tư' },
@@ -1162,13 +2143,10 @@ const LegalDocParser = {
       if (t.re.test(fullText)) { header.doc_type = t.type; break; }
     }
 
-    // Title: find the longest line in first 20 that looks like a title
-    // Usually starts with "Thông tư", "Nghị định", "Quy định", etc.
     for (let i = 0; i < Math.min(lines.length, 25); i++) {
       const line = lines[i];
       if (/^(Thông tư|Nghị định|Quyết định|Luật|Quy định|Về việc)/i.test(line) && line.length > 30) {
         header.title = line;
-        // Merge next line if it continues (no marker start)
         if (i + 1 < lines.length && !/^(Chương|Điều|Căn cứ|Số)/i.test(lines[i + 1])) {
           header.title += ' ' + lines[i + 1];
         }
@@ -1179,11 +2157,9 @@ const LegalDocParser = {
       header.title = header.doc_type || 'Văn bản pháp luật';
     }
 
-    // Date
     const dateMatch = fullText.match(/ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})\s+năm\s+(\d{4})/i);
     if (dateMatch) header.date = `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`;
 
-    // Tags from doc type
     if (header.doc_type) header.tags.push(header.doc_type);
     if (/ngân\s*hàng|tín\s*dụng/i.test(fullText)) header.tags.push('Ngân hàng');
     if (/trí\s*tuệ\s*nhân\s*tạo|AI/i.test(fullText)) header.tags.push('AI');
@@ -1191,10 +2167,8 @@ const LegalDocParser = {
     return header;
   },
 
-  // Parse chapters from lines
   parseChapters(lines) {
     const chapters = [];
-    // Find chapter boundaries: "Chương I", "CHƯƠNG II", etc.
     const chapterIndices = [];
     const chapterRe = /^Chương\s+([IVXLCDM]+|\d+)[.\s:—–-]*(.*)/i;
 
@@ -1207,28 +2181,21 @@ const LegalDocParser = {
 
     if (chapterIndices.length === 0) return [];
 
-    // Check if there's preamble content before first chapter
     const firstChIdx = chapterIndices[0].idx;
     const preambleArticles = this.parseArticlesFromLines(lines, 0, firstChIdx);
     if (preambleArticles.length > 0) {
       chapters.push({
-        chapter_id: 'ch0',
-        chapter_number: '0',
-        title: 'Căn cứ pháp lý',
+        chapter_id: 'ch0', chapter_number: '0', title: 'Căn cứ pháp lý',
         articles: preambleArticles,
       });
     }
 
-    // Build each chapter
     for (let c = 0; c < chapterIndices.length; c++) {
       const ch = chapterIndices[c];
       const startLine = ch.idx + 1;
       const endLine = c + 1 < chapterIndices.length ? chapterIndices[c + 1].idx : lines.length;
-
       chapters.push({
-        chapter_id: `ch${c + 1}`,
-        chapter_number: ch.number,
-        title: ch.title,
+        chapter_id: `ch${c + 1}`, chapter_number: ch.number, title: ch.title,
         articles: this.parseArticlesFromLines(lines, startLine, endLine),
       });
     }
@@ -1236,7 +2203,6 @@ const LegalDocParser = {
     return chapters;
   },
 
-  // Parse articles from a range of lines
   parseArticlesFromLines(lines, start, end) {
     const articles = [];
     const articleRe = /^Điều\s+(\d+)[.\s:—–-]*(.*)/i;
@@ -1250,13 +2216,10 @@ const LegalDocParser = {
     }
 
     if (articleIndices.length === 0) {
-      // No articles found — wrap remaining lines as a single article
       const paragraphs = this.parseParagraphs(lines, start, end);
       if (paragraphs.length > 0) {
         articles.push({
-          article_id: `d_pre_${start}`,
-          article_number: 0,
-          title: 'Nội dung',
+          article_id: `d_pre_${start}`, article_number: 0, title: 'Nội dung',
           paragraphs,
         });
       }
@@ -1267,11 +2230,8 @@ const LegalDocParser = {
       const art = articleIndices[a];
       const pStart = art.idx + 1;
       const pEnd = a + 1 < articleIndices.length ? articleIndices[a + 1].idx : end;
-
       articles.push({
-        article_id: `d${art.number}`,
-        article_number: art.number,
-        title: art.title,
+        article_id: `d${art.number}`, article_number: art.number, title: art.title,
         paragraphs: this.parseParagraphs(lines, pStart, pEnd),
       });
     }
@@ -1279,33 +2239,22 @@ const LegalDocParser = {
     return articles;
   },
 
-  // Parse paragraphs with indent detection
   parseParagraphs(lines, start, end) {
     const paragraphs = [];
     for (let i = start; i < end; i++) {
       const line = lines[i];
       if (!line || line.length < 2) continue;
-      // Skip chapter/article markers that may be in range
       if (/^(Chương\s+[IVXLCDM\d]+|Điều\s+\d+)/i.test(line)) continue;
-
-      paragraphs.push({
-        text: line,
-        indent: this.detectIndent(line),
-      });
+      paragraphs.push({ text: line, indent: this.detectIndent(line) });
     }
     return paragraphs;
   },
 
-  // Detect indent level from line content
   detectIndent(line) {
-    // Level 2: (i), (ii), (iii), (iv)... or roman numeral sub-sub
     if (/^\([ivxlcdm]+\)/i.test(line)) return 2;
-    // Level 2: dashes or bullets as deep indent
     if (/^[-–—•]\s/.test(line)) return 2;
-    // Level 1: a), b), c)... or a., b., c.
     if (/^[a-zđ]\)\s/i.test(line)) return 1;
     if (/^[a-zđ]\.\s/i.test(line) && line.length > 5) return 1;
-    // Level 0: numbered clauses 1., 2., 3. or standalone paragraphs
     return 0;
   },
 };
@@ -1329,7 +2278,6 @@ function renderDocument(doc) {
 
   let html = '';
 
-  // Header
   html += `<div class="doc-header">`;
   if (h.issuing_body) html += `<div class="org">${esc(h.issuing_body)}</div>`;
   if (h.doc_number) html += `<div class="org" style="font-size:11px;margin-bottom:12px">${esc(h.doc_number)}${h.doc_type ? ' — ' + esc(h.doc_type).toUpperCase() : ''}</div>`;
@@ -1343,10 +2291,8 @@ function renderDocument(doc) {
   }
   html += `</div>`;
 
-  // Raw text preview (hidden by default)
   html += `<div class="raw-preview" id="raw-preview">${esc(rawText.slice(0, 5000))}${rawText.length > 5000 ? '\n\n... [truncated]' : ''}</div>`;
 
-  // TOC
   html += `<div class="toc" id="toc" style="display:none"><h3>Mục lục</h3>`;
   doc.chapters.forEach(ch => {
     html += `<a class="toc-item chapter-link" onclick="scrollToEl('${ch.chapter_id}')">${esc(ch.title)}</a>`;
@@ -1356,7 +2302,6 @@ function renderDocument(doc) {
   });
   html += `</div>`;
 
-  // Chapters + Articles
   doc.chapters.forEach(ch => {
     html += `<div class="chapter" id="${ch.chapter_id}">Chương ${esc(ch.chapter_number)} — ${esc(ch.title)}</div>`;
     ch.articles.forEach(art => {
@@ -1371,6 +2316,11 @@ function renderDocument(doc) {
   });
 
   container.innerHTML = html;
+
+  // Phase 2: Load stored annotations and render highlights
+  AnnotationStore.load();
+  renderAllHighlights();
+  renderAnnotationPanel();
 }
 
 // ================================================================
@@ -1391,29 +2341,46 @@ function scrollToEl(id) {
 }
 
 function searchText(query) {
-  // Restore original text from docData instead of manipulating innerHTML
-  document.querySelectorAll('mark').forEach(m => { m.outerHTML = m.textContent; });
+  // Remove search highlights only (preserve annotation highlights)
+  document.querySelectorAll('mark.search-hit').forEach(m => {
+    const parent = m.parentNode;
+    while (m.firstChild) parent.insertBefore(m.firstChild, m);
+    parent.removeChild(m);
+    parent.normalize();
+  });
   if (!query || query.length < 2) return;
 
   const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-  const walker = document.createTreeWalker(
-    document.getElementById('doc-container'),
-    NodeFilter.SHOW_TEXT,
-    null
-  );
+  const container = document.getElementById('doc-container');
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
 
   const matches = [];
   while (walker.nextNode()) {
     const node = walker.currentNode;
-    if (node.textContent.match(re) && node.parentElement.closest('.article, .chapter, .doc-header')) {
+    if (node.textContent.match(re) && node.parentElement.closest('.article, .chapter, .doc-header')
+        && !node.parentElement.closest('mark.ann-highlight')) {
       matches.push(node);
     }
   }
 
+  // Walk matches and wrap with <mark class="search-hit">
   matches.forEach(node => {
-    const parent = node.parentElement;
-    const html = parent.innerHTML;
-    parent.innerHTML = html.replace(re, '<mark>$1</mark>');
+    const text = node.textContent;
+    const parts = text.split(re);
+    if (parts.length <= 1) return;
+    const frag = document.createDocumentFragment();
+    parts.forEach(part => {
+      if (re.test(part)) {
+        re.lastIndex = 0; // reset regex
+        const m = document.createElement('mark');
+        m.className = 'search-hit';
+        m.textContent = part;
+        frag.appendChild(m);
+      } else {
+        frag.appendChild(document.createTextNode(part));
+      }
+    });
+    node.parentNode.replaceChild(frag, node);
   });
 }
 
@@ -1440,11 +2407,201 @@ function exportText() {
 }
 
 // ================================================================
-// LLM EXPLAINER
+// PHASE 3: SELECTION TOOLBAR (Highlight + Explain)
 // ================================================================
 let selectedText = '';
 let selectedContext = '';
+let selectedArticleId = '';
+let selectedOffset = null;
 const explainCache = {};
+
+// ── Selection constants ────────────────────────────────────────
+let SELECTION_MAX_WORDS = 50;
+let SELECTION_MAX_CHARS = 800;
+
+function countWords(text) {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+// ── mouseup: show two-button toolbar ───────────────────────────
+document.addEventListener('mouseup', (e) => {
+  const toolbar = document.getElementById('selection-toolbar');
+  if (!toolbar) return;
+  if (e.target.closest('.selection-toolbar, .explain-overlay, .toolbar, .landing-card, .modal-overlay')) return;
+
+  const sel = window.getSelection();
+  const text = sel.toString().trim();
+
+  // Nothing selected or trivial
+  if (text.length < 2) {
+    toolbar.style.display = 'none';
+    return;
+  }
+
+  const wordCount = countWords(text);
+  const range = sel.getRangeAt(0);
+  const rect = range.getBoundingClientRect();
+  const top = window.scrollY + rect.top - 40;
+  const left = window.scrollX + rect.left + rect.width / 2 - 90;
+
+  // ── TOO LONG → show warning ──
+  if (wordCount > SELECTION_MAX_WORDS || text.length > SELECTION_MAX_CHARS) {
+    toolbar.style.top = top + 'px';
+    toolbar.style.left = left + 'px';
+    toolbar.style.display = 'flex';
+    toolbar.classList.add('warn');
+    toolbar.innerHTML = `<button style="width:100%">⚠ ${wordCount} từ — chọn ngắn hơn (≤${SELECTION_MAX_WORDS})</button>`;
+    clearTimeout(toolbar._warnTimer);
+    toolbar._warnTimer = setTimeout(() => { toolbar.style.display = 'none'; }, 2500);
+    return;
+  }
+
+  // ── VALID SELECTION → compute article offset + show buttons ──
+  toolbar.classList.remove('warn');
+  selectedText = text;
+
+  // Find parent article and compute offset
+  const anchor = sel.anchorNode;
+  const el = anchor?.nodeType === 3 ? anchor.parentElement : anchor;
+  const articleEl = el?.closest?.('.article');
+  selectedArticleId = articleEl?.id || '';
+  selectedContext = articleEl ? articleEl.textContent.trim().slice(0, 600) : '';
+
+  // Compute text offset within article
+  if (articleEl) {
+    selectedOffset = getArticleTextOffset(articleEl, range);
+  } else {
+    selectedOffset = null;
+  }
+
+  toolbar.style.top = top + 'px';
+  toolbar.style.left = left + 'px';
+  toolbar.style.display = 'flex';
+
+  // Build buttons
+  const wordHint = wordCount > 10 ? ` (${wordCount})` : '';
+  toolbar.innerHTML = `
+    <button class="btn-highlight" id="btn-highlight">🖍 Highlight</button>
+    <button class="btn-explain" id="btn-explain">⚡ Explain${wordHint}</button>`;
+
+  document.getElementById('btn-highlight').onclick = highlightSelection;
+  document.getElementById('btn-explain').onclick = explainAndHighlight;
+});
+
+// ── Dismiss on mousedown ───────────────────────────────────────
+document.addEventListener('mousedown', (e) => {
+  const toolbar = document.getElementById('selection-toolbar');
+  if (toolbar && !e.target.closest('.selection-toolbar')) {
+    toolbar.style.display = 'none';
+    toolbar.classList.remove('warn');
+  }
+});
+
+// ── Highlight only (no LLM call) ──────────────────────────────
+function highlightSelection() {
+  if (!selectedText || !selectedArticleId || !selectedOffset) return;
+
+  const toolbar = document.getElementById('selection-toolbar');
+  toolbar.style.display = 'none';
+
+  const ann = AnnotationStore.add({
+    id: generateId(),
+    text: selectedText,
+    articleId: selectedArticleId,
+    textOffset: { ...selectedOffset },
+    textVerify: {
+      head: selectedText.slice(0, 20),
+      tail: selectedText.slice(-20),
+    },
+    note: null,
+    explanation: null,
+    createdAt: Date.now(),
+  });
+
+  // Clear selection
+  window.getSelection().removeAllRanges();
+  trackEvent('highlight_add', { words: countWords(selectedText) });
+  return ann;
+}
+
+// ── Explain + Highlight (LLM call + persist) ──────────────────
+async function explainAndHighlight() {
+  if (!selectedText) return;
+
+  const wordCount = countWords(selectedText);
+  if (wordCount > SELECTION_MAX_WORDS || selectedText.length > SELECTION_MAX_CHARS) return;
+
+  // Create annotation first (highlight immediately)
+  const ann = highlightSelection();
+
+  // Then fire LLM explain
+  const overlay = document.getElementById('explain-overlay');
+  const provider = LLM.getActiveProvider();
+  const cacheKey = selectedText.toLowerCase().slice(0, 80) + ':' + provider;
+  const termText = selectedText; // capture before async
+
+  overlay.style.display = 'flex';
+  overlay.innerHTML = `
+    <div class="explain-popup">
+      <div class="explain-popup-header">
+        <div>
+          <div class="term-label">Giải thích thuật ngữ</div>
+          <div class="term-text">${esc(termText)}</div>
+        </div>
+        <button class="explain-popup-close" onclick="closeExplainBtn()">×</button>
+      </div>
+      <div class="explain-popup-body">
+        <div class="explain-loading"><div class="spinner"></div><p>Đang phân tích (${provider})...</p></div>
+      </div>
+    </div>`;
+
+  if (explainCache[cacheKey]) {
+    // Attach cached explanation to annotation
+    if (ann) AnnotationStore.update(ann.id, { explanation: explainCache[cacheKey] });
+    renderExplanation(termText, explainCache[cacheKey], provider);
+    return;
+  }
+
+  try {
+    const docTitle = docData?.header?.title || 'legal document';
+    const docType = docData?.header?.doc_type || '';
+
+    const systemWithContext = EXPLAIN_SYSTEM_PROMPT.replace(
+      'Vietnamese banking compliance teams',
+      `Vietnamese banking compliance teams. They are reading: "${docTitle}" (${docType})`
+    );
+
+    const response = await LLM.call(
+      systemWithContext,
+      `Term: "${termText}"\n\nContext from the document:\n"${selectedContext.slice(0, 500)}"`,
+      { provider, maxTokens: 1000 }
+    );
+
+    const result = JSON.parse(response.replace(/```json|```/g, '').trim());
+    explainCache[cacheKey] = result;
+
+    // Attach explanation to annotation
+    if (ann) AnnotationStore.update(ann.id, { explanation: result });
+
+    renderExplanation(termText, result, provider);
+    trackEvent('explain_term', { term: termText.slice(0, 40), provider });
+
+  } catch (err) {
+    renderExplainError(termText, err.message);
+  }
+}
+
+function closeExplain(e) {
+  if (e && e.target === document.getElementById('explain-overlay'))
+    document.getElementById('explain-overlay').style.display = 'none';
+}
+function closeExplainBtn() {
+  document.getElementById('explain-overlay').style.display = 'none';
+}
 
 const EXPLAIN_SYSTEM_PROMPT = `You are a legal/technical term explainer for Vietnamese banking compliance teams (non-technical: lawyers, risk officers, auditors).
 
@@ -1468,94 +2625,8 @@ Rules:
 - Keep each field under 100 words.
 - Be specific to Vietnamese banking context.`;
 
-document.addEventListener('mouseup', (e) => {
-  const trigger = document.getElementById('explain-trigger');
-  if (!trigger || e.target.closest('.explain-trigger, .explain-overlay, .toolbar, .landing-card, .modal-overlay')) return;
-
-  const sel = window.getSelection();
-  const text = sel.toString().trim();
-
-  if (text.length >= 2 && text.length <= 200) {
-    selectedText = text;
-    const anchor = sel.anchorNode;
-    const el = anchor?.nodeType === 3 ? anchor.parentElement : anchor;
-    const articleEl = el?.closest?.('.article');
-    selectedContext = articleEl ? articleEl.textContent.trim().slice(0, 600) : '';
-
-    const range = sel.getRangeAt(0);
-    const rect = range.getBoundingClientRect();
-    trigger.style.top = (window.scrollY + rect.top - 36) + 'px';
-    trigger.style.left = (window.scrollX + rect.left + rect.width / 2 - 45) + 'px';
-    trigger.style.display = 'block';
-  } else {
-    trigger.style.display = 'none';
-  }
-});
-
-document.addEventListener('mousedown', (e) => {
-  const trigger = document.getElementById('explain-trigger');
-  if (trigger && !e.target.closest('.explain-trigger')) trigger.style.display = 'none';
-});
-
-function closeExplain(e) {
-  if (e && e.target === document.getElementById('explain-overlay'))
-    document.getElementById('explain-overlay').style.display = 'none';
-}
-function closeExplainBtn() {
-  document.getElementById('explain-overlay').style.display = 'none';
-}
-
-async function explainSelection() {
-  if (!selectedText) return;
-  document.getElementById('explain-trigger').style.display = 'none';
-  const overlay = document.getElementById('explain-overlay');
-  const provider = LLM.getActiveProvider();
-  const cacheKey = selectedText.toLowerCase().slice(0, 80) + ':' + provider;
-
-  overlay.style.display = 'flex';
-  overlay.innerHTML = `
-    <div class="explain-popup">
-      <div class="explain-popup-header">
-        <div>
-          <div class="term-label">Giải thích thuật ngữ</div>
-          <div class="term-text">${esc(selectedText)}</div>
-        </div>
-        <button class="explain-popup-close" onclick="closeExplainBtn()">×</button>
-      </div>
-      <div class="explain-popup-body">
-        <div class="explain-loading"><div class="spinner"></div><p>Đang phân tích (${provider})...</p></div>
-      </div>
-    </div>`;
-
-  if (explainCache[cacheKey]) {
-    renderExplanation(selectedText, explainCache[cacheKey], provider);
-    return;
-  }
-
-  try {
-    const docTitle = docData?.header?.title || 'Vietnamese legal document';
-    const docType = docData?.header?.doc_type || '';
-
-    const systemWithContext = EXPLAIN_SYSTEM_PROMPT.replace(
-      'Vietnamese banking compliance teams',
-      `Vietnamese banking compliance teams. They are reading: "${docTitle}" (${docType})`
-    );
-
-    const response = await LLM.call(
-      systemWithContext,
-      `Term: "${selectedText}"\n\nContext from the document:\n"${selectedContext.slice(0, 500)}"`,
-      { provider, maxTokens: 1000 }
-    );
-
-    const result = JSON.parse(response.replace(/```json|```/g, '').trim());
-    explainCache[cacheKey] = result;
-    renderExplanation(selectedText, result, provider);
-    trackEvent('explain_term', { term: selectedText.slice(0, 40), provider });
-
-  } catch (err) {
-    renderExplainError(selectedText, err.message);
-  }
-}
+// ── explainSelection kept as alias for backward compat ─────────
+const explainSelection = explainAndHighlight;
 
 function renderExplanation(term, r, provider) {
   const overlay = document.getElementById('explain-overlay');
@@ -1654,10 +2725,31 @@ function esc(s) {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
+    // Confirm dialog (z-600, highest priority)
+    const confirmEl = document.getElementById('confirmDialog');
+    if (confirmEl && !confirmEl.classList.contains('hidden')) { resolveConfirm(false); return; }
     const overlay = document.getElementById('explain-overlay');
     if (overlay?.style.display !== 'none') { overlay.style.display = 'none'; return; }
     const modal = document.getElementById('settingsModal');
     if (!modal.classList.contains('hidden')) { closeSettings(); return; }
+    // Dismiss selection toolbar
+    const toolbar = document.getElementById('selection-toolbar');
+    if (toolbar) toolbar.style.display = 'none';
+    // Dismiss annotation context menu
+    hideAnnotationMenu();
+  }
+  // Undo/Redo annotations
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+    if (document.getElementById('screen-viewer')?.style.display !== 'none') {
+      e.preventDefault();
+      AnnotationStore.undo();
+    }
+  }
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+    if (document.getElementById('screen-viewer')?.style.display !== 'none') {
+      e.preventDefault();
+      AnnotationStore.redo();
+    }
   }
   if (e.key === 'Enter' && document.getElementById('screen-landing').style.display !== 'none'
       && document.activeElement?.tagName !== 'TEXTAREA') {
