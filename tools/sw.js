@@ -1,6 +1,6 @@
-const CACHE_NAME = 'inkflow-v1';
+const CACHE_NAME = 'inkflow-v2';
 const ASSETS = [
-  './inkflow.html',
+  './tao.html',
   './manifest.json'
 ];
 
@@ -45,10 +45,8 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip API calls (Claude API, Jina)
-  if (request.url.includes('api.anthropic.com') ||
-      request.url.includes('r.jina.ai') ||
-      request.url.includes('paulgraham.com')) {
+  // Skip API calls
+  if (request.url.includes('generativelanguage.googleapis.com')) {
     return;
   }
 
@@ -70,7 +68,7 @@ self.addEventListener('fetch', (event) => {
           .catch(() => {
             // Offline fallback for HTML
             if (request.headers.get('accept')?.includes('text/html')) {
-              return caches.match('./inkflow.html');
+              return caches.match('./tao.html');
             }
           });
       })
