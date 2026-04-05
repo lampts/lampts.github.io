@@ -10,7 +10,7 @@
       gtag('config', 'G-VC31GENS6S');
     </script>
   <meta charset="UTF-8">
-  <title>Inkflow – Focus Mode</title>
+  <title>Inkflow – Focus Reader</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✒️</text></svg>">
   <link rel="manifest" href="manifest.json">
@@ -36,8 +36,10 @@
       --stats-border: rgba(0, 0, 0, 0.06);
       --panel-bg: #ffffff;
       --panel-border: rgba(0, 0, 0, 0.1);
-      --agent-icon: '✨';
       --accent-color: #4a90e2;
+      --highlight-bg: rgba(72, 180, 97, 0.2);
+      --highlight-hover-bg: rgba(72, 180, 97, 0.38);
+      --underline-color: #e07060;
     }
 
     body.dark-mode {
@@ -54,6 +56,9 @@
       --panel-bg: #242424;
       --panel-border: rgba(255, 255, 255, 0.1);
       --accent-color: #5da3f5;
+      --highlight-bg: rgba(170, 255, 190, 0.12);
+      --highlight-hover-bg: rgba(170, 255, 190, 0.25);
+      --underline-color: #e88070;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -73,7 +78,6 @@
       height: 100vh;
       padding: 6vh max(5vw, calc((100vw - 68ch) / 2)) 10vh;
       border: none;
-      resize: none;
       outline: none;
       background: transparent;
       color: inherit;
@@ -83,12 +87,36 @@
       overflow-y: auto;
       caret-color: var(--text-color);
       white-space: pre-wrap;
+      word-wrap: break-word;
       tab-size: 4;
     }
 
-    #editor::placeholder { color: var(--placeholder-color); opacity: 1; }
+    #editor:empty::before {
+      content: attr(data-placeholder);
+      color: var(--placeholder-color);
+      pointer-events: none;
+    }
+
     ::selection { background: var(--selection-bg); }
 
+    /* Highlight & Underline */
+    #editor mark {
+      background: var(--highlight-bg);
+      border-radius: 2px;
+      padding: 0 1px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    #editor mark:hover { background: var(--highlight-hover-bg); }
+    #editor u {
+      text-decoration-color: var(--underline-color);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
+    #editor u:hover { text-decoration-thickness: 3px; }
+
+    /* Stats bar */
     #stats-bar {
       position: fixed;
       bottom: 0;
@@ -106,6 +134,7 @@
       z-index: 5;
     }
 
+    /* Top buttons */
     .top-buttons {
       position: fixed;
       top: 15px;
@@ -133,31 +162,103 @@
 
     .icon-btn:hover { background: var(--button-hover-bg); opacity: 1; transform: scale(1.08); }
     #theme-toggle::before { content: var(--button-icon); }
-    #agent-toggle::before { content: var(--agent-icon); }
     #share-toggle::before { content: '🔗'; }
+    #settings-toggle::before { content: '⚙️'; }
 
-    /* Agent Panel */
-    #agent-panel {
+    /* Selection toolbar */
+    #sel-toolbar {
       position: fixed;
-      top: 70px;
-      right: 15px;
-      width: min(420px, calc(100vw - 30px));
-      max-height: calc(100vh - 140px);
+      display: none;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 6px;
+      padding: 4px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      z-index: 20;
+      flex-direction: row;
+      gap: 3px;
+    }
+    .tb-btn {
+      padding: 4px 10px;
+      background: var(--button-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      color: var(--text-color);
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .tb-btn:hover { background: var(--button-hover-bg); }
+
+    /* AI prompt bar */
+    #ai-bar {
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(520px, calc(100vw - 32px));
       background: var(--panel-bg);
       border: 1px solid var(--panel-border);
       border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+      z-index: 25;
       display: none;
       flex-direction: column;
-      gap: 1rem;
-      z-index: 9;
+      gap: 6px;
+    }
+    #ai-bar.active { display: flex; }
+
+    .ai-bar-quick {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .ai-q {
+      padding: 3px 10px;
+      background: var(--button-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      color: var(--stats-text);
+      transition: all 0.15s;
+    }
+    .ai-q:hover { background: var(--button-hover-bg); color: var(--text-color); }
+
+    .ai-bar-input {
+      display: flex;
+      gap: 4px;
+    }
+    .ai-bar-input input {
+      flex: 1;
+      padding: 6px 10px;
+      background: var(--button-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 4px;
+      color: var(--text-color);
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      outline: none;
+    }
+    .ai-bar-input input:focus { border-color: var(--accent-color); }
+
+    #ai-status {
+      font-size: 0.72rem;
+      color: var(--stats-text);
+      min-height: 0;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      max-height: 120px;
       overflow-y: auto;
     }
+    #ai-status:empty { display: none; }
+    #ai-status.error { color: #e57373; }
 
-    #agent-panel.active { display: flex; }
-
-    /* Share Panel */
+    /* Share panel */
     #share-panel {
       position: fixed;
       top: 70px;
@@ -173,7 +274,6 @@
       gap: 1rem;
       z-index: 9;
     }
-
     #share-panel.active { display: flex; }
 
     #qr-container {
@@ -183,11 +283,7 @@
       background: white;
       border-radius: 8px;
     }
-
-    #qr-container svg {
-      max-width: 200px;
-      max-height: 200px;
-    }
+    #qr-container svg { max-width: 200px; max-height: 200px; }
 
     #share-url {
       width: 100%;
@@ -203,24 +299,12 @@
       overflow-y: auto;
     }
 
-    .share-stats {
-      font-size: 0.75rem;
-      color: var(--stats-text);
-      text-align: center;
-    }
+    .share-stats { font-size: 0.75rem; color: var(--stats-text); text-align: center; }
+    .warning-text { font-size: 0.7rem; color: #e57373; text-align: center; }
 
-    .section-divider {
-      border-top: 1px solid var(--panel-border);
-      margin: 0.5rem 0;
-    }
-
-    .preset-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-    }
-
-    .preset-btn, .action-btn {
+    .label { font-size: 0.8rem; font-weight: 500; color: var(--stats-text); margin-bottom: 0.3rem; letter-spacing: 0.02em; }
+    .button-row { display: flex; gap: 0.5rem; }
+    .action-btn {
       padding: 0.5rem 0.75rem;
       background: var(--button-bg);
       border: 1px solid var(--panel-border);
@@ -231,131 +315,206 @@
       transition: all 0.2s;
       color: var(--text-color);
     }
-
-    .preset-btn:hover, .action-btn:hover { background: var(--button-hover-bg); }
-
-    .action-btn.primary {
-      background: var(--accent-color);
-      color: white;
-      border-color: var(--accent-color);
-    }
-
+    .action-btn:hover { background: var(--button-hover-bg); }
+    .action-btn.primary { background: var(--accent-color); color: white; border-color: var(--accent-color); }
     .action-btn.primary:hover { opacity: 0.9; }
 
-    textarea, input {
+    /* Highlights panel */
+    #hl-panel {
+      position: fixed;
+      bottom: 32px;
+      left: 0;
       width: 100%;
-      padding: 0.6rem;
+      max-height: 35vh;
+      overflow-y: auto;
+      padding: 0.8rem max(5vw, calc((100vw - 68ch) / 2));
+      background: var(--stats-bg);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--stats-border);
+      display: none;
+      z-index: 4;
+    }
+    #hl-panel.active { display: block; }
+
+    .hl-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .hl-header .label { margin-bottom: 0; }
+    .hl-toggle {
+      font-size: 0.7rem;
+      color: var(--stats-text);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: var(--font-ui);
+    }
+    .hl-toggle:hover { color: var(--text-color); }
+
+    .hl-item {
+      padding: 0.4rem 0.6rem;
+      margin: 0.3rem 0;
+      border-left: 3px solid;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      font-family: var(--font-content);
+      cursor: pointer;
+      border-radius: 0 4px 4px 0;
+      transition: background 0.15s;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .hl-item:hover { background: var(--button-hover-bg); }
+    .hl-item.is-mark { border-left-color: rgba(72, 180, 97, 0.7); }
+    .hl-item.is-underline { border-left-color: var(--underline-color); }
+    .hl-item .hl-text { flex: 1; }
+    .hl-item .hl-explain {
+      font-size: 0.75rem;
+      color: var(--stats-text);
+      margin-top: 0.3rem;
+      line-height: 1.5;
+    }
+    .hl-item .hl-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .hl-item .hl-actions button {
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      background: var(--button-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 3px;
+      cursor: pointer;
+      color: var(--stats-text);
+      font-family: var(--font-ui);
+    }
+    .hl-item .hl-actions button:hover { background: var(--button-hover-bg); color: var(--text-color); }
+
+    /* Modal overlay */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .modal-overlay.visible { opacity: 1; }
+    body.dark-mode .modal-overlay { background: rgba(0, 0, 0, 0.45); }
+
+    .modal {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      width: min(360px, calc(100vw - 40px));
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transform: scale(0.97);
+      transition: transform 0.15s;
+    }
+    .modal-overlay.visible .modal { transform: scale(1); }
+
+    .modal-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-color);
+    }
+    .modal-body {
+      font-size: 0.8rem;
+      color: var(--stats-text);
+      line-height: 1.5;
+    }
+    .modal-input {
+      width: 100%;
+      padding: 8px 10px;
       background: var(--button-bg);
       border: 1px solid var(--panel-border);
       border-radius: 4px;
       color: var(--text-color);
       font-family: var(--font-ui);
-      font-size: 0.9rem;
-      resize: vertical;
+      font-size: 0.82rem;
       outline: none;
     }
+    .modal-input:focus { border-color: var(--accent-color); }
+    .modal-input::placeholder { color: var(--placeholder-color); }
 
-    #custom-prompt { min-height: 80px; }
-
-    #agent-result, #coach-result {
-      min-height: 150px;
-      max-height: 300px;
-      overflow-y: auto;
-      padding: 1rem;
-      background: var(--button-bg);
-      border: 1px solid var(--panel-border);
-      border-radius: 4px;
-      font-family: var(--font-content);
-      font-size: 0.9rem;
-      line-height: 1.6;
-      display: none;
-      white-space: pre-wrap;
-    }
-
-    #agent-result.active, #coach-result.active { display: block; }
-
-    .button-row { display: flex; gap: 0.5rem; }
-
-    #loading {
-      display: none;
-      text-align: center;
-      color: var(--stats-text);
-      font-size: 0.85rem;
-    }
-
-    #loading.active { display: block; }
-
-    .label {
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--stats-text);
-      margin-bottom: 0.3rem;
-      letter-spacing: 0.02em;
-    }
-
-    .label.clickable {
-      cursor: pointer;
-      user-select: none;
+    .modal-actions {
       display: flex;
-      align-items: center;
-      gap: 0.3rem;
+      gap: 6px;
+      justify-content: flex-end;
     }
-
-    .label.clickable::after {
-      content: '▼';
-      font-size: 0.7rem;
-      transition: transform 0.2s;
-    }
-
-    .label.clickable.collapsed::after { transform: rotate(-90deg); }
-    .label.clickable:hover { color: var(--text-color); }
-
-    .collapsible-section { display: flex; flex-direction: column; gap: 0.5rem; }
-    .collapsible-section.collapsed { display: none; }
-
-    .settings-link {
-      font-size: 0.75rem;
-      color: var(--stats-text);
-      text-decoration: underline;
+    .modal-btn {
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-family: var(--font-ui);
       cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid var(--panel-border);
+      background: var(--button-bg);
+      color: var(--text-color);
     }
-
-    .settings-link:hover { color: var(--text-color); }
-
-    .progress-badge {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
+    .modal-btn:hover { background: var(--button-hover-bg); }
+    .modal-btn.primary {
       background: var(--accent-color);
       color: white;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
+      border-color: var(--accent-color);
     }
-
-    .coach-buttons {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 0.5rem;
+    .modal-btn.primary:hover { opacity: 0.9; }
+    .modal-btn.danger {
+      background: #e05555;
+      color: white;
+      border-color: #e05555;
     }
-
-    .warning-text {
-      font-size: 0.7rem;
-      color: #e57373;
-      text-align: center;
-    }
+    .modal-btn.danger:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
-  <textarea id="editor" placeholder="Just write… (Tab=Quote, Ctrl/Cmd+U=Underline)" spellcheck="true" autofocus></textarea>
-  <div id="stats-bar">0 words · 0 characters · 1 line</div>
-   
+  <div id="editor" contenteditable="true" spellcheck="true" data-placeholder="Paste or write text… then highlight what matters.&#10;&#10;Ctrl+H = Highlight · Ctrl+U = Underline · Select → Ask AI"></div>
+
+  <div id="stats-bar">0 words · 0 characters · 0 highlights</div>
+
   <div class="top-buttons">
     <button id="share-toggle" class="icon-btn" aria-label="Share via URL/QR"></button>
-    <button id="agent-toggle" class="icon-btn" aria-label="Toggle agent"></button>
+    <button id="settings-toggle" class="icon-btn" aria-label="Settings"></button>
     <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme"></button>
   </div>
 
-  <!-- Share Panel -->
+  <!-- Selection toolbar -->
+  <div id="sel-toolbar">
+    <button class="tb-btn" id="tb-highlight">Highlight</button>
+    <button class="tb-btn" id="tb-underline">Underline</button>
+    <button class="tb-btn" id="tb-ask">Ask AI</button>
+  </div>
+
+  <!-- AI prompt bar (appears when Ask AI is clicked) -->
+  <div id="ai-bar">
+    <div class="ai-bar-quick">
+      <button class="ai-q" data-cmd="fix">Fix</button>
+      <button class="ai-q" data-cmd="rewrite">Rewrite</button>
+      <button class="ai-q" data-cmd="translate">Translate</button>
+      <button class="ai-q" data-cmd="explain">Explain</button>
+    </div>
+    <div class="ai-bar-input">
+      <input id="ai-prompt" type="text" placeholder="Or type any instruction…" autocomplete="off" />
+      <button id="ai-send" class="tb-btn">Go</button>
+    </div>
+    <div id="ai-status"></div>
+  </div>
+
+  <!-- Share panel -->
   <div id="share-panel">
     <div class="label">Share via URL</div>
     <div id="qr-container"></div>
@@ -368,53 +527,19 @@
     </div>
   </div>
 
-  <div id="agent-panel">
-    <!-- Quick Actions -->
-    <div class="label">Quick Actions</div>
-    <div class="preset-buttons">
-      <button class="preset-btn" data-prompt="Review this text critically. Point out weak arguments, unclear phrasing, logical gaps, and areas for improvement. Be direct and constructive.">Criticize</button>
-      <button class="preset-btn" data-prompt="Revise this text to improve clarity, flow, and impact. Keep the core message but make it sharper and more compelling.">Revise</button>
-      <button class="preset-btn" data-prompt="Summarize this text in three resolutions: 5 words | 15 words | 30 words.">Summarize</button>
-      <button class="preset-btn" data-prompt="Rewrite this in a professional, formal tone suitable for business communication.">Professional Tone</button>
-      <button class="preset-btn" data-prompt="Translate this to Vietnamese while preserving the original tone and nuance.">→ Vietnamese</button>
-      <button class="preset-btn" data-prompt="Translate this to English while preserving the original tone and nuance.">→ English</button>
+  <!-- Highlights panel -->
+  <div id="hl-panel">
+    <div class="hl-header">
+      <div class="label" id="hl-count">Highlights</div>
+      <div style="display:flex;gap:8px;">
+        <button class="hl-toggle" id="hl-clear">Clear all</button>
+        <button class="hl-toggle" id="hl-collapse">▼ Collapse</button>
+      </div>
     </div>
-
-    <!-- Custom Prompt (Collapsible) -->
-    <div class="label clickable" id="custom-prompt-toggle">Custom Prompt</div>
-    <div class="collapsible-section collapsed" id="custom-prompt-section">
-      <textarea id="custom-prompt" placeholder="Or write your own prompt..."></textarea>
-      <button id="run-agent" class="action-btn">Run Agent</button>
-    </div>
-
-    <!-- Agent Results -->
-    <div id="loading">Processing...</div>
-    <div id="agent-result"></div>
-    <div class="button-row" id="agent-actions" style="display: none;">
-      <button id="copy-result" class="action-btn">Copy Result</button>
-      <button id="export-json" class="action-btn">Export JSON</button>
-    </div>
-
-    <div class="section-divider"></div>
-
-    <!-- Daily Writing Coach -->
-    <div class="label">
-      Daily Writing Coach – PG Style
-      <span id="streak-badge" class="progress-badge" style="margin-left: 0.5rem;">Day 0</span>
-    </div>
-
-    <div class="coach-buttons">
-      <button id="insert-patterns" class="action-btn primary">Insert Pattern Practice</button>
-      <button id="analyze-writing" class="action-btn">Analyze PG Style</button>
-      <button id="save-practice" class="action-btn">Save Practice</button>
-    </div>
-
-    <!-- Coach Results -->
-    <div id="coach-result"></div>
-    <a class="settings-link" id="settings-link">Configure API Key</a>
+    <div id="hl-list"></div>
   </div>
 
-  <!-- QR Code Library (qrcode-generator) -->
+  <!-- QR Code Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 
   <script>
@@ -423,7 +548,6 @@
       // URL-as-Database Module
       // ========================================
       const URLDatabase = {
-        // Compress: text → URL-safe base64
         async compress(str) {
           const bytes = new TextEncoder().encode(str);
           const stream = new CompressionStream('deflate-raw');
@@ -435,7 +559,6 @@
             .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
         },
 
-        // Decompress: URL-safe base64 → text
         async decompress(b64) {
           try {
             const str = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
@@ -453,7 +576,6 @@
           }
         },
 
-        // Save: content → URL hash
         async save(content) {
           if (content.trim()) {
             const hash = '#' + await this.compress(content);
@@ -465,7 +587,6 @@
           }
         },
 
-        // Load: URL hash → content
         async load() {
           if (location.hash && location.hash.length > 1) {
             return await this.decompress(location.hash.slice(1));
@@ -473,20 +594,18 @@
           return '';
         },
 
-        // Get compressed size info
         getStats(content, compressed) {
           const originalBytes = new TextEncoder().encode(content).length;
           const compressedBytes = compressed.length;
           const ratio = originalBytes > 0 ? ((1 - compressedBytes / originalBytes) * 100).toFixed(0) : 0;
           const urlLength = location.origin.length + location.pathname.length + 1 + compressedBytes;
-          const qrFits = urlLength <= 2500; // Conservative limit for QR v40-L
+          const qrFits = urlLength <= 2500;
           return { originalBytes, compressedBytes, ratio, urlLength, qrFits };
         },
 
-        // Render QR code
         renderQR(container, url) {
           try {
-            const qr = qrcode(0, 'L'); // Auto version, low error correction
+            const qr = qrcode(0, 'L');
             qr.addData(url);
             qr.make();
             container.innerHTML = qr.createSvgTag(4, 0);
@@ -504,23 +623,14 @@
       const editor = document.getElementById('editor');
       const statsBar = document.getElementById('stats-bar');
       const themeToggle = document.getElementById('theme-toggle');
-      const agentToggle = document.getElementById('agent-toggle');
       const shareToggle = document.getElementById('share-toggle');
-      const agentPanel = document.getElementById('agent-panel');
+      const settingsToggle = document.getElementById('settings-toggle');
       const sharePanel = document.getElementById('share-panel');
-      const customPrompt = document.getElementById('custom-prompt');
-      const customPromptToggle = document.getElementById('custom-prompt-toggle');
-      const customPromptSection = document.getElementById('custom-prompt-section');
-      const runAgent = document.getElementById('run-agent');
-      const loading = document.getElementById('loading');
-      const agentResult = document.getElementById('agent-result');
-      const copyResult = document.getElementById('copy-result');
-      const exportJson = document.getElementById('export-json');
-      const agentActions = document.getElementById('agent-actions');
-      const settingsLink = document.getElementById('settings-link');
-      const presetButtons = document.querySelectorAll('.preset-btn');
-
-      // Share panel elements
+      const selToolbar = document.getElementById('sel-toolbar');
+      const hlPanel = document.getElementById('hl-panel');
+      const hlList = document.getElementById('hl-list');
+      const hlCount = document.getElementById('hl-count');
+      const hlCollapse = document.getElementById('hl-collapse');
       const qrContainer = document.getElementById('qr-container');
       const shareUrl = document.getElementById('share-url');
       const shareStats = document.getElementById('share-stats');
@@ -528,29 +638,710 @@
       const copyUrl = document.getElementById('copy-url');
       const clearUrl = document.getElementById('clear-url');
 
-      // Coach elements
-      const insertPatterns = document.getElementById('insert-patterns');
-      const analyzeWriting = document.getElementById('analyze-writing');
-      const coachResult = document.getElementById('coach-result');
-      const savePractice = document.getElementById('save-practice');
-      const streakBadge = document.getElementById('streak-badge');
-
-      let lastAgentResponse = '';
-
-      // PG essay list
-      const pgEssays = [
-        'avg.html', 'worked.html', 'smart.html', 'simply.html', 'die.html',
-        'greatwork.html', 'writes.html', 'procrastination.html', 'think.html',
-        'startupideas.html', 'before.html', 'wealth.html', 'disagree.html',
-        'say.html', 'foundervisa.html', 'ambitious.html', 'popular.html'
-      ];
+      let hlCollapsed = false;
+      let saveTimer = null;
 
       // ========================================
-      // Share Panel Functions
+      // Modal Utility (replaces native prompt/confirm)
+      // ========================================
+      function showModal({ title, body, input, placeholder, value, primaryLabel, primaryClass, cancelLabel }) {
+        return new Promise(resolve => {
+          const overlay = document.createElement('div');
+          overlay.className = 'modal-overlay';
+          const modal = document.createElement('div');
+          modal.className = 'modal';
+
+          if (title) {
+            const t = document.createElement('div');
+            t.className = 'modal-title';
+            t.textContent = title;
+            modal.appendChild(t);
+          }
+          if (body) {
+            const b = document.createElement('div');
+            b.className = 'modal-body';
+            b.textContent = body;
+            modal.appendChild(b);
+          }
+
+          let inputEl = null;
+          if (input) {
+            inputEl = document.createElement('input');
+            inputEl.className = 'modal-input';
+            inputEl.type = input === 'password' ? 'password' : 'text';
+            if (placeholder) inputEl.placeholder = placeholder;
+            if (value) inputEl.value = value;
+            modal.appendChild(inputEl);
+          }
+
+          const actions = document.createElement('div');
+          actions.className = 'modal-actions';
+
+          const cancelBtn = document.createElement('button');
+          cancelBtn.className = 'modal-btn';
+          cancelBtn.textContent = cancelLabel || 'Cancel';
+
+          const primaryBtn = document.createElement('button');
+          primaryBtn.className = 'modal-btn ' + (primaryClass || 'primary');
+          primaryBtn.textContent = primaryLabel || 'OK';
+
+          actions.appendChild(cancelBtn);
+          actions.appendChild(primaryBtn);
+          modal.appendChild(actions);
+          overlay.appendChild(modal);
+          document.body.appendChild(overlay);
+
+          // Animate in
+          requestAnimationFrame(() => overlay.classList.add('visible'));
+
+          function close(result) {
+            overlay.classList.remove('visible');
+            setTimeout(() => overlay.remove(), 150);
+            resolve(result);
+          }
+
+          cancelBtn.addEventListener('click', () => close(null));
+          overlay.addEventListener('click', (e) => { if (e.target === overlay) close(null); });
+          primaryBtn.addEventListener('click', () => {
+            close(inputEl ? inputEl.value : true);
+          });
+
+          if (inputEl) {
+            inputEl.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter') close(inputEl.value);
+              if (e.key === 'Escape') close(null);
+            });
+            setTimeout(() => { inputEl.focus(); inputEl.select(); }, 50);
+          } else {
+            setTimeout(() => primaryBtn.focus(), 50);
+          }
+
+          document.addEventListener('keydown', function esc(e) {
+            if (e.key === 'Escape') {
+              document.removeEventListener('keydown', esc);
+              close(null);
+            }
+          });
+        });
+      }
+
+      // ========================================
+      // Core Functions
+      // ========================================
+      const updateStats = () => {
+        const text = editor.innerText || '';
+        const chars = text.length;
+        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+        const marks = editor.querySelectorAll('mark').length;
+        const underlines = editor.querySelectorAll('u').length;
+        const total = marks + underlines;
+        statsBar.textContent = `${words} words · ${chars} characters · ${total} highlight${total !== 1 ? 's' : ''}`;
+      };
+
+      // Debounced auto-save
+      const saveDraft = () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          localStorage.setItem('inkflowDraft', editor.innerHTML);
+        }, 400);
+      };
+
+      const load = async () => {
+        const urlContent = await URLDatabase.load();
+        if (urlContent) {
+          // Backward compat: plain text (no HTML tags) vs HTML with highlights
+          if (/<[a-z][\s\S]*>/i.test(urlContent)) {
+            editor.innerHTML = urlContent;
+          } else {
+            editor.textContent = urlContent;
+          }
+        } else {
+          const draft = localStorage.getItem('inkflowDraft');
+          if (draft) editor.innerHTML = draft;
+        }
+        updateStats();
+        updateHighlightsList();
+      };
+
+      const setTheme = (dark) => {
+        document.body.classList.toggle('dark-mode', dark);
+        localStorage.setItem('inkflowTheme', dark ? 'dark' : 'light');
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#1a1a1a' : '#fffff8');
+      };
+
+      // ========================================
+      // Paste Sanitization
+      // ========================================
+      editor.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const html = e.clipboardData.getData('text/html');
+        const plain = e.clipboardData.getData('text/plain');
+
+        if (html) {
+          // Parse and keep only safe tags
+          const temp = document.createElement('div');
+          temp.innerHTML = html;
+          const sanitized = sanitizeNode(temp);
+          insertHTML(sanitized.innerHTML || sanitized.textContent);
+        } else {
+          document.execCommand('insertText', false, plain);
+        }
+      });
+
+      function sanitizeNode(node) {
+        const allowed = new Set(['MARK', 'U', 'BR', 'DIV', 'P', 'B', 'I', 'STRONG', 'EM']);
+        const frag = document.createDocumentFragment();
+
+        for (const child of [...node.childNodes]) {
+          if (child.nodeType === 3) { // text node
+            frag.appendChild(child.cloneNode());
+          } else if (child.nodeType === 1) { // element
+            if (allowed.has(child.tagName)) {
+              const el = document.createElement(child.tagName);
+              el.appendChild(sanitizeNode(child));
+              frag.appendChild(el);
+            } else {
+              // Unwrap: keep children
+              frag.appendChild(sanitizeNode(child));
+            }
+          }
+        }
+        const wrapper = document.createElement('div');
+        wrapper.appendChild(frag);
+        return wrapper;
+      }
+
+      function insertHTML(html) {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        const frag = document.createDocumentFragment();
+        let lastNode;
+        while (temp.firstChild) {
+          lastNode = frag.appendChild(temp.firstChild);
+        }
+        range.insertNode(frag);
+        if (lastNode) {
+          const newRange = document.createRange();
+          newRange.setStartAfter(lastNode);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+        }
+      }
+
+      // ========================================
+      // Selection Toolbar
+      // ========================================
+      let toolbarTimeout;
+
+      function showToolbar() {
+        const sel = window.getSelection();
+        if (!sel.rangeCount || sel.isCollapsed || !sel.toString().trim()) {
+          hideToolbar();
+          return;
+        }
+        if (!editor.contains(sel.anchorNode)) {
+          hideToolbar();
+          return;
+        }
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        selToolbar.style.display = 'flex';
+        const tbRect = selToolbar.getBoundingClientRect();
+        let left = rect.left + (rect.width / 2) - (tbRect.width / 2);
+        left = Math.max(8, Math.min(left, window.innerWidth - tbRect.width - 8));
+        selToolbar.style.left = left + 'px';
+        selToolbar.style.top = (rect.top - tbRect.height - 8 + window.scrollY) + 'px';
+      }
+
+      function hideToolbar() {
+        selToolbar.style.display = 'none';
+      }
+
+      editor.addEventListener('mouseup', () => {
+        clearTimeout(toolbarTimeout);
+        toolbarTimeout = setTimeout(showToolbar, 10);
+      });
+
+      document.addEventListener('mousedown', (e) => {
+        if (!selToolbar.contains(e.target)) {
+          clearTimeout(toolbarTimeout);
+          toolbarTimeout = setTimeout(hideToolbar, 150);
+        }
+        // Close AI bar when clicking outside it (e.g. back into the editor)
+        const aiBar = document.getElementById('ai-bar');
+        if (aiBar.classList.contains('active') && !aiBar.contains(e.target) && e.target.id !== 'tb-ask') {
+          closeAIBar();
+        }
+      });
+
+      // ========================================
+      // Highlight & Underline
+      // ========================================
+      // Collect all text nodes within a range, respecting partial start/end
+      function getTextNodesInRange(range) {
+        const nodes = [];
+        const walker = document.createTreeWalker(
+          range.commonAncestorContainer.nodeType === 3
+            ? range.commonAncestorContainer.parentNode
+            : range.commonAncestorContainer,
+          NodeFilter.SHOW_TEXT,
+          null
+        );
+        let node;
+        while ((node = walker.nextNode())) {
+          if (range.intersectsNode(node) && node.textContent.length > 0) {
+            nodes.push(node);
+          }
+        }
+        return nodes;
+      }
+
+      function wrapSelection(tagName) {
+        const sel = window.getSelection();
+        if (!sel.rangeCount || sel.isCollapsed) return;
+        const range = sel.getRangeAt(0);
+        const TAG = tagName.toUpperCase();
+
+        // Check if entire selection is already inside the target tag — unwrap
+        const parent = sel.anchorNode.parentElement;
+        if (parent && parent.tagName === TAG && parent !== editor
+            && parent.contains(sel.focusNode)) {
+          unwrapElement(parent);
+          sel.removeAllRanges();
+          hideToolbar();
+          return;
+        }
+
+        // Get all text nodes in the selection
+        const textNodes = getTextNodesInRange(range);
+        if (textNodes.length === 0) {
+          sel.removeAllRanges();
+          hideToolbar();
+          return;
+        }
+
+        textNodes.forEach((textNode, i) => {
+          // Skip if already wrapped in the same tag
+          if (textNode.parentElement.tagName === TAG) return;
+          // Skip empty/whitespace-only nodes between block elements
+          if (!textNode.textContent.trim() && textNodes.length > 1) return;
+
+          let targetNode = textNode;
+          let startOffset = 0;
+          let endOffset = textNode.textContent.length;
+
+          // Partial start node
+          if (i === 0 && textNode === range.startContainer) {
+            startOffset = range.startOffset;
+          }
+          // Partial end node
+          if (i === textNodes.length - 1 && textNode === range.endContainer) {
+            endOffset = range.endOffset;
+          }
+
+          // Split text node if partial
+          if (startOffset > 0) {
+            targetNode = textNode.splitText(startOffset);
+            endOffset -= startOffset;
+          }
+          if (endOffset < targetNode.textContent.length) {
+            targetNode.splitText(endOffset);
+          }
+
+          // Wrap the target text node
+          const wrapper = document.createElement(tagName);
+          targetNode.parentNode.insertBefore(wrapper, targetNode);
+          wrapper.appendChild(targetNode);
+        });
+
+        sel.removeAllRanges();
+        hideToolbar();
+        saveDraft();
+        updateStats();
+        updateHighlightsList();
+      }
+
+      function unwrapElement(el) {
+        const parent = el.parentNode;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
+        parent.removeChild(el);
+        parent.normalize();
+        saveDraft();
+        updateStats();
+        updateHighlightsList();
+      }
+
+      // Double-click on mark/u to remove
+      editor.addEventListener('dblclick', (e) => {
+        const target = e.target;
+        if ((target.tagName === 'MARK' || target.tagName === 'U') && target !== editor) {
+          e.preventDefault();
+          e.stopPropagation();
+          unwrapElement(target);
+        }
+      });
+
+      // Toolbar button handlers
+      document.getElementById('tb-highlight').addEventListener('click', () => wrapSelection('mark'));
+      document.getElementById('tb-underline').addEventListener('click', () => wrapSelection('u'));
+
+      // Keyboard shortcuts
+      editor.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+          e.preventDefault();
+          wrapSelection('mark');
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+          e.preventDefault();
+          wrapSelection('u');
+        }
+      });
+
+      // ========================================
+      // Highlights Panel
+      // ========================================
+      function updateHighlightsList() {
+        const marks = [...editor.querySelectorAll('mark')];
+        const underlines = [...editor.querySelectorAll('u')];
+        const total = marks.length + underlines.length;
+
+        if (total === 0) {
+          hlPanel.classList.remove('active');
+          return;
+        }
+
+        hlPanel.classList.add('active');
+        hlCount.textContent = `${total} highlight${total !== 1 ? 's' : ''}`;
+
+        if (hlCollapsed) return;
+
+        hlList.innerHTML = '';
+
+        marks.forEach(m => {
+          hlList.appendChild(createHLItem(m, 'is-mark'));
+        });
+        underlines.forEach(u => {
+          hlList.appendChild(createHLItem(u, 'is-underline'));
+        });
+      }
+
+      function createHLItem(el, className) {
+        const item = document.createElement('div');
+        item.className = 'hl-item ' + className;
+
+        const preview = el.textContent.length > 100 ? el.textContent.slice(0, 100) + '…' : el.textContent;
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'hl-text';
+        textDiv.textContent = preview;
+
+        // Check if this element has an explanation attached
+        const explanation = el.getAttribute('data-explain');
+        if (explanation) {
+          const explainDiv = document.createElement('div');
+          explainDiv.className = 'hl-explain';
+          explainDiv.textContent = explanation;
+          textDiv.appendChild(explainDiv);
+        }
+
+        const actions = document.createElement('div');
+        actions.className = 'hl-actions';
+
+        const askBtn = document.createElement('button');
+        askBtn.textContent = 'Ask AI';
+        askBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Set up AI bar targeting this specific element
+          aiSelectedText = el.textContent;
+          aiTargetMarks = [el];
+          el.setAttribute('data-ai-pending', '1');
+          aiBar.classList.add('active');
+          aiPromptInput.value = '';
+          aiStatus.textContent = '';
+          aiStatus.className = '';
+          aiPromptInput.focus();
+        });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = '✕';
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          unwrapElement(el);
+        });
+
+        actions.appendChild(askBtn);
+        actions.appendChild(removeBtn);
+        item.appendChild(textDiv);
+        item.appendChild(actions);
+
+        item.addEventListener('click', () => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.style.outline = '2px solid var(--accent-color)';
+          setTimeout(() => el.style.outline = '', 1500);
+        });
+
+        return item;
+      }
+
+      document.getElementById('hl-clear').addEventListener('click', async () => {
+        const all = [...editor.querySelectorAll('mark'), ...editor.querySelectorAll('u')];
+        if (all.length === 0) return;
+        const ok = await showModal({
+          title: 'Clear all highlights',
+          body: `Remove all ${all.length} highlight${all.length !== 1 ? 's' : ''}? The text will be kept.`,
+          primaryLabel: 'Clear all',
+          primaryClass: 'danger'
+        });
+        if (!ok) return;
+        all.forEach(el => {
+          const parent = el.parentNode;
+          while (el.firstChild) parent.insertBefore(el.firstChild, el);
+          parent.removeChild(el);
+        });
+        editor.normalize();
+        saveDraft();
+        updateStats();
+        updateHighlightsList();
+      });
+
+      hlCollapse.addEventListener('click', () => {
+        hlCollapsed = !hlCollapsed;
+        hlCollapse.textContent = hlCollapsed ? '▶ Expand' : '▼ Collapse';
+        hlList.style.display = hlCollapsed ? 'none' : '';
+      });
+
+      // ========================================
+      // Ask AI — Universal text transformer
+      // f(selected_text, instruction) → transformed_text
+      // ========================================
+      const aiBar = document.getElementById('ai-bar');
+      const aiPromptInput = document.getElementById('ai-prompt');
+      const aiStatus = document.getElementById('ai-status');
+      const aiSend = document.getElementById('ai-send');
+
+      // The text the user selected when they clicked "Ask AI"
+      let aiSelectedText = '';
+      // The mark elements wrapping that selection (for replacement)
+      let aiTargetMarks = [];
+
+      const QUICK_CMDS = {
+        fix: 'Fix spelling and grammar errors. Return ONLY the corrected text, nothing else.',
+        rewrite: 'Rewrite this to be clearer and more concise. Keep the same meaning. Return ONLY the rewritten text.',
+        translate: 'Translate to English if not English, or to Vietnamese if already English. Return ONLY the translation.',
+        explain: 'Explain this clearly and concisely in 2-3 sentences.'
+      };
+
+      const getGeminiKey = async () => {
+        let key = localStorage.getItem('GEMINI_API_KEY');
+        if (!key) {
+          key = await showModal({
+            title: 'Gemini API key',
+            body: 'Enter your API key to enable Ask AI features.',
+            input: 'password',
+            placeholder: 'AIza...',
+            primaryLabel: 'Save'
+          });
+          if (key && key.trim()) {
+            localStorage.setItem('GEMINI_API_KEY', key.trim());
+          }
+        }
+        return key;
+      };
+
+      const callGemini = async (promptText) => {
+        const key = await getGeminiKey();
+        if (!key) return null;
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }]
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error?.message || `Gemini API error (${response.status})`);
+        }
+
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.';
+      };
+
+      function openAIBar() {
+        const sel = window.getSelection();
+        if (!sel.rangeCount || sel.isCollapsed) return;
+        aiSelectedText = sel.toString().trim();
+        if (!aiSelectedText) return;
+
+        // Remember the selection's mark elements before clearing selection
+        // First highlight the selection so user sees what AI will act on
+        wrapSelection('mark');
+        // Collect the marks we just created
+        aiTargetMarks = [...editor.querySelectorAll('mark')].filter(
+          m => !m.getAttribute('data-ai-done')
+        ).filter(m => {
+          // Match marks whose text is part of the original selection
+          return aiSelectedText.includes(m.textContent.trim()) ||
+                 m.textContent.trim().length > 0;
+        });
+        // Tag them so we can find them later
+        aiTargetMarks.forEach(m => m.setAttribute('data-ai-pending', '1'));
+        // Re-collect precisely
+        aiTargetMarks = [...editor.querySelectorAll('mark[data-ai-pending]')];
+
+        aiBar.classList.add('active');
+        aiPromptInput.value = '';
+        aiStatus.textContent = '';
+        aiStatus.className = '';
+        aiPromptInput.focus();
+      }
+
+      function closeAIBar() {
+        aiBar.classList.remove('active');
+        aiSelectedText = '';
+        // Clean up pending tags if user cancelled
+        editor.querySelectorAll('mark[data-ai-pending]').forEach(m => {
+          m.removeAttribute('data-ai-pending');
+        });
+        aiTargetMarks = [];
+        aiPromptInput.value = '';
+        aiStatus.textContent = '';
+      }
+
+      async function runAI(instruction) {
+        if (!aiSelectedText || !instruction) return;
+
+        const isReplace = !instruction.startsWith('Explain');
+        const snippet = aiSelectedText.slice(0, 1500);
+        const fullPrompt = `${instruction}\n\nText:\n"${snippet}"`;
+
+        aiStatus.textContent = 'Thinking…';
+        aiStatus.className = '';
+        aiSend.disabled = true;
+
+        try {
+          const result = await callGemini(fullPrompt);
+          if (!result) { closeAIBar(); return; }
+
+          const pendingMarks = [...editor.querySelectorAll('mark[data-ai-pending]')];
+
+          if (isReplace) {
+            // Replace: swap the marked text with AI result
+            aiStatus.textContent = result;
+
+            // Show accept/reject
+            aiStatus.innerHTML = '';
+            const preview = document.createElement('div');
+            preview.style.cssText = 'margin-bottom:4px;';
+            preview.textContent = result;
+            const btns = document.createElement('div');
+            btns.style.cssText = 'display:flex;gap:4px;margin-top:4px;';
+            const acceptBtn = document.createElement('button');
+            acceptBtn.className = 'ai-q';
+            acceptBtn.textContent = 'Accept';
+            acceptBtn.style.cssText = 'background:var(--accent-color);color:white;border-color:var(--accent-color);';
+            const rejectBtn = document.createElement('button');
+            rejectBtn.className = 'ai-q';
+            rejectBtn.textContent = 'Dismiss';
+
+            acceptBtn.addEventListener('click', () => {
+              // Replace mark contents with AI result
+              if (pendingMarks.length > 0) {
+                // Put result in first mark, remove the rest
+                pendingMarks[0].textContent = result;
+                pendingMarks[0].removeAttribute('data-ai-pending');
+                pendingMarks[0].setAttribute('data-ai-done', '1');
+                for (let i = 1; i < pendingMarks.length; i++) {
+                  pendingMarks[i].remove();
+                }
+              }
+              saveDraft();
+              updateStats();
+              updateHighlightsList();
+              closeAIBar();
+            });
+
+            rejectBtn.addEventListener('click', () => {
+              // Remove marks, restore original text
+              pendingMarks.forEach(m => unwrapElement(m));
+              closeAIBar();
+            });
+
+            btns.appendChild(acceptBtn);
+            btns.appendChild(rejectBtn);
+            aiStatus.appendChild(preview);
+            aiStatus.appendChild(btns);
+          } else {
+            // Annotate: attach explanation to marks
+            pendingMarks.forEach(m => {
+              m.setAttribute('data-explain', result);
+              m.removeAttribute('data-ai-pending');
+              m.setAttribute('data-ai-done', '1');
+            });
+            saveDraft();
+            updateHighlightsList();
+            closeAIBar();
+          }
+        } catch (e) {
+          aiStatus.textContent = 'Error: ' + e.message;
+          aiStatus.className = 'error';
+        } finally {
+          aiSend.disabled = false;
+        }
+      }
+
+      // Wire up Ask AI button in selection toolbar
+      document.getElementById('tb-ask').addEventListener('click', openAIBar);
+
+      // Quick command buttons
+      document.querySelectorAll('.ai-q[data-cmd]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cmd = btn.getAttribute('data-cmd');
+          const instruction = QUICK_CMDS[cmd];
+          if (instruction) runAI(instruction);
+        });
+      });
+
+      // Custom prompt
+      aiSend.addEventListener('click', () => {
+        const instruction = aiPromptInput.value.trim();
+        if (instruction) runAI(instruction);
+      });
+
+      aiPromptInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          const instruction = aiPromptInput.value.trim();
+          if (instruction) runAI(instruction);
+        }
+        if (e.key === 'Escape') {
+          closeAIBar();
+        }
+      });
+
+      // Close AI bar on Escape globally
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && aiBar.classList.contains('active')) {
+          closeAIBar();
+        }
+      });
+
+      // ========================================
+      // Share Panel
       // ========================================
       async function updateSharePanel() {
-        const content = editor.value;
-        if (!content.trim()) {
+        const content = editor.innerHTML;
+        if (!content.trim() || editor.innerText.trim() === '') {
           qrContainer.innerHTML = '<div style="padding:2rem;color:#888;text-align:center;">Write something first</div>';
           shareUrl.textContent = location.origin + location.pathname;
           shareStats.textContent = '';
@@ -570,352 +1361,42 @@
       }
 
       // ========================================
-      // Coach State Management
-      // ========================================
-      const getCoachState = () => {
-        const state = localStorage.getItem('inkflowCoach');
-        return state ? JSON.parse(state) : { history: [], streak: 0, lastPracticeDate: null };
-      };
-
-      const saveCoachState = (state) => {
-        localStorage.setItem('inkflowCoach', JSON.stringify(state));
-      };
-
-      const updateStreak = () => {
-        const state = getCoachState();
-        const today = new Date().toDateString();
-        if (state.lastPracticeDate === today) {
-          // Already practiced today
-        } else if (state.lastPracticeDate === new Date(Date.now() - 86400000).toDateString()) {
-          state.streak += 1;
-        } else if (state.lastPracticeDate) {
-          state.streak = 1;
-        } else {
-          state.streak = 1;
-        }
-        state.lastPracticeDate = today;
-        saveCoachState(state);
-        streakBadge.textContent = `Day ${state.streak}`;
-      };
-
-      // ========================================
-      // Core Functions
-      // ========================================
-      const updateStats = () => {
-        const text = editor.value;
-        const chars = text.length;
-        const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-        const lines = text ? text.split('\n').length : 1;
-        statsBar.textContent = `${words} words · ${chars} characters · ${lines} lines`;
-      };
-
-      // Auto-save to localStorage (draft backup)
-      const saveDraft = () => localStorage.setItem('inkflowDraft', editor.value);
-
-      // Load: URL hash takes priority, then localStorage draft
-      const load = async () => {
-        const urlContent = await URLDatabase.load();
-        if (urlContent) {
-          editor.value = urlContent;
-        } else {
-          const draft = localStorage.getItem('inkflowDraft');
-          if (draft) editor.value = draft;
-        }
-        updateStats();
-        const state = getCoachState();
-        streakBadge.textContent = `Day ${state.streak}`;
-      };
-
-      const setTheme = (dark) => {
-        document.body.classList.toggle('dark-mode', dark);
-        localStorage.setItem('inkflowTheme', dark ? 'dark' : 'light');
-        // Update PWA theme color
-        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#1a1a1a' : '#fffff8');
-      };
-
-      const getApiKey = () => {
-        let apiKey = localStorage.getItem('ANTHROPIC_API_KEY');
-        if (!apiKey) {
-          apiKey = prompt('Please enter your Anthropic API key:');
-          if (apiKey) localStorage.setItem('ANTHROPIC_API_KEY', apiKey);
-        }
-        return apiKey;
-      };
-
-      const callClaude = async (prompt, content) => {
-        const apiKey = getApiKey();
-        if (!apiKey) {
-          alert('API key required. Click "Configure API Key" to set it.');
-          return null;
-        }
-
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'content-type': 'application/json',
-            'anthropic-dangerous-direct-browser-access': 'true'
-          },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-20250514',
-            max_tokens: 4096,
-            messages: [{ role: 'user', content: content ? `${prompt}\n\n---\n\n${content}` : prompt }]
-          })
-        });
-
-        const data = await response.json();
-        return data.content[0].text;
-      };
-
-      const runAgentTask = async (prompt) => {
-        const content = editor.value.trim();
-        if (!content) {
-          alert('Nothing to process. Write something first.');
-          return;
-        }
-
-        loading.classList.add('active');
-        agentResult.classList.remove('active');
-        agentActions.style.display = 'none';
-        lastAgentResponse = '';
-
-        try {
-          const result = await callClaude(prompt, content);
-          lastAgentResponse = result;
-          agentResult.textContent = result;
-          agentResult.classList.add('active');
-          agentActions.style.display = 'flex';
-        } catch (error) {
-          console.error('Agent error:', error);
-          agentResult.textContent = 'Error: ' + error.message;
-          agentResult.classList.add('active');
-        } finally {
-          loading.classList.remove('active');
-        }
-      };
-
-      // Insert pattern practice
-      const insertPatternPractice = async () => {
-        loading.classList.add('active');
-        coachResult.classList.remove('active');
-
-        try {
-          const randomEssay = pgEssays[Math.floor(Math.random() * pgEssays.length)];
-          const essayUrl = `https://www.paulgraham.com/${randomEssay}`;
-          const response = await fetch(`https://r.jina.ai/${essayUrl}`);
-          const essayText = await response.text();
-
-          const patternPrompt = `Analyze this Paul Graham essay and extract 5 distinct sentence structure patterns.
-
-For each pattern:
-1. Identify the structural template with [placeholders]
-2. Explain what makes it effective
-3. Provide 2-3 topic suggestions
-
-Format as quoted blocks:
-
-> Pattern 1: [Name]
-> Template: [structure]
-> Why it works: [explanation]
-> Practice topics: [topics]
-> 
-> [Your answer here]
-
-Focus on: contrarian openings, question-answer rhythm, anecdote-to-principle bridges, cause-effect chains.
-
-Essay (first 3000 chars):
-${essayText.slice(0, 3000)}`;
-
-          const patterns = await callClaude(patternPrompt);
-          const cursorPos = editor.selectionStart;
-          const before = editor.value.substring(0, cursorPos);
-          const after = editor.value.substring(cursorPos);
-
-          editor.value = before + '\n\n' + patterns + '\n\n' + after;
-          editor.dispatchEvent(new Event('input'));
-
-          const newPos = cursorPos + patterns.length + 4;
-          editor.focus();
-          editor.setSelectionRange(newPos, newPos);
-          alert('Pattern practice inserted!');
-        } catch (error) {
-          console.error('Pattern insertion error:', error);
-          alert('Error: ' + error.message);
-        } finally {
-          loading.classList.remove('active');
-        }
-      };
-
-      // Analyze PG style
-      const analyzePGStyle = async () => {
-        const content = editor.value.trim();
-        if (!content) {
-          alert('Write something first.');
-          return;
-        }
-
-        loading.classList.add('active');
-        coachResult.classList.remove('active');
-
-        const prompt = `Analyze this using Paul Graham's style criteria:
-
-1. Sentence Length: ~15 words avg, varied rhythm
-2. Conversational Tone: contractions, direct address
-3. Logic Flow: clear because/therefore/but structure
-4. Clarity: concrete examples, minimal jargon
-5. Contrarian Insight: challenges assumptions
-
-Provide:
-- Score: X/10
-- Strengths
-- Improvements
-- Rewrite 2-3 sentences in PG style
-- Next exercise`;
-
-        try {
-          const result = await callClaude(prompt, content);
-          coachResult.textContent = result;
-          coachResult.classList.add('active');
-        } catch (error) {
-          coachResult.textContent = 'Error: ' + error.message;
-          coachResult.classList.add('active');
-        } finally {
-          loading.classList.remove('active');
-        }
-      };
-
-      // Save practice session
-      const savePracticeSession = () => {
-        const state = getCoachState();
-        state.history.push({
-          date: new Date().toISOString(),
-          content: editor.value,
-          wordCount: editor.value.trim() ? editor.value.trim().split(/\s+/).length : 0
-        });
-        saveCoachState(state);
-        updateStreak();
-        alert(`Practice saved! Streak: ${state.streak} days`);
-      };
-
-      // Keyboard handlers
-      const handleTab = (e) => {
-        if (e.key !== 'Tab') return;
-        const { selectionStart: start, selectionEnd: end, value } = editor;
-        if (start === end) return;
-
-        e.preventDefault();
-        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
-        const lineEnd = value.indexOf('\n', end) === -1 ? value.length : value.indexOf('\n', end);
-        const lines = value.substring(lineStart, lineEnd).split('\n');
-
-        const newLines = lines.map(line => {
-          if (e.shiftKey) return line.replace(/^>\s?/, '');
-          return line.trim() ? '> ' + line : line;
-        });
-
-        const newText = newLines.join('\n');
-        editor.value = value.substring(0, lineStart) + newText + value.substring(lineEnd);
-        editor.selectionStart = lineStart;
-        editor.selectionEnd = lineStart + newText.length;
-        editor.dispatchEvent(new Event('input'));
-      };
-
-      const handleUnderline = (e) => {
-        if (e.key !== 'u' || (!e.ctrlKey && !e.metaKey)) return;
-        const { selectionStart: start, selectionEnd: end, value } = editor;
-        if (start === end) return;
-
-        e.preventDefault();
-        const selected = value.substring(start, end);
-        const isUnderlined = value.substring(start - 2, start) === '++' && value.substring(end, end + 2) === '++';
-
-        if (isUnderlined) {
-          editor.value = value.substring(0, start - 2) + selected + value.substring(end + 2);
-          editor.selectionStart = start - 2;
-          editor.selectionEnd = end - 2;
-        } else {
-          editor.value = value.substring(0, start) + '++' + selected + '++' + value.substring(end);
-          editor.selectionStart = start + 2;
-          editor.selectionEnd = end + 2;
-        }
-        editor.dispatchEvent(new Event('input'));
-      };
-
-      // ========================================
       // Event Listeners
       // ========================================
       editor.addEventListener('input', () => {
         saveDraft();
         updateStats();
       });
-      editor.addEventListener('keydown', handleTab);
-      editor.addEventListener('keydown', handleUnderline);
 
       themeToggle.addEventListener('click', () => setTheme(!document.body.classList.contains('dark-mode')));
 
-      agentToggle.addEventListener('click', () => {
-        agentPanel.classList.toggle('active');
-        sharePanel.classList.remove('active');
-      });
-
       shareToggle.addEventListener('click', async () => {
         sharePanel.classList.toggle('active');
-        agentPanel.classList.remove('active');
         if (sharePanel.classList.contains('active')) {
           await updateSharePanel();
         }
       });
 
-      customPromptToggle.addEventListener('click', () => {
-        customPromptToggle.classList.toggle('collapsed');
-        customPromptSection.classList.toggle('collapsed');
-      });
-
-      presetButtons.forEach(btn => {
-        btn.addEventListener('click', () => runAgentTask(btn.dataset.prompt));
-      });
-
-      runAgent.addEventListener('click', () => {
-        const prompt = customPrompt.value.trim();
-        if (!prompt) {
-          alert('Enter a custom prompt first.');
-          return;
-        }
-        runAgentTask(prompt);
-      });
-
-      copyResult.addEventListener('click', () => {
-        if (!lastAgentResponse) return;
-        navigator.clipboard.writeText(lastAgentResponse).then(() => {
-          const original = copyResult.textContent;
-          copyResult.textContent = 'Copied!';
-          setTimeout(() => copyResult.textContent = original, 1500);
+      settingsToggle.addEventListener('click', async () => {
+        const currentKey = localStorage.getItem('GEMINI_API_KEY');
+        const newKey = await showModal({
+          title: 'Gemini API key',
+          body: currentKey ? 'Update or clear your key.' : 'Enter your key to enable Ask AI.',
+          input: 'text',
+          placeholder: 'AIza...',
+          value: currentKey || '',
+          primaryLabel: 'Save'
         });
+        if (newKey === null) return;
+        if (newKey.trim()) {
+          localStorage.setItem('GEMINI_API_KEY', newKey.trim());
+        } else {
+          localStorage.removeItem('GEMINI_API_KEY');
+        }
       });
 
-      exportJson.addEventListener('click', () => {
-        const data = {
-          originalText: editor.value,
-          agentResponse: lastAgentResponse,
-          wordCount: editor.value.trim() ? editor.value.trim().split(/\s+/).length : 0,
-          charCount: editor.value.length,
-          timestamp: new Date().toISOString()
-        };
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `inkflow-${Date.now()}.json`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      });
-
-      // Share panel actions
       copyUrl.addEventListener('click', async () => {
-        await URLDatabase.save(editor.value);
+        await URLDatabase.save(editor.innerHTML);
         navigator.clipboard.writeText(location.href).then(() => {
           const original = copyUrl.textContent;
           copyUrl.textContent = 'Copied!';
@@ -923,36 +1404,32 @@ Provide:
         });
       });
 
-      clearUrl.addEventListener('click', () => {
-        if (confirm('Clear editor and start new draft?')) {
-          editor.value = '';
-          history.replaceState({}, '', location.pathname);
-          localStorage.removeItem('inkflowDraft');
-          updateStats();
-          updateSharePanel();
-        }
+      clearUrl.addEventListener('click', async () => {
+        const ok = await showModal({
+          title: 'New draft',
+          body: 'Clear all content and start fresh?',
+          primaryLabel: 'Clear',
+          primaryClass: 'danger'
+        });
+        if (!ok) return;
+        editor.innerHTML = '';
+        history.replaceState({}, '', location.pathname);
+        localStorage.removeItem('inkflowDraft');
+        updateStats();
+        updateHighlightsList();
+        if (sharePanel.classList.contains('active')) updateSharePanel();
       });
 
-      // Coach actions
-      insertPatterns.addEventListener('click', insertPatternPractice);
-      analyzeWriting.addEventListener('click', analyzePGStyle);
-      savePractice.addEventListener('click', savePracticeSession);
-
-      settingsLink.addEventListener('click', () => {
-        const currentKey = localStorage.getItem('ANTHROPIC_API_KEY');
-        const newKey = prompt('Enter your Anthropic API key:', currentKey || '');
-        if (newKey !== null) {
-          localStorage.setItem('ANTHROPIC_API_KEY', newKey);
-          alert('API key saved.');
-        }
-      });
-
-      // Handle URL changes (back/forward)
       window.addEventListener('popstate', async () => {
         const content = await URLDatabase.load();
         if (content) {
-          editor.value = content;
+          if (/<[a-z][\s\S]*>/i.test(content)) {
+            editor.innerHTML = content;
+          } else {
+            editor.textContent = content;
+          }
           updateStats();
+          updateHighlightsList();
         }
       });
 
