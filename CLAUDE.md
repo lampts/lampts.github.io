@@ -4,92 +4,45 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a personal academic website built with Jekyll using the al-folio theme. It serves as a portfolio and blog for Pham Thanh Lam, featuring:
-- Personal about page with professional background
-- Blog posts and news announcements
-- Project showcases  
-- Academic publications management via BibTeX
-- Custom HTML tools and calculators
+Personal academic website for Pham Thanh Lam (lampts.github.io / lampt.org), built with Jekyll using the **al-folio** theme. Combines a standard Jekyll blog/portfolio with standalone HTML tools.
 
 ## Development Commands
 
-### Local Development with Docker (Recommended)
 ```bash
-# Using pre-built Docker image
+# Docker (recommended) — serves on port 8080 with live reload
 docker-compose up
 
-# Build and run custom Docker image
-docker-compose -f docker-local.yml up
-
-# Alternative script-based approach
-./bin/dockerhub_run.sh
-```
-
-### Local Development (Standard Jekyll)
-```bash
-# Install dependencies
+# Standard Jekyll
 bundle install
+bundle exec jekyll serve --lsi        # dev server with live reload
+bundle exec jekyll build --lsi        # production build
 
-# Serve locally with live reload
-bundle exec jekyll serve --lsi
-
-# Build for production
-bundle exec jekyll build --lsi
-```
-
-### Testing and Validation
-```bash
-# Build the site (validates Jekyll compilation)
+# Validate build (no test framework — Jekyll build is the validation step)
 bundle exec jekyll build
-
-# Check for broken links and validate HTML (if configured)
-# No specific testing framework configured - rely on Jekyll build validation
 ```
 
-## Architecture and Structure
+## Deployment
 
-### Core Jekyll Structure
-- `_config.yml` - Main site configuration with personal info, theme settings, and plugin configs
-- `_layouts/` - HTML templates (about, post, page, distill, etc.)
-- `_includes/` - Reusable HTML components and scripts
-- `_sass/` - Stylesheet sources and theme customization
-- `_pages/` - Static pages like About
-- `_posts/` - Blog posts in Markdown
-- `_news/` - News/announcement items
-- `_projects/` - Project showcase items
+GitHub Actions (`.github/workflows/deploy.yml`) triggers on push to master/main. Builds with Ruby 3.2.1 and deploys the `_site/` folder to gh-pages branch via `JamesIves/github-pages-deploy-action`.
 
-### Custom Content
-- Root-level HTML files - Custom tools and calculators (lamp.html, llm.html, etc.)
-- `assets/` - Images, CSS, JS, PDFs, and other static resources
-- `_bibliography/` - Academic papers in BibTeX format
-- `_data/` - YAML data files for CV, repositories, venues, etc.
+## Architecture
 
-### Key Features
-- **Academic Publications**: Managed via Jekyll Scholar plugin with BibTeX
-- **Math Support**: MathJax integration for mathematical expressions
-- **Dark Mode**: Theme switching capability
-- **Responsive Design**: Bootstrap-based responsive layouts
-- **GitHub Integration**: Repository stats and trophy displays
-- **Social Media**: Integrated social links and Open Graph meta tags
+### Two types of content
 
-### Deployment
-- **GitHub Pages**: Automatic deployment via GitHub Actions on push to master/main
-- **Workflow**: `.github/workflows/deploy.yml` handles building and deployment
-- **Build Process**: Ruby 3.2.1, bundle install, Jekyll build, deploy to gh-pages branch
+1. **Jekyll-managed content** — Standard al-folio theme pages that go through the Jekyll build pipeline. Uses layouts in `_layouts/`, includes from `_includes/`, styles from `_sass/`. Content lives in `_pages/`, `_posts/`, `_news/`, `_projects/`, `_bibliography/`.
 
-### Content Management
-- **Blog Posts**: Add Markdown files to `_posts/` with YAML front matter
-- **Projects**: Add to `_projects/` directory
-- **News**: Add to `_news/` for announcements
-- **Publications**: Edit `_bibliography/papers.bib` for academic papers
-- **CV Data**: Update YAML files in `_data/` directory
+2. **Standalone HTML tools** — ~30 self-contained HTML files in the repo root (e.g., `lamp.html`, `llm.html`, `tvm_calculator.html`, `collatz.html`, `qr.html`). These are fully standalone (inline CSS/JS, no Jekyll front matter, no layout dependency). They are served as-is by GitHub Pages. When creating new tools, follow this pattern — single-file HTML with everything inlined.
 
-### Custom Tools
-The site includes numerous standalone HTML tools (lamp.html, llm.html, calculator tools, etc.) that appear to be interactive utilities and demos, likely related to the owner's work in AI/ML and data science.
+### Key configuration
 
-### Dependencies
-- Jekyll with multiple plugins (scholar, diagrams, feed, etc.)
-- Ruby gems managed via Bundler
-- Bootstrap 4.6.1 for responsive design
-- MathJax 3.2.0 for math rendering
-- FontAwesome 5.15.4 for icons
+- `_config.yml` — Central config for site metadata, theme toggles (dark mode, math, masonry, etc.), plugin settings, and library versions
+- Jekyll Scholar configured in `_config.yml` under `scholar:` — reads BibTeX from `_bibliography/papers.bib`
+- About page (`_pages/about.md`) is the site homepage (permalink: `/`)
+
+### Layout chain
+
+`default.html` → wraps all other layouts (`about.html`, `post.html`, `page.html`, `distill.html`, `cv.html`, `bib.html`). Shared components (head, header, footer, scripts) are in `_includes/`.
+
+### Plugin ecosystem
+
+Key plugins: `jekyll-scholar` (academic publications), `jekyll-paginate-v2`, `jekyll-archives` (year/tag/category), `jekyll-diagrams` (requires mermaid.cli via npm), `jekyll-minifier`, `jekyll-toc`.
