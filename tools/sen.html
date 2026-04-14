@@ -224,24 +224,24 @@
                 <form id="forecastForm">
                     <div class="form-group">
                         <label class="form-label">Previous Period Revenue (Daily)</label>
-                        <textarea id="previousData">69.6, 66.6, 66.1, 62.8, 62, 69.9, 64.1, 65.6, 65, 76.9, 69, 61.8, 67.9, 67.8, 69.4, 64.4, 67.6, 60.3, 55.3, 67.7, 62.9, 63.2, 59.2, 62, 60, 55, 59.6, 59.5, 56.2, 56.6, 56.9</textarea>
+                        <textarea id="previousData" placeholder="1, 2, 3"></textarea>
                         <div class="form-help">Baseline period for comparison (e.g., last month)</div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Current Period Revenue (Daily, So Far)</label>
-                        <textarea id="currentData">62.6, 56.1, 69, 70.4, 71.5, 67.3, 65.6, 62.5, 60.6, 82, 68.4, 70.2, 67.7, 71, 63.8, 61.4, 68.8, 71.1, 70.3</textarea>
+                        <textarea id="currentData" placeholder="1, 2, 3"></textarea>
                         <div class="form-help">Actual results from current period</div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Period Length (Days)</label>
-                        <input type="number" id="periodLength" value="30" min="1" max="365">
+                        <input type="number" id="periodLength" min="1" max="365" placeholder="30">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Target Revenue</label>
-                        <input type="number" id="target" value="2000">
+                        <input type="number" id="target" placeholder="2000">
                     </div>
 
                     <div class="form-group">
@@ -253,21 +253,21 @@
                     <div class="form-group">
                         <label class="form-label">Event Boost Range (min-max %)</label>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                            <input type="number" id="boostMin" value="5" step="1" placeholder="Min %">
-                            <input type="number" id="boostMax" value="15" step="1" placeholder="Max %">
+                            <input type="number" id="boostMin" step="1" placeholder="5">
+                            <input type="number" id="boostMax" step="1" placeholder="15">
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Expected Downtime Events/Period</label>
-                        <input type="number" id="downtimeEvents" value="1" step="0.1">
+                        <input type="number" id="downtimeEvents" step="0.1" placeholder="1">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Downtime Impact (%)</label>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                            <input type="number" id="downtimeMin" value="5" step="1" placeholder="Min %">
-                            <input type="number" id="downtimeMax" value="10" step="1" placeholder="Max %">
+                            <input type="number" id="downtimeMin" step="1" placeholder="5">
+                            <input type="number" id="downtimeMax" step="1" placeholder="10">
                         </div>
                     </div>
 
@@ -781,14 +781,14 @@
                 try {
                     const previousData = parseCSV(document.getElementById('previousData').value);
                     const currentData = parseCSV(document.getElementById('currentData').value);
-                    const periodLength = parseInt(document.getElementById('periodLength').value);
-                    const target = parseFloat(document.getElementById('target').value);
+                    const periodLength = parseInt(document.getElementById('periodLength').value) || 30;
+                    const target = parseFloat(document.getElementById('target').value) || 2000;
                     const eventDays = parseCSV(document.getElementById('eventDays').value);
-                    const boostMin = parseFloat(document.getElementById('boostMin').value);
-                    const boostMax = parseFloat(document.getElementById('boostMax').value);
-                    const downtimeEvents = parseFloat(document.getElementById('downtimeEvents').value);
-                    const downtimeMin = parseFloat(document.getElementById('downtimeMin').value);
-                    const downtimeMax = parseFloat(document.getElementById('downtimeMax').value);
+                    const boostMin = parseFloat(document.getElementById('boostMin').value) || 5;
+                    const boostMax = parseFloat(document.getElementById('boostMax').value) || 15;
+                    const downtimeEvents = parseFloat(document.getElementById('downtimeEvents').value) || 1;
+                    const downtimeMin = parseFloat(document.getElementById('downtimeMin').value) || 5;
+                    const downtimeMax = parseFloat(document.getElementById('downtimeMax').value) || 10;
                     const numSims = parseInt(document.getElementById('numSims').value);
                     
                     validateInputs(previousData, currentData, target, periodLength);

@@ -658,8 +658,8 @@ Since then, it got a full re-write of the styles and many additional cool featur
 
 ## HTML Files
 
-- [lamp.html](lamp.html) - *April 14, 2026*
 - [index.html](index.html) - *April 14, 2026*
+- [lamp.html](lamp.html) - *April 14, 2026*
 - [collatz.html](collatz.html) - *October 14, 2025*
 - [crypto.html](crypto.html) - *October 12, 2025*
 - [rock.html](rock.html) - *October 09, 2025*
