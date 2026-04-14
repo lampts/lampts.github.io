@@ -1,204 +1,806 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>λ lampt.org — Lam Pham</title>
+    <meta name="description" content="Lam Pham. Small tools, large systems. CDAO at Cake by VPBank. ML for 6.5M+ banking users, 25M+ voice calls, production AI across telco, FMCG, mobility, gaming, finance.">
+    <meta property="og:title" content="λ lampt.org — Lam Pham">
+    <meta property="og:description" content="Small tools, large systems. AI that handles real money.">
+    <meta property="og:url" content="https://www.lampt.org">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FBD45B'/><text x='50' y='78' font-size='72' font-family='monospace' font-weight='bold' text-anchor='middle' fill='%23111'>λ</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-VC31GENS6S');
     </script>
+    <style>
+        :root {
+            --accent: #FBD45B;
+            --black: #111;
+            --white: #FAFAFA;
+            --gray: #777;
+            --dim: #999;
+            --shadow: 3px 3px 0px #000;
+            --shadow-sm: 2px 2px 0px #000;
+            --font-mono: 'IBM Plex Mono', monospace;
+            --font-serif: 'IBM Plex Serif', serif;
+        }
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pham Thanh Lam</title>
-    <meta name="description" content="Building AI systems that ship at scale.">
-    <meta name="author" content="Pham Thanh Lam">
-    
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 font-family=%22serif%22>λ</text></svg>">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@500;700&display=swap" rel="stylesheet">
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--white);
+            color: var(--black);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 4rem;
+        }
+
+        a { color: var(--black); }
+
+        /* ── Identity block (always visible) ── */
+        .identity { margin-bottom: 2.5rem; }
+
+        .id-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .id-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .lambda {
+            font-size: 2.6rem;
+            font-weight: 700;
+            line-height: 1;
+            background: var(--accent);
+            padding: 4px 14px;
+            box-shadow: var(--shadow);
+            flex-shrink: 0;
+        }
+
+        .avatar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--black);
+            flex-shrink: 0;
+        }
+
+        /* ── Mode toggle ── */
+        .toggle-wrap {
+            display: flex;
+            border: 1.5px solid var(--black);
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .toggle-btn {
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 6px 14px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            color: var(--gray);
+            transition: all 0.15s;
+        }
+
+        .toggle-btn.active {
+            background: var(--black);
+            color: var(--white);
+        }
+
+        .toggle-btn:not(.active):hover {
+            background: var(--accent);
+            color: var(--black);
+        }
+
+        .name {
+            font-family: var(--font-serif);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+
+        .tagline {
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 1.25rem;
+            line-height: 1.5;
+        }
+
+        .tagline em {
+            font-style: normal;
+            background: var(--accent);
+            padding: 0 4px;
+        }
+
+        .links-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .links-row a {
+            font-size: 0.7rem;
+            text-decoration: none;
+            border: 1.5px solid var(--black);
+            padding: 3px 10px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.12s;
+        }
+
+        .links-row a:hover {
+            background: var(--accent);
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        /* ── Shared ── */
+        .section { margin-bottom: 2.75rem; }
+
+        .section-head {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--black);
+            padding-bottom: 6px;
+            margin-bottom: 1.25rem;
+        }
+
+        /* ── Mode visibility ── */
+        .mode-builder,
+        .mode-career { display: none; }
+
+        body.builder .mode-builder { display: block; }
+        body.career .mode-career { display: block; }
+
+        /* builder bio / career bio */
+        .bio {
+            font-family: var(--font-serif);
+            font-size: 0.93rem;
+            line-height: 1.8;
+            margin-bottom: 0.75rem;
+        }
+
+        .bio strong { font-weight: 600; }
+
+        .bio a {
+            text-decoration: none;
+            border-bottom: 1.5px solid var(--accent);
+        }
+
+        /* ── Numbers tape ── */
+        .tape {
+            border: 1.5px solid var(--black);
+            box-shadow: var(--shadow);
+            margin-bottom: 2.75rem;
+            padding: 1rem 1.25rem;
+        }
+
+        .tape-row {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            padding: 0.35rem 0;
+        }
+
+        .tape-row + .tape-row {
+            border-top: 1px solid #E0E0E0;
+        }
+
+        .tape-row .t-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            min-width: 70px;
+            flex-shrink: 0;
+        }
+
+        .tape-row .t-lbl {
+            font-size: 0.78rem;
+            color: var(--gray);
+        }
+
+        .tape-row .t-lbl em {
+            font-style: normal;
+            color: var(--black);
+            font-weight: 500;
+        }
+
+        /* ── Now block (builder) ── */
+        .now-text {
+            font-family: var(--font-serif);
+            font-size: 0.9rem;
+            line-height: 1.8;
+            margin-bottom: 0.75rem;
+        }
+
+        .now-text strong { font-weight: 600; }
+
+        .now-date {
+            font-size: 0.65rem;
+            color: var(--dim);
+            margin-top: 0.5rem;
+        }
+
+        /* ── Artifacts (builder) ── */
+        .artifacts { display: grid; gap: 0.75rem; }
+
+        .artifact {
+            border: 1.5px solid var(--black);
+            padding: 0.9rem 1.1rem;
+            box-shadow: var(--shadow);
+            text-decoration: none;
+            color: var(--black);
+            display: block;
+            transition: all 0.12s;
+        }
+
+        .artifact:hover {
+            background: var(--accent);
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0px #000;
+        }
+
+        .artifact .a-type {
+            font-size: 0.58rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            color: var(--gray);
+            margin-bottom: 3px;
+        }
+
+        .artifact .a-title {
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .artifact .a-desc {
+            font-size: 0.75rem;
+            color: var(--gray);
+            margin-top: 3px;
+            line-height: 1.5;
+        }
+
+        /* ── Tools grid (builder) ── */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+
+        .tool {
+            border: 1.5px solid var(--black);
+            padding: 0.65rem 0.9rem;
+            text-decoration: none;
+            color: var(--black);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.12s;
+        }
+
+        .tool:hover {
+            background: var(--accent);
+            transform: translate(-1px, -1px);
+        }
+
+        .tool .t-name { font-weight: 600; font-size: 0.82rem; }
+        .tool .t-what { font-size: 0.68rem; color: var(--gray); margin-top: 1px; }
+
+        .tools-more {
+            margin-top: 0.75rem;
+            font-size: 0.7rem;
+        }
+
+        .tools-more a {
+            text-decoration: none;
+            border: 1.5px solid var(--black);
+            padding: 3px 10px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.12s;
+        }
+
+        .tools-more a:hover {
+            background: var(--accent);
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        /* ── Principles (builder) ── */
+        .principles { display: flex; flex-direction: column; gap: 0.9rem; }
+
+        .principle {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 0.75rem;
+            align-items: baseline;
+        }
+
+        .principle .p-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: var(--accent);
+            padding: 2px 8px;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .principle .p-text {
+            font-family: var(--font-serif);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* ── Timeline (career) ── */
+        .timeline { display: flex; flex-direction: column; gap: 1.25rem; }
+
+        .t-item {
+            padding-left: 1.15rem;
+            border-left: 3px solid var(--black);
+        }
+
+        .t-item.current { border-left-color: var(--accent); }
+
+        .t-item .t-year {
+            font-size: 0.62rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--dim);
+        }
+
+        .t-item .t-role {
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 2px 0;
+        }
+
+        .t-item .t-org { font-size: 0.8rem; }
+        .t-item .t-org a { text-decoration: none; border-bottom: 1.5px solid var(--accent); }
+
+        .t-item .t-desc {
+            font-size: 0.75rem;
+            color: var(--gray);
+            line-height: 1.55;
+            margin-top: 4px;
+        }
+
+        /* ── Credentials (career) ── */
+        .creds { display: flex; flex-direction: column; gap: 0.9rem; }
+
+        .cred { display: flex; gap: 0.75rem; align-items: baseline; }
+
+        .cred .tag {
+            font-size: 0.58rem;
+            font-weight: 700;
+            background: var(--accent);
+            padding: 2px 8px;
+            box-shadow: var(--shadow-sm);
+            white-space: nowrap;
+            flex-shrink: 0;
+            letter-spacing: 0.5px;
+        }
+
+        .cred .info { font-size: 0.8rem; line-height: 1.55; }
+        .cred .info a { text-decoration: none; border-bottom: 1.5px solid var(--accent); }
+
+        /* ── Education (career) ── */
+        .edu {
+            font-family: var(--font-serif);
+            font-size: 0.88rem;
+            line-height: 1.8;
+        }
+
+        .edu p + p { margin-top: 0.4rem; }
+
+        /* ── OSS (career) ── */
+        .oss { display: flex; flex-direction: column; gap: 0.6rem; }
+
+        .oss-row { display: flex; gap: 0.75rem; align-items: baseline; }
+
+        .oss-row .oss-name {
+            font-weight: 600;
+            font-size: 0.8rem;
+            min-width: 95px;
+            flex-shrink: 0;
+        }
+
+        .oss-row .oss-name a { text-decoration: none; border-bottom: 1.5px solid var(--accent); }
+        .oss-row .oss-desc { font-size: 0.75rem; color: var(--gray); }
+
+        /* ── Contact (career) ── */
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 75px 1fr;
+            gap: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .contact-grid .c-label {
+            font-weight: 600;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray);
+        }
+
+        .contact-grid a { text-decoration: none; border-bottom: 1.5px solid var(--accent); }
+
+        /* ── Footer ── */
+        .footer {
+            margin-top: 3.5rem;
+            padding-top: 1.25rem;
+            border-top: 2px solid var(--black);
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .footer-left { font-size: 0.65rem; color: var(--dim); }
+
+        .footer-right { display: flex; gap: 0.75rem; }
+        .footer-right a { font-size: 0.65rem; color: var(--gray); text-decoration: none; }
+        .footer-right a:hover { color: var(--black); }
+
+        /* ── Transition ── */
+        .mode-builder, .mode-career {
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .tools-grid { grid-template-columns: 1fr; }
+            .principle { grid-template-columns: 1fr; }
+            .cred { flex-direction: column; gap: 0.2rem; }
+            .oss-row { flex-direction: column; gap: 0.1rem; }
+            .id-row { flex-direction: column; }
+            .lambda { font-size: 2.2rem; }
+            .name { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body class="builder">
+    <div class="container">
+
+        <!-- IDENTITY (always visible) -->
+        <div class="identity">
+            <div class="id-row">
+                <div class="id-left">
+                    <div class="lambda">λ</div>
+                    <img class="avatar" src="/assets/img/prof_pic.jpg" alt="Lam Pham">
+                </div>
+                <div class="toggle-wrap">
+                    <button class="toggle-btn active" data-mode="builder">Build</button>
+                    <button class="toggle-btn" data-mode="career">CV</button>
+                </div>
+            </div>
+            <div class="name">Lam Pham</div>
+            <div class="tagline"><em>Small tools, large systems.</em> AI that handles real money.</div>
+
+            <!-- Builder bio -->
+            <div class="mode-builder">
+                <div class="bio">
+                    I build composable AI infrastructure for banking at <a href="https://cake.vn">Cake by VPBank</a> — ML models serving 6.5M+ users, deep learning in production, voice agents handling 25M+ real calls. Before banking: shipped AI across telco, FMCG, mobility, gaming, and finance. Probably the only person in Vietnam who's built production AI across all of them.
+                </div>
+            </div>
+
+            <!-- Career bio -->
+            <div class="mode-career">
+                <div class="bio">
+                    Chief Data Science & AI Officer at <a href="https://cake.vn">Cake by VPBank</a>, Vietnam's largest digital bank. I lead a 25-person DSAI team running ML models for 6.5M+ banking users, deep learning systems in production, and voice agents that have handled 25M+ real customer calls — credit scoring, revenue forecasting, causal inference, agentic workflows processing real money.
+                </div>
+                <div class="bio">
+                    Before Cake: co-founded <strong>TrueID</strong> at VNG (Vietnam's first tech unicorn) — built a $1M+ ARR AI business serving 10M+ users (B2B2C). Before that: shipped production AI across <strong>every major sector</strong> — telco at Viettel, FMCG, mobility, gaming at VNG, financial sentiment at Sentifi. Studied computer science in <strong>Saint Petersburg for seven years</strong>. <a href="https://www.kaggle.com/saigonapps">Kaggle Master</a>. <a href="https://github.com/lampts/wsdm19cup">WSDM Cup winner</a>. Tennis player, solo guitarist, father of two pianists (ABRSM Grade 5+).
+                </div>
+                <div class="bio">
+                    I might be the only person in Vietnam who has built production AI across telco, FMCG, mobility, gaming, and finance — and also won international ML competitions, co-founded a product company, and now runs AI infrastructure at a bank. Each piece of that sentence is load-bearing.
+                </div>
+            </div>
+
+            <div class="links-row">
+                <a href="https://github.com/lampts">GitHub</a>
+                <a href="https://www.linkedin.com/in/lam-pham-thanh-1428602b">LinkedIn</a>
+                <a href="https://www.kaggle.com/saigonapps">Kaggle</a>
+                <a href="mailto:laampt@gmail.com">Email</a>
+            </div>
+        </div>
+
+        <!-- BUILDER MODE -->
+
+        <!-- Now -->
+        <div class="mode-builder section">
+            <div class="section-head">Now</div>
+            <div class="now-text">
+                Building a <strong>multi-agent orchestrator</strong> (codename Rach) — five digital twin sub-agents as personal intelligence infrastructure. Shipping a <strong>voice agent evaluation playbook</strong> for our 150+ agent fleet with SNR monitoring, golden QA eval sets, response mode systems. Running an <strong>intel-brief pipeline</strong> that compresses Vietnamese financial reports from $8 to $0.80 per report via PDF→markdown→SQL cascade.
+            </div>
+            <div class="now-text">
+                Teaching causal inference to the DSAI team using credit risk scenarios. Designing the <strong>Cake NextGen AI Banker</strong> program. Iterating on the IPO narrative where AI infrastructure is the core valuation driver.
+            </div>
+            <div class="now-date">Updated April 2026</div>
+        </div>
+
+        <!-- Artifacts -->
+        <div class="mode-builder section">
+            <div class="section-head">Work</div>
+            <div class="artifacts">
+                <a class="artifact" href="https://github.com/lampts/wsdm19cup">
+                    <div class="a-type">Competition · 2019</div>
+                    <div class="a-title">WSDM Cup — 1st Place, Fake News Detection</div>
+                    <div class="a-desc">Modified BERT for Chinese text pair matching. 700+ teams, ACM conference. The competitive ML win that shaped how I think about evaluation.</div>
+                </a>
+                <a class="artifact" href="https://github.com/lampts/bert4vn">
+                    <div class="a-type">Open Source · 2019</div>
+                    <div class="a-title">bert4vn — BERT Pre-trained for Vietnamese</div>
+                    <div class="a-desc">Among the first Vietnamese language models released openly. Used across Vietnam's NLP community.</div>
+                </a>
+                <a class="artifact" href="https://pyvideo.org/pycon-singapore-2016/music2vec-a-smart-music-recommendation-and-discovery-pyconsg-2016.html">
+                    <div class="a-type">Talk · PyCon SG 2016</div>
+                    <div class="a-title">music2vec — Song Arithmetic from Million Playlists</div>
+                    <div class="a-desc">Word2vec applied to playlists. Song A − Song B + Playlist X = discovery. The talk that started everything.</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Tools -->
+        <div class="mode-builder section">
+            <div class="section-head">Tools</div>
+            <div class="tools-grid">
+                <a class="tool" href="/tools/tao.html">
+                    <div class="t-name">Tao</div>
+                    <div class="t-what">Minimal attentive writing</div>
+                </a>
+                <a class="tool" href="/tools/code.html">
+                    <div class="t-name">Code</div>
+                    <div class="t-what">Python in the browser</div>
+                </a>
+                <a class="tool" href="/tools/ctalk.html">
+                    <div class="t-name">Talk</div>
+                    <div class="t-what">Webcam self-interview</div>
+                </a>
+                <a class="tool" href="/tools/llm.html">
+                    <div class="t-name">LLM</div>
+                    <div class="t-what">Multi-model chat</div>
+                </a>
+            </div>
+            <div class="tools-more">
+                <a href="/tools/">All 67 tools →</a>
+            </div>
+        </div>
+
+        <!-- Principles -->
+        <div class="mode-builder section">
+            <div class="section-head">How I Build</div>
+            <div class="principles">
+                <div class="principle">
+                    <div class="p-label">Unix</div>
+                    <div class="p-text">Small composable tools that multiply force. One tool does one thing. Pipe them for complex behavior.</div>
+                </div>
+                <div class="principle">
+                    <div class="p-label">Slope > Intercept</div>
+                    <div class="p-text">Hire for learning rate, not current knowledge. Build for compounding. Applies to people, models, and systems.</div>
+                </div>
+                <div class="principle">
+                    <div class="p-label">Farmer</div>
+                    <div class="p-text">Optimize conditions, nurture without forcing, accept seasonal variability. Patient cultivation beats forced growth.</div>
+                </div>
+                <div class="principle">
+                    <div class="p-label">Hard to Vary</div>
+                    <div class="p-text">Good explanations have parts you can't swap without breaking the whole. If an element is decorative, remove it.</div>
+                </div>
+                <div class="principle">
+                    <div class="p-label">Ship > Paper</div>
+                    <div class="p-text">A model in production beats a model in a notebook. The march of nines starts after the demo works.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAREER MODE -->
+
+        <!-- Numbers -->
+        <div class="mode-career tape">
+            <div class="tape-row">
+                <span class="t-val">6.5M+</span>
+                <span class="t-lbl">banking users served by <em>ML models in production</em> at Cake</span>
+            </div>
+            <div class="tape-row">
+                <span class="t-val">25M+</span>
+                <span class="t-lbl"><em>real customer calls</em> handled by voice agents in production</span>
+            </div>
+            <div class="tape-row">
+                <span class="t-val">10M+</span>
+                <span class="t-lbl">users on <em>eKYC & identity products</em> built at VNG/TrueID</span>
+            </div>
+            <div class="tape-row">
+                <span class="t-val">40+</span>
+                <span class="t-lbl"><em>BFSI clients</em> across banking, insurance, and fintech</span>
+            </div>
+            <div class="tape-row">
+                <span class="t-val">$1M+</span>
+                <span class="t-lbl"><em>ARR</em> — B2B2C AI products, co-founded and shipped</span>
+            </div>
+            <div class="tape-row">
+                <span class="t-val">5</span>
+                <span class="t-lbl"><em>industry sectors</em> — telco · FMCG · mobility · gaming · finance</span>
+            </div>
+        </div>
+
+        <!-- Career Timeline -->
+        <div class="mode-career section">
+            <div class="section-head">Career</div>
+            <div class="timeline">
+                <div class="t-item current">
+                    <div class="t-year">2024 — Present</div>
+                    <div class="t-role">Chief Data Science & AI Officer</div>
+                    <div class="t-org"><a href="https://cake.vn">Cake by VPBank</a> — Vietnam's largest digital bank</div>
+                    <div class="t-desc">Lead 25-person DSAI team. ML models serving 6.5M+ banking users, deep learning in production, voice agents handling 25M+ real calls. Building agentic banking infrastructure — causal inference for credit risk, multi-agent orchestration, voice AI fleet management. Target: 70% AI workforce by 2027.</div>
+                </div>
+                <div class="t-item">
+                    <div class="t-year">2019 — 2023</div>
+                    <div class="t-role">Co-founder, TrueID · Head of AI Products</div>
+                    <div class="t-org"><a href="https://vng.com.vn">VNG Corporation</a> — Vietnam's first tech unicorn</div>
+                    <div class="t-desc">Co-founded TrueID — digital identity platform and eKYC for financial services. Built a $1M+ ARR AI business serving 10M+ users across B2B2C. Learned what works when real money and real identity are at stake.</div>
+                </div>
+                <div class="t-item">
+                    <div class="t-year">2015 — 2018</div>
+                    <div class="t-role">Lead Data Scientist</div>
+                    <div class="t-org">Viettel · Sentifi AG · VNG Corp</div>
+                    <div class="t-desc">Production AI across telco (Viettel), financial sentiment (Sentifi AG, Switzerland), gaming & social (VNG). Built data science pipelines for social listening, fraud detection, NLP for Vietnamese text. The years that proved AI generalizes across sectors if you understand the fundamentals.</div>
+                </div>
+                <div class="t-item">
+                    <div class="t-year">2012 — 2015</div>
+                    <div class="t-role">Deputy Head of Mobile · Co-founder, Saigonapps</div>
+                    <div class="t-org">GNT Inc · FPT Software · Saigonapps</div>
+                    <div class="t-desc">Led mobile development at GNT — built Mobion Music, #1 on Japan App Store. Then enterprise software at FPT, then startup co-founder. Built the instinct for shipping products, not just models.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Credentials -->
+        <div class="mode-career section">
+            <div class="section-head">Credentials</div>
+            <div class="creds">
+                <div class="cred">
+                    <span class="tag">1ST PLACE</span>
+                    <div class="info"><a href="https://github.com/lampts/wsdm19cup">WSDM Analytics Cup 2019</a> — Fake news detection (ByteDance). Modified BERT, 700+ teams, ACM conference.</div>
+                </div>
+                <div class="cred">
+                    <span class="tag">KEYNOTE</span>
+                    <div class="info">IFC World Bank FIDN 2020 — "Implementing Digital Identity Platforms for a Digital Economy." Banking infrastructure meets AI verification at scale.</div>
+                </div>
+                <div class="cred">
+                    <span class="tag">KAGGLE</span>
+                    <div class="info"><a href="https://www.kaggle.com/saigonapps">Kaggle Master</a>. CIKM 2017 (4th). CIKM 2018 (8th). AICovid Vietnam 2021 (2nd).</div>
+                </div>
+                <div class="cred">
+                    <span class="tag">SPEAKER</span>
+                    <div class="info"><a href="https://pyvideo.org/pycon-singapore-2016/music2vec-a-smart-music-recommendation-and-discovery-pyconsg-2016.html">PyCon SG 2016</a> — music2vec. TopDev 2019 — Productionizing AI. VietnamWorks Tech Expo 2016.</div>
+                </div>
+                <div class="cred">
+                    <span class="tag">OSS</span>
+                    <div class="info"><a href="https://github.com/lampts/bert4vn">bert4vn</a> & albert4vn — first-wave Vietnamese language models. VietAI open lectures (2017).</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Education -->
+        <div class="mode-career section">
+            <div class="section-head">Education</div>
+            <div class="edu">
+                <p><strong>MSc Computer Science</strong> — Saint Petersburg State University, Russia (2005–2012). Seven years shaped by the mathematical tradition and formal systems thinking.</p>
+                <p><strong>MSc Business Information Systems</strong> — Vietnamese-German University (2010–2012).</p>
+            </div>
+        </div>
+
+        <!-- Open Source -->
+        <div class="mode-career section">
+            <div class="section-head">Open Source</div>
+            <div class="oss">
+                <div class="oss-row">
+                    <div class="oss-name"><a href="https://github.com/lampts/wsdm19cup">wsdm19cup</a></div>
+                    <div class="oss-desc">1st place — WSDM 2019 fake news classification</div>
+                </div>
+                <div class="oss-row">
+                    <div class="oss-name"><a href="https://github.com/lampts/bert4vn">bert4vn</a></div>
+                    <div class="oss-desc">BERT pre-trained for Vietnamese</div>
+                </div>
+                <div class="oss-row">
+                    <div class="oss-name">albert4vn</div>
+                    <div class="oss-desc">Lightweight ALBERT for Vietnamese (2019)</div>
+                </div>
+                <div class="oss-row">
+                    <div class="oss-name"><a href="https://github.com/lampts/aicovidvn115m">aicovidvn</a></div>
+                    <div class="oss-desc">2nd place — COVID cough classification (2021)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="mode-career section">
+            <div class="section-head">Contact</div>
+            <div class="contact-grid">
+                <div class="c-label">Email</div>
+                <div><a href="mailto:laampt@gmail.com">laampt@gmail.com</a></div>
+                <div class="c-label">LinkedIn</div>
+                <div><a href="https://www.linkedin.com/in/lam-pham-thanh-1428602b">lam-pham</a></div>
+                <div class="c-label">GitHub</div>
+                <div><a href="https://github.com/lampts">lampts</a></div>
+                <div class="c-label">Kaggle</div>
+                <div><a href="https://www.kaggle.com/saigonapps">saigonapps</a></div>
+                <div class="c-label">Location</div>
+                <div>Ho Chi Minh City, Vietnam</div>
+            </div>
+        </div>
+
+        <!-- FOOTER (always visible) -->
+        <div class="footer">
+            <div class="footer-left">λ lampt.org · HCMC · © 2026</div>
+            <div class="footer-right">
+                <a href="mailto:laampt@gmail.com">Email</a>
+                <a href="https://github.com/lampts">GitHub</a>
+                <a href="https://www.kaggle.com/saigonapps">Kaggle</a>
+            </div>
+        </div>
+
+    </div>
 
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['IBM Plex Mono', 'monospace'],
-                        mono: ['IBM Plex Mono', 'monospace'],
-                        serif: ['IBM Plex Serif', 'serif'],
-                    },
-                    colors: {
-                        background: '#ffffff',
-                        foreground: '#000000',
-                        muted: '#666666',
-                    }
-                }
-            }
+        const buttons = document.querySelectorAll('.toggle-btn');
+        const body = document.body;
+
+        // Load saved mode
+        const saved = localStorage.getItem('lampt-mode');
+        if (saved === 'career') {
+            body.className = 'career';
+            buttons[0].classList.remove('active');
+            buttons[1].classList.add('active');
         }
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                body.className = mode;
+                buttons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                localStorage.setItem('lampt-mode', mode);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
     </script>
-</head>
-<body class="bg-background text-foreground font-mono text-sm antialiased selection:bg-black selection:text-white">
-
-    <div class="p-4 md:p-12 overflow-hidden min-h-screen">
-        <div class="w-full max-w-xl mx-auto">
-            
-            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <a class="text-3xl font-serif font-medium tracking-tight flex items-center gap-2" href="/">
-                    <span>Pham Thanh Lam (Laam)</span>
-                </a>
-                <div class="flex gap-4 text-xs uppercase tracking-wider">
-                    <a class="underline underline-offset-4 hover:decoration-2 decoration-1" href="mailto:laampt@icloud.com">Email</a>
-                    <a class="underline underline-offset-4 hover:decoration-2 decoration-1" href="https://github.com/lampts" target="_blank">GitHub</a>
-                    <a class="underline underline-offset-4 hover:decoration-2 decoration-1" href="https://www.linkedin.com/in/lam-pham-thanh-1428602b" target="_blank">LinkedIn</a>
-                </div>
-            </header>
-
-            <div class="mt-8 mb-12">
-                <div class="flex flex-col-reverse sm:flex-row gap-6 items-start">
-                    <div class="flex-1">
-                        <p class="mb-4 leading-relaxed font-semibold text-base">
-                            Building AI systems that ship at scale.
-                        </p>
-                        <p class="mb-4 leading-relaxed text-muted">
-                            I build AI systems that ship. Currently Chief Data Science & AI Officer at <span class="text-foreground">Cake by VPBank</span>, Vietnam's largest digital bank, where I manage 15+ people running 100+ models and 150+ voice agents in production.
-                        </p>
-                        <p class="mb-4 leading-relaxed text-muted">
-                            The work: transforming traditional banking into agentic AI operations. We're building toward unicorn status through digital twins and multi-agent systems that handle real customer money.
-                        </p>
-                        <p class="text-xs text-muted">Based in Ho Chi Minh City, Vietnam.</p>
-                    </div>
-                    <div class="shrink-0 border border-black p-1 shadow-[3px_3px_0px_#000]">
-                        <img src="/assets/img/prof_pic.jpg" alt="Pham Thanh Lam" class="w-24 h-24 object-cover grayscale hover:grayscale-0 transition-all" onerror="this.style.display='none'">
-                    </div>
-                </div>
-            </div>
-
-            <h2 class="font-serif text-lg font-bold mb-6 border-b border-black pb-2">Timeline</h2>
-
-            <div class="pl-2">
-                <div class="relative flex flex-col space-y-6 border-l border-gray-300 py-2">
-                    
-                    <a href="https://cake.vn" target="_blank" class="flex flex-col gap-2 px-4 py-3 ml-6 group cursor-pointer bg-white border border-black shadow-[3px_3px_0px_#000] hover:shadow-[5px_5px_0px_#000] transition-all relative">
-                        <div class="absolute size-[7px] bg-black -left-[32px] top-[18px] outline outline-white outline-4"></div>
-                        
-                        <div class="flex items-baseline gap-2 justify-between relative">
-                            <div class="flex items-center gap-2 min-w-0 flex-1">
-                                <div class="px-1.5 py-0.5 bg-[#FBD45B] text-black text-[10px] font-medium border border-black">CURRENT</div>
-                                <div class="text-xs truncate font-bold">Chief Data Science & AI Officer</div>
-                            </div>
-                            <div class="text-[10px] text-muted shrink-0 ml-2">2024 - Present</div>
-                        </div>
-                        <p class="text-xs text-muted no-underline mt-1">
-                            Cake by VPBank. Running 100+ AI models and 150+ voice agents. Building agentic banking infrastructure—causal inference, revenue forecasting, and Personal AI Infrastructure.
-                        </p>
-                    </a>
-
-                    <div class="flex flex-col gap-1 px-4 py-2 ml-6 hover:bg-gray-50 group cursor-pointer relative">
-                        <div class="absolute size-[7px] bg-gray-400 -left-[32px] top-[14px] outline outline-white outline-4"></div>
-                        
-                        <div class="flex items-baseline gap-1 justify-between text-xs w-full">
-                            <div class="font-semibold truncate">Vietnam's First Tech Unicorn</div>
-                            <div class="text-[10px] text-muted whitespace-nowrap shrink-0">2019 - 2023</div>
-                        </div>
-                        <div class="text-xs text-muted">
-                            Built AI products crossing $1M ARR with 10M+ users (B2B2C). Learned what works when stakes are high.
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-1 px-4 py-2 ml-6 hover:bg-gray-50 group cursor-pointer relative">
-                        <div class="absolute size-[7px] bg-gray-400 -left-[32px] top-[14px] outline outline-white outline-4"></div>
-                        
-                        <div class="flex items-baseline gap-1 justify-between text-xs w-full">
-                            <div class="font-semibold truncate">IFC World Bank FIDN</div>
-                            <div class="text-[10px] text-muted whitespace-nowrap shrink-0">2020</div>
-                        </div>
-                        <div class="text-xs text-muted">
-                            Keynote on digital identity platforms. Banking infrastructure meets identity verification at scale.
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-1 px-4 py-2 ml-6 hover:bg-gray-50 group cursor-pointer relative">
-                        <div class="absolute size-[7px] bg-gray-400 -left-[32px] top-[14px] outline outline-white outline-4"></div>
-                        
-                        <div class="flex items-baseline gap-1 justify-between text-xs w-full">
-                            <div class="font-semibold truncate">WSDM Analytics Cup Winner</div>
-                            <div class="text-[10px] text-muted whitespace-nowrap shrink-0">2019</div>
-                        </div>
-                        <div class="text-xs text-muted">
-                            First competitive ML win that mattered. Fake news detection algorithms with modified Bert version.
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            <h2 class="font-serif text-lg font-bold mt-12 mb-4 border-b border-black pb-2">Philosophy</h2>
-            <div class="flex flex-col gap-4 text-xs leading-relaxed text-muted">
-                <p>
-                    <strong class="text-foreground">What I care about:</strong> Systems that work at scale. Code that ships beats papers that don't. Agentic workflows replacing human ops. Causal inference in production, not just notebooks. Building tools that multiply force—like Unix philosophy but for AI systems.
-                </p>
-            </div>
-
-            <h2 class="font-serif text-lg font-bold mt-12 mb-4 border-b border-black pb-2">Building</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="border border-gray-200 p-3 hover:border-black transition-colors">
-                    <div class="font-semibold text-xs mb-1">MAI Agents</div>
-                    <div class="text-xs text-muted">Research review & automation</div>
-                </div>
-                <div class="border border-gray-200 p-3 hover:border-black transition-colors">
-                    <div class="font-semibold text-xs mb-1">Revenue Forecasting</div>
-                    <div class="text-xs text-muted">Monte Carlo methods under uncertainty</div>
-                </div>
-                <div class="border border-gray-200 p-3 hover:border-black transition-colors">
-                    <a href="https://www.lampt.org/tools/tao.html" class="block text-inherit no-underline">
-                    <div class="font-semibold text-xs mb-1">Tao</div>
-                    <div class="text-xs text-muted">Minimal Attentive Writing Tool</div>
-                    </a>
-                </div>
-                <div class="border border-gray-200 p-3 hover:border-black transition-colors">
-                    <a href="https://www.lampt.org/tools/code.html" class="block text-inherit no-underline">
-                    <div class="font-semibold text-xs mb-1">Code</div>
-                    <div class="text-xs text-muted">Minimal Python Coding Tool</div>
-                    </a>
-                </div>
-                <div class="border border-gray-200 p-3 hover:border-black transition-colors">
-                    <a href="https://www.lampt.org/tools/ctalk.html" class="block text-inherit no-underline">
-                    <div class="font-semibold text-xs mb-1">Talk</div>
-                    <div class="text-xs text-muted">Self-Recording Webcam Interview</div>
-                    </a>
-                </div>
-                <div class="border border-gray-200 p-3 hover:border-black transition-colors">
-                    <a href="https://www.lampt.org/tools/llm.html" class="block text-inherit no-underline">
-                    <div class="font-semibold text-xs mb-1">LLM</div>
-                    <div class="text-xs text-muted">Chat with multiple LLM</div>
-                    </a>
-                </div>
-            </div>
-            <h2 class="font-serif text-lg font-bold mt-12 mb-4 border-b border-black pb-2">Connect</h2>
-            <p class="mb-4 text-xs text-muted">
-                Vietnam, HCMC, 70000
-            </p>
-            <div class="flex flex-wrap gap-4 text-xs">
-                <a href="https://twitter.com/saigonapps" class="border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors" target="_blank">Twitter</a>
-                <a href="https://www.kaggle.com/saigonapps" class="border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors" target="_blank">Kaggle</a>
-                <a href="https://github.com/lampts" class="border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors" target="_blank">GitHub</a>
-                <a href="https://www.linkedin.com/in/lam-pham-thanh-1428602b" class="border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors" target="_blank">LinkedIn</a>
-            </div>
-
-            <footer class="mt-20 border-t border-black pt-6 pb-12 flex justify-between items-baseline text-xs text-muted">
-                <p class="font-serif text-sm text-black">Pham Thanh Lam (λ)</p>
-                <div class="flex gap-4">
-                    <span>&copy; 2025</span>
-                </div>
-            </footer>
-
-        </div>
-    </div>
 </body>
 </html>
