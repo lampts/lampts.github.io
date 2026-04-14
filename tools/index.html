@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>λ tools — lampt.org</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="68 standalone interactive tools, demos & experiments by Lam Pham. AI, finance, visualization, dev tools & more.">
+<meta property="og:title" content="λ tools — lampt.org">
+<meta property="og:description" content="Small tools, large systems. 68 standalone interactive experiments.">
+<meta property="og:url" content="https://www.lampt.org/tools/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FBD45B'/><text x='50' y='78' font-size='72' font-family='monospace' font-weight='bold' text-anchor='middle' fill='%23111'>λ</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VC31GENS6S');
+</script>
+<style>
+:root {
+  --accent: #FBD45B;
+  --bg: #FAFAFA;
+  --fg: #111;
+  --gray: #777;
+  --dim: #999;
+  --card-bg: #fff;
+  --card-border: #111;
+  --tag-bg: #f0f0f0;
+  --shadow: 3px 3px 0px #000;
+  --shadow-sm: 2px 2px 0px #000;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-serif: 'IBM Plex Serif', serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111;
+    --fg: #e0e0e0;
+    --gray: #999;
+    --dim: #666;
+    --card-bg: #1a1a1a;
+    --card-border: #e0e0e0;
+    --tag-bg: #222;
+    --shadow: 3px 3px 0px rgba(255,255,255,0.15);
+    --shadow-sm: 2px 2px 0px rgba(255,255,255,0.15);
+  }
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { background: var(--bg); color: var(--fg); font-family: var(--font-mono); line-height: 1.6; font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+
+a { color: var(--fg); }
+
+/* header */
+.header { margin-bottom: 2.5rem; }
+.id-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.lambda { font-size: 2rem; font-weight: 700; line-height: 1; background: var(--accent); color: #111; padding: 4px 12px; box-shadow: var(--shadow); text-decoration: none; flex-shrink: 0; }
+.lambda:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0px #000; }
+.avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid var(--fg); flex-shrink: 0; }
+.header-text { flex: 1; }
+.header-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2.5px; font-weight: 600; }
+.header-sub { font-size: 0.78rem; color: var(--gray); margin-top: 2px; }
+
+/* controls */
+.controls { margin-bottom: 1.75rem; }
+.search-row { display: flex; gap: 0.6rem; margin-bottom: 0.75rem; align-items: center; }
+.search { flex: 1; padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.8rem;
+  background: var(--card-bg); color: var(--fg); border: 1.5px solid var(--card-border); box-shadow: var(--shadow-sm); outline: none; }
+.search:focus { border-color: var(--accent); }
+.search::placeholder { color: var(--dim); }
+.count { font-size: 0.7rem; color: var(--dim); white-space: nowrap; flex-shrink: 0; }
+.tag-filters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.tag-btn { font-family: var(--font-mono); font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+  padding: 4px 10px; background: transparent; color: var(--gray); border: 1.5px solid var(--card-border); box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.12s; }
+.tag-btn:hover { background: var(--accent); color: #111; transform: translate(-1px, -1px); }
+.tag-btn.active { background: var(--fg); color: var(--bg); }
+
+/* section head */
+.section-head { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2.5px; font-weight: 600;
+  border-bottom: 2px solid var(--fg); padding-bottom: 6px; margin-bottom: 1.25rem; }
+
+/* grid */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.6rem; }
+.card { display: block; padding: 0.75rem 0.9rem; background: var(--card-bg); border: 1.5px solid var(--card-border);
+  box-shadow: var(--shadow-sm); text-decoration: none; color: var(--fg); transition: all 0.12s; }
+.card:hover { background: var(--accent); color: #111; transform: translate(-1px, -1px); box-shadow: 4px 4px 0px #000; }
+.card:hover .card-date, .card:hover .card-tag { color: #111; }
+.card-title { font-size: 0.82rem; font-weight: 600; margin-bottom: 0.3rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-meta { display: flex; justify-content: space-between; align-items: center; }
+.card-date { font-size: 0.65rem; color: var(--dim); transition: color 0.12s; }
+.card-tag { font-size: 0.58rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--gray); background: var(--tag-bg); padding: 1px 6px; transition: color 0.12s; }
+.card:hover .card-tag { background: rgba(0,0,0,0.1); }
+
+/* empty state */
+.empty { text-align: center; padding: 3rem 1rem; color: var(--dim); font-size: 0.85rem; display: none; }
+
+/* footer */
+.footer { margin-top: 3rem; padding-top: 1rem; border-top: 2px solid var(--fg);
+  display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
+.footer-left { font-size: 0.65rem; color: var(--dim); }
+.footer-right a { font-size: 0.65rem; color: var(--gray); text-decoration: none; margin-left: 0.75rem; }
+.footer-right a:hover { color: var(--fg); }
+
+@media (max-width: 480px) {
+  body { padding: 1.5rem 1rem 3rem; }
+  .grid { grid-template-columns: 1fr; }
+  .id-row { flex-wrap: wrap; }
+  .search-row { flex-direction: column; }
+  .count { align-self: flex-end; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="id-row">
+    <a class="lambda" href="/lamp.html">λ</a>
+    <img class="avatar" src="/assets/img/prof_pic.jpg" alt="Lam Pham">
+    <div class="header-text">
+      <div class="header-title">Tools</div>
+      <div class="header-sub">standalone demos & experiments</div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <div class="search-row">
+    <input type="text" class="search" placeholder="grep ..." id="search" autocomplete="off">
+    <div class="count" id="count"></div>
+  </div>
+  <div class="tag-filters" id="tags"></div>
+</div>
+
+<div class="section-head" id="list-head">All</div>
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty">no matches found</div>
+
+<div class="footer">
+  <div class="footer-left">λ lampt.org</div>
+  <div class="footer-right">
+    <a href="/lamp.html">Home</a>
+    <a href="https://github.com/lampts">GitHub</a>
+    <a href="mailto:laampt@gmail.com">Email</a>
+  </div>
+</div>
+
+<script>
+const TOOLS = [
+  // === root-level tools ===
+  { title: "Galton Board Simulation", href: "/gemini_galton.html", date: "2025-04-25", tag: "viz" },
+  { title: "The Book of Answers", href: "/tboa.html", date: "2025-04-27", tag: "fun" },
+  { title: "TVM Calculator", href: "/tvm_calculator.html", date: "2025-04-27", tag: "finance" },
+  { title: "WebAssembly IPython", href: "/ipython.html", date: "2025-05-01", tag: "dev" },
+  { title: "LeCun Net Digit Recognizer", href: "/lecun.html", date: "2025-05-04", tag: "ai" },
+  { title: "Interactive Meta-Prompt Configurator", href: "/prompt.html", date: "2025-05-08", tag: "ai" },
+  { title: "Annotated Presentation Creator", href: "/annotate.html", date: "2025-05-16", tag: "writing" },
+  { title: "Waveform Visualizer", href: "/wave.html", date: "2025-05-22", tag: "viz" },
+  { title: "Reservoir-Sampling Log Rate Limiter", href: "/reservoir.html", date: "2025-05-22", tag: "dev" },
+  { title: "Cake by VPBank: SEA Strategy", href: "/cake25.html", date: "2025-05-23", tag: "finance" },
+  { title: "Infographic: Cake SEA Strategy", href: "/cakeinfo.html", date: "2025-05-23", tag: "finance" },
+  { title: "Flashcard App", href: "/card.html", date: "2025-05-23", tag: "learning" },
+  { title: "Solar System Explorer", href: "/solar.html", date: "2025-05-23", tag: "viz" },
+  { title: "Loss Landscapes – 3D Viewer", href: "/loss.html", date: "2025-05-24", tag: "ai" },
+  { title: "Mini Spotify – Offline Player", href: "/mp3.html", date: "2025-05-25", tag: "fun" },
+  { title: "Bird Stories – by AI", href: "/story.html", date: "2025-06-02", tag: "fun" },
+  { title: "Ao Dai Benchmark – AI Rankings", href: "/aodaibench.html", date: "2025-06-07", tag: "ai" },
+  { title: "Interactive SVG Comparison", href: "/svg.html", date: "2025-06-07", tag: "viz" },
+  { title: "QR Code to Go Board Converter", href: "/qr.html", date: "2025-06-12", tag: "dev" },
+  { title: "Paws & Coffee", href: "/paws.html", date: "2025-06-26", tag: "fun" },
+  { title: "Keynote: Cake AI Way", href: "/pq25.html", date: "2025-06-29", tag: "ai" },
+  { title: "Direct Photo Analysis Tool", href: "/photo.html", date: "2025-08-16", tag: "ai" },
+  { title: "HeadshotPro AI", href: "/headshot.html", date: "2025-10-04", tag: "ai" },
+  { title: "Classical Music Metro Line", href: "/classic.html", date: "2025-10-06", tag: "fun" },
+  { title: "PictureMe – AI Photo", href: "/pictureme.html", date: "2025-10-08", tag: "ai" },
+  { title: "Progressive Metal & Rock", href: "/rock.html", date: "2025-10-09", tag: "fun" },
+  { title: "Crypto Signing & Verification", href: "/crypto.html", date: "2025-10-12", tag: "dev" },
+  { title: "Collatz Conjecture (3N+1)", href: "/collatz.html", date: "2025-10-14", tag: "viz" },
+  // === tools/ directory ===
+  { title: "Chinese Learner – HSK 1-2", href: "/tools/hellochinese.html", date: "2025-11-16", tag: "learning" },
+  { title: "Dice Roll Simulator", href: "/tools/baby.html", date: "2025-11-18", tag: "fun" },
+  { title: "DSAI Interview Protocol", href: "/tools/ctalk.html", date: "2025-11-20", tag: "dev" },
+  { title: "Revenue Sensitivity Analysis", href: "/tools/sen.html", date: "2025-11-20", tag: "finance" },
+  { title: "Monte Carlo Revenue Sim", href: "/tools/sim.html", date: "2025-11-20", tag: "finance" },
+  { title: "Inkflow – Focus Reader", href: "/tools/tao.html", date: "2025-11-22", tag: "writing" },
+  { title: "NanoFluency: Native Echo", href: "/tools/speak.html", date: "2025-11-23", tag: "learning" },
+  { title: "PyConsole TUI", href: "/tools/code.html", date: "2025-11-25", tag: "dev" },
+  { title: "LLM Comparison", href: "/tools/llm.html", date: "2025-11-27", tag: "ai" },
+  { title: "LLM Council", href: "/tools/council.html", date: "2025-11-27", tag: "ai" },
+  { title: "AI Market Trends 2025-2030", href: "/tools/ai30.html", date: "2025-11-29", tag: "ai" },
+  { title: "HBR Year in Tech 2026", href: "/tools/hbr.html", date: "2025-11-29", tag: "dev" },
+  { title: "AI Skills Gap Heatmap", href: "/tools/skill25.html", date: "2025-11-29", tag: "ai" },
+  { title: "nanotele", href: "/tools/tele.html", date: "2025-12-02", tag: "dev" },
+  { title: "PDF to Gist", href: "/tools/p2g.html", date: "2025-12-03", tag: "dev" },
+  { title: "AI English Teacher", href: "/tools/teach.html", date: "2025-12-11", tag: "learning" },
+  { title: "Jina Reader Proxy", href: "/tools/proxy.html", date: "2025-12-23", tag: "dev" },
+  { title: "Forest Fire Model", href: "/tools/fire.html", date: "2025-12-27", tag: "viz" },
+  { title: "Poker Trainer", href: "/tools/poker.html", date: "2025-12-30", tag: "fun" },
+  { title: "Guitar Lead Trainer", href: "/tools/guitar.html", date: "2026-01-02", tag: "fun" },
+  { title: "AI GTM Playbook", href: "/tools/gtm.html", date: "2026-01-10", tag: "ai" },
+  { title: "Lucky Draw Simulator", href: "/tools/luck.html", date: "2026-01-10", tag: "fun" },
+  { title: "PFM from Scratch", href: "/tools/pfm.html", date: "2026-01-10", tag: "finance" },
+  { title: "KB Visualization", href: "/tools/kbvis.html", date: "2026-01-15", tag: "viz" },
+  { title: "Dodge-meter – Earnings Call", href: "/tools/ometer.html", date: "2026-01-18", tag: "finance" },
+  { title: "HEALTH_OS", href: "/tools/hos.html", date: "2026-01-20", tag: "dev" },
+  { title: "In My Life – Solo Guitar", href: "/tools/solo.html", date: "2026-01-25", tag: "fun" },
+  { title: "Cake LLM Namer", href: "/tools/namer.html", date: "2026-01-28", tag: "ai" },
+  { title: "ML/DS Quiz Platform", href: "/tools/quiz.html", date: "2026-02-04", tag: "learning" },
+  { title: "Experiment Valley – Tutorial", href: "/tools/ab.html", date: "2026-02-11", tag: "learning" },
+  { title: "Experiment Valley – Competition", href: "/tools/abc.html", date: "2026-02-12", tag: "learning" },
+  { title: "microGPT – Karpathy", href: "/tools/gpt.html", date: "2026-02-12", tag: "ai" },
+  { title: "Reader", href: "/tools/reader.html", date: "2026-02-20", tag: "writing" },
+  { title: "EU Trip 2026 Planner", href: "/tools/trip.html", date: "2026-02-21", tag: "fun" },
+  { title: "Python ML Stack – Deps", href: "/tools/xz.html", date: "2026-02-27", tag: "dev" },
+  { title: "Animated Word Cloud", href: "/tools/wc.html", date: "2026-03-01", tag: "viz" },
+  { title: "Agent Clone Builder", href: "/tools/ac.html", date: "2026-03-04", tag: "ai" },
+  { title: "Tục Ngữ Tài Chính", href: "/tools/sa.html", date: "2026-03-05", tag: "finance" },
+  { title: "LexMark", href: "/tools/le.html", date: "2026-03-06", tag: "writing" },
+];
+
+TOOLS.sort((a, b) => b.date.localeCompare(a.date));
+
+const TAGS = [...new Set(TOOLS.map(t => t.tag))].sort();
+const grid = document.getElementById("grid");
+const search = document.getElementById("search");
+const tagsEl = document.getElementById("tags");
+const countEl = document.getElementById("count");
+const emptyEl = document.getElementById("empty");
+const listHead = document.getElementById("list-head");
+
+let activeTag = null;
+
+// render tag buttons
+const allBtn = document.createElement("button");
+allBtn.className = "tag-btn active";
+allBtn.textContent = "all";
+allBtn.onclick = () => { activeTag = null; render(); };
+tagsEl.appendChild(allBtn);
+TAGS.forEach(tag => {
+  const btn = document.createElement("button");
+  btn.className = "tag-btn";
+  btn.textContent = tag;
+  btn.onclick = () => { activeTag = activeTag === tag ? null : tag; render(); };
+  tagsEl.appendChild(btn);
+});
+
+function render() {
+  const q = search.value.toLowerCase();
+  const filtered = TOOLS.filter(t => {
+    const matchTag = !activeTag || t.tag === activeTag;
+    const matchSearch = !q || t.title.toLowerCase().includes(q) || t.tag.includes(q) || t.date.includes(q);
+    return matchTag && matchSearch;
+  });
+
+  tagsEl.querySelectorAll(".tag-btn").forEach(btn => {
+    const isAll = btn.textContent === "all";
+    btn.classList.toggle("active", isAll ? !activeTag : btn.textContent === activeTag);
+  });
+
+  countEl.textContent = filtered.length + " / " + TOOLS.length;
+  listHead.textContent = activeTag ? activeTag.toUpperCase() : "All";
+
+  grid.innerHTML = "";
+  filtered.forEach(t => {
+    const a = document.createElement("a");
+    a.className = "card";
+    a.href = t.href;
+    a.innerHTML = '<div class="card-title">' + t.title + '</div>' +
+      '<div class="card-meta"><span class="card-date">' + t.date + '</span><span class="card-tag">' + t.tag + '</span></div>';
+    grid.appendChild(a);
+  });
+
+  emptyEl.style.display = filtered.length === 0 ? "block" : "none";
+}
+
+search.addEventListener("input", render);
+render();
+</script>
+</body>
+</html>
