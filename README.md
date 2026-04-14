@@ -658,7 +658,8 @@ Since then, it got a full re-write of the styles and many additional cool featur
 
 ## HTML Files
 
-- [index.html](index.html) - *November 28, 2025*
+- [lamp.html](lamp.html) - *April 14, 2026*
+- [index.html](index.html) - *April 14, 2026*
 - [collatz.html](collatz.html) - *October 14, 2025*
 - [crypto.html](crypto.html) - *October 12, 2025*
 - [rock.html](rock.html) - *October 09, 2025*
@@ -684,7 +685,6 @@ Since then, it got a full re-write of the styles and many additional cool featur
 - [wave.html](wave.html) - *May 22, 2025*
 - [annotate.html](annotate.html) - *May 16, 2025*
 - [prompt.html](prompt.html) - *May 08, 2025*
-- [lamp.html](lamp.html) - *May 05, 2025*
 - [lecun.html](lecun.html) - *May 04, 2025*
 - [inkflow.html](inkflow.html) - *May 03, 2025*
 - [ipython.html](ipython.html) - *May 01, 2025*
