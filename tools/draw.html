@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>minidraw — a tiny shared canvas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Mono:wght@500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EDEEF2; --dot:#C9CCD6; --surface:#FFFFFF; --ink:#1A1D23; --muted:#6A7080;
+    --line:#E2E4EA; --accent:#EE4D22; --accent-deep:#C93C15; --ok:#1E9E5A; --danger:#D7261D;
+    --shadow:0 10px 30px rgba(22,24,33,.12),0 1px 2px rgba(22,24,33,.08);
+    --shadow-sm:0 1px 2px rgba(22,24,33,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; overflow:hidden; color:var(--ink);
+    font:14px/1.45 Inter,system-ui,-apple-system,sans-serif;
+    background-color:var(--bg);
+    background-image:radial-gradient(var(--dot) 1px,transparent 1.4px);
+    background-size:22px 22px;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+  button:focus-visible,input:focus-visible,[contenteditable]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+
+  #board{position:fixed;inset:0;touch-action:none;display:block}
+  #board.t-pen,#board.t-rect,#board.t-ell,#board.t-line,#board.t-arrow,#board.t-eraser{cursor:crosshair}
+  #board.t-text{cursor:text}
+  #board.dragging{cursor:grabbing}
+
+  /* ---------- floating chrome ---------- */
+  .topbar{position:fixed;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:20;gap:10px}
+  .pill{pointer-events:auto;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:8px 12px}
+  .brand{font-family:"Bricolage Grotesque",Inter,sans-serif;font-weight:700;font-size:17px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+  .logo{width:22px;height:22px;border-radius:7px;background:var(--accent);display:grid;place-items:center;flex:none}
+  .logo svg{width:14px;height:14px;stroke:#fff;stroke-width:2.4;fill:none;stroke-linecap:round}
+  .peers{display:none;align-items:center;gap:6px;font:500 11px Inter,sans-serif;color:var(--ok);background:rgba(30,158,90,.1);border-radius:99px;padding:3px 9px}
+  .peers.on{display:flex}
+  .peers i{width:6px;height:6px;border-radius:50%;background:var(--ok);animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .savestate{font-size:12px;color:var(--muted);white-space:nowrap}
+  .btn-accent{background:var(--accent);color:#fff;font-weight:600;font-size:13px;padding:8px 14px;border-radius:10px;display:flex;align-items:center;gap:7px;transition:background .12s}
+  .btn-ghost{background:transparent;color:var(--ink);font-weight:600;font-size:13px;padding:8px 12px;border-radius:10px;display:flex;align-items:center;gap:7px;border:1px solid var(--line);transition:background .12s}
+  .btn-ghost:hover{background:#F1F2F5}
+  .btn-ghost svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .imparea{width:100%;min-height:96px;resize:vertical;font:500 11.5px "IBM Plex Mono",monospace;color:var(--ink);background:#F4F5F7;border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-bottom:12px}
+  .imparea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  .notice{background:rgba(238,77,34,.06);border:1px solid rgba(238,77,34,.22);color:#9A3412;border-radius:12px;padding:11px 13px;font-size:12.5px;line-height:1.5;margin-top:12px}
+  .btn-accent:hover{background:var(--accent-deep)}
+  .btn-accent svg{width:14px;height:14px;stroke:#fff;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---------- dock ---------- */
+  .dock{position:fixed;left:50%;transform:translateX(-50%);top:72px;z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:6px;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:2px;max-width:min(96vw,720px)}
+  .dock .sep{width:1px;align-self:stretch;background:var(--line);margin:4px 6px}
+  .tbtn{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:var(--ink);position:relative;transition:background .1s}
+  .tbtn:hover{background:#F1F2F5}
+  .tbtn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .tbtn.active{background:var(--ink);color:#fff}
+  .tbtn[disabled]{opacity:.35;cursor:default}
+  .tbtn[disabled]:hover{background:none}
+  .tbtn .key{position:absolute;right:3px;bottom:2px;font:500 8px "IBM Plex Mono",monospace;color:var(--muted)}
+  .tbtn.active .key{color:rgba(255,255,255,.6)}
+  .swatch{width:26px;height:26px;margin:5px 2px;border-radius:50%;border:2px solid transparent;background-clip:content-box;padding:2px;transition:transform .1s}
+  .swatch.active{border-color:var(--ink)}
+  .swatch:hover{transform:scale(1.12)}
+  .wbtn{width:30px;height:36px;border-radius:10px;display:grid;place-items:center}
+  .wbtn:hover{background:#F1F2F5}
+  .wbtn i{border-radius:99px;background:currentColor;display:block}
+  .wbtn.active{background:var(--ink);color:#fff}
+
+  /* ---------- payload meter (signature) ---------- */
+  .meter{position:fixed;left:16px;bottom:16px;z-index:20;display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-sm);padding:8px 12px}
+  .meter .lab{font:600 10px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .meter .bar{width:86px;height:8px;border-radius:99px;background:#EDEEF2;border:1px solid var(--line);overflow:hidden}
+  .meter .bar i{display:block;height:100%;width:0%;background:var(--ink);border-radius:99px;transition:width .35s,background .35s}
+  .meter.warn .bar i{background:var(--accent)}
+  .meter.over .bar i{background:var(--danger)}
+  .meter .val{font:500 11px "IBM Plex Mono",monospace;color:var(--muted);white-space:nowrap}
+  .meter.over .val{color:var(--danger)}
+
+  .hint{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;color:var(--muted);pointer-events:none;z-index:5;transition:opacity .4s}
+  .hint h2{font-family:"Bricolage Grotesque",Inter,sans-serif;font-weight:600;font-size:21px;color:var(--ink);margin:0 0 6px;letter-spacing:-.01em}
+  .hint p{margin:0;font-size:13px;max-width:300px}
+  .hint kbd{font:500 11px "IBM Plex Mono",monospace;background:var(--surface);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 5px}
+  .hint.gone{opacity:0}
+
+  /* ---------- text editor ---------- */
+  #ted{position:fixed;z-index:15;min-width:12px;padding:0;margin:0;background:transparent;border:0;outline:0;white-space:pre;caret-color:var(--accent);display:none}
+
+  /* ---------- modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(21,23,32,.46);z-index:40;display:none;align-items:center;justify-content:center;padding:18px}
+  .overlay.open{display:flex;animation:fade .16s}
+  @keyframes fade{from{opacity:0}}
+  .modal{background:var(--surface);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:400px;padding:22px;animation:rise .18s}
+  @keyframes rise{from{transform:translateY(8px);opacity:0}}
+  .modal h2{font-family:"Bricolage Grotesque",Inter,sans-serif;font-weight:700;font-size:20px;letter-spacing:-.02em;margin:0 0 4px;display:flex;justify-content:space-between;align-items:center}
+  .modal .sub{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .xbtn{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:var(--muted)}
+  .xbtn:hover{background:#F1F2F5}
+  .linkrow{display:flex;gap:8px;margin-bottom:14px}
+  .linkrow input{flex:1;min-width:0;font:500 11.5px "IBM Plex Mono",monospace;color:var(--ink);background:#F4F5F7;border:1px solid var(--line);border-radius:10px;padding:9px 11px;text-overflow:ellipsis}
+  .copybtn{background:var(--ink);color:#fff;font-weight:600;font-size:13px;border-radius:10px;padding:0 14px;flex:none;transition:background .12s}
+  .copybtn:hover{background:#000}
+  .qrtile{border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:14px}
+  .qrtile canvas{width:204px;max-width:100%;image-rendering:pixelated;border-radius:4px}
+  .qrtile .cap{font-size:12px;color:var(--muted)}
+  .qrmiss{font-size:13px;color:var(--muted);text-align:center;padding:18px 8px}
+  .mfoot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;gap:10px}
+  .mfoot .mono{font:500 11px "IBM Plex Mono",monospace}
+  .overbox{background:rgba(215,38,29,.07);border:1px solid rgba(215,38,29,.25);color:var(--danger);border-radius:12px;padding:14px;font-size:13px;margin-bottom:14px}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(8px);background:var(--ink);color:#fff;font-size:13px;font-weight:500;border-radius:10px;padding:9px 16px;opacity:0;pointer-events:none;transition:.22s;z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+
+  @media (max-width:760px){
+    .dock{top:auto;bottom:14px;border-radius:18px}
+    .meter{left:12px;bottom:auto;top:64px;padding:6px 10px}
+    .meter .lab{display:none}
+    .topbar{top:10px;left:10px;right:10px}
+    .savestate{display:none}
+    .hint{top:42%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="board" class="t-pen"></canvas>
+
+<div class="hint" id="hint">
+  <h2>An empty board, a full link.</h2>
+  <p>Draw with the pen <kbd>P</kbd>, drop shapes <kbd>R</kbd> <kbd>O</kbd> or text <kbd>T</kbd>. <b>Share</b> packs everything into one URL — up to 10&nbsp;KB.</p>
+</div>
+
+<header class="topbar">
+  <div class="pill">
+    <span class="brand">
+      <span class="logo"><svg viewBox="0 0 24 24"><path d="M4 16c3-7 5 7 8 0s5 7 8 0"/></svg></span>
+      minidraw
+    </span>
+    <span class="peers" id="peers"><i></i><span id="peersN">2 here</span></span>
+  </div>
+  <div class="pill">
+    <span class="savestate" id="saveState">saved locally</span>
+    <button class="btn-ghost" id="importBtn" title="Load a board from a minidraw link">
+      <svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19h14"/></svg>
+      Import
+    </button>
+    <button class="btn-accent" id="shareBtn">
+      <svg viewBox="0 0 24 24"><path d="M10 13.5a4.5 4.5 0 0 0 6.8.5l2.7-2.7a4.5 4.5 0 0 0-6.4-6.4L11.6 6.4"/><path d="M14 10.5a4.5 4.5 0 0 0-6.8-.5l-2.7 2.7a4.5 4.5 0 0 0 6.4 6.4l1.5-1.5"/></svg>
+      Share
+    </button>
+  </div>
+</header>
+
+<nav class="dock" id="dock" aria-label="Tools">
+  <button class="tbtn" data-tool="select" title="Select · move (V)"><svg viewBox="0 0 24 24"><path d="M5 3.5 18.5 9.8l-6 1.8-2.6 5.7z"/></svg><span class="key">V</span></button>
+  <button class="tbtn active" data-tool="pen" title="Pen (P)"><svg viewBox="0 0 24 24"><path d="M16.8 3.7a2.1 2.1 0 0 1 3 3L7.6 18.9 3.5 20l1.1-4.1z"/></svg><span class="key">P</span></button>
+  <button class="tbtn" data-tool="rect" title="Rectangle (R)"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12.5" rx="2"/></svg><span class="key">R</span></button>
+  <button class="tbtn" data-tool="ell" title="Ellipse (O)"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="12.2" rx="8.4" ry="6.4"/></svg><span class="key">O</span></button>
+  <button class="tbtn" data-tool="line" title="Line (L)"><svg viewBox="0 0 24 24"><path d="M5 19 19 5"/></svg><span class="key">L</span></button>
+  <button class="tbtn" data-tool="arrow" title="Arrow (A)"><svg viewBox="0 0 24 24"><path d="M5 19 19 5M12.2 5H19v6.8"/></svg><span class="key">A</span></button>
+  <button class="tbtn" data-tool="text" title="Text (T)"><svg viewBox="0 0 24 24"><path d="M5 6.5V4.5h14v2M12 4.5V20M9 20h6"/></svg><span class="key">T</span></button>
+  <button class="tbtn" data-tool="eraser" title="Eraser (E)"><svg viewBox="0 0 24 24"><path d="m13.5 20-9.2-9.2a1.8 1.8 0 0 1 0-2.6l4.9-4.9a1.8 1.8 0 0 1 2.6 0l7.9 7.9a1.8 1.8 0 0 1 0 2.6L13.5 20H8.7"/><path d="M6.5 11.5 13 18"/></svg><span class="key">E</span></button>
+  <span class="sep"></span>
+  <span id="swatches" style="display:contents"></span>
+  <span class="sep"></span>
+  <span id="widths" style="display:contents"></span>
+  <span class="sep"></span>
+  <button class="tbtn" id="undoBtn" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M8.5 13.5 4 9l4.5-4.5"/><path d="M4 9h10.3A5.7 5.7 0 0 1 20 14.7 5.7 5.7 0 0 1 14.3 20H11"/></svg></button>
+  <button class="tbtn" id="redoBtn" title="Redo (Ctrl+Shift+Z)"><svg viewBox="0 0 24 24"><path d="M15.5 13.5 20 9l-4.5-4.5"/><path d="M20 9H9.7A5.7 5.7 0 0 0 4 14.7 5.7 5.7 0 0 0 9.7 20H13"/></svg></button>
+  <button class="tbtn" id="clearBtn" title="Clear board"><svg viewBox="0 0 24 24"><path d="M4 6.5h16M9.5 6.5v-2h5v2M6.5 6.5 7.5 20h9l1-13.5M10 10.5v6M14 10.5v6"/></svg></button>
+</nav>
+
+<div class="meter" id="meter" title="Everything you draw is encoded into the share link. Hard ceiling: 10 KB.">
+  <span class="lab">payload</span>
+  <div class="bar"><i id="meterFill"></i></div>
+  <span class="val" id="meterVal">0.0 / 10 KB</span>
+</div>
+
+<div id="ted" contenteditable="true" spellcheck="false"></div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mtitle">
+    <h2 id="mtitle"><span id="mtitleTxt">Share this board</span>
+      <button class="xbtn" id="closeModal" aria-label="Close"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 5l14 14M19 5 5 19"/></svg></button>
+    </h2>
+    <p class="sub" id="msub">The whole drawing travels inside the link — no server, no account.</p>
+    <div id="shareBody"></div>
+    <div class="mfoot">
+      <span id="mfootTxt">Tabs on this device sync live. Links carry a snapshot.</span>
+      <span class="mono" id="sizeNote"></span>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Link copied</div>
+
+<script>
+/* ================= QR encoder — byte mode, EC L, v1-20, mask 0 =================
+   Round-trip validated against jsQR for versions 1 through 20. */
+const QR=(()=>{
+  const EXP=new Uint8Array(512),LOG=new Uint8Array(256);
+  {let x=1;for(let i=0;i<255;i++){EXP[i]=x;LOG[x]=i;x<<=1;if(x&256)x^=285;}for(let i=255;i<512;i++)EXP[i]=EXP[i-255];}
+  const mul=(a,b)=>(a&&b)?EXP[LOG[a]+LOG[b]]:0;
+  const BLOCKS=[null,[7,[[1,19]]],[10,[[1,34]]],[15,[[1,55]]],[20,[[1,80]]],[26,[[1,108]]],
+    [18,[[2,68]]],[20,[[2,78]]],[24,[[2,97]]],[30,[[2,116]]],[18,[[2,68],[2,69]]],
+    [20,[[4,81]]],[24,[[2,92],[2,93]]],[26,[[4,107]]],[30,[[3,115],[1,116]]],[22,[[5,87],[1,88]]],
+    [24,[[5,98],[1,99]]],[28,[[1,107],[5,108]]],[30,[[5,120],[1,121]]],[28,[[3,113],[4,114]]],[28,[[3,107],[5,108]]]];
+  const ALIGN=[null,[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],
+    [6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90]];
+  const dataCW=v=>{let d=0;for(const[c,n]of BLOCKS[v][1])d+=c*n;return d;};
+  const capacity=v=>Math.floor((dataCW(v)*8-4-(v<10?8:16))/8);
+  function rs(data,n){
+    let g=[1];
+    for(let i=0;i<n;i++){const q=new Array(g.length+1).fill(0);
+      for(let j=0;j<g.length;j++){q[j]^=g[j];q[j+1]^=mul(g[j],EXP[i]);}g=q;}
+    const res=new Uint8Array(data.length+n);res.set(data);
+    for(let i=0;i<data.length;i++){const f=res[i];if(f)for(let j=1;j<g.length;j++)res[i+j]^=mul(g[j],f);}
+    return res.slice(data.length);
+  }
+  function encode(text){
+    const bytes=new TextEncoder().encode(text);
+    let v=1;while(v<=20&&capacity(v)<bytes.length)v++;
+    if(v>20)return null;
+    const[ec,groups]=BLOCKS[v],totalData=dataCW(v),bits=[];
+    const push=(val,len)=>{for(let i=len-1;i>=0;i--)bits.push((val>>i)&1);};
+    push(4,4);push(bytes.length,v<10?8:16);
+    for(const b of bytes)push(b,8);
+    push(0,Math.min(4,totalData*8-bits.length));
+    while(bits.length%8)bits.push(0);
+    const cw=[];
+    for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=(b<<1)|bits[i+j];cw.push(b);}
+    const pads=[236,17];let pi=0;
+    while(cw.length<totalData)cw.push(pads[(pi++)%2]);
+    const blocks=[];let off=0;
+    for(const[c,n]of groups)for(let k=0;k<c;k++){blocks.push(cw.slice(off,off+n));off+=n;}
+    const ecs=blocks.map(b=>rs(Uint8Array.from(b),ec));
+    const out=[],maxD=Math.max(...blocks.map(b=>b.length));
+    for(let i=0;i<maxD;i++)for(const b of blocks)if(i<b.length)out.push(b[i]);
+    for(let i=0;i<ec;i++)for(const e of ecs)out.push(e[i]);
+    return matrix(v,out);
+  }
+  function matrix(v,codewords){
+    const size=17+4*v;
+    const m=Array.from({length:size},()=>new Int8Array(size).fill(-1));
+    const set=(r,c,val)=>{m[r][c]=val?1:0;};
+    const finder=(r,c)=>{for(let i=-1;i<=7;i++)for(let j=-1;j<=7;j++){
+      const rr=r+i,cc=c+j;if(rr<0||cc<0||rr>=size||cc>=size)continue;
+      set(rr,cc,i>=0&&i<=6&&j>=0&&j<=6&&(i===0||i===6||j===0||j===6||(i>=2&&i<=4&&j>=2&&j<=4)));}};
+    finder(0,0);finder(0,size-7);finder(size-7,0);
+    for(let i=8;i<size-8;i++){if(m[6][i]<0)set(6,i,i%2===0);if(m[i][6]<0)set(i,6,i%2===0);}
+    for(const r of ALIGN[v])for(const c of ALIGN[v]){
+      if((r<=8&&c<=8)||(r<=8&&c>=size-9)||(r>=size-9&&c<=8))continue;
+      for(let i=-2;i<=2;i++)for(let j=-2;j<=2;j++)set(r+i,c+j,Math.max(Math.abs(i),Math.abs(j))!==1);
+    }
+    set(size-8,8,1);
+    for(let i=0;i<9;i++)if(i!==6){if(m[8][i]<0)set(8,i,0);if(m[i][8]<0)set(i,8,0);}
+    for(let i=0;i<8;i++){if(m[8][size-1-i]<0)set(8,size-1-i,0);if(m[size-1-i][8]<0)set(size-1-i,8,0);}
+    if(v>=7)for(let i=0;i<18;i++){set(Math.floor(i/3),size-11+(i%3),0);set(size-11+(i%3),Math.floor(i/3),0);}
+    const bitsArr=[];
+    for(const b of codewords)for(let i=7;i>=0;i--)bitsArr.push((b>>i)&1);
+    let col=size-1,up=true,k=0;
+    while(col>0){
+      if(col===6)col--;
+      for(let i=0;i<size;i++){
+        const row=up?size-1-i:i;
+        for(let c2=0;c2<2;c2++){
+          const cc=col-c2;
+          if(m[row][cc]<0){
+            let bit=k<bitsArr.length?bitsArr[k]:0;k++;
+            if((row+cc)%2===0)bit^=1;
+            m[row][cc]=bit;
+          }
+        }
+      }
+      up=!up;col-=2;
+    }
+    const fmtData=(0b01<<3)|0;
+    let rem=fmtData<<10;
+    for(let i=14;i>=10;i--)if((rem>>i)&1)rem^=0b10100110111<<(i-10);
+    const fmt=((fmtData<<10)|rem)^0b101010000010010;
+    const posA=[[8,0],[8,1],[8,2],[8,3],[8,4],[8,5],[8,7],[8,8],[7,8],[5,8],[4,8],[3,8],[2,8],[1,8],[0,8]];
+    const posB=[[size-1,8],[size-2,8],[size-3,8],[size-4,8],[size-5,8],[size-6,8],[size-7,8],
+      [8,size-8],[8,size-7],[8,size-6],[8,size-5],[8,size-4],[8,size-3],[8,size-2],[8,size-1]];
+    for(let i=0;i<15;i++){
+      const bit=(fmt>>(14-i))&1;
+      set(posA[i][0],posA[i][1],bit);set(posB[i][0],posB[i][1],bit);
+    }
+    if(v>=7){
+      let r2=v<<12;
+      for(let i=17;i>=12;i--)if((r2>>i)&1)r2^=0b1111100100101<<(i-12);
+      const ver=(v<<12)|r2;
+      for(let i=0;i<18;i++){
+        const bit=(ver>>i)&1;
+        set(Math.floor(i/3),size-11+(i%3),bit);
+        set(size-11+(i%3),Math.floor(i/3),bit);
+      }
+    }
+    return{size,modules:m};
+  }
+  return{encode};
+})();
+
+/* ================= app ================= */
+(()=>{
+const PALETTE=['#1A1D23','#EE4D22','#2456E6','#1E9E5A','#7A3FE4','#8A8F9C'];
+const WIDTHS=[2.5,4.5,7];
+const FSIZES=[17,25,36];
+const LIMIT=10240; // 10 KB hard cap on encoded payload
+
+const cv=document.getElementById('board'),ctx=cv.getContext('2d');
+const ted=document.getElementById('ted'),hint=document.getElementById('hint');
+const $=id=>document.getElementById(id);
+
+let els=[],tool='pen',colorIdx=0,widthIdx=1,sel=-1;
+let undoStack=[],redoStack=[];
+let drawing=null,drag=null,erasing=false,pendingSnap=null,editing=null;
+let sid,clientId=Math.random().toString(36).slice(2,9);
+
+/* ---------- storage helpers (degrade gracefully if blocked) ---------- */
+const ls={
+  get(k){try{return localStorage.getItem(k)}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+};
+
+/* ---------- compact (de)serialization ---------- */
+const packRot=el=>Math.abs(el.rot||0)>.0005?Math.round(el.rot*1000)/1000:0;
+function pack(list){
+  return list.map(el=>{
+    const rot=packRot(el);
+    if(el.t==='pen'){
+      const a=['p',el.c,el.sw];let px=0,py=0;
+      el.pts.forEach((pt,i)=>{
+        const x=Math.round(pt.x),y=Math.round(pt.y);
+        if(i===0){a.push(x,y);}else{a.push(x-px,y-py);}
+        px=x;py=y;
+      });
+      if(rot)a.push(rot); // base length is odd; even length ⇒ last item is rot
+      return a;
+    }
+    if(el.t==='rect'||el.t==='ell'){
+      const a=[el.t==='rect'?'r':'o',el.c,el.sw,Math.round(el.x),Math.round(el.y),Math.round(el.w),Math.round(el.h)];
+      if(rot)a.push(rot);return a;
+    }
+    if(el.t==='line'||el.t==='arrow')return[el.t==='line'?'l':'a',el.c,el.sw,Math.round(el.x1),Math.round(el.y1),Math.round(el.x2),Math.round(el.y2)];
+    const a=['t',el.c,el.fs,Math.round(el.x),Math.round(el.y),el.txt];
+    if(rot)a.push(rot);return a;
+  });
+}
+function unpack(arr){
+  const out=[];
+  for(const a of arr||[]){
+    const k=a[0];
+    if(k==='p'){
+      const hasRot=a.length%2===0,end=hasRot?a.length-1:a.length;
+      const pts=[];let x=0,y=0;
+      for(let i=3;i<end;i+=2){
+        if(i===3){x=a[3];y=a[4];}else{x+=a[i];y+=a[i+1];}
+        pts.push({x,y});
+      }
+      out.push({t:'pen',c:a[1],sw:a[2],pts,rot:hasRot?a[a.length-1]:0});
+    }else if(k==='r'||k==='o')out.push({t:k==='r'?'rect':'ell',c:a[1],sw:a[2],x:a[3],y:a[4],w:a[5],h:a[6],rot:a[7]||0});
+    else if(k==='l'||k==='a')out.push({t:k==='l'?'line':'arrow',c:a[1],sw:a[2],x1:a[3],y1:a[4],x2:a[5],y2:a[6]});
+    else if(k==='t')out.push({t:'text',c:a[1],fs:a[2],x:a[3],y:a[4],txt:a[5],rot:a[6]||0});
+  }
+  return out;
+}
+
+/* ---------- payload codec: JSON -> deflate -> base64url ---------- */
+function b64e(u8){let s='';for(let i=0;i<u8.length;i+=8000)s+=String.fromCharCode(...u8.subarray(i,i+8000));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function b64d(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;}
+async function encodePayload(){
+  const json=JSON.stringify({v:1,sid,els:pack(els)});
+  if(typeof CompressionStream!=='undefined'){
+    try{
+      const buf=await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer();
+      return '1'+b64e(new Uint8Array(buf));
+    }catch(e){}
+  }
+  return '0'+b64e(new TextEncoder().encode(json));
+}
+async function decodePayload(s){
+  const mode=s[0],u8=b64d(s.slice(1));
+  let json;
+  if(mode==='1')json=await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  else json=new TextDecoder().decode(u8);
+  return JSON.parse(json);
+}
+
+/* ---------- canvas ---------- */
+let dpr=1;
+function resize(){
+  dpr=Math.min(window.devicePixelRatio||1,3);
+  cv.width=innerWidth*dpr;cv.height=innerHeight*dpr;
+  cv.style.width=innerWidth+'px';cv.style.height=innerHeight+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  render();
+}
+function fontFor(fs){return `500 ${fs}px Inter, system-ui, sans-serif`;}
+const rotPt=(x,y,cx,cy,a)=>{
+  const c=Math.cos(a),s=Math.sin(a),dx=x-cx,dy=y-cy;
+  return{x:cx+dx*c-dy*s,y:cy+dx*s+dy*c};
+};
+function centerOf(el){const b=bbox(el);return{cx:b.x+b.w/2,cy:b.y+b.h/2};}
+function drawEl(el){
+  const rot=el.rot||0;
+  if(rot){const{cx,cy}=centerOf(el);ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);ctx.translate(-cx,-cy);}
+  drawElRaw(el);
+  if(rot)ctx.restore();
+}
+function drawElRaw(el){
+  ctx.strokeStyle=ctx.fillStyle=PALETTE[el.c]||PALETTE[0];
+  ctx.lineWidth=el.sw;ctx.lineCap='round';ctx.lineJoin='round';
+  if(el.t==='pen'){
+    const p=el.pts;ctx.beginPath();
+    if(p.length===1){ctx.arc(p[0].x,p[0].y,el.sw/2,0,7);ctx.fill();return;}
+    ctx.moveTo(p[0].x,p[0].y);
+    for(let i=1;i<p.length-1;i++){
+      const mx=(p[i].x+p[i+1].x)/2,my=(p[i].y+p[i+1].y)/2;
+      ctx.quadraticCurveTo(p[i].x,p[i].y,mx,my);
+    }
+    ctx.lineTo(p[p.length-1].x,p[p.length-1].y);ctx.stroke();
+  }else if(el.t==='rect'){
+    const r=Math.min(8,Math.abs(el.w)/3,Math.abs(el.h)/3);
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(el.x,el.y,el.w,el.h,r);else ctx.rect(el.x,el.y,el.w,el.h);
+    ctx.stroke();
+  }else if(el.t==='ell'){
+    ctx.beginPath();
+    ctx.ellipse(el.x+el.w/2,el.y+el.h/2,Math.abs(el.w/2),Math.abs(el.h/2),0,0,7);
+    ctx.stroke();
+  }else if(el.t==='line'||el.t==='arrow'){
+    ctx.beginPath();ctx.moveTo(el.x1,el.y1);ctx.lineTo(el.x2,el.y2);
+    if(el.t==='arrow'){
+      const ang=Math.atan2(el.y2-el.y1,el.x2-el.x1),hl=Math.max(11,el.sw*3.2);
+      ctx.moveTo(el.x2,el.y2);ctx.lineTo(el.x2-hl*Math.cos(ang-.46),el.y2-hl*Math.sin(ang-.46));
+      ctx.moveTo(el.x2,el.y2);ctx.lineTo(el.x2-hl*Math.cos(ang+.46),el.y2-hl*Math.sin(ang+.46));
+    }
+    ctx.stroke();
+  }else if(el.t==='text'){
+    ctx.font=fontFor(el.fs);ctx.textBaseline='top';
+    el.txt.split('\n').forEach((ln,i)=>ctx.fillText(ln,el.x,el.y+i*el.fs*1.3));
+  }
+}
+function textBox(el){
+  ctx.font=fontFor(el.fs);
+  const lines=el.txt.split('\n');
+  let w=0;for(const ln of lines)w=Math.max(w,ctx.measureText(ln).width);
+  return{x:el.x,y:el.y,w,h:lines.length*el.fs*1.3};
+}
+function bbox(el){
+  if(el.t==='pen'){
+    let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;
+    for(const p of el.pts){x1=Math.min(x1,p.x);y1=Math.min(y1,p.y);x2=Math.max(x2,p.x);y2=Math.max(y2,p.y);}
+    const pad=el.sw/2+2;
+    return{x:x1-pad,y:y1-pad,w:x2-x1+pad*2,h:y2-y1+pad*2};
+  }
+  if(el.t==='rect'||el.t==='ell'){
+    const x=Math.min(el.x,el.x+el.w),y=Math.min(el.y,el.y+el.h);
+    return{x,y,w:Math.abs(el.w),h:Math.abs(el.h)};
+  }
+  if(el.t==='line'||el.t==='arrow'){
+    const x=Math.min(el.x1,el.x2),y=Math.min(el.y1,el.y2);
+    return{x:x-4,y:y-4,w:Math.abs(el.x2-el.x1)+8,h:Math.abs(el.y2-el.y1)+8};
+  }
+  return textBox(el);
+}
+const ROT_OFF=26; // rotate handle distance above selection frame
+function handlesFor(el){
+  if(el.t==='line'||el.t==='arrow')
+    return[{id:'p1',x:el.x1,y:el.y1},{id:'p2',x:el.x2,y:el.y2}];
+  const b=bbox(el),rot=el.rot||0,cx=b.x+b.w/2,cy=b.y+b.h/2;
+  const lx1=b.x-6,ly1=b.y-6,lx2=b.x+b.w+6,ly2=b.y+b.h+6;
+  const H=[['nw',lx1,ly1],['ne',lx2,ly1],['sw',lx1,ly2],['se',lx2,ly2],['rot',cx,ly1-ROT_OFF]];
+  return H.map(([id,x,y])=>({id,...rotPt(x,y,cx,cy,rot)}));
+}
+function handleAt(x,y,touch){
+  if(sel<0||!els[sel])return null;
+  const R=touch?15:11;
+  for(const h of handlesFor(els[sel]))if(Math.hypot(x-h.x,y-h.y)<=R)return h.id;
+  return null;
+}
+function render(){
+  ctx.clearRect(0,0,innerWidth,innerHeight);
+  for(const el of els)drawEl(el);
+  if(drawing)drawEl(drawing);
+  if(sel>=0&&els[sel]){
+    const el=els[sel];
+    ctx.save();
+    ctx.strokeStyle='#EE4D22';ctx.lineWidth=1.5;
+    if(el.t==='line'||el.t==='arrow'){
+      for(const h of handlesFor(el)){
+        ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(h.x,h.y,5,0,7);ctx.fill();ctx.stroke();
+      }
+    }else{
+      const b=bbox(el),rot=el.rot||0,cx=b.x+b.w/2,cy=b.y+b.h/2;
+      ctx.translate(cx,cy);ctx.rotate(rot);ctx.translate(-cx,-cy);
+      ctx.setLineDash([6,4]);
+      ctx.strokeRect(b.x-6,b.y-6,b.w+12,b.h+12);
+      ctx.setLineDash([]);
+      // rotate handle stem + knob
+      ctx.beginPath();ctx.moveTo(cx,b.y-6);ctx.lineTo(cx,b.y-6-ROT_OFF+5);ctx.stroke();
+      ctx.fillStyle='#fff';
+      ctx.beginPath();ctx.arc(cx,b.y-6-ROT_OFF,5,0,7);ctx.fill();ctx.stroke();
+      for(const[hx,hy]of[[b.x-6,b.y-6],[b.x+b.w+6,b.y-6],[b.x-6,b.y+b.h+6],[b.x+b.w+6,b.y+b.h+6]]){
+        ctx.beginPath();ctx.rect(hx-3.5,hy-3.5,7,7);ctx.fill();ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  hint.classList.toggle('gone',els.length>0||!!drawing);
+}
+
+/* ---------- hit testing ---------- */
+const segDist=(px,py,ax,ay,bx,by)=>{
+  const dx=bx-ax,dy=by-ay,L=dx*dx+dy*dy;
+  const t=L?Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/L)):0;
+  const x=ax+t*dx,y=ay+t*dy;
+  return Math.hypot(px-x,py-y);
+};
+function hit(px0,py0){
+  for(let i=els.length-1;i>=0;i--){
+    const el=els[i],b=bbox(el),tol=el.sw?el.sw/2+6:6;
+    let x=px0,y=py0;
+    if(el.rot){const{cx,cy}=centerOf(el);({x,y}=rotPt(px0,py0,cx,cy,-el.rot));}
+    if(x<b.x-tol||x>b.x+b.w+tol||y<b.y-tol||y>b.y+b.h+tol)continue;
+    if(el.t==='pen'){
+      const p=el.pts;
+      if(p.length===1)return i;
+      for(let j=0;j<p.length-1;j++)if(segDist(x,y,p[j].x,p[j].y,p[j+1].x,p[j+1].y)<=tol)return i;
+    }else if(el.t==='line'||el.t==='arrow'){
+      if(segDist(x,y,el.x1,el.y1,el.x2,el.y2)<=tol)return i;
+    }else return i; // rect / ell / text: box hit
+  }
+  return -1;
+}
+function moveEl(el,dx,dy){
+  if(el.t==='pen')for(const p of el.pts){p.x+=dx;p.y+=dy;}
+  else if(el.t==='line'||el.t==='arrow'){el.x1+=dx;el.y1+=dy;el.x2+=dx;el.y2+=dy;}
+  else{el.x+=dx;el.y+=dy;}
+}
+
+/* ---------- history ---------- */
+function snapshot(){return JSON.stringify(pack(els));}
+function pushUndo(snap){
+  undoStack.push(snap??snapshot());
+  if(undoStack.length>60)undoStack.shift();
+  redoStack.length=0;
+  syncHistoryBtns();
+}
+function undo(){
+  if(!undoStack.length)return;
+  redoStack.push(snapshot());
+  els=unpack(JSON.parse(undoStack.pop()));sel=-1;
+  render();saveSoon();broadcastSoon();meterSoon();syncHistoryBtns();
+}
+function redo(){
+  if(!redoStack.length)return;
+  undoStack.push(snapshot());
+  els=unpack(JSON.parse(redoStack.pop()));sel=-1;
+  render();saveSoon();broadcastSoon();meterSoon();syncHistoryBtns();
+}
+function syncHistoryBtns(){
+  $('undoBtn').disabled=!undoStack.length;
+  $('redoBtn').disabled=!redoStack.length;
+}
+
+/* ---------- change pipeline ---------- */
+const throttle=(fn,ms)=>{let t=0,id=null,la;return(...a)=>{la=a;const now=Date.now();
+  const run=()=>{t=Date.now();id=null;fn(...la);};
+  if(now-t>=ms)run();else if(!id)id=setTimeout(run,ms-(now-t));};};
+const debounce=(fn,ms)=>{let id;return(...a)=>{clearTimeout(id);id=setTimeout(()=>fn(...a),ms);};};
+
+function save(){
+  ls.set('minidraw:'+sid,JSON.stringify({v:1,sid,ts:Date.now(),els:pack(els)}));
+  ls.set('minidraw:last',sid);
+  $('saveState').textContent='saved locally';
+}
+const saveSoon=throttle(()=>{$('saveState').textContent='saving…';setTimeout(save,120);},400);
+function changed(){render();saveSoon();broadcastSoon();meterSoon();}
+
+/* ---------- live sync across tabs ---------- */
+let ch=null;const peerSet=new Map();
+function startSync(){
+  if(typeof BroadcastChannel==='undefined')return;
+  if(ch)ch.close();
+  ch=new BroadcastChannel('minidraw-'+sid);
+  ch.onmessage=e=>{
+    const m=e.data;if(!m||m.src===clientId)return;
+    if(m.t==='els'){
+      els=unpack(m.data);
+      if(sel>=els.length)sel=-1;
+      render();meterSoon();
+    }else if(m.t==='hi'){peerSet.set(m.src,Date.now());ch.postMessage({t:'hb',src:clientId});peersUI();}
+    else if(m.t==='hb'){peerSet.set(m.src,Date.now());peersUI();}
+  };
+  ch.postMessage({t:'hi',src:clientId});
+  setInterval(()=>{
+    ch.postMessage({t:'hb',src:clientId});
+    const now=Date.now();
+    for(const[k,v]of peerSet)if(now-v>5500)peerSet.delete(k);
+    peersUI();
+  },2200);
+}
+const broadcastSoon=throttle(()=>{if(ch)ch.postMessage({t:'els',src:clientId,data:pack(els)});},120);
+function peersUI(){
+  const n=peerSet.size+1;
+  $('peers').classList.toggle('on',n>1);
+  $('peersN').textContent=n+' here';
+}
+
+/* ---------- payload meter ---------- */
+const meterSoon=debounce(async()=>{
+  const p=await encodePayload();
+  const kb=p.length/1024,pct=Math.min(100,p.length/LIMIT*100);
+  $('meterFill').style.width=pct+'%';
+  $('meterVal').textContent=kb.toFixed(1)+' / 10 KB';
+  const m=$('meter');
+  m.classList.toggle('warn',pct>72&&pct<=100);
+  m.classList.toggle('over',pct>100);
+},450);
+
+/* ---------- pointer input ---------- */
+const pos=e=>({x:e.clientX,y:e.clientY});
+const OPP={nw:'se',ne:'sw',sw:'ne',se:'nw'};
+function beginTransform(id,x,y){
+  const el=els[sel],b=bbox(el),cx=b.x+b.w/2,cy=b.y+b.h/2,rot=el.rot||0;
+  drag={mode:id==='rot'?'rotate':(id==='p1'||id==='p2')?id:'resize',
+    handle:id,moved:false,
+    o:{b,cx,cy,rot,
+       startAng:Math.atan2(y-cy,x-cx),
+       pts:el.t==='pen'?el.pts.map(p=>({...p})):null,
+       fs:el.fs,
+       x1:el.x1,y1:el.y1,x2:el.x2,y2:el.y2}};
+}
+cv.addEventListener('pointerdown',e=>{
+  if(e.button!==undefined&&e.button!==0)return;
+  if(editing)commitText();
+  cv.setPointerCapture(e.pointerId);
+  const{x,y}=pos(e);
+  pendingSnap=snapshot();
+  if(tool==='select'){
+    const h=handleAt(x,y,e.pointerType==='touch');
+    if(h){beginTransform(h,x,y);cv.classList.add('dragging');return;}
+    const i=hit(x,y);sel=i;
+    if(i>=0){drag={mode:'move',lx:x,ly:y,moved:false};cv.classList.add('dragging');}
+    render();
+  }else if(tool==='eraser'){
+    erasing=true;eraseAt(x,y,true);
+  }else if(tool==='text'){
+    openTextEditor(x,y);
+  }else if(tool==='pen'){
+    drawing={t:'pen',c:colorIdx,sw:WIDTHS[widthIdx],pts:[{x,y}]};render();
+  }else if(tool==='rect'||tool==='ell'){
+    drawing={t:tool,c:colorIdx,sw:WIDTHS[widthIdx],x,y,w:0,h:0};
+  }else if(tool==='line'||tool==='arrow'){
+    drawing={t:tool,c:colorIdx,sw:WIDTHS[widthIdx],x1:x,y1:y,x2:x,y2:y};
+  }
+});
+function applyResize(el,x,y,shiftKey){
+  const o=drag.o,rot=o.rot;
+  const p=rotPt(x,y,o.cx,o.cy,-rot);                 // pointer in element frame
+  const a=drag.handle,opp=OPP[a];
+  const ax=opp.includes('w')?o.b.x-6:o.b.x+o.b.w+6;  // fixed anchor = opposite corner
+  const ay=opp.includes('n')?o.b.y-6:o.b.y+o.b.h+6;
+  let w=Math.max(24,Math.abs(p.x-ax)),h=Math.max(24,Math.abs(p.y-ay));
+  if(el.t==='text'||shiftKey){                       // uniform scale
+    const k=Math.max(w/(o.b.w+12),h/(o.b.h+12));
+    w=(o.b.w+12)*k;h=(o.b.h+12)*k;
+  }
+  const sx=Math.sign(p.x-ax)||1,sy=Math.sign(p.y-ay)||1;
+  const nc=rotPt(ax+sx*w/2,ay+sy*h/2,o.cx,o.cy,rot); // new center, world frame
+  const iw=w-12,ih=h-12;                             // strip selection padding
+  const kx=iw/o.b.w,ky=ih/o.b.h;
+  if(el.t==='rect'||el.t==='ell'){
+    el.w=iw;el.h=ih;el.x=nc.x-iw/2;el.y=nc.y-ih/2;
+  }else if(el.t==='pen'){
+    for(let i=0;i<el.pts.length;i++){
+      const q=o.pts[i];
+      el.pts[i].x=nc.x+(q.x-o.cx)*kx;
+      el.pts[i].y=nc.y+(q.y-o.cy)*ky;
+    }
+  }else if(el.t==='text'){
+    el.fs=Math.max(8,Math.min(200,o.fs*ky));
+    const tb=textBox(el);
+    el.x=nc.x-tb.w/2;el.y=nc.y-tb.h/2;
+  }
+}
+cv.addEventListener('pointermove',e=>{
+  const{x,y}=pos(e);
+  if(drawing){
+    if(drawing.t==='pen'){
+      const last=drawing.pts[drawing.pts.length-1];
+      if(Math.hypot(x-last.x,y-last.y)>1.4)drawing.pts.push({x,y});
+    }else if(drawing.t==='rect'||drawing.t==='ell'){drawing.w=x-drawing.x;drawing.h=y-drawing.y;}
+    else{drawing.x2=x;drawing.y2=y;}
+    render();
+  }else if(drag&&sel>=0){
+    const el=els[sel];
+    if(drag.mode==='move'){
+      const dx=x-drag.lx,dy=y-drag.ly;
+      if(dx||dy){drag.moved=true;moveEl(el,dx,dy);drag.lx=x;drag.ly=y;render();broadcastSoon();}
+    }else if(drag.mode==='p1'||drag.mode==='p2'){
+      drag.moved=true;
+      if(drag.mode==='p1'){el.x1=x;el.y1=y;}else{el.x2=x;el.y2=y;}
+      render();broadcastSoon();
+    }else if(drag.mode==='rotate'){
+      drag.moved=true;
+      const o=drag.o;
+      let rot=o.rot+Math.atan2(y-o.cy,x-o.cx)-o.startAng;
+      if(e.shiftKey)rot=Math.round(rot/(Math.PI/12))*(Math.PI/12);   // 15° steps
+      else{const q=Math.round(rot/(Math.PI/2))*(Math.PI/2);if(Math.abs(rot-q)<.05)rot=q;} // soft snap to 90°s
+      rot=Math.atan2(Math.sin(rot),Math.cos(rot));                   // normalize
+      el.rot=Math.abs(rot)<.0005?0:rot;
+      render();broadcastSoon();
+    }else if(drag.mode==='resize'){
+      drag.moved=true;
+      applyResize(el,x,y,e.shiftKey);
+      render();broadcastSoon();
+    }
+  }else if(erasing){
+    eraseAt(x,y,false);
+  }else if(tool==='select'&&sel>=0){
+    const h=handleAt(x,y,false);
+    cv.style.cursor=h==='rot'?'grab':h?(h==='p1'||h==='p2'?'move':(h==='nw'||h==='se'?'nwse-resize':'nesw-resize')):'';
+  }else if(cv.style.cursor)cv.style.cursor='';
+});
+function finishStroke(){
+  if(!drawing)return;
+  const d=drawing;drawing=null;
+  let keep=true;
+  if(d.t==='rect'||d.t==='ell'){
+    if(Math.abs(d.w)<4&&Math.abs(d.h)<4)keep=false;
+    else{const x=Math.min(d.x,d.x+d.w),y=Math.min(d.y,d.y+d.h);d.w=Math.abs(d.w);d.h=Math.abs(d.h);d.x=x;d.y=y;}
+  }
+  if((d.t==='line'||d.t==='arrow')&&Math.hypot(d.x2-d.x1,d.y2-d.y1)<4)keep=false;
+  if(keep){pushUndo(pendingSnap);els.push(d);changed();}
+  else render();
+  pendingSnap=null;
+}
+cv.addEventListener('pointerup',()=>{
+  if(drawing)finishStroke();
+  if(drag){
+    if(drag.moved){pushUndo(pendingSnap);changed();}
+    drag=null;cv.classList.remove('dragging');
+  }
+  if(erasing){
+    erasing=false;
+    if(erasedAny){pushUndo(pendingSnap);changed();erasedAny=false;}
+  }
+  pendingSnap=null;
+});
+cv.addEventListener('pointercancel',()=>{drawing=null;drag=null;erasing=false;render();});
+let erasedAny=false;
+function eraseAt(x,y){
+  const i=hit(x,y);
+  if(i>=0){els.splice(i,1);if(sel===i)sel=-1;else if(sel>i)sel--;erasedAny=true;render();broadcastSoon();}
+}
+cv.addEventListener('dblclick',e=>{
+  if(tool!=='select')return;
+  const{x,y}=pos(e),i=hit(x,y);
+  if(i>=0&&els[i].t==='text'){
+    const el=els[i];
+    pendingSnap=snapshot();
+    els.splice(i,1);sel=-1;render();
+    openTextEditor(el.x,el.y,el.txt,el.fs,el.c,pendingSnap,el.rot);
+  }
+});
+
+/* ---------- text tool ---------- */
+function openTextEditor(x,y,initial='',fs,ci,snap,rot){
+  editing={x,y,fs:fs??FSIZES[widthIdx],c:ci??colorIdx,snap:snap??snapshot(),rot:rot||0};
+  ted.style.display='block';
+  ted.style.left=x+'px';ted.style.top=(y-2)+'px';
+  ted.style.font=fontFor(editing.fs);ted.style.lineHeight=1.3;
+  ted.style.color=PALETTE[editing.c];
+  ted.textContent=initial;
+  setTimeout(()=>{ted.focus();
+    const r=document.createRange();r.selectNodeContents(ted);r.collapse(false);
+    const s=getSelection();s.removeAllRanges();s.addRange(r);},0);
+}
+function commitText(){
+  if(!editing)return;
+  const txt=ted.innerText.replace(/\n+$/,'');
+  const e=editing;editing=null;ted.style.display='none';ted.textContent='';
+  if(txt.trim()){
+    pushUndo(e.snap);
+    els.push({t:'text',c:e.c,fs:e.fs,x:e.x,y:e.y,txt,rot:e.rot||0});
+    changed();
+  }else render();
+  if(tool==='text')setTool('select');
+}
+ted.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();commitText();}
+  if(e.key==='Escape'){editing=null;ted.style.display='none';ted.textContent='';render();}
+});
+ted.addEventListener('blur',()=>{if(editing)commitText();});
+
+/* ---------- toolbar ---------- */
+function setTool(t){
+  tool=t;sel=t==='select'?sel:-1;
+  document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));
+  cv.className='t-'+t;
+  render();
+}
+document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>setTool(b.dataset.tool)));
+
+const sw=$('swatches');
+PALETTE.forEach((hex,i)=>{
+  const b=document.createElement('button');
+  b.className='swatch'+(i===0?' active':'');
+  b.style.background=hex;b.title='Color '+(i+1)+' ('+(i+1)+')';
+  b.addEventListener('click',()=>{
+    colorIdx=i;
+    sw.querySelectorAll('.swatch').forEach((s,j)=>s.classList.toggle('active',j===i));
+    if(sel>=0){pushUndo();els[sel].c=i;changed();}
+  });
+  sw.appendChild(b);
+});
+const wd=$('widths');
+WIDTHS.forEach((w,i)=>{
+  const b=document.createElement('button');
+  b.className='wbtn'+(i===1?' active':'');
+  b.title=['Thin','Medium','Bold'][i]+' stroke';
+  const dot=document.createElement('i');
+  const s=4+i*3;dot.style.width=s+'px';dot.style.height=s+'px';
+  b.appendChild(dot);
+  b.addEventListener('click',()=>{
+    widthIdx=i;
+    wd.querySelectorAll('.wbtn').forEach((x,j)=>x.classList.toggle('active',j===i));
+    if(sel>=0){pushUndo();const el=els[sel];if(el.t==='text')el.fs=FSIZES[i];else el.sw=WIDTHS[i];changed();}
+  });
+  wd.appendChild(b);
+});
+$('undoBtn').addEventListener('click',undo);
+$('redoBtn').addEventListener('click',redo);
+$('clearBtn').addEventListener('click',()=>{
+  if(!els.length)return;
+  if(confirm('Clear the whole board?')){pushUndo();els=[];sel=-1;changed();}
+});
+
+/* ---------- keyboard ---------- */
+addEventListener('keydown',e=>{
+  if(editing||e.target.closest('input,[contenteditable]'))return;
+  const mod=e.ctrlKey||e.metaKey;
+  if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return;}
+  if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return;}
+  if(mod)return;
+  const map={v:'select',p:'pen',r:'rect',o:'ell',l:'line',a:'arrow',t:'text',e:'eraser'};
+  const k=e.key.toLowerCase();
+  if(map[k]){setTool(map[k]);return;}
+  if(k>='1'&&k<='6'){sw.children[+k-1].click();return;}
+  if((e.key==='Delete'||e.key==='Backspace')&&sel>=0){
+    pushUndo();els.splice(sel,1);sel=-1;changed();
+  }
+  if(e.key==='Escape'){sel=-1;render();}
+});
+
+/* ---------- share / import modal ---------- */
+const overlay=$('overlay');
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+$('shareBtn').addEventListener('click',openShare);
+$('importBtn').addEventListener('click',openImport);
+$('closeModal').addEventListener('click',()=>overlay.classList.remove('open'));
+overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('open');});
+
+// A link only opens elsewhere if this page lives at a reachable web address.
+// file://, blob:, and sandboxed previews (e.g. running inside Claude) don't.
+const PORTABLE=/^https?:$/.test(location.protocol)&&!/usercontent|sandbox/i.test(location.hostname);
+
+async function openShare(){
+  $('mtitleTxt').textContent='Share this board';
+  $('msub').textContent='The whole drawing travels inside the link — no server, no account.';
+  $('mfootTxt').textContent='Tabs on this device sync live. Links carry a snapshot.';
+  const body=$('shareBody');
+  body.innerHTML='<p class="sub">Packing the board…</p>';
+  overlay.classList.add('open');
+  const payload=await encodePayload();
+  const kb=(payload.length/1024).toFixed(1);
+  $('sizeNote').textContent=kb+' / 10 KB';
+  if(payload.length>LIMIT){
+    body.innerHTML='<div class="overbox"><b>Too big to travel.</b> This board encodes to '+kb+' KB — past the 10 KB link ceiling. Erase a few strokes (long pen scribbles cost the most) and try again.</div>';
+    return;
+  }
+  const url=location.href.split('#')[0]+'#'+payload;
+  body.innerHTML=
+    '<div class="linkrow"><input id="shareUrl" readonly value=""><button class="copybtn" id="copyBtn">Copy</button></div>'+
+    '<div class="qrtile" id="qrtile"></div>'+
+    (PORTABLE?'':'<div class="notice"><b>Heads-up:</b> this page isn’t at a public web address ('+location.protocol+'//…), so scanning the QR or opening the link can’t reach the app from another device. The drawing data is still in the link — send the link text, then on the other device open minidraw and paste it into <b>Import</b>.</div>');
+  $('shareUrl').value=url;
+  $('shareUrl').addEventListener('focus',e=>e.target.select());
+  $('copyBtn').addEventListener('click',async()=>{
+    try{await navigator.clipboard.writeText(url);}
+    catch(e){const i=$('shareUrl');i.select();document.execCommand('copy');}
+    toast('Link copied');
+  });
+  const tile=$('qrtile');
+  const m=QR.encode(url);
+  if(m){
+    const qc=document.createElement('canvas');
+    const quiet=4,scale=4,px=(m.size+quiet*2)*scale;
+    qc.width=qc.height=px;
+    const g=qc.getContext('2d');
+    g.fillStyle='#fff';g.fillRect(0,0,px,px);
+    g.fillStyle='#1A1D23';
+    for(let r=0;r<m.size;r++)for(let c=0;c<m.size;c++)
+      if(m.modules[r][c])g.fillRect((c+quiet)*scale,(r+quiet)*scale,scale,scale);
+    tile.appendChild(qc);
+    const cap=document.createElement('span');cap.className='cap';
+    cap.textContent=PORTABLE?'Scan to open the board on another device':'QR carries the link text — use Import on the other device';
+    tile.appendChild(cap);
+  }else{
+    tile.innerHTML='<div class="qrmiss">This link is too long for a clean QR code (≈860-byte limit). Copy the link instead — it carries everything.</div>';
+  }
+}
+
+function extractPayload(s){
+  s=(s||'').trim();
+  const h=s.indexOf('#');
+  if(h>=0)s=s.slice(h+1);
+  s=s.replace(/\s+/g,'');
+  return(s&&(s[0]==='0'||s[0]==='1'))?s:null;
+}
+function openImport(){
+  $('mtitleTxt').textContent='Import a board';
+  $('msub').textContent='Paste a minidraw link (or just its #data part). It replaces what’s on this board — undo brings it back.';
+  $('mfootTxt').textContent='Works even when the link’s address can’t be opened directly.';
+  $('sizeNote').textContent='';
+  const body=$('shareBody');
+  body.innerHTML=
+    '<textarea class="imparea" id="impIn" placeholder="https://…/minidraw.html#1eJxLy… or 1eJxLy…" spellcheck="false"></textarea>'+
+    '<div class="linkrow" style="justify-content:flex-end"><button class="copybtn" id="impGo">Load board</button></div>'+
+    '<div id="impErr"></div>';
+  overlay.classList.add('open');
+  setTimeout(()=>$('impIn').focus(),0);
+  $('impGo').addEventListener('click',async()=>{
+    const p=extractPayload($('impIn').value);
+    const err=$('impErr');
+    if(!p){err.innerHTML='<div class="overbox">That doesn’t look like a minidraw link — it should contain <b>#0…</b> or <b>#1…</b> data.</div>';return;}
+    try{
+      const doc=await decodePayload(p);
+      const next=unpack(doc.els);
+      pushUndo();
+      els=next;sel=-1;
+      changed();syncHistoryBtns();
+      overlay.classList.remove('open');
+      toast('Board loaded — '+els.length+' element'+(els.length===1?'':'s'));
+    }catch(e){
+      err.innerHTML='<div class="overbox">Couldn’t decode that data. Make sure the whole link was copied — every character matters.</div>';
+    }
+  });
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  const hash=location.hash.slice(1);
+  let loaded=false;
+  if(hash&&(hash[0]==='0'||hash[0]==='1')){
+    try{
+      const doc=await decodePayload(hash);
+      sid=doc.sid||Math.random().toString(36).slice(2,8);
+      els=unpack(doc.els);
+      loaded=true;
+      save();
+      history.replaceState(null,'',location.pathname+location.search);
+      toast('Board loaded from link');
+    }catch(e){console.warn('bad share payload',e);setTimeout(()=>toast('Couldn’t read the board in that link — try Import and paste it'),400);}
+  }
+  if(!loaded){
+    sid=ls.get('minidraw:last')||Math.random().toString(36).slice(2,8);
+    const raw=ls.get('minidraw:'+sid);
+    if(raw){try{els=unpack(JSON.parse(raw).els);}catch(e){}}
+  }
+  startSync();
+  resize();
+  syncHistoryBtns();
+  meterSoon();
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(render);
+}
+addEventListener('resize',resize);
+addEventListener('beforeunload',save);
+boot();
+})();
+</script>
+</body>
+</html>
