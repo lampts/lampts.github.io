@@ -9,3 +9,6 @@ _site
 Gemfile.lock
 vendor
 
+
+# Private tools moved out of public access (personal/financial/health/work-internal)
+private/
