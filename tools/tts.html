@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>λ tts — Gemini Flash TTS</title>
+<meta name="description" content="Single & multi-speaker text-to-speech via Gemini Flash TTS, with live token counting and cost estimation.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FBD45B'/><text x='50' y='78' font-size='72' font-family='monospace' font-weight='bold' text-anchor='middle' fill='%23111'>λ</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --accent: #FBD45B;
+  --bg: #FAFAFA;
+  --fg: #111;
+  --gray: #777;
+  --dim: #999;
+  --card-bg: #fff;
+  --card-border: #111;
+  --tag-bg: #f0f0f0;
+  --line: #e2e2e2;
+  --shadow: 3px 3px 0px #000;
+  --shadow-sm: 2px 2px 0px #000;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-serif: 'IBM Plex Serif', serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111;
+    --fg: #e0e0e0;
+    --gray: #999;
+    --dim: #666;
+    --card-bg: #1a1a1a;
+    --card-border: #e0e0e0;
+    --tag-bg: #222;
+    --line: #2c2c2c;
+    --shadow: 3px 3px 0px rgba(255,255,255,0.15);
+    --shadow-sm: 2px 2px 0px rgba(255,255,255,0.15);
+  }
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { background: var(--bg); color: var(--fg); font-family: var(--font-mono); line-height: 1.6; font-size: 16px; -webkit-font-smoothing: antialiased; }
+body { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+::selection { background: var(--accent); color: #111; }
+
+/* header */
+.header { margin-bottom: 2rem; }
+.id-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; }
+.lambda { font-size: 2rem; font-weight: 700; line-height: 1; background: var(--accent); color: #111; padding: 4px 12px; box-shadow: var(--shadow); text-decoration: none; flex-shrink: 0; }
+.lambda:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0px #000; }
+.header-text { flex: 1; }
+.header-title { font-family: var(--font-serif); font-weight: 700; font-size: 1.5rem; letter-spacing: -0.5px; line-height: 1.1; }
+.header-sub { font-size: 0.78rem; color: var(--gray); margin-top: 3px; }
+.header-meta { display: flex; gap: 1rem; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gray); flex-wrap: wrap; }
+.header-meta a { color: var(--gray); text-decoration: none; border-bottom: 1px solid var(--line); }
+.header-meta a:hover { color: var(--fg); border-color: var(--fg); }
+
+/* sections */
+.section { margin-bottom: 2rem; }
+.section-head { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 2.5px; font-weight: 600;
+  border-bottom: 2px solid var(--fg); padding-bottom: 6px; margin-bottom: 1.1rem; display: flex; align-items: center; gap: 0.6rem; }
+.num { background: var(--fg); color: var(--bg); font-size: 0.62rem; padding: 2px 6px; letter-spacing: 1px; }
+
+/* fields */
+label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; color: var(--gray); display: block; margin-bottom: 0.4rem; }
+input, select, textarea {
+  width: 100%; font-family: var(--font-mono); font-size: 0.82rem; color: var(--fg);
+  background: var(--card-bg); border: 1.5px solid var(--card-border); box-shadow: var(--shadow-sm);
+  padding: 0.55rem 0.65rem; outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: var(--shadow); }
+input::placeholder, textarea::placeholder { color: var(--dim); }
+textarea { resize: vertical; line-height: 1.7; min-height: 8rem; }
+select { cursor: pointer; -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23777'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 0.7rem center; padding-right: 1.8rem; }
+.field { margin-bottom: 1rem; }
+.row { display: flex; gap: 0.9rem; }
+.col { flex: 1; min-width: 0; }
+.hint { font-size: 0.66rem; color: var(--dim); margin-top: 0.35rem; }
+.hidden { display: none !important; }
+
+/* tabs (mode) */
+.tabs { display: flex; gap: 0; margin-bottom: 1.1rem; }
+.tab { flex: 1; font-family: var(--font-mono); font-size: 0.66rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;
+  padding: 0.5rem; background: var(--card-bg); color: var(--gray); border: 1.5px solid var(--card-border); box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.12s; }
+.tab + .tab { border-left: none; }
+.tab.active { background: var(--fg); color: var(--bg); }
+.tab:not(.active):hover { background: var(--accent); color: #111; }
+
+/* tips / chips */
+.tips { font-size: 0.72rem; color: var(--gray); background: var(--tag-bg); border-left: 3px solid var(--accent); padding: 0.6rem 0.75rem; margin-bottom: 1rem; }
+.tips code { background: var(--card-bg); border: 1px solid var(--line); padding: 0 4px; font-size: 0.68rem; }
+.tagrow { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
+.dtag { font-size: 0.62rem; padding: 2px 7px; border: 1.5px solid var(--card-border); box-shadow: 1px 1px 0 var(--card-border); background: var(--card-bg); cursor: pointer; transition: all 0.1s; }
+.dtag:hover { background: var(--accent); color: #111; transform: translate(-1px,-1px); }
+
+/* generate button */
+.gen { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+  width: 100%; padding: 0.85rem; background: var(--accent); color: #111; border: 1.5px solid var(--card-border); box-shadow: var(--shadow); cursor: pointer; transition: all 0.12s; }
+.gen:hover:not(:disabled) { transform: translate(-1px,-1px); box-shadow: 4px 4px 0px #000; }
+.gen:active:not(:disabled) { transform: translate(1px,1px); box-shadow: 1px 1px 0px #000; }
+.gen:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* status */
+.status { font-size: 0.74rem; margin-top: 0.9rem; min-height: 1.2rem; }
+.status.err { color: #d23; }
+.status.ok { color: #1a8a4a; }
+.spin::after { content: ''; animation: dots 1.4s steps(4,end) infinite; }
+@keyframes dots { 0%{content:''} 25%{content:' .'} 50%{content:' ..'} 75%,100%{content:' ...'} }
+
+/* output */
+.out { border: 1.5px solid var(--card-border); box-shadow: var(--shadow-sm); background: var(--card-bg); padding: 1rem; }
+audio { width: 100%; margin-bottom: 0.8rem; }
+.dl { display: inline-block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;
+  padding: 5px 12px; background: var(--fg); color: var(--bg); text-decoration: none; box-shadow: var(--shadow-sm); }
+.dl:hover { transform: translate(-1px,-1px); }
+
+/* lyric sync (karaoke) */
+.krow { display: flex; align-items: baseline; gap: 0.6rem; margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--line); }
+.klabel { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; color: var(--gray); }
+.ksub { font-size: 0.6rem; color: var(--dim); }
+.karaoke { margin-top: 0.7rem; font-family: var(--font-serif); font-size: 1.1rem; line-height: 2.1; letter-spacing: -0.2px; }
+.karaoke:empty::before { content: '—'; color: var(--dim); font-size: 0.8rem; }
+.ktok { padding: 1px 2px; border-radius: 2px; transition: color 0.1s, background 0.1s; }
+.ktok.word { cursor: pointer; }
+.ktok.word:hover { background: var(--tag-bg); }
+.ktok.sung { color: #2a9d5c; }
+.ktok.active { background: #2fbf71; color: #06240f; box-shadow: 2px 2px 0 #1a8a4a; }
+.ktok.tag { font-family: var(--font-mono); font-size: 0.72rem; color: var(--dim); font-style: normal; }
+
+/* cost meter */
+.meter { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; border: 1.5px solid var(--card-border); box-shadow: var(--shadow-sm); background: var(--card-bg); }
+.cell { padding: 0.7rem 0.8rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.cell:nth-child(2n) { border-right: none; }
+.cell:nth-last-child(-n+2) { border-bottom: none; }
+.cell .k { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gray); }
+.cell .v { font-family: var(--font-serif); font-weight: 700; font-size: 1.15rem; margin-top: 2px; letter-spacing: -0.5px; }
+.cell .v small { font-family: var(--font-mono); font-weight: 400; font-size: 0.62rem; color: var(--dim); letter-spacing: 0; }
+.cost-accent .v { color: #111; }
+.cost-accent { background: var(--accent); }
+.pricerow { display: flex; gap: 0.9rem; align-items: flex-end; margin-top: 0.9rem; }
+.pricerow .col label { font-size: 0.58rem; }
+.session { font-size: 0.66rem; color: var(--gray); margin-top: 0.8rem; display: flex; justify-content: space-between; align-items: center; }
+.session b { font-family: var(--font-serif); color: var(--fg); }
+.linkbtn { background: none; border: none; color: var(--gray); font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; text-decoration: underline; }
+.linkbtn:hover { color: var(--fg); }
+
+/* footer */
+.footer { margin-top: 2.5rem; padding-top: 1rem; border-top: 2px solid var(--fg);
+  display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
+.footer-left { font-size: 0.65rem; color: var(--dim); }
+.footer-right a { font-size: 0.65rem; color: var(--gray); text-decoration: none; margin-left: 0.75rem; }
+.footer-right a:hover { color: var(--fg); }
+
+@media (max-width: 480px) {
+  body { padding: 1.5rem 1rem 3rem; }
+  .row { flex-direction: column; gap: 1rem; }
+  .pricerow { flex-direction: column; align-items: stretch; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="id-row">
+    <a class="lambda" href="/tools/">λ</a>
+    <div class="header-text">
+      <div class="header-title">tts</div>
+      <div class="header-sub">single &amp; multi-speaker speech via Gemini Flash TTS</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <span id="modelLabel">gemini-3.1-flash-tts-preview</span>
+    <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Get API key ↗</a>
+    <a href="https://ai.google.dev/gemini-api/docs/speech-generation" target="_blank" rel="noopener">Docs ↗</a>
+  </div>
+</div>
+
+<!-- 01 — KEY -->
+<div class="section">
+  <div class="section-head"><span class="num">01</span> Model &amp; key</div>
+  <div class="row field">
+    <div class="col">
+      <label for="modelSelect">Model</label>
+      <select id="modelSelect"></select>
+      <div class="hint" id="modelRate"></div>
+    </div>
+    <div class="col">
+      <label for="apiKey">Gemini API Key <span style="color:#d23">*</span></label>
+      <input type="password" id="apiKey" placeholder="AIza…  (stored locally)">
+      <div class="hint">Saved to <code>localStorage</code> — only sent to Google's API.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 02 — VOICE -->
+<div class="section">
+  <div class="section-head"><span class="num">02</span> Voice</div>
+  <div class="tabs">
+    <button class="tab active" data-mode="single">Single speaker</button>
+    <button class="tab" data-mode="multi">Multi-speaker</button>
+  </div>
+
+  <div id="singleConfig">
+    <div class="field">
+      <label for="singleVoice">Voice</label>
+      <select id="singleVoice" class="voice-select"></select>
+    </div>
+  </div>
+
+  <div id="multiConfig" class="hidden">
+    <div class="row field">
+      <div class="col">
+        <label>Speaker 1 — name</label>
+        <input type="text" id="spk1Name" value="Joe">
+      </div>
+      <div class="col">
+        <label>Speaker 1 — voice</label>
+        <select id="spk1Voice" class="voice-select"></select>
+      </div>
+    </div>
+    <div class="row field">
+      <div class="col">
+        <label>Speaker 2 — name</label>
+        <input type="text" id="spk2Name" value="Jane">
+      </div>
+      <div class="col">
+        <label>Speaker 2 — voice</label>
+        <select id="spk2Voice" class="voice-select"></select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 03 — SCRIPT -->
+<div class="section">
+  <div class="section-head"><span class="num">03</span> Script</div>
+  <div class="tips" id="promptTips"></div>
+  <div class="field">
+    <textarea id="textInput" rows="7"></textarea>
+    <div class="tagrow" id="tagRow"></div>
+    <div class="hint" id="charHint"></div>
+  </div>
+  <button class="gen" id="generateBtn">Generate audio</button>
+  <div class="status" id="status"></div>
+</div>
+
+<!-- 04 — OUTPUT -->
+<div class="section hidden" id="outSection">
+  <div class="section-head"><span class="num">04</span> Output</div>
+  <div class="out" style="margin-bottom:1rem">
+    <audio id="audioPlayer" controls></audio>
+    <a class="dl" id="downloadLink" download="gemini_speech.wav">↓ Download WAV</a>
+    <div class="krow" id="kHead">
+      <span class="klabel">▸ Lyric sync</span>
+      <span class="ksub" id="kStatus">estimated — API returns no timestamps</span>
+    </div>
+    <div class="karaoke" id="karaoke"></div>
+  </div>
+
+  <div class="meter">
+    <div class="cell"><div class="k">Input · text tokens</div><div class="v" id="mIn">—</div></div>
+    <div class="cell"><div class="k">Output · audio tokens</div><div class="v" id="mOut">—</div></div>
+    <div class="cell"><div class="k">Audio length</div><div class="v" id="mDur">—</div></div>
+    <div class="cell cost-accent"><div class="k">This generation</div><div class="v" id="mCost">—</div></div>
+  </div>
+
+  <div class="pricerow">
+    <div class="col">
+      <label>Input $/1M tok</label>
+      <input type="number" id="priceIn" value="1.00" step="0.01" min="0">
+    </div>
+    <div class="col">
+      <label>Output $/1M tok</label>
+      <input type="number" id="priceOut" value="20.00" step="0.01" min="0">
+    </div>
+  </div>
+  <div class="session">
+    <span>Session total · <b id="sessCount">0</b> runs · <b id="sessCost">$0.000000</b></span>
+    <button class="linkbtn" id="resetSession">reset</button>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-left">λ lampt.org · audio @ 24kHz · 25 tok/s</div>
+  <div class="footer-right">
+    <a href="/tools/">Tools</a>
+    <a href="https://github.com/lampts">GitHub</a>
+  </div>
+</div>
+
+<script>
+// ---- Gemini prebuilt voices (per speech-generation docs) ----
+const VOICES = [
+  ["Zephyr","Bright"],["Puck","Upbeat"],["Charon","Informative"],["Kore","Firm"],
+  ["Fenrir","Excitable"],["Leda","Youthful"],["Orus","Firm"],["Aoede","Breezy"],
+  ["Callirrhoe","Easy-going"],["Autonoe","Bright"],["Enceladus","Breathy"],["Iapetus","Clear"],
+  ["Umbriel","Easy-going"],["Algieba","Smooth"],["Despina","Smooth"],["Erinome","Clear"],
+  ["Algenib","Gravelly"],["Rasalgethi","Informative"],["Laomedeia","Upbeat"],["Achernar","Soft"],
+  ["Alnilam","Firm"],["Schedar","Even"],["Gacrux","Mature"],["Pulcherrima","Forward"],
+  ["Achird","Friendly"],["Zubenelgenubi","Casual"],["Vindemiatrix","Gentle"],["Sadachbia","Lively"],
+  ["Sadaltager","Knowledgeable"],["Sulafat","Warm"]
+];
+
+const PRESETS = {
+  single: {
+    tip: 'Steer delivery with natural language &amp; directorial tags — e.g. <code>Say cheerfully:</code>, <code>[whisper]</code>, <code>[short pause]</code>.',
+    text: 'Say dynamically: "Hello! [short pause] [whisper] I have a secret... I\'m a machine."',
+    tags: ['[whisper]','[short pause]','[laughing]','[sigh]','Say cheerfully:','Say in a spooky voice:']
+  },
+  multi: {
+    tip: 'Write a script using the <b>exact speaker names</b> set above. One line per turn.',
+    text: 'TTS the following conversation between Joe and Jane:\n\nJoe: How\'s it going today Jane?\nJane: [yawn] Not too bad, how about you?',
+    tags: ['[yawn]','[laughing]','[clears throat]','[excited]']
+  }
+};
+
+// ---- TTS models (price = USD per 1M tokens; verified against ai.google.dev pricing) ----
+const MODELS = [
+  { id:'gemini-3.1-flash-tts-preview', label:'Gemini 3.1 Flash TTS', in:1.00, out:20.00 },
+  { id:'gemini-2.5-flash-preview-tts', label:'Gemini 2.5 Flash TTS', in:0.50, out:10.00 },
+  { id:'gemini-2.5-pro-preview-tts',   label:'Gemini 2.5 Pro TTS',   in:1.00, out:20.00 },
+];
+const SAMPLE_RATE = 24000, AUDIO_TOK_PER_SEC = 25;
+
+// ---- DOM ----
+const $ = id => document.getElementById(id);
+const apiKey = $('apiKey'), textInput = $('textInput'), statusEl = $('status');
+const singleConfig = $('singleConfig'), multiConfig = $('multiConfig');
+const promptTips = $('promptTips'), tagRow = $('tagRow'), charHint = $('charHint');
+let mode = 'single';
+
+// populate voice dropdowns
+document.querySelectorAll('.voice-select').forEach(sel => {
+  VOICES.forEach(([n,d]) => {
+    const o = document.createElement('option');
+    o.value = n; o.textContent = `${n} · ${d}`;
+    sel.appendChild(o);
+  });
+});
+$('spk2Voice').selectedIndex = 3; // Kore, distinct from Zephyr
+
+// ---- persistence ----
+const LS = { key:'tts.apiKey', text:'tts.text', model:'tts.model', pin:'tts.priceIn', pout:'tts.priceOut', sc:'tts.sessCost', sn:'tts.sessCount' };
+apiKey.value = localStorage.getItem(LS.key) || '';
+apiKey.addEventListener('input', () => localStorage.setItem(LS.key, apiKey.value));
+
+// ---- model selection (auto-fills pricing) ----
+const modelSelect = $('modelSelect');
+MODELS.forEach(m => { const o = document.createElement('option'); o.value = m.id; o.textContent = m.label; modelSelect.appendChild(o); });
+let currentModel = MODELS.find(m => m.id === localStorage.getItem(LS.model)) || MODELS[0];
+modelSelect.value = currentModel.id;
+
+function applyModel(m, fromSaved) {
+  currentModel = m;
+  localStorage.setItem(LS.model, m.id);
+  $('modelLabel').textContent = m.id;
+  $('modelRate').innerHTML = `$${m.in.toFixed(2)} in · $${m.out.toFixed(2)} out <span style="opacity:.6">/1M tok</span>`;
+  // saved per-model price override wins; otherwise the model's list price
+  const savedIn = localStorage.getItem(LS.pin + '.' + m.id);
+  const savedOut = localStorage.getItem(LS.pout + '.' + m.id);
+  $('priceIn').value  = (fromSaved && savedIn  !== null) ? savedIn  : m.in.toFixed(2);
+  $('priceOut').value = (fromSaved && savedOut !== null) ? savedOut : m.out.toFixed(2);
+}
+// persist price edits keyed to the active model, so each model remembers its override
+$('priceIn').addEventListener('input', () => localStorage.setItem(LS.pin + '.' + currentModel.id, $('priceIn').value));
+$('priceOut').addEventListener('input', () => localStorage.setItem(LS.pout + '.' + currentModel.id, $('priceOut').value));
+modelSelect.addEventListener('change', () => applyModel(MODELS.find(m => m.id === modelSelect.value), true));
+applyModel(currentModel, true);
+
+// ---- session totals ----
+let sessCost = parseFloat(localStorage.getItem(LS.sc)) || 0;
+let sessCount = parseInt(localStorage.getItem(LS.sn)) || 0;
+function renderSession() {
+  $('sessCount').textContent = sessCount;
+  $('sessCost').textContent = '$' + sessCost.toFixed(6);
+  localStorage.setItem(LS.sc, sessCost); localStorage.setItem(LS.sn, sessCount);
+}
+renderSession();
+$('resetSession').addEventListener('click', () => { sessCost = 0; sessCount = 0; renderSession(); });
+
+// ---- mode / presets ----
+function applyPreset(m) {
+  mode = m;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.mode === m));
+  singleConfig.classList.toggle('hidden', m !== 'single');
+  multiConfig.classList.toggle('hidden', m === 'single');
+  const p = PRESETS[m];
+  promptTips.innerHTML = '<strong>Tip:</strong> ' + p.tip;
+  const saved = localStorage.getItem(LS.text + '.' + m);
+  textInput.value = saved !== null ? saved : p.text;
+  tagRow.innerHTML = '';
+  p.tags.forEach(tag => {
+    const b = document.createElement('span');
+    b.className = 'dtag'; b.textContent = tag;
+    b.onclick = () => insertTag(tag);
+    tagRow.appendChild(b);
+  });
+  updateCharHint();
+}
+function insertTag(tag) {
+  const t = textInput, s = t.selectionStart, e = t.selectionEnd;
+  const ins = (s>0 && t.value[s-1] !== ' ' && t.value[s-1] !== '\n') ? ' ' + tag : tag;
+  t.value = t.value.slice(0,s) + ins + t.value.slice(e);
+  t.focus(); t.selectionStart = t.selectionEnd = s + ins.length;
+  updateCharHint();
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => applyPreset(t.dataset.mode)));
+
+// live char / rough token estimate (~4 chars ≈ 1 token)
+function updateCharHint() {
+  const c = textInput.value.length;
+  const est = Math.max(1, Math.round(c / 4));
+  charHint.textContent = `${c} chars · ~${est} input tokens (estimate)`;
+  localStorage.setItem(LS.text + '.' + mode, textInput.value);
+}
+textInput.addEventListener('input', updateCharHint);
+
+applyPreset('single');
+
+// ---- helpers ----
+function setStatus(msg, kind, spin) {
+  statusEl.textContent = msg;
+  statusEl.className = 'status' + (kind ? ' ' + kind : '') + (spin ? ' spin' : '');
+}
+function fmtDur(sec) {
+  const m = Math.floor(sec/60), s = sec % 60;
+  return m ? `${m}m ${s.toFixed(0)}s` : `${sec.toFixed(1)}s`;
+}
+// pull tokens by modality from usageMetadata, with fallbacks
+function tokensFor(details, fallback) {
+  if (Array.isArray(details)) {
+    const sum = details.reduce((a,d) => a + (d.tokenCount || 0), 0);
+    if (sum) return sum;
+  }
+  return fallback || 0;
+}
+
+// ---- generate ----
+$('generateBtn').addEventListener('click', async () => {
+  const key = apiKey.value.trim();
+  const text = textInput.value.trim();
+  if (!key) { setStatus('Provide a Gemini API key first.', 'err'); apiKey.focus(); return; }
+  if (!text) { setStatus('Script is empty.', 'err'); return; }
+
+  $('generateBtn').disabled = true;
+  setStatus('Synthesizing', null, true);
+
+  let speechConfig;
+  if (mode === 'single') {
+    speechConfig = { voiceConfig: { prebuiltVoiceConfig: { voiceName: $('singleVoice').value } } };
+  } else {
+    speechConfig = { multiSpeakerVoiceConfig: { speakerVoiceConfigs: [
+      { speaker: $('spk1Name').value.trim(), voiceConfig: { prebuiltVoiceConfig: { voiceName: $('spk1Voice').value } } },
+      { speaker: $('spk2Name').value.trim(), voiceConfig: { prebuiltVoiceConfig: { voiceName: $('spk2Voice').value } } }
+    ]}};
+  }
+
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${currentModel.id}:generateContent?key=${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text }] }],
+        generationConfig: { responseModalities: ['AUDIO'], speechConfig }
+      })
+    });
+
+    if (!res.ok) {
+      let detail = await res.text();
+      try { detail = JSON.parse(detail).error?.message || detail; } catch(e){}
+      throw new Error(`${res.status} — ${detail}`);
+    }
+
+    const data = await res.json();
+    const part = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+    if (!part) throw new Error('No audio returned (response may have been blocked).');
+
+    const wav = pcmToWav(part.inlineData.data, SAMPLE_RATE, 1, 16);
+    const url = URL.createObjectURL(wav);
+    const audio = $('audioPlayer'), dl = $('downloadLink');
+    audio.src = url; dl.href = url;
+    buildKaraoke(text, wav, audio);
+
+    // ---- usage + cost ----
+    const u = data.usageMetadata || {};
+    const inTok  = tokensFor(u.promptTokensDetails, u.promptTokenCount);
+    const outTok = tokensFor(u.candidatesTokensDetails, u.candidatesTokenCount);
+    const pIn = parseFloat($('priceIn').value) || 0;
+    const pOut = parseFloat($('priceOut').value) || 0;
+    const cost = (inTok/1e6)*pIn + (outTok/1e6)*pOut;
+    const durSec = outTok / AUDIO_TOK_PER_SEC;
+
+    $('mIn').innerHTML  = inTok.toLocaleString();
+    $('mOut').innerHTML = outTok.toLocaleString() + ' <small>audio</small>';
+    $('mDur').innerHTML = fmtDur(durSec) + ' <small>~' + AUDIO_TOK_PER_SEC + ' tok/s</small>';
+    $('mCost').textContent = '$' + cost.toFixed(6);
+
+    sessCost += cost; sessCount += 1; renderSession();
+
+    $('outSection').classList.remove('hidden');
+    setStatus('Done.', 'ok');
+  } catch (err) {
+    console.error(err);
+    setStatus('Failed: ' + err.message, 'err');
+  } finally {
+    $('generateBtn').disabled = false;
+  }
+});
+
+// ---- lyric sync (estimated alignment — the API returns no timestamps) ----
+const KARAOKE = { words: [] };           // [{el, weight, start, end}]
+const kEl = $('karaoke'), kStatus = $('kStatus');
+const PAUSE_TAG = /pause|breath|sigh|beat/i;
+
+function syllables(w) {
+  const s = w.toLowerCase().replace(/[^a-z]/g, '');
+  if (!s) return 1;
+  const m = s.replace(/e\b/, '').match(/[aeiouy]+/g);
+  return Math.max(1, m ? m.length : 1);
+}
+function trailPause(w) {
+  if (/(\.\.\.|…)["'’]?$/.test(w)) return 2.0;
+  if (/[.!?]["'’]?$/.test(w)) return 1.2;
+  if (/[,;:]["'’]?$/.test(w)) return 0.5;
+  return 0;
+}
+
+// split script into ordered display tokens; only `word` tokens are highlighted
+function tokenizeScript(text) {
+  const out = [];
+  text.split('\n').forEach((line, li) => {
+    if (li) out.push({ type: 'br' });
+    // drop a leading "Name:" / "Say X:" directive or speaker label (not spoken)
+    line = line.replace(/^\s*[A-Za-z][\w '’]*:\s*/, '');
+    line.split(/(\[[^\]]*\])/).forEach(p => {           // separate [tags]
+      if (!p) return;
+      if (p[0] === '[') { out.push({ type: 'tag', raw: p }); return; }
+      p.split(/(\s+)/).forEach(tok => {
+        if (!tok) return;
+        out.push(/^\s+$/.test(tok) ? { type: 'space' } : { type: 'word', raw: tok });
+      });
+    });
+  });
+  return out;
+}
+
+async function buildKaraoke(text, blob, audio) {
+  kEl.innerHTML = '';
+  KARAOKE.words = [];
+  tokenizeScript(text).forEach(t => {
+    if (t.type === 'br') { kEl.appendChild(document.createElement('br')); return; }
+    if (t.type === 'space') { kEl.appendChild(document.createTextNode(' ')); return; }
+    const span = document.createElement('span');
+    span.className = 'ktok ' + (t.type === 'tag' ? 'tag' : 'word');
+    span.textContent = t.raw;
+    kEl.appendChild(span);
+    if (t.type === 'word') {
+      KARAOKE.words.push({ el: span, weight: syllables(t.raw) + trailPause(t.raw), start: 0, end: 0 });
+    } else if (t.type === 'tag' && PAUSE_TAG.test(t.raw)) {
+      KARAOKE.words.push({ el: null, weight: 1.0, start: 0, end: 0 });   // silent gap
+    }
+  });
+
+  if (!KARAOKE.words.length) { kStatus.textContent = 'no spoken words detected'; return; }
+
+  const span = await analyzeSpeechSpan(blob).catch(() => null);
+  let total = (span && span.duration) || audio.duration;
+  if (!total || !isFinite(total)) total = await durationOf(audio);
+
+  let t0 = 0, t1 = total;
+  if (span && span.end > span.start) {
+    t0 = span.start; t1 = span.end;
+    kStatus.textContent = 'estimated · waveform-aligned';
+  } else {
+    kStatus.textContent = 'estimated · proportional';
+  }
+
+  const totW = KARAOKE.words.reduce((a, w) => a + w.weight, 0) || 1;
+  let acc = t0; const dur = t1 - t0;
+  KARAOKE.words.forEach(w => { w.start = acc; acc += (w.weight / totW) * dur; w.end = acc; });
+}
+
+function durationOf(audio) {
+  return new Promise(res => {
+    if (audio.duration && isFinite(audio.duration)) return res(audio.duration);
+    audio.addEventListener('loadedmetadata', () => res(audio.duration || 0), { once: true });
+  });
+}
+
+// detect speech onset/offset from an RMS envelope of the waveform
+async function analyzeSpeechSpan(blob) {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  const ctx = new Ctx();
+  try {
+    const buf = await ctx.decodeAudioData(await blob.arrayBuffer());
+    const ch = buf.getChannelData(0), sr = buf.sampleRate;
+    const win = Math.max(1, Math.floor(sr * 0.02));            // 20ms windows
+    const env = [];
+    for (let i = 0; i < ch.length; i += win) {
+      let s = 0; const n = Math.min(win, ch.length - i);
+      for (let j = 0; j < n; j++) s += ch[i + j] * ch[i + j];
+      env.push(Math.sqrt(s / n));
+    }
+    let peak = 0; for (const v of env) if (v > peak) peak = v;
+    const thr = peak * 0.08;
+    let a = env.findIndex(v => v > thr);
+    if (a < 0) return { start: 0, end: buf.duration, duration: buf.duration };
+    let b = env.length - 1; while (b > a && env[b] <= thr) b--;
+    return { start: a * win / sr, end: (b + 1) * win / sr, duration: buf.duration };
+  } finally { if (ctx.close) ctx.close(); }
+}
+
+// highlight the active word as the audio plays
+$('audioPlayer').addEventListener('timeupdate', () => {
+  const t = $('audioPlayer').currentTime;
+  KARAOKE.words.forEach(w => {
+    if (!w.el) return;
+    if (t >= w.end)        { w.el.classList.add('sung');   w.el.classList.remove('active'); }
+    else if (t >= w.start) { w.el.classList.add('active'); w.el.classList.remove('sung'); }
+    else                   { w.el.classList.remove('active', 'sung'); }
+  });
+});
+// click a word to seek there
+kEl.addEventListener('click', e => {
+  const span = e.target.closest('.ktok.word'); if (!span) return;
+  const w = KARAOKE.words.find(x => x.el === span);
+  if (w) { $('audioPlayer').currentTime = w.start + 0.001; $('audioPlayer').play(); }
+});
+
+// ---- PCM (base64) -> WAV blob ----
+function pcmToWav(b64, sampleRate, channels, bits) {
+  const bin = atob(b64), dataSize = bin.length;
+  const buf = new ArrayBuffer(44 + dataSize), view = new DataView(buf);
+  const ws = (off, s) => { for (let i=0;i<s.length;i++) view.setUint8(off+i, s.charCodeAt(i)); };
+  ws(0,'RIFF'); view.setUint32(4, 36+dataSize, true); ws(8,'WAVE'); ws(12,'fmt ');
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, channels, true);
+  view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate*channels*bits/8, true);
+  view.setUint16(32, channels*bits/8, true); view.setUint16(34, bits, true);
+  ws(36,'data'); view.setUint32(40, dataSize, true);
+  const pcm = new Uint8Array(buf, 44);
+  for (let i=0;i<dataSize;i++) pcm[i] = bin.charCodeAt(i);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+</script>
+</body>
+</html>
