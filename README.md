@@ -658,7 +658,7 @@ Since then, it got a full re-write of the styles and many additional cool featur
 
 ## HTML Files
 
-- [index.html](index.html) - *April 14, 2026*
+- [index.html](index.html) - *June 19, 2026*
 - [lamp.html](lamp.html) - *April 14, 2026*
 - [collatz.html](collatz.html) - *October 14, 2025*
 - [crypto.html](crypto.html) - *October 12, 2025*
@@ -669,7 +669,6 @@ Since then, it got a full re-write of the styles and many additional cool featur
 - [jina.html](jina.html) - *September 26, 2025*
 - [llm.html](llm.html) - *August 29, 2025*
 - [photo.html](photo.html) - *August 16, 2025*
-- [pq25.html](pq25.html) - *July 03, 2025*
 - [paws.html](paws.html) - *June 26, 2025*
 - [story.html](story.html) - *June 15, 2025*
 - [qr.html](qr.html) - *June 12, 2025*
@@ -679,8 +678,6 @@ Since then, it got a full re-write of the styles and many additional cool featur
 - [loss.html](loss.html) - *May 24, 2025*
 - [card.html](card.html) - *May 23, 2025*
 - [solar.html](solar.html) - *May 23, 2025*
-- [cakeinfo.html](cakeinfo.html) - *May 23, 2025*
-- [cake25.html](cake25.html) - *May 23, 2025*
 - [reservoir.html](reservoir.html) - *May 22, 2025*
 - [wave.html](wave.html) - *May 22, 2025*
 - [annotate.html](annotate.html) - *May 16, 2025*
