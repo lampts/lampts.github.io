@@ -169,6 +169,16 @@ h1.lead{margin-top:22px}
     <button class="pri" id="forge">⚒ Rèn đoạn văn</button>
     <button id="reset">↺ Về bản Beatles</button>
   </div>
+  <details style="margin-top:12px;border-top:2px solid #000;padding-top:10px" id="ownDetails">
+    <summary>Hoặc: dùng văn bản của bạn</summary>
+    <p class="sub" style="color:#000;margin-top:8px">
+      Dán đoạn tiếng Anh của bạn. Máy <b>giữ nguyên câu chữ</b>, chỉ thêm IPA, nghĩa tiếng Việt và mẹo phát âm.
+    </p>
+    <textarea id="ownText" rows="4" placeholder="Dán đoạn văn tiếng Anh của bạn vào đây…" style="margin-top:10px"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="pri" id="useOwn">✍ Dùng văn bản của tôi</button>
+    </div>
+  </details>
   <details style="margin-top:12px;border-top:2px solid #000;padding-top:10px">
     <summary>Không có API key? Đi đường vòng</summary>
     <p class="sub" style="color:#000;margin-top:8px">
@@ -474,6 +484,54 @@ Return ONLY JSON:
 {"theme":"...","accent":"${accent}","sentences":[{"en":"","ipa":"","vi":"","tips":[""]}],"anchors":{"word":"note"}}`;
 }
 
+function buildAnnotatePrompt(text,accent){
+  return `You are a phonetics coach preparing a pronunciation drill for a Vietnamese adult learner.
+
+TASK: Take the PASSAGE below EXACTLY as written. Do NOT rewrite, add, remove, translate or reorder any words — the learner's own English text must stay verbatim. Only split it into sentences and annotate.
+
+PASSAGE:
+"""
+${text}
+"""
+
+For each sentence give:
+- en: the sentence EXACTLY as it appears in the passage (verbatim, unchanged)
+- ipa: broad ${accent} transcription in slashes, using ‿ to mark linking, | to mark pauses
+- vi: idiomatic Vietnamese conveying the MEANING, not a literal word-by-word translation
+- tips: 2–4 very short Vietnamese notes on the hardest sounds in that sentence
+
+Also give anchors: an object mapping lowercase tricky words to a very short Vietnamese pronunciation note.
+
+Return ONLY JSON:
+{"theme":"...","accent":"${accent}","sentences":[{"en":"","ipa":"","vi":"","tips":[""]}],"anchors":{"word":"note"}}
+Set theme to a short label for the passage (its first few words, or "Văn bản của tôi").`;
+}
+
+// split a pasted passage into sentences locally (offline fallback, no API)
+function splitSentences(t){
+  const clean=String(t).replace(/\s+/g,' ').trim();
+  if(!clean)return[];
+  return (clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[clean]).map(s=>s.trim()).filter(Boolean);
+}
+
+async function annotate(){
+  const text=$('ownText').value.trim();
+  if(!text) throw new Error('Chưa có văn bản.');
+  const accent=$('accent').value;
+  status('Đang chú giải văn bản…');
+  const body={contents:[{parts:[{text:buildAnnotatePrompt(text,accent)}]}],
+    generationConfig:{responseMimeType:'application/json',temperature:0.3}};
+  const j=await callText(body);
+  const txt=(j?.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+  let obj;
+  try{ obj=JSON.parse(txt); }
+  catch(e){ const m=txt.match(/\{[\s\S]*\}/); if(!m)throw new Error('Model trả về không phải JSON.'); obj=JSON.parse(m[0]); }
+  if(!obj.sentences||!obj.sentences.length) throw new Error('JSON thiếu sentences.');
+  obj.theme=obj.theme||'Văn bản của tôi'; obj.accent=accent; obj.anchors=obj.anchors||{};
+  DOC=obj; wipe(true); renderDoc();
+  status(`Xong: ${wordCount()} từ.`);
+}
+
 async function forge(missing){
   const theme=$('theme').value.trim()||'The Beatles';
   const accent=$('accent').value, maxw=$('wc').value;
@@ -498,6 +556,25 @@ $('forge').onclick=async()=>{
   try{await forge(null)}catch(e){err(e)}
   clearInterval(creep);taskStep(1);taskEnd();$('forge').disabled=false;
 };
+$('useOwn').onclick=async()=>{
+  const text=$('ownText').value.trim();
+  if(!text){status('Dán văn bản tiếng Anh của bạn trước.','err');return}
+  if(!$('key').value.trim()){
+    // offline: no key — split locally so audio/shadow work; LLM adds IPA later.
+    const sents=splitSentences(text).map(en=>({en,ipa:'',vi:'',tips:[]}));
+    if(!sents.length){status('Không tách được câu nào.','err');return}
+    DOC={theme:'Văn bản của tôi',accent:$('accent').value,sentences:sents,anchors:{}};
+    wipe(true);renderDoc();
+    status('Đã nạp văn bản. Chưa có IPA — thêm key ở ⚙, hoặc dùng "Copy prompt" ở mục đường vòng.');
+    return;
+  }
+  $('useOwn').disabled=true;S.stop=false;
+  taskStart('Đang chú giải văn bản',1);
+  $('taskDetail').textContent=text.slice(0,60);
+  const creep=setInterval(()=>{const p=Math.min(.9,(Date.now()-TASK.t0)/22000);sand(p)},200);
+  try{await annotate()}catch(e){err(e)}
+  clearInterval(creep);taskStep(1);taskEnd();$('useOwn').disabled=false;
+};
 $('patch').onclick=async()=>{
   if(!DOC._miss||!DOC._miss.length){status('Đã phủ kín, không cần vá.');return}
   $('patch').disabled=true;try{await forge(DOC._miss)}catch(e){err(e)}$('patch').disabled=false;
@@ -505,7 +582,10 @@ $('patch').onclick=async()=>{
 $('reset').onclick=()=>{DOC=JSON.parse(JSON.stringify(BEATLES));wipe(true);renderDoc();status('Về bản Beatles.')};
 
 $('copyPrompt').onclick=async()=>{
-  const p=buildPrompt($('theme').value.trim()||'The Beatles',$('accent').value,$('wc').value,DOC._miss);
+  const own=$('ownText').value.trim();
+  const p=own
+    ? buildAnnotatePrompt(own,$('accent').value)
+    : buildPrompt($('theme').value.trim()||'The Beatles',$('accent').value,$('wc').value,DOC._miss);
   try{ await navigator.clipboard.writeText(p); status('Đã copy prompt. Dán vào LLM bất kỳ.'); }
   catch(e){
     const ta=$('pasteJson'); ta.value=p; ta.select();
