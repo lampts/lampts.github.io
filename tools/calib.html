@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Probability Calibration — An Interactive Monograph</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VC31GENS6S');
+</script>
+<script>
+  // Apply saved (or system) theme before first paint to avoid a flash
+  (function(){
+    var saved = localStorage.getItem('cw-theme');
+    var theme = saved || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root, :root[data-theme="light"]{
+    --bg:#fbfbf9; --paper:#ffffff; --ink:#14161b; --muted:#6a6f78; --faint:#9a9ea7;
+    --rule:#e7e6e1; --rule-2:#d8d7d1; --accent:#3a3fb0; --accent-ink:#ffffff;
+    --accent-soft:#ececfa; --ok:#1c7a54; --warn:#a35a09; --err:#b3261e;
+    --code-bg:#f6f6f2; --code-ink:#1a1c22; --tag-bg:#f1f1ec; --sel:#dcdcf7;
+    --shadow:0 1px 0 rgba(0,0,0,.02);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d0e11; --paper:#131418; --ink:#e8e8e4; --muted:#969aa2; --faint:#6c7079;
+    --rule:#24262c; --rule-2:#2e3037; --accent:#9aa0ff; --accent-ink:#0b0c14;
+    --accent-soft:#1a1c2c; --ok:#57d9a3; --warn:#e0a94b; --err:#ff6b6b;
+    --code-bg:#0a0b0e; --code-ink:#e6e7ea; --tag-bg:#1b1d23; --sel:#2a2d4a;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  ::selection{background:var(--sel)}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.72;
+    font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13.5px;-webkit-font-smoothing:antialiased;
+    transition:background .18s ease,color .18s ease}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
+  a:hover{border-bottom-color:var(--accent)}
+  b,strong{font-weight:600}
+  em,i{font-style:italic}
+
+  #app{display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;max-width:1180px;margin:0 auto}
+
+  /* ---- sidebar / contents ---- */
+  #side{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;
+    border-right:1px solid var(--rule);padding:22px 18px 40px}
+  #side .mast{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+  #side .mast-t{font-size:13.5px;font-weight:700;letter-spacing:.01em;margin-bottom:18px;color:var(--ink)}
+  .toc-h{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+    margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+  .toc-sec{margin:10px 0 2px}
+  .toc-sec>a{display:block;font-size:12px;font-weight:600;color:var(--ink);padding:2px 0}
+  .toc-sec>a .n{color:var(--accent);margin-right:8px}
+  .toc-sub{display:block;font-size:11px;color:var(--muted);padding:2px 0 2px 22px;line-height:1.4}
+  .toc-sub:hover{color:var(--ink)}
+  .toc-sec>a.active{color:var(--accent)}
+
+  /* ---- main / paper ---- */
+  #main{min-width:0}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;
+    padding:9px 34px;background:color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+  .topbar .k{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);letter-spacing:.02em}
+  .topbar .grow{flex:1}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
+  .dot.ok{background:var(--ok)} .dot.run{background:var(--warn);animation:pulse 1s infinite} .dot.err{background:var(--err)}
+  @keyframes pulse{50%{opacity:.35}}
+
+  .btn{cursor:pointer;font-family:inherit;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:600;border:1px solid var(--rule-2);background:transparent;color:var(--ink);
+    padding:5px 11px;border-radius:2px;transition:all .15s ease}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.solid{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn.solid:hover{color:var(--accent-ink);opacity:.9}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  .paper{max-width:800px;margin:0 auto;padding:44px 34px 140px}
+
+  /* title block */
+  .titleblock{text-align:center;border-bottom:1px solid var(--rule-2);padding-bottom:30px;margin-bottom:8px}
+  .kicker{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+  .titleblock h1{font-size:27px;line-height:1.28;font-weight:700;letter-spacing:-.01em;margin:0 auto 14px;max-width:640px}
+  .authors{font-size:13px;font-weight:500}
+  .affil{font-size:11.5px;color:var(--muted);margin-top:3px;font-style:italic}
+
+  /* abstract */
+  .abstract{max-width:660px;margin:26px auto 0;padding:2px 0}
+  .abstract .lab{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);
+    text-align:center;margin-bottom:8px}
+  .abstract p{font-size:12.5px;color:var(--ink);margin:0 0 8px;text-align:justify;hyphens:auto}
+  .abstract .how{font-size:11.5px;color:var(--muted);border-top:1px solid var(--rule);margin-top:12px;padding-top:10px;text-align:center}
+  .abstract kbd{font-family:inherit;font-size:10.5px;background:var(--tag-bg);border:1px solid var(--rule-2);
+    border-radius:3px;padding:1px 5px}
+
+  /* section headers */
+  .sec-head{scroll-margin-top:64px;margin:52px 0 4px;padding-bottom:8px;border-bottom:1px solid var(--rule-2)}
+  .sec-head h2{font-size:19px;font-weight:700;margin:0;letter-spacing:-.005em}
+  .sec-head h2 .n{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+  .sec-head .lead{font-size:12px;color:var(--muted);margin:8px 0 0;padding-left:0}
+
+  /* step */
+  .step{scroll-margin-top:64px;margin:30px 0}
+  .step-h{display:flex;align-items:baseline;gap:12px;margin:0 0 10px}
+  .step-h .sn{font-size:12px;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;min-width:30px}
+  .step-h .st{font-size:14px;font-weight:600;letter-spacing:-.005em}
+
+  /* commentary */
+  .comment{border-left:2px solid var(--accent);padding:2px 0 2px 16px;margin:12px 0}
+  .comment .who{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+  .comment p{margin:0 0 9px;font-size:12.8px;color:var(--ink)}
+  .comment p:last-child{margin-bottom:0}
+  .comment code{font-size:11.5px;background:var(--tag-bg);padding:1px 5px;border-radius:3px}
+  .comment small{color:var(--muted);font-size:11px}
+
+  /* concept cards / lists in notes */
+  .note-body{margin:12px 0}
+  .note-body ul{margin:6px 0;padding-left:20px}
+  .note-body li{margin:4px 0;font-size:12.5px}
+  .note-body p{font-size:12.5px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;
+    background:var(--rule);border:1px solid var(--rule);margin:14px 0}
+  .card{background:var(--paper);padding:13px 15px}
+  .card h4{margin:0 0 5px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  .card p{margin:0;font-size:11.5px;color:var(--muted);line-height:1.55}
+
+  /* code cell */
+  .cell{border:1px solid var(--rule-2);border-radius:3px;overflow:hidden;margin:12px 0;background:var(--paper)}
+  .cell-head{display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid var(--rule);background:var(--tag-bg)}
+  .cell-head .in{font-size:10.5px;color:var(--accent);font-weight:600;letter-spacing:.04em}
+  .cell-head .lang{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .cell-head .grow{flex:1}
+  .cell-head .runhint{font-size:10px;color:var(--faint)}
+  .cell textarea{display:block;width:100%;border:0;outline:0;resize:vertical;background:var(--code-bg);
+    color:var(--code-ink);font-family:inherit;font-size:12.4px;line-height:1.62;padding:12px 14px;tab-size:4;min-height:40px}
+  .cell .runbtn{font-size:10px;padding:3px 10px}
+
+  /* outputs */
+  .output:empty{display:none}
+  .out-block{border-top:1px solid var(--rule);padding:10px 14px}
+  .out-lab{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+  .out-block pre{margin:0;font-family:inherit;font-size:12px;line-height:1.55;white-space:pre;overflow-x:auto;color:var(--ink);
+    -webkit-overflow-scrolling:touch}
+  .out-block.err pre{white-space:pre-wrap;word-break:break-word}
+  .out-block.err pre{color:var(--err)}
+  .figure{border-top:1px solid var(--rule);padding:14px;text-align:center;background:var(--paper)}
+  .figure img{max-width:100%;background:#fff;border:1px solid var(--rule);border-radius:2px}
+  .figcap{font-size:10.5px;color:var(--muted);margin-top:9px;font-style:italic;line-height:1.5;max-width:560px;margin-left:auto;margin-right:auto}
+  .figcap .fn{font-style:normal;font-weight:600;color:var(--ink)}
+
+  /* boot overlay */
+  #boot{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px}
+  #boot .box{max-width:460px}
+  #boot .kicker{margin-bottom:10px}
+  #boot h2{margin:0 0 8px;font-size:17px;font-weight:700}
+  #boot p{color:var(--muted);font-size:12px;margin:6px 0 0}
+  #boot .log{font-size:11px;color:var(--accent);margin-top:14px;min-height:16px;letter-spacing:.02em}
+  .spinner{width:30px;height:30px;border-radius:50%;border:2px solid var(--rule-2);border-top-color:var(--accent);
+    animation:spin 1s linear infinite;margin:0 auto 4px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  @media(max-width:900px){
+    #app{grid-template-columns:1fr}
+    #side{display:none}
+    .paper{padding:30px 20px 120px}
+    .topbar{padding:9px 20px}
+  }
+  @media(max-width:430px){
+    body{font-size:13px}
+    .topbar{padding:8px 12px;gap:8px}
+    .topbar .btn{padding:5px 8px;font-size:9px;letter-spacing:.04em}
+    .topbar .k{font-size:10px}
+    .paper{padding:22px 15px 100px}
+    .titleblock h1{font-size:21px}
+    .titleblock{padding-bottom:22px}
+    .kicker{font-size:9.5px;letter-spacing:.15em}
+    .abstract p,.abstract .how{text-align:left}
+    .sec-head h2{font-size:17px}
+    .sec-head h2 .n{margin-right:10px}
+    .cell-head .lang,.cell-head .runhint{display:none}
+    .cell textarea{font-size:12px}
+  }
+</style>
+</head>
+<body>
+<div id="boot">
+  <div class="box">
+    <div class="spinner"></div>
+    <div class="kicker">Interactive Monograph</div>
+    <h2>Initialising the Python runtime</h2>
+    <p>Fetching Pyodide with numpy · pandas · scikit-learn · scipy · matplotlib, plus the ICU dataset. First load can take up to a minute; afterwards it is cached.</p>
+    <div class="log" id="bootlog">starting…</div>
+  </div>
+</div>
+
+<div id="app">
+  <nav id="side">
+    <div class="mast">Interactive Monograph</div>
+    <div class="mast-t">Probability&nbsp;Calibration</div>
+    <div class="toc-h">Contents</div>
+    <div id="toc"></div>
+  </nav>
+
+  <div id="main">
+    <div class="topbar">
+      <span class="k"><span class="dot" id="kdot"></span><span id="kstat">loading…</span></span>
+      <span class="grow"></span>
+      <button class="btn" id="themeToggle" title="Toggle light / dark">Theme</button>
+      <button class="btn" id="runAll">Run all</button>
+      <button class="btn" id="resetAll" title="Reset the Python session">Reset</button>
+    </div>
+
+    <div class="paper">
+      <div class="titleblock">
+        <div class="kicker">Assessing &amp; Correcting Predicted Probabilities</div>
+        <h1>Probability Calibration:<br>A Hands-On, In-Browser Walkthrough</h1>
+        <div class="authors">Adapted from Brian&nbsp;Lucena</div>
+        <div class="affil">PyData Calibration Workshop · numeristical/resources · MIMIC-III ICU mortality</div>
+
+        <div class="abstract">
+          <div class="lab">Abstract</div>
+          <p>A model that discriminates well can still lie about <em>how</em> confident it is. This walkthrough builds a random-forest mortality model on ICU data, shows how to <b>assess</b> whether its probabilities behave like probabilities — via log-loss, the Brier score, and reliability diagrams — and then <b>corrects</b> them with four calibration methods: Platt scaling, isotonic regression, beta calibration, and spline calibration. We contrast a held-out calibration set against cross-validated calibration, and close with a synthetic-ground-truth study of what each method actually recovers.</p>
+          <p class="how">Every code listing is live. Run a cell with its <b>Run</b> button or <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>Enter</kbd>; prerequisites run automatically. Charts and printed output appear inline.</p>
+        </div>
+      </div>
+      <div id="content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   Content. Each step is a narrated concept ('note') or a live code cell ('code').
+   Code cells share one Python namespace and run in order.
+   ============================================================================ */
+const STEPS = [
+/* ---------------------------------------------------------------- SECTION 0 */
+{lesson:"L0", lessonTitle:"Lesson 0 — What is calibration?",
+ lessonLead:"Concepts first: the kinds of predictions a model makes, and where calibration fits in.",
+ kind:"note", title:"Three kinds of predictions",
+ brian:`<p>To understand calibration it helps to see the landscape of predictions a model can make.</p>
+ <p>A <b>hard prediction</b> votes an exact label — yes/no, or one class. A <b>probabilistic prediction</b> gives a probability for each outcome. In between, for binary problems, is a <b>ranking</b>: a score where higher means "more likely true", but the number may not behave like a probability at all.</p>
+ <p>Moving <i>up</i> the ladder is easy — probabilities become scores (just rank them), scores become hard votes (pick a threshold). Moving <i>down</i> is hard: you can't recover a ranking from yes/no votes. But turning scores into real probabilities <b>is</b> possible — that process is calibration.</p>`,
+ body:`<div class="cards">
+   <div class="card"><h4>Hard</h4><p>Predict the exact value of y. Binary: yes/no. Multiclass: pick one class.</p></div>
+   <div class="card"><h4>Ranking</h4><p>A score for x. Higher = more likely y is true. Not necessarily a valid probability.</p></div>
+   <div class="card"><h4>Probabilistic</h4><p>A probability for each outcome that should behave like a real probability.</p></div>
+ </div>`},
+
+{lesson:"L0", kind:"note", title:"What it means to be 'well calibrated'",
+ brian:`<p>Calibration is adjusting a model's predictions so they're <b>probabilistically meaningful</b>. Concretely: look at every time the model predicted about 0.30. In the long run, about 30% of those events should actually occur. If they do, the model is well calibrated.</p>
+ <p>We all have that friend who's "99.99% sure" — but they're wrong far more than one time in ten thousand. That's overconfidence. We don't want our models to be that friend. When the model says 99%, it should be wrong about one time in a hundred.</p>`,
+ body:`<div class="note-body"><p><b>Why bother?</b></p><ul>
+   <li><b>Actions depend on precise probabilities</b> — loan interest rates, insurance pricing: the wrong probability loses money.</li>
+   <li><b>Judge model quality &amp; fairness</b> — trust "75% sure" vs "95% sure"; spot where a model is less confident for some groups.</li>
+   <li><b>Simulate impact</b> — if the probabilities are true, you can estimate a model's effect on a population before deploying.</li>
+   <li><b>Recalibrate for drift / new populations</b> — cheaper than retraining a whole model.</li>
+ </ul>
+ <p><b>How:</b> fit a function mapping the uncalibrated score → true probability, using a dataset of (score, outcome) pairs. Methods differ in what functions they fit and how.</p></div>`},
+
+/* ---------------------------------------------------------------- SECTION 1 */
+{lesson:"L1", lessonTitle:"Lesson 1 — Assessing calibration",
+ lessonLead:"Train a model on ICU data and measure whether its probabilities behave like probabilities.",
+ kind:"code", title:"Imports",
+ brian:`<p>This notebook needs numpy, pandas, scikit-learn and matplotlib. In the original workshop we also use the <code>ml_insights</code> package (imported as <code>mli</code>) and <code>betacal</code>. Here in the browser those two are pre-loaded as small stand-ins — <code>plot_reliability_diagram</code>, <code>SplineCalib</code>, <code>BetaCalibration</code>, and <code>cv_predictions</code> are already defined for you and behave the same way.</p>`,
+ code:`import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import log_loss, brier_score_loss, roc_auc_score
+from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LogisticRegression
+from sklearn.calibration import calibration_curve
+
+# ml_insights (mli) + betacal stand-ins are already loaded:
+#   plot_reliability_diagram(...), SplineCalib, BetaCalibration, cv_predictions(...)
+print("ready")`},
+
+{lesson:"L1", kind:"code", title:"Load & impute the MIMIC ICU data",
+ brian:`<p>This data is from the MIMIC ICU dataset. Each row is one hospital stay, with lots of lab values and vital-sign measurements, plus a flag for whether the patient died in the hospital — <code>hospital_expire_flag</code>. We'll build models predicting ICU mortality.</p>
+ <p>The data has many missing values. To keep the presentation simple we just impute the median of each column — not always the best strategy, but fine for illustrating calibration.</p>
+ <p><small>(In-browser note: the file is a trimmed, median-imputed subsample so training stays fast. The full data is 60k rows × 79 columns.)</small></p>`,
+ code:`lab_aug_df = pd.read_csv('calib_data_slim.csv')
+
+# Impute the median in each numeric column to replace NaNs
+for i in range(len(lab_aug_df.columns)):
+    if lab_aug_df.iloc[:, i].dtype != 'O':
+        col = lab_aug_df.iloc[:, i]
+        lab_aug_df.iloc[:, i] = col.fillna(col.median())
+
+# Subsample so in-browser training is responsive (keeps the ~11% mortality rate)
+lab_aug_df = lab_aug_df.sample(n=12000, random_state=42).reset_index(drop=True)
+lab_aug_df.shape`},
+
+{lesson:"L1", kind:"code", title:"Pick features and the target",
+ brian:`<p>To start we'll pick just six variables — really three measurements, each as a min and a max: BUN (blood urea nitrogen), WBC (white blood cell count), and systolic blood pressure. The point isn't to build the best model, just to have <i>a</i> model whose calibration we can study.</p>`,
+ code:`feature_set_1 = ['bun_min', 'bun_max', 'wbc_min', 'wbc_max', 'sysbp_max', 'sysbp_min']
+
+X_1 = lab_aug_df.loc[:, feature_set_1]
+y = lab_aug_df['hospital_expire_flag']
+X_1.head()`},
+
+{lesson:"L1", kind:"code", title:"Split into train / calibration / test",
+ brian:`<p>We divide the data three ways: <b>train</b> to build the model, <b>calibration</b> to later fit the calibration function, and <b>test</b> to evaluate. We start with 60% train, 5% calibration, leaving 35% for test — you want a big test set so comparisons between calibration methods are stable.</p>
+ <p>Note there's a lot of variance between different train/test splits. Don't over-conclude from a single random state — later we run it many times.</p>`,
+ code:`train_perc = .6
+calib_perc = .05
+test_perc  = 1 - train_perc - calib_perc
+rs = 42   # random state — used for the split AND the random forest
+
+# First carve off the test set...
+X_train_calib_1, X_test_1, y_train_calib_1, y_test_1 = train_test_split(
+    X_1, y, test_size=test_perc, random_state=rs)
+
+# ...then carve the calibration set out of what's left
+X_train_1, X_calib_1, y_train_1, y_calib_1 = train_test_split(
+    X_train_calib_1, y_train_calib_1,
+    test_size=calib_perc/(1-test_perc), random_state=rs)
+
+X_train_1.shape, X_calib_1.shape, X_test_1.shape`},
+
+{lesson:"L1", kind:"code", title:"Baseline positive rate",
+ brian:`<p>Before building any binary classifier I always check the baseline: what fraction of cases are positive? This tells you how balanced the data is and gives a reference point. Here about 11% of patients died — so a 30% prediction means one of the sicker patients.</p>`,
+ code:`np.mean(y_train_1)`},
+
+{lesson:"L1", kind:"code", title:"Fit a random forest",
+ brian:`<p>We fit a random forest of trees and use it to predict probabilities. A random forest's probability is just the fraction of trees voting "yes" — and you should <b>not</b> expect that to be well calibrated. 60% of trees voting yes doesn't mean a 60% probability of mortality.</p>
+ <p>We take column 1 of <code>predict_proba</code> — the probability of the positive class (death).</p>
+ <p><small>(In-browser: 200 trees instead of 500 to keep it snappy.)</small></p>`,
+ code:`rfmodel1 = RandomForestClassifier(n_estimators=200, class_weight='balanced_subsample',
+                                  random_state=rs, n_jobs=-1)
+rfmodel1.fit(X_train_1, y_train_1)
+
+rf1_preds_test_uncalib = rfmodel1.predict_proba(X_test_1)[:, 1]
+rf1_preds_test_uncalib[:8]`},
+
+{lesson:"L1", kind:"code", title:"Log-loss vs AUROC — and why AUROC ignores calibration",
+ brian:`<p>The metric I like for calibration is <b>log-loss</b> (a.k.a. cross-entropy, the negative mean log-likelihood). It penalizes you when you say 10% but it happens 30% of the time. It measures discrimination <i>and</i> calibration together.</p>
+ <p>AUROC (the C-statistic) only measures the quality of the <b>ranking</b> — it says nothing about calibration. Watch: if I divide every probability by 4, the AUROC is identical, but the log-loss gets much worse because the probabilities are now systematically too small.</p>`,
+ code:`print("AUROC :", roc_auc_score(y_test_1, rf1_preds_test_uncalib))
+print("logloss:", log_loss(y_test_1, rf1_preds_test_uncalib))
+print()
+print("Divide all probs by 4 ->")
+print("AUROC :", roc_auc_score(y_test_1, rf1_preds_test_uncalib/4), " (unchanged)")
+print("logloss:", log_loss(y_test_1, rf1_preds_test_uncalib/4), " (worse)")`},
+
+{lesson:"L1", kind:"code", title:"Brier score",
+ brian:`<p>The <b>Brier score</b> is the mean squared error between predicted probability and the true 0/1 outcome. Its key difference from log-loss: the worst a single case can cost is 1. So one very confident mistake gets lost in the shuffle over thousands of points — whereas log-loss would blow up to (near) infinity. Log-loss really punishes overconfidence, especially on the tails.</p>`,
+ code:`brier_score_loss(y_test_1, rf1_preds_test_uncalib)`},
+
+{lesson:"L1", kind:"code", title:"Reliability diagram (the default plot)",
+ brian:`<p>Now a qualitative view: the <b>reliability diagram</b>. We bin the predictions, and for each bin compare the average predicted probability (x) with the empirical fraction of positives (y). Perfect calibration hugs the line y = x. Points <b>above</b> the line = we under-predicted; <b>below</b> = we over-predicted.</p>
+ <p>The error bars show roughly a 95% range under perfect calibration — several bins drifting the same way, or points outside their bars, signal miscalibration.</p>`,
+ code:`rd = plot_reliability_diagram(y_test_1, rf1_preds_test_uncalib)
+plt.title('Reliability diagram — uncalibrated random forest');`},
+
+{lesson:"L1", kind:"code", title:"Show the histogram of bin counts",
+ brian:`<p>Context matters: most of the data sits in the first bin (low predicted probability). Mistakes way out on the right involve very little data, so they hurt less. Turning on the histogram shows where the mass actually is.</p>`,
+ code:`plt.figure(figsize=(8,6))
+plot_reliability_diagram(y_test_1, rf1_preds_test_uncalib, show_histogram=True);`},
+
+{lesson:"L1", kind:"code", title:"Custom bins",
+ brian:`<p>Because so much data is crammed near zero, let's split that first big bin into several fine bins, and aggregate the sparse high-probability region into wider bins. Now you can see three bins in a row sitting below the line — we're over-predicting mortality there.</p>`,
+ code:`plt.figure(figsize=(8,6))
+custom_bins_a = np.array([0, .01, .02, .03, .05, .1, .3, .5, .75, 1])
+plot_reliability_diagram(y_test_1, rf1_preds_test_uncalib,
+                         bins=custom_bins_a, show_histogram=True);`},
+
+{lesson:"L1", kind:"code", title:"Logit scaling — zoom into the tails",
+ brian:`<p>To examine the very small (and very large) probabilities, use <b>logit scaling</b>: it stretches the ends of the [0,1] interval and squishes the middle, so we spend more of the plot where the action is. Down at the low probabilities you can see we're actually <b>under</b>-predicting quite badly, then over-predicting in the mid-range.</p>`,
+ code:`plt.figure(figsize=(9,8))
+rd = plot_reliability_diagram(y_test_1, rf1_preds_test_uncalib,
+                              scaling='logit', bins=custom_bins_a, marker='.')
+plt.title('Uncalibrated — logit scale');`},
+
+{lesson:"L1", kind:"code", title:"Get the raw numbers back",
+ brian:`<p>The function returns a dictionary with the predicted probabilities, empirical probabilities and counts per bin. In the smallest bin we predicted about 0.0017 on average, but empirically the rate was about 0.012 — off by roughly a factor of seven. To log-loss that's a big deal; to Brier score it barely registers.</p>`,
+ code:`print(rd.keys())
+for p, e, c in zip(rd['pred_probs'], rd['emp_probs'], rd['bin_counts']):
+    print(f"pred={p:.4f}   emp={e:.4f}   n={int(c)}")`},
+
+{lesson:"L1", kind:"code", title:"sklearn also has calibration_curve",
+ brian:`<p>For reference, scikit-learn ships a <code>calibration_curve</code> function. It returns the same kind of bin averages but it's more basic — no error bars, no custom bin widths, no logit scaling — and it leaves the plotting to you.</p>`,
+ code:`prob_true, prob_pred = calibration_curve(y_test_1, rf1_preds_test_uncalib, n_bins=20)
+plt.figure(figsize=(6,6))
+plt.scatter(prob_pred, prob_true)
+plt.plot(np.linspace(0,1,11), np.linspace(0,1,11), color='k')
+plt.xlabel('predicted'); plt.ylabel('empirical'); plt.title('sklearn calibration_curve');`},
+
+/* ---------------------------------------------------------------- SECTION 2 */
+{lesson:"L2", lessonTitle:"Lesson 2 — Calibrating the model",
+ lessonLead:"Four methods — Platt, Isotonic, Beta, SplineCalib — first on a held-out set, then via cross-validation.",
+ kind:"note", title:"The plan",
+ brian:`<p>In Lesson 1 we saw our model isn't particularly well calibrated. To fix it we need a <b>calibration dataset</b> of (score, outcome) pairs. Two ways to get one: (A) hold out a chunk of data up front — simple, but it's data you can't train on; or (2) use <b>cross-validated predictions</b> on the training data — more work, but far more data-efficient.</p>
+ <p>Given a calibration set, every method just fits some function from uncalibrated score → true probability, then runs future predictions through it. We'll cover four: <b>Platt scaling</b>, <b>Isotonic regression</b>, <b>Beta calibration</b>, and <b>SplineCalib</b>.</p>`,
+ body:`<div class="cards">
+  <div class="card"><h4>Platt</h4><p>Fit a logistic curve (2 params). Little data needed, but very restrictive shape.</p></div>
+  <div class="card"><h4>Isotonic</h4><p>Piecewise-constant monotonic fit (PAV). No parametric form; needs lots of data, can be choppy.</p></div>
+  <div class="card"><h4>Beta</h4><p>3-param family that <i>includes</i> y=x, so it won't wreck already-calibrated data.</p></div>
+  <div class="card"><h4>SplineCalib</h4><p>Cubic smoothing spline, auto-tuned. Flexible and usually the best fit; a bit slower.</p></div>
+ </div>`},
+
+{lesson:"L2", kind:"code", title:"Predictions on the calibration & test sets",
+ brian:`<p>Approach A: we already set aside 5% (~600 rows here; ~3000 in the full workshop) for calibration. Let's get the model's raw predictions on both the calibration set and the test set to have them ready.</p>`,
+ code:`calibset_preds_uncalib_1 = rfmodel1.predict_proba(X_calib_1)[:, 1]
+testset_preds_uncalib_1  = rfmodel1.predict_proba(X_test_1)[:, 1]
+
+base_logloss = log_loss(y_test_1, testset_preds_uncalib_1)
+print("uncalibrated test log-loss:", base_logloss)`},
+
+{lesson:"L2", kind:"code", title:"Method 1 — Platt scaling",
+ brian:`<p>Platt scaling assumes a logistic relationship between the score and the true probability — so we literally fit a logistic regression with two parameters. It needs very little data, but if the true relationship isn't logistic it can only do so well; notice how the curve is forced to swing above, then below, then above the line.</p>
+ <p>One scikit-learn snag: its logistic regression is always regularized. To effectively turn that off we set <code>C</code> to a huge number.</p>`,
+ code:`lr = LogisticRegression(C=99999999999, solver='lbfgs')
+lr.fit(calibset_preds_uncalib_1.reshape(-1,1), y_calib_1)
+
+testset_platt_probs = lr.predict_proba(testset_preds_uncalib_1.reshape(-1,1))[:, 1]
+
+# The fitted curve over the test data
+plt.figure(figsize=(7,6))
+plot_reliability_diagram(y_test_1, testset_preds_uncalib_1, error_bars=False)
+tvec = np.linspace(.01, .99, 99)
+plt.plot(tvec, lr.predict_proba(tvec.reshape(-1,1))[:,1], lw=2, label='Platt curve')
+plt.legend(); plt.title('Platt scaling curve on test data');
+
+print("Platt   test log-loss:", log_loss(y_test_1, testset_platt_probs),
+      "  (uncalib:", round(base_logloss,4), ")")`},
+
+{lesson:"L2", kind:"code", title:"Method 2 — Isotonic regression",
+ brian:`<p>Isotonic regression fits a piecewise-constant, monotonically increasing function using the Pool-Adjacent-Violators algorithm. It assumes no parametric form, so with enough data it can beat Platt — but it's data-hungry and tends to overfit into long flat steps that jump sharply. With only a few thousand calibration points it can even make things <i>worse</i>.</p>`,
+ code:`iso = IsotonicRegression(out_of_bounds='clip')
+iso.fit(calibset_preds_uncalib_1, y_calib_1)
+
+testset_iso_probs = iso.predict(testset_preds_uncalib_1)
+
+plt.figure(figsize=(7,6))
+plot_reliability_diagram(y_test_1, testset_preds_uncalib_1, error_bars=False)
+tvec = np.linspace(.01, .99, 99)
+plt.plot(tvec, iso.predict(tvec), lw=2, label='Isotonic curve')
+plt.legend(); plt.title('Isotonic curve on test data');
+
+print("Isotonic test log-loss:", log_loss(y_test_1, testset_iso_probs),
+      "  (uncalib:", round(base_logloss,4), ")")`},
+
+{lesson:"L2", kind:"code", title:"Method 3 — Beta calibration",
+ brian:`<p>Beta calibration (Kull, Silva Filho &amp; Flach) noticed a flaw in Platt: because a logistic curve can't reproduce the line y = x, running already-calibrated data through it makes things worse. So they built a three-parameter family that <b>includes</b> y = x. It's fit as a logistic regression on the features log(s) and −log(1−s).</p>`,
+ code:`bc = BetaCalibration()
+bc.fit(calibset_preds_uncalib_1, y_calib_1)
+
+testset_beta_probs = bc.predict(testset_preds_uncalib_1)
+
+plt.figure(figsize=(7,6))
+plot_reliability_diagram(y_test_1, testset_preds_uncalib_1, error_bars=False)
+tvec = np.linspace(.01, .99, 99)
+plt.plot(tvec, bc.predict(tvec), lw=2, label='Beta curve')
+plt.legend(); plt.title('Beta calibration curve on test data');
+
+print("Beta    test log-loss:", log_loss(y_test_1, testset_beta_probs),
+      "  (uncalib:", round(base_logloss,4), ")")`},
+
+{lesson:"L2", kind:"code", title:"Method 4 — SplineCalib",
+ brian:`<p>SplineCalib fits a cubic smoothing spline. Its loss balances fitting the data against keeping the second derivative small (a smoothness penalty), and it auto-tunes that trade-off by cross-validation — so it runs many penalized logistic fits and picks the best. That's why it's a touch slower, but it's flexible and here it tends to fit the test data best.</p>`,
+ code:`splinecalib = SplineCalib()
+splinecalib.fit(calibset_preds_uncalib_1, y_calib_1)
+
+testset_splinecalib_probs = splinecalib.predict(testset_preds_uncalib_1)
+
+plt.figure(figsize=(7,6))
+plot_reliability_diagram(y_test_1, testset_preds_uncalib_1, error_bars=False)
+tvec = np.linspace(.01, .99, 99)
+plt.plot(tvec, splinecalib.predict(tvec), lw=2, label='SplineCalib curve')
+plt.legend(); plt.title('SplineCalib curve on test data');
+
+print("Spline  test log-loss:", log_loss(y_test_1, testset_splinecalib_probs),
+      "  (uncalib:", round(base_logloss,4), ")")`},
+
+{lesson:"L2", kind:"code", title:"Compare all four (held-out calibration set)",
+ brian:`<p>The honest way to compare is the numbers. Here's log-loss and Brier for every method on the test set. Remember: on any single split the ranking can jump around — isotonic in particular can look bad with a small calibration set. Don't crown a winner from one run.</p>`,
+ code:`rows = [
+    ("uncalibrated", testset_preds_uncalib_1),
+    ("Platt",        testset_platt_probs),
+    ("Isotonic",     testset_iso_probs),
+    ("Beta",         testset_beta_probs),
+    ("SplineCalib",  testset_splinecalib_probs),
+]
+print(f"{'method':<14}{'log-loss':>12}{'Brier':>12}")
+for name, p in rows:
+    print(f"{name:<14}{log_loss(y_test_1,p):>12.4f}{brier_score_loss(y_test_1,p):>12.4f}")
+
+# The calibrated reliability diagram for the best-behaved method:
+plt.figure(figsize=(7,6))
+plot_reliability_diagram(y_test_1, testset_splinecalib_probs)
+plt.title('Reliability diagram after SplineCalib');`},
+
+{lesson:"L2", kind:"code", title:"Approach 2 — cross-validated calibration data",
+ brian:`<p>Approach A spends 5% of the data. Approach 2 recovers it: split the <b>training</b> data into 5 folds, train the same model on 4 folds and predict the 5th, rotating through — now every training row has an out-of-fold prediction from a model that never saw it. Use those as the calibration set. We assume the fold-models calibrate like the full model.</p>
+ <p><small>(This trains 5 random forests — give it ~20–40s.)</small></p>`,
+ code:`cv_preds_train = cv_predictions(rfmodel1, X_train_1, y_train_1, clone_model=True)
+cv_preds_train1 = cv_preds_train[:, 1]
+print("cross-validated predictions shape:", cv_preds_train.shape)
+cv_preds_train1[:8]`},
+
+{lesson:"L2", kind:"code", title:"SplineCalib on the CV data vs the small calib set",
+ brian:`<p>Now fit SplineCalib on those cross-validated predictions — this calibration set is much bigger (the whole training set) so the curve is far less jumpy. Compare it to the curve we got from the tiny held-out set.</p>`,
+ code:`splinecalib_cv = SplineCalib()
+splinecalib_cv.fit(cv_preds_train1, y_train_1)
+
+testset_splinecalib_probs_cv = splinecalib_cv.predict(testset_preds_uncalib_1)
+
+plt.figure(figsize=(7,6))
+plot_reliability_diagram(y_train_1, cv_preds_train1, error_bars=False)
+tvec = np.linspace(.01, .99, 99)
+plt.plot(tvec, splinecalib.predict(tvec), lw=2, label='Spline (small calib set)')
+plt.plot(tvec, splinecalib_cv.predict(tvec), lw=2, label='Spline (CV calib set)')
+plt.legend(); plt.title('SplineCalib: small vs cross-validated calibration set');
+
+print("Spline (held-out) log-loss:", log_loss(y_test_1, testset_splinecalib_probs))
+print("Spline (CV)       log-loss:", log_loss(y_test_1, testset_splinecalib_probs_cv))`},
+
+{lesson:"L2", kind:"code", title:"All four methods, CV-calibrated",
+ brian:`<p>And here's every method calibrated on the cross-validated data. With more calibration data, isotonic usually recovers and the methods bunch closer together. Look at the whole table, not one cell.</p>
+ <p><small>(Trains 5 forests once; the calibrators are cheap.)</small></p>`,
+ code:`# Platt, Isotonic, Beta, Spline all fit on the CV predictions
+plattcv = LogisticRegression(C=99999999999).fit(cv_preds_train1.reshape(-1,1), y_train_1)
+isocv   = IsotonicRegression(out_of_bounds='clip').fit(cv_preds_train1, y_train_1)
+betacv  = BetaCalibration().fit(cv_preds_train1, y_train_1)
+
+res = {
+  "uncalibrated": testset_preds_uncalib_1,
+  "Platt (CV)":   plattcv.predict_proba(testset_preds_uncalib_1.reshape(-1,1))[:,1],
+  "Isotonic (CV)":isocv.predict(testset_preds_uncalib_1),
+  "Beta (CV)":    betacv.predict(testset_preds_uncalib_1),
+  "Spline (CV)":  testset_splinecalib_probs_cv,
+}
+print(f"{'method':<16}{'log-loss':>12}{'Brier':>12}")
+for name, p in res.items():
+    print(f"{name:<16}{log_loss(y_test_1,p):>12.4f}{brier_score_loss(y_test_1,p):>12.4f}")`},
+
+/* ---------------------------------------------------------------- SECTION 3 */
+{lesson:"LA", lessonTitle:"Advanced — synthetic ground truth & the unity prior",
+ lessonLead:"When we know the true calibration curve, we can see exactly what each method recovers.",
+ kind:"code", title:"Build a known 'true' calibration function",
+ brian:`<p>In the advanced material we make our own ground truth. This little helper builds a piecewise-linear function; we'll treat it as the <b>true</b> calibration curve — i.e. if x is the model's raw score, f(x) is the real probability that y = 1. That lets us generate synthetic data and check whether a calibrator recovers the curve we planted.</p>`,
+ code:`def make_pw_linear_fn(xvals, yvals):
+    xv, yv = np.asarray(xvals), np.asarray(yvals)
+    def lin_func(x):
+        if isinstance(x, np.ndarray):
+            return np.array([lin_func(i) for i in x])
+        if x <= xv[0]:  return yv[0]
+        if x >= xv[-1]: return yv[-1]
+        j = np.max(np.where(x > xv)[0])
+        return yv[j] + (x-xv[j])*(yv[j+1]-yv[j])/(xv[j+1]-xv[j])
+    return lin_func
+
+xv = np.array([0, .1, .4, .7, .9, 1])
+yv = np.array([0, .4, .7, .8, .95, 1])
+f1 = make_pw_linear_fn(xv, yv)
+
+tvec = np.linspace(0, 1, 1001)
+plt.figure(figsize=(6,6))
+plt.plot(tvec, f1(tvec), lw=2, label='true calibration f(x)')
+plt.plot(tvec, tvec, 'k--', label='y = x')
+plt.legend(); plt.title('A synthetic "true" calibration curve');`},
+
+{lesson:"LA", kind:"code", title:"Generate synthetic data and recover the curve",
+ brian:`<p>Now draw raw scores uniformly, pass them through f to get true probabilities, and flip coins to make 0/1 labels. Then fit our calibrators and see who recovers the planted curve best. This is the setup the workshop uses to study the <b>unity prior</b> — a prior nudging SplineCalib toward y = x where data is thin, so it doesn't invent wild wiggles in sparse regions. <small>(That prior lives in the real <code>ml_insights.SplineCalib</code>; the lightweight in-browser stand-in here doesn't implement it, so the curve you see is the plain penalized-spline fit.)</small></p>`,
+ code:`rng = np.random.RandomState(0)
+N = 4000
+scores = rng.rand(N)
+true_p = f1(scores)
+labels = (rng.rand(N) < true_p).astype(int)
+
+spl = SplineCalib().fit(scores, labels)
+bet = BetaCalibration().fit(scores, labels)
+iso = IsotonicRegression(out_of_bounds='clip').fit(scores, labels)
+
+plt.figure(figsize=(7,7))
+plt.plot(tvec, f1(tvec), 'k', lw=3, label='truth')
+plt.plot(tvec, spl.predict(tvec), lw=2, label='SplineCalib')
+plt.plot(tvec, bet.predict(tvec), lw=2, label='Beta')
+plt.plot(tvec, iso.predict(tvec), lw=1.5, alpha=.8, label='Isotonic')
+plt.plot(tvec, tvec, 'k--', alpha=.4)
+plt.legend(); plt.title('Recovering the true curve from synthetic data');`},
+
+{lesson:"LA", kind:"note", title:"Multiclass calibration & wrap-up",
+ brian:`<p>Everything so far was binary. Multiclass calibration is more involved — a common approach is one-vs-rest: calibrate each class's score against "is it this class or not", then renormalize so the probabilities sum to one. The workshop demonstrates this on a random forest's MNIST outputs.</p>
+ <p>That example needs the MNIST prediction files, which aren't bundled into this browser build, so it's left as a pointer rather than a live cell. Thanks for working through the walkthrough!</p>`,
+ body:`<div class="note-body"><ul>
+   <li><b>Held-out vs CV</b> — CV calibration is more data-efficient; prefer it unless you have data to burn.</li>
+   <li><b>Log-loss is your compass</b> — reliability diagrams are for intuition; the number decides.</li>
+   <li><b>Don't trust one split</b> — variance across random states is large.</li>
+   <li><b>SplineCalib</b> is a strong default; <b>Beta</b> won't harm already-calibrated scores; <b>Isotonic</b> needs lots of data.</li>
+ </ul></div>`},
+];
+
+/* ============================================================================
+   Python bootstrap: helper stand-ins for ml_insights / betacal + the run harness.
+   Matplotlib is themed to a clean, conference-figure style (mono fonts, minimal
+   spines, restrained color cycle).
+   ============================================================================ */
+const BOOTSTRAP = String.raw`
+import ast, io, base64, contextlib, traceback, warnings
+warnings.filterwarnings('ignore')
+import numpy as np
+import matplotlib
+matplotlib.use('AGG')
+import matplotlib.pyplot as plt
+
+_PALETTE = ['#3a3fb0', '#b23a48', '#1f7a5c', '#c77d1f', '#5c4b8a', '#3b8ea5']
+plt.rcParams.update({
+    'figure.figsize': (7, 5), 'figure.dpi': 120, 'savefig.dpi': 120,
+    'figure.facecolor': 'white', 'savefig.facecolor': 'white', 'axes.facecolor': 'white',
+    'font.family': 'monospace', 'font.size': 9,
+    'axes.titlesize': 10, 'axes.titleweight': 'bold', 'axes.labelsize': 9,
+    'axes.edgecolor': '#3a3a3a', 'axes.linewidth': 0.8,
+    'axes.spines.top': False, 'axes.spines.right': False,
+    'axes.grid': True, 'grid.color': '#cfcfcf', 'grid.linewidth': 0.5, 'grid.alpha': 0.7,
+    'axes.prop_cycle': plt.cycler(color=_PALETTE),
+    'legend.frameon': False, 'legend.fontsize': 8,
+    'xtick.labelsize': 8, 'ytick.labelsize': 8,
+    'xtick.color': '#3a3a3a', 'ytick.color': '#3a3a3a',
+    'text.color': '#1a1a1a', 'axes.labelcolor': '#1a1a1a',
+    'lines.linewidth': 1.8, 'lines.markersize': 6,
+})
+
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
+from sklearn.preprocessing import SplineTransformer
+from sklearn.base import clone
+from sklearn.model_selection import cross_val_predict
+
+_EPS = 1e-6
+def _logit(p):
+    p = np.clip(np.asarray(p, dtype=float), 1e-4, 1-1e-4)
+    return np.log(p/(1-p))
+
+def plot_reliability_diagram(y, x, bins=15, error_bars=True, show_histogram=False,
+                             scaling=None, marker='o', color=None, label=None, ax=None):
+    """Lightweight stand-in for ml_insights.plot_reliability_diagram."""
+    y = np.asarray(y, dtype=float); x = np.asarray(x, dtype=float)
+    if np.isscalar(bins):
+        edges = np.linspace(0, 1, int(bins)+1)
+    else:
+        edges = np.asarray(bins, dtype=float)
+    idx = np.clip(np.digitize(x, edges[1:-1]), 0, len(edges)-2)
+    pred, emp, cnt = [], [], []
+    for b in range(len(edges)-1):
+        m = idx == b
+        c = int(m.sum()); cnt.append(c)
+        if c > 0:
+            pred.append(x[m].mean()); emp.append(y[m].mean())
+        else:
+            pred.append(np.nan); emp.append(np.nan)
+    pred = np.array(pred); emp = np.array(emp); cnt = np.array(cnt)
+
+    fig = plt.gcf()
+    if show_histogram:
+        fig.clf()
+        gs = fig.add_gridspec(3, 1)
+        ax1 = fig.add_subplot(gs[:2, 0]); ax2 = fig.add_subplot(gs[2, 0], sharex=None)
+    else:
+        ax1 = ax if ax is not None else plt.gca(); ax2 = None
+
+    T = _logit if scaling == 'logit' else (lambda v: np.asarray(v, dtype=float))
+    ok = ~np.isnan(pred)
+    # diagonal
+    dl = np.linspace(0.001, 0.999, 300)
+    ax1.plot(T(dl), T(dl), '-', color='#555', lw=1, alpha=.7, zorder=1)
+    # error bars (normal approx)
+    if error_bars:
+        with np.errstate(invalid='ignore'):
+            se = np.sqrt(np.clip(emp*(1-emp), 0, None)/np.maximum(cnt, 1))
+        lo = np.clip(emp-1.96*se, 1e-4, 1-1e-4); hi = np.clip(emp+1.96*se, 1e-4, 1-1e-4)
+        ax1.vlines(T(pred[ok]), T(lo[ok]), T(hi[ok]), color='#9a9a9a', lw=1, zorder=2)
+    ax1.plot(T(pred[ok]), T(emp[ok]), marker, color=(color or '#3a3fb0'),
+             label=label, zorder=3, ms=6.5)
+    if scaling == 'logit':
+        ticks = np.array([.001,.005,.01,.02,.05,.1,.2,.3,.5,.7,.9,.97,.99])
+        ax1.set_xticks(_logit(ticks)); ax1.set_xticklabels([str(t) for t in ticks], fontsize=7.5, rotation=45)
+        ax1.set_yticks(_logit(ticks)); ax1.set_yticklabels([str(t) for t in ticks], fontsize=7.5)
+    ax1.set_xlabel('predicted probability'); ax1.set_ylabel('empirical probability')
+    if label: ax1.legend()
+    if ax2 is not None:
+        centers = (edges[:-1]+edges[1:])/2
+        widths = np.diff(edges)*0.9
+        ax2.bar(centers, cnt, width=widths, color='#8a90d0', alpha=.85, edgecolor='none')
+        ax2.set_ylabel('count'); ax2.set_xlabel('predicted probability'); ax2.set_xlim(0,1)
+    return {'pred_probs': pred, 'emp_probs': emp, 'bin_counts': cnt}
+
+class BetaCalibration:
+    """Beta calibration: logistic regression on [log s, -log(1-s)]."""
+    def fit(self, x, y):
+        x = np.clip(np.asarray(x, dtype=float), _EPS, 1-_EPS)
+        Z = np.column_stack([np.log(x), -np.log(1-x)])
+        self.lr_ = LogisticRegression(C=1e6, solver='lbfgs', max_iter=2000).fit(Z, y)
+        return self
+    def predict(self, x):
+        x = np.clip(np.asarray(x, dtype=float), _EPS, 1-_EPS)
+        Z = np.column_stack([np.log(x), -np.log(1-x)])
+        return self.lr_.predict_proba(Z)[:, 1]
+
+class SplineCalib:
+    """Stand-in for ml_insights.SplineCalib: penalized spline logistic fit, CV-tuned."""
+    def __init__(self, n_knots=8, degree=3):
+        self.n_knots = n_knots; self.degree = degree
+    def fit(self, x, y):
+        x = np.asarray(x, dtype=float).reshape(-1, 1)
+        self.st_ = SplineTransformer(n_knots=self.n_knots, degree=self.degree,
+                                     include_bias=False).fit(x)
+        Xs = self.st_.transform(x)
+        self.lr_ = LogisticRegressionCV(Cs=15, cv=4, max_iter=3000, solver='lbfgs',
+                                        scoring='neg_log_loss').fit(Xs, y)
+        return self
+    def predict(self, x):
+        x = np.asarray(x, dtype=float).reshape(-1, 1)
+        return self.lr_.predict_proba(self.st_.transform(x))[:, 1]
+
+def cv_predictions(model, X, y, clone_model=True, cv=5):
+    m = clone(model) if clone_model else model
+    return cross_val_predict(m, X, y, cv=cv, method='predict_proba', n_jobs=1)
+
+# ---- run harness -----------------------------------------------------------
+def run_cell(code):
+    plt.close('all')
+    out = io.StringIO(); result = None; err = None
+    try:
+        tree = ast.parse(code)
+        last = None
+        if tree.body and isinstance(tree.body[-1], ast.Expr):
+            last = tree.body.pop()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            if tree.body:
+                exec(compile(tree, '<cell>', 'exec'), globals())
+            if last is not None:
+                result = eval(compile(ast.Expression(last.value), '<cell>', 'eval'), globals())
+    except Exception:
+        err = traceback.format_exc()
+    imgs = []
+    for num in plt.get_fignums():
+        fig = plt.figure(num)
+        buf = io.BytesIO()
+        try:
+            fig.savefig(buf, format='png', bbox_inches='tight')
+            imgs.append(base64.b64encode(buf.getvalue()).decode())
+        except Exception:
+            pass
+    plt.close('all')
+    rep = None
+    if result is not None:
+        try: rep = repr(result)
+        except Exception: rep = '<unrepr-able>'
+        if rep is not None and len(rep) > 6000: rep = rep[:6000] + ' …(truncated)'
+    return {'stdout': out.getvalue(), 'result': rep, 'images': imgs, 'error': err}
+`;
+
+/* ============================================================================
+   UI wiring
+   ============================================================================ */
+let pyodide = null;
+let ready = false;
+const codeSteps = [];      // {textarea, runBtn, dot, output, ran, idx, num, title}
+const sectionEls = [];     // {id, tocLink}
+
+function bootlog(m){ const e=document.getElementById('bootlog'); if(e) e.textContent=m; }
+function setKernel(state, text){
+  document.getElementById('kdot').className = 'dot ' + (state||'');
+  document.getElementById('kstat').textContent = text;
+}
+function el(tag, cls, html){ const n=document.createElement(tag); if(cls)n.className=cls; if(html!=null)n.innerHTML=html; return n; }
+
+function buildUI(){
+  const content = document.getElementById('content');
+  const toc = document.getElementById('toc');
+  let codeIdx = 0, cellNo = 0;
+  let sec = -1, sub = 0;
+  let curTocSec = null;
+
+  STEPS.forEach((s) => {
+    // new section header?
+    if (s.lessonTitle){
+      sec++; sub = 0;
+      const clean = s.lessonTitle.replace(/^[^—]*—\s*/,'');
+      const secId = 'sec-'+sec;
+      const head = el('div','sec-head'); head.id = secId;
+      head.appendChild(el('h2', null, '<span class="n">'+sec+'</span>'+clean));
+      if (s.lessonLead) head.appendChild(el('p','lead', s.lessonLead));
+      content.appendChild(head);
+      // toc section
+      curTocSec = el('div','toc-sec');
+      const a = el('a', null, '<span class="n">'+sec+'</span>'+clean); a.href='#'+secId;
+      a.dataset.target = secId;
+      curTocSec.appendChild(a);
+      toc.appendChild(curTocSec);
+      sectionEls.push({id:secId, tocLink:a});
+    }
+    sub++;
+    const num = sec + '.' + sub;
+    const stepId = 'step-' + sec + '-' + sub;
+
+    const step = el('div','step'); step.id = stepId;
+    step.appendChild(el('div','step-h','<span class="sn">'+num+'</span><span class="st">'+(s.title||'')+'</span>'));
+
+    // toc sub-entry
+    if (curTocSec){
+      const sa = el('a','toc-sub', num+'  '+(s.title||'')); sa.href='#'+stepId;
+      curTocSec.appendChild(sa);
+    }
+
+    if (s.brian){
+      const c = el('div','comment');
+      c.appendChild(el('div','who','Commentary · Brian Lucena'));
+      c.insertAdjacentHTML('beforeend', s.brian);
+      step.appendChild(c);
+    }
+    if (s.body){ step.appendChild(el('div','note-body', s.body)); }
+
+    if (s.kind === 'code'){
+      const idx = codeIdx++; cellNo++;
+      const cell = el('div','cell');
+      const head = el('div','cell-head');
+      head.appendChild(el('span','in','In ['+cellNo+']'));
+      head.appendChild(el('span','lang','Python'));
+      head.appendChild(el('span','grow'));
+      head.appendChild(el('span','runhint','⌘/Ctrl+↵'));
+      const runBtn = el('button','btn solid runbtn','Run'); runBtn.disabled = true;
+      head.appendChild(runBtn);
+      const dot = el('span','dot');
+      head.appendChild(dot);
+      cell.appendChild(head);
+
+      const ta = el('textarea'); ta.value = s.code; ta.spellcheck = false;
+      ta.rows = Math.min(26, s.code.split('\n').length + 1);
+      cell.appendChild(ta);
+
+      const output = el('div','output');
+      cell.appendChild(output);
+      step.appendChild(cell);
+
+      const rec = {idx, textarea:ta, runBtn, dot, output, ran:false, num, title:s.title||''};
+      codeSteps.push(rec);
+      runBtn.onclick = () => runUpTo(idx);
+      ta.addEventListener('keydown', (e)=>{
+        if((e.ctrlKey||e.metaKey) && e.key==='Enter'){ e.preventDefault(); runUpTo(idx); }
+        if(e.key==='Tab'){ e.preventDefault(); const st=ta.selectionStart, en=ta.selectionEnd;
+          ta.value = ta.value.slice(0,st)+'    '+ta.value.slice(en); ta.selectionStart=ta.selectionEnd=st+4; }
+      });
+    }
+    content.appendChild(step);
+  });
+
+  // scrollspy on sections
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(en=>{
+      if(en.isIntersecting){
+        sectionEls.forEach(se=> se.tocLink.classList.toggle('active', se.id===en.target.id));
+      }
+    });
+  }, {rootMargin:'-8% 0px -82% 0px'});
+  sectionEls.forEach(se=> obs.observe(document.getElementById(se.id)));
+}
+
+function renderOutput(rec, res){
+  rec.output.innerHTML = '';
+  if (res.stdout && res.stdout.trim()){
+    const b = el('div','out-block'); b.appendChild(el('div','out-lab','stdout'));
+    const p = el('pre'); p.textContent = res.stdout; b.appendChild(p); rec.output.appendChild(b);
+  }
+  const imgs = res.images || [];
+  imgs.forEach((img, k)=>{
+    const b = el('div','figure');
+    const im = el('img'); im.src = 'data:image/png;base64,'+img; b.appendChild(im);
+    const suffix = imgs.length > 1 ? String.fromCharCode(97+k) : '';
+    b.appendChild(el('div','figcap','<span class="fn">Figure '+rec.num+suffix+'.</span> '+rec.title));
+    rec.output.appendChild(b);
+  });
+  if (res.result != null){
+    const b = el('div','out-block'); b.appendChild(el('div','out-lab','Out ['+rec.num+']'));
+    const p = el('pre'); p.textContent = res.result; b.appendChild(p); rec.output.appendChild(b);
+  }
+  if (res.error){
+    const b = el('div','out-block err'); b.appendChild(el('div','out-lab','traceback'));
+    const p = el('pre'); p.textContent = res.error; b.appendChild(p); rec.output.appendChild(b);
+  }
+}
+
+async function runOne(rec){
+  if(!ready) return false;
+  rec.dot.className = 'dot run';
+  rec.runBtn.disabled = true;
+  rec.output.innerHTML = '<div class="out-block"><div class="out-lab">running…</div></div>';
+  try{
+    pyodide.globals.set('__code__', rec.textarea.value);
+    const resProxy = await pyodide.runPythonAsync('run_cell(__code__)');
+    const res = resProxy.toJs({dict_converter: Object.fromEntries});
+    resProxy.destroy && resProxy.destroy();
+    renderOutput(rec, res);
+    if(res.error){ rec.dot.className='dot err'; rec.ran=false; return false; }
+    rec.dot.className='dot ok'; rec.ran=true; return true;
+  }catch(e){
+    renderOutput(rec, {error:String(e)});
+    rec.dot.className='dot err'; rec.ran=false; return false;
+  }finally{
+    rec.runBtn.disabled = false;
+  }
+}
+
+let running = false;
+async function runUpTo(idx){
+  if(!ready || running) return;
+  running = true;
+  try{
+    for(let i=0;i<=idx;i++){
+      const rec = codeSteps[i];
+      if(i<idx && rec.ran) continue;
+      const ok = await runOne(rec);
+      if(!ok){ rec.textarea.scrollIntoView({behavior:'smooth', block:'center'}); break; }
+    }
+  } finally { running = false; }
+}
+
+// ---- theme toggle ---------------------------------------------------------
+function applyThemeLabel(){
+  const t = document.documentElement.dataset.theme;
+  document.getElementById('themeToggle').textContent = (t === 'light') ? 'Dark' : 'Light';
+}
+document.getElementById('themeToggle').onclick = ()=>{
+  const cur = document.documentElement.dataset.theme;
+  const next = (cur === 'light') ? 'dark' : 'light';
+  document.documentElement.dataset.theme = next;
+  localStorage.setItem('cw-theme', next);
+  applyThemeLabel();
+};
+applyThemeLabel();
+
+document.getElementById('runAll').onclick = async ()=>{
+  if(!ready||running) return;
+  await runUpTo(codeSteps.length-1);
+};
+document.getElementById('resetAll').onclick = async ()=>{
+  if(!ready) return;
+  setKernel('run','resetting…');
+  await pyodide.runPythonAsync('globals().clear()');
+  await pyodide.runPythonAsync(BOOTSTRAP);
+  codeSteps.forEach(r=>{ r.ran=false; r.dot.className='dot'; r.output.innerHTML=''; });
+  setKernel('ok','ready');
+};
+
+async function boot(){
+  buildUI();
+  setKernel('run','loading Pyodide…');
+  try{
+    bootlog('loading pyodide core…');
+    pyodide = await loadPyodide();
+    bootlog('loading numpy · pandas · scikit-learn · scipy · matplotlib…');
+    await pyodide.loadPackage(['numpy','pandas','scikit-learn','scipy','matplotlib']);
+    bootlog('fetching dataset…');
+    const resp = await fetch('calib_data_slim.csv');
+    if(!resp.ok) throw new Error('Could not fetch calib_data_slim.csv ('+resp.status+'). Serve this folder over http (see note).');
+    const buf = new Uint8Array(await resp.arrayBuffer());
+    pyodide.FS.writeFile('calib_data_slim.csv', buf);
+    bootlog('initialising helpers…');
+    await pyodide.runPythonAsync(BOOTSTRAP);
+    ready = true;
+    setKernel('ok','ready');
+    codeSteps.forEach(r=> r.runBtn.disabled=false);
+    document.getElementById('boot').style.display='none';
+  }catch(e){
+    bootlog('ERROR: '+e.message);
+    setKernel('err','failed');
+    const bl=document.getElementById('bootlog');
+    bl.innerHTML += '<br><br>If you opened this file directly (file://), browsers block fetch. Run a local server in this folder, e.g.<br><code>python3 -m http.server 8000</code><br>then open <code>http://localhost:8000/calib.html</code>';
+  }
+}
+
+(function(){
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/pyodide/v0.28.0/full/pyodide.js';
+  s.onload = boot;
+  s.onerror = ()=>{ bootlog('Failed to load Pyodide from CDN — check your internet connection.'); };
+  document.head.appendChild(s);
+})();
+</script>
+</body>
+</html>
