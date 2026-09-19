@@ -212,6 +212,7 @@ const TOOLS = [
   { title: "minidraw — Shared Canvas", href: "/tools/draw.html", date: "2026-06-14", tag: "dev" },
   { title: "Gemini Flash TTS — Cost & Lyric Sync", href: "/tools/tts.html", date: "2026-06-21", tag: "ai" },
   { title: "Drill Forge — Pronunciation Drills", href: "/tools/drill_forge.html", date: "2026-08-23", tag: "learning" },
+  { title: "The Petersburg Line — Science Metro", href: "/tools/pantheon.html", date: "2026-09-13", tag: "learning" },
 ];
 
 TOOLS.sort((a, b) => b.date.localeCompare(a.date));
@@ -244,7 +245,7 @@ function render() {
   const q = search.value.toLowerCase();
   const filtered = TOOLS.filter(t => {
     const matchTag = !activeTag || t.tag === activeTag;
-    const matchSearch = !q || t.title.toLowerCase().includes(q) || t.tag.includes(q) || t.date.includes(q);
+    const matchSearch = !q || t.title.toLowerCase().includes(q) || t.tag.includes(q) || t.date.includes(q) || t.href.toLowerCase().includes(q);
     return matchTag && matchSearch;
   });
 
