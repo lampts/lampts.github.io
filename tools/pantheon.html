@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Petersburg Line — a time-travel metro of science</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F1E6;
+  --card:#FFFDF7;
+  --ink:#14120E;
+  --ink-soft:#4A453B;
+  --rule:#14120E;
+  --accent:#FBD45B;
+  --m1:#D6232B;
+  --m2:#0B57B0;
+  --m3:#12833C;
+  --m4:#E07A1F;
+  --shadow:3px 3px 0px #14120E;
+  --shadow-lg:6px 6px 0px #14120E;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#15130F;
+    --card:#1F1C16;
+    --ink:#F5F1E6;
+    --ink-soft:#BDB6A6;
+    --rule:#F5F1E6;
+    --m1:#F0564F;
+    --m2:#5B94F0;
+    --m3:#3FBF6A;
+    --m4:#F2A24C;
+    --shadow:3px 3px 0px #F5F1E6;
+    --shadow-lg:6px 6px 0px #F5F1E6;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#15130F; --card:#1F1C16; --ink:#F5F1E6; --ink-soft:#BDB6A6;
+  --m1:#F0564F; --m2:#5B94F0; --m3:#3FBF6A; --m4:#F2A24C;
+  --shadow:3px 3px 0px #F5F1E6; --shadow-lg:6px 6px 0px #F5F1E6;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"IBM Plex Serif",Georgia,serif;
+  line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:44rem;margin:0 auto;padding:20px 16px 96px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+
+/* ---------- ticket hero ---------- */
+.ticket{
+  background:var(--accent);
+  color:#14120E;
+  border:3px solid #14120E;
+  box-shadow:6px 6px 0px #14120E;
+  padding:18px 18px 14px;
+  position:relative;
+}
+.ticket .bars{display:flex;gap:5px;margin-bottom:14px}
+.ticket .bars i{height:9px;flex:1;border:2px solid #14120E;display:block}
+.ticket h1{
+  font-family:"IBM Plex Mono",monospace;
+  font-weight:700;
+  font-size:clamp(26px,7.4vw,42px);
+  line-height:1.02;
+  margin:0 0 6px;
+  letter-spacing:-0.02em;
+}
+.ticket .sub{font-size:15px;margin:0 0 12px;max-width:32ch}
+.ticket .stub{
+  border-top:2px dashed #14120E;padding-top:10px;
+  display:flex;flex-wrap:wrap;gap:6px 18px;
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+}
+
+/* ---------- controls ---------- */
+.bar{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  margin:20px 0 6px;
+}
+button{font-family:"IBM Plex Mono",monospace;cursor:pointer}
+.btn{
+  background:var(--card);color:var(--ink);
+  border:2px solid var(--rule);
+  box-shadow:var(--shadow);
+  padding:7px 12px;font-size:12px;font-weight:600;
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.btn:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--rule)}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--rule)}
+.btn[aria-pressed="true"]{background:var(--accent);color:#14120E;border-color:#14120E;box-shadow:3px 3px 0 #14120E}
+.spacer{flex:1}
+.passport{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+  border:2px solid var(--rule);padding:6px 10px;background:var(--card);
+}
+.meter{height:6px;background:var(--card);border:2px solid var(--rule);margin:10px 0 22px}
+.meter i{display:block;height:100%;background:var(--accent);width:0%;transition:width .25s ease}
+
+/* ---------- metro line ---------- */
+.era{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:700;
+  margin:26px 0 10px 30px;padding-left:26px;position:relative;color:var(--ink);
+}
+.era::before{
+  content:"";position:absolute;left:-6px;top:2px;width:14px;height:14px;
+  background:var(--c);border:3px solid var(--rule);border-radius:50%;
+}
+.era small{display:block;font-weight:500;color:var(--ink-soft);font-size:11px;letter-spacing:0}
+
+.station{
+  position:relative;margin-left:30px;border-left:6px solid var(--c);
+  padding:2px 0 20px 30px;
+}
+.station:last-child{border-left-color:transparent}
+.dot{
+  position:absolute;left:-13px;top:6px;width:20px;height:20px;border-radius:50%;
+  background:var(--paper);border:5px solid var(--c);
+}
+.station.done .dot{background:var(--accent);border-color:var(--rule)}
+.stbtn{
+  display:block;width:100%;text-align:left;background:var(--card);
+  border:2px solid var(--rule);box-shadow:var(--shadow);
+  padding:10px 12px;font-family:inherit;color:var(--ink);
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.stbtn:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--rule)}
+.stbtn .yr{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:700;color:var(--c);letter-spacing:.04em}
+.stbtn .nm{font-size:18px;font-weight:600;line-height:1.2;margin:2px 0 3px}
+.stbtn .tg{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-soft)}
+.stbtn .stamp{float:right;font-size:15px}
+
+/* ---------- rubber-stamp seal (visited) ---------- */
+.seal{
+  --sink:var(--m1);
+  display:inline-flex;align-items:center;justify-content:center;
+  width:40px;height:40px;flex:none;border-radius:50%;
+  border:2.5px solid var(--sink);color:var(--sink);
+  font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:20px;line-height:1;
+  transform:rotate(-13deg);opacity:.9;position:relative;
+  mix-blend-mode:multiply;
+}
+.seal::before{content:"";position:absolute;inset:3px;border:1.5px solid var(--sink);border-radius:50%}
+.stbtn .seal{float:right;margin:-1px 0 0 8px}
+.seal-corner{position:absolute;top:8px;right:8px;width:36px;height:36px;font-size:17px;
+  mix-blend-mode:normal;background:rgba(255,253,247,.82);box-shadow:0 1px 5px rgba(20,18,14,.35)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .seal{mix-blend-mode:screen}}
+:root[data-theme="dark"] .seal{mix-blend-mode:screen}
+
+/* ---------- wall of fame ---------- */
+.wall{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(min-width:560px){.wall{grid-template-columns:repeat(3,1fr)}}
+.frame{
+  position:relative;
+  background:var(--card);border:3px solid var(--rule);box-shadow:var(--shadow);
+  padding:8px;font-family:inherit;color:var(--ink);text-align:left;
+  transition:transform .08s ease, box-shadow .08s ease;
+}
+.frame:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--rule)}
+.frame svg,.frame img{display:block;width:100%;height:auto;border:2px solid var(--rule)}
+.frame img{aspect-ratio:5/6;object-fit:cover;object-position:center 18%;background:#fff}
+.panel .top img{width:104px;height:125px;flex:none;object-fit:cover;object-position:center 18%;
+  border:2px solid #14120E;background:#fff}
+.credit{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-soft);
+  padding:0 14px 12px;line-height:1.5;word-break:break-word}
+.credit a{color:var(--ink-soft)}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+  border:2px solid var(--rule);padding:6px 10px;background:var(--card);white-space:nowrap}
+.chip.on{background:var(--accent);color:#14120E;border-color:#14120E}
+.frame .plate{margin-top:7px}
+.frame .plate b{display:block;font-size:13px;line-height:1.2}
+.frame .plate span{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-soft)}
+
+/* ---------- detail ---------- */
+.overlay{
+  position:fixed;inset:0;background:rgba(20,18,14,.62);
+  display:none;align-items:flex-start;justify-content:center;
+  padding:16px;overflow-y:auto;z-index:50;
+}
+.overlay.open{display:flex}
+.panel{
+  background:var(--card);border:3px solid var(--rule);box-shadow:var(--shadow-lg);
+  max-width:34rem;width:100%;margin:auto;
+}
+.panel .top{position:relative;display:flex;gap:12px;padding:14px;border-bottom:3px solid var(--rule);background:var(--c);}
+.panel .top svg{width:104px;height:auto;flex:none;border:2px solid #14120E;background:#fff}
+.panel .top .who{color:#fff;min-width:0}
+.panel .top .who h2{margin:0;font-size:21px;line-height:1.15;font-weight:600}
+.panel .top .who .ru{font-family:"IBM Plex Mono",monospace;font-size:12px;opacity:.9;word-break:break-word}
+.panel .top .who .dt{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;margin-top:6px;
+  background:var(--accent);color:#14120E;display:inline-block;padding:1px 6px;border:2px solid #14120E}
+.panel .body{padding:14px}
+.panel .body p{margin:0 0 12px;font-size:16px}
+.panel .lbl{font-family:"IBM Plex Mono",monospace;font-size:10px;font-weight:700;color:var(--ink-soft);margin-bottom:3px}
+.puzzle{border:2px solid var(--rule);padding:10px;margin:0 0 12px;background:var(--paper)}
+.answer{display:none;margin-top:9px;padding-top:9px;border-top:2px dashed var(--rule);font-size:15px}
+.answer.show{display:block}
+.foot{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 14px;align-items:center}
+.wikilink{
+  font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+  border:2px solid var(--rule);box-shadow:var(--shadow);padding:7px 12px;
+  color:var(--ink);text-decoration:none;background:var(--card)
+}
+.wikilink:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--rule)}
+.note{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-soft);padding:0 14px 14px;line-height:1.5}
+
+.done-banner{
+  border:3px solid var(--rule);background:var(--accent);color:#14120E;
+  padding:14px;margin-top:26px;box-shadow:var(--shadow);display:none
+}
+.done-banner.show{display:block}
+.done-banner p{margin:0;font-size:15px}
+
+footer{margin-top:34px;border-top:2px solid var(--rule);padding-top:12px;
+  font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-soft);line-height:1.7}
+footer a{color:var(--ink-soft)}
+:focus-visible{outline:3px solid var(--m4);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="ticket">
+    <div class="bars"><i style="background:#D6232B"></i><i style="background:#0B57B0"></i><i style="background:#12833C"></i><i style="background:#FBD45B"></i></div>
+    <h1 id="t-title">THE PETERSBURG LINE</h1>
+    <p class="sub" id="t-sub">One metro line, 21 stations, 300 years. Every stop is a person who worked where your dad went to school.</p>
+    <div class="stub mono">
+      <span id="t-stub1">1724 → TODAY</span>
+      <span id="t-stub2">VASILIEVSKY ISLAND</span>
+      <span id="t-stub3">KEEP THIS TICKET</span>
+    </div>
+  </div>
+
+  <div class="bar">
+    <button class="btn" id="v-line" aria-pressed="true">Metro line</button>
+    <button class="btn" id="v-wall" aria-pressed="false">Wall of fame</button>
+    <span class="spacer"></span>
+    <button class="btn" id="lang" aria-pressed="false">VI</button>
+  </div>
+  <div class="bar" style="margin-top:0">
+    <span class="passport mono" id="pass">0 / 21</span>
+    <button class="btn" id="reset">Clear stamps</button>
+    <span class="spacer"></span>
+    <span class="chip mono" id="photochip">…</span>
+  </div>
+  <div class="meter"><i id="meterfill"></i></div>
+
+  <div id="view-line"></div>
+  <div id="view-wall" class="wall" style="display:none"></div>
+
+  <div class="done-banner" id="banner"><p id="banner-text"></p></div>
+
+  <footer>
+    <span id="f1">Built from the ECMI post “Mathematical St. Petersburg”.</span><br>
+    <a href="https://ecmiindmath.org/2020/05/07/mathematical-st-petersburg/" target="_blank" rel="noopener">ecmiindmath.org — Mathematical St. Petersburg</a><br>
+    <a href="http://www.mathsoc.spb.ru/pantheon/index.html" target="_blank" rel="noopener">mathsoc.spb.ru — St. Petersburg Mathematical Pantheon</a><br>
+    <span id="f2">Portraits load live from Wikipedia.</span>
+  </footer>
+</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true">
+  <div class="panel" id="panel"></div>
+</div>
+
+<script>
+/* ============================================================
+   DATA — one row per station. Keep every string to one line.
+   ============================================================ */
+const D = [
+{y:"1724", line:1, name_en:"Peter the Great", name_vi:"Pyotr Đại đế", ru:"Пётр I", dates:"1672–1725",
+ tag_en:"the line opens", tag_vi:"ga khởi hành",
+ bio_en:"The tsar who signed one decree and gave Russia its first Academy of Sciences, on this island.",
+ bio_vi:"Vị Sa hoàng ký một sắc lệnh và tạo ra Viện Hàn lâm Khoa học đầu tiên của Nga, ngay trên hòn đảo này.",
+ why_en:"Every station after this one exists because of that signature.",
+ why_vi:"Mọi ga phía sau tồn tại được là nhờ chữ ký đó.",
+ q_en:"He had zero scientists. How do you start an academy of science with nobody in it?",
+ q_vi:"Ông không có nhà khoa học nào. Làm sao mở một viện khoa học khi chưa có ai?",
+ a_en:"You invite them. He paid the best minds in Europe to move to a brand-new, half-built city.",
+ a_vi:"Thì đi mời. Ông trả tiền để những bộ óc giỏi nhất châu Âu chuyển tới một thành phố mới xây dở.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Inconnu_d%27apr%C3%A8s_J.-M._Nattier%2C_Portrait_de_Pierre_Ier_%28mus%C3%A9e_de_l%E2%80%99Ermitage%29.jpg/500px-Inconnu_d%27apr%C3%A8s_J.-M._Nattier%2C_Portrait_de_Pierre_Ier_%28mus%C3%A9e_de_l%E2%80%99Ermitage%29.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Peter_the_Great",
+ f:{hair:"long",hc:"#2A2018",facial:"mustache",collar:"coat18",skin:"#EDD0B4"}},
+
+{y:"1725", line:1, name_en:"Daniel Bernoulli", name_vi:"Daniel Bernoulli", ru:"Даниил Бернулли", dates:"1700–1782",
+ tag_en:"why wings lift", tag_vi:"vì sao cánh máy bay nâng",
+ bio_en:"Came to the city for medicine, switched to mathematics, and worked out how moving fluids push.",
+ bio_vi:"Tới đây để học y, chuyển sang toán, rồi tìm ra cách chất lỏng chuyển động tạo áp lực.",
+ why_en:"His rule explains a plane wing, a curveball, and why the shower curtain hugs your legs.",
+ why_vi:"Quy tắc của ông giải thích cánh máy bay, quả bóng xoáy, và vì sao rèm tắm hút vào chân con.",
+ q_en:"Squeeze a garden hose. The water shoots out faster. Does the pressure inside go up or down?",
+ q_vi:"Bóp ống nước. Nước phun nhanh hơn. Áp suất bên trong tăng hay giảm?",
+ a_en:"Down. Faster flow means lower pressure — that is Bernoulli's principle.",
+ a_vi:"Giảm. Chảy càng nhanh thì áp suất càng thấp — đó là nguyên lý Bernoulli.",
+ wiki:"https://en.wikipedia.org/wiki/Daniel_Bernoulli", pan:["pantheon/bernoull/Daniel_Bernoulli_002.jpg","pantheon/bernoull/Daniel_Bernoulli_003.jpg"], panpage:"pantheon/bernoull/dan.html",
+ f:{hair:"wig",hc:"#E9E3D5",facial:"none",collar:"coat18",skin:"#F0D6BA"}},
+
+{y:"1727", line:1, name_en:"Leonhard Euler", name_vi:"Leonhard Euler", ru:"Леонард Эйлер", dates:"1707–1783",
+ tag_en:"the most prolific of all", tag_vi:"người viết nhiều nhất lịch sử",
+ bio_en:"Arrived at 20, lived here most of his life, went blind, and kept producing more mathematics than anyone ever.",
+ bio_vi:"Đến năm 20 tuổi, sống phần lớn đời ở đây, bị mù, và vẫn viết ra nhiều toán học hơn bất kỳ ai.",
+ why_en:"The symbols e, i, π and f(x) all reached your homework through his pen.",
+ why_vi:"Các ký hiệu e, i, π và f(x) đến với bài tập của con qua ngòi bút của ông.",
+ q_en:"A town has seven bridges. Can you walk a route that crosses each one exactly once?",
+ q_vi:"Một thị trấn có bảy cây cầu. Có đường đi nào qua mỗi cầu đúng một lần không?",
+ a_en:"No — and proving it impossible is how Euler invented graph theory, the maths behind maps and networks.",
+ a_vi:"Không — và khi chứng minh điều đó, Euler đã khai sinh lý thuyết đồ thị, nền của bản đồ và mạng lưới.",
+ wiki:"https://en.wikipedia.org/wiki/Leonhard_Euler", pan:["pantheon/euler/Leonhard_Euler.jpg","pantheon/euler/Euler2.jpg"], panpage:"pantheon/euler/index.html",
+ f:{hair:"cap",hc:"#B9B2A4",facial:"none",collar:"coat18",skin:"#EFD3B6"}},
+
+{y:"1741", line:1, name_en:"Mikhail Lomonosov", name_vi:"Mikhail Lomonosov", ru:"Михаил Ломоносов", dates:"1711–1765",
+ tag_en:"nothing is ever lost", tag_vi:"không gì mất đi",
+ bio_en:"A fisherman's son who walked 1,000 km to study, then came back to run the Academy.",
+ bio_vi:"Con trai một ngư dân đi bộ 1.000 km để đi học, rồi quay về điều hành Viện Hàn lâm.",
+ why_en:"He argued that matter is never destroyed in a reaction — it only moves.",
+ why_vi:"Ông lập luận rằng vật chất không biến mất trong phản ứng — nó chỉ chuyển chỗ.",
+ q_en:"Burn a big log. You get a tiny pile of ash. Where did the rest of the weight go?",
+ q_vi:"Đốt một khúc gỗ to, chỉ còn nhúm tro. Phần khối lượng còn lại đi đâu?",
+ a_en:"Into invisible gas. Weigh the gas too and nothing is missing — conservation of mass.",
+ a_vi:"Thành khí vô hình. Cân cả khí thì không thiếu gì cả — bảo toàn khối lượng.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/M.V._Lomonosov_by_L.Miropolskiy_after_G.C.Prenner_%281787%2C_RAN%29.jpg/500px-M.V._Lomonosov_by_L.Miropolskiy_after_G.C.Prenner_%281787%2C_RAN%29.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Mikhail_Lomonosov",
+ f:{hair:"wig",hc:"#E9E3D5",facial:"none",collar:"coat18",skin:"#EDD2B6"}},
+
+{y:"1828", line:2, name_en:"Mikhail Ostrogradsky", name_vi:"Mikhail Ostrogradsky", ru:"Михаил Остроградский", dates:"1801–1862",
+ tag_en:"count the skin, not the inside", tag_vi:"đếm vỏ, không cần đếm ruột",
+ bio_en:"Star of the Academy who lived on the 7th line of this island and taught a generation of engineers.",
+ bio_vi:"Ngôi sao của Viện Hàn lâm, sống ở đường số 7 trên đảo này và dạy cả một thế hệ kỹ sư.",
+ why_en:"His divergence theorem is how engineers measure what flows into or out of any shape.",
+ why_vi:"Định lý divergence của ông giúp kỹ sư đo thứ gì chảy vào hay ra khỏi một hình bất kỳ.",
+ q_en:"You want to know how much air escapes a balloon. Measure everything inside, or just the skin?",
+ q_vi:"Muốn biết bao nhiêu khí thoát khỏi quả bóng: đo hết bên trong hay chỉ đo lớp vỏ?",
+ a_en:"Just the skin. He proved the two answers are always equal, which saves enormous work.",
+ a_vi:"Chỉ lớp vỏ. Ông chứng minh hai kết quả luôn bằng nhau — tiết kiệm vô số công sức.",
+ wiki:"https://en.wikipedia.org/wiki/Mikhail_Ostrogradsky", pan:["pantheon/ostrogra/portrait.jpg"], panpage:"pantheon/ostrogra/index.html",
+ f:{hair:"short",hc:"#3A322A",facial:"chops",collar:"frock19",skin:"#EDD0B2"}},
+
+{y:"1845", line:2, name_en:"Georg Cantor", name_vi:"Georg Cantor", ru:"Георг Кантор", dates:"1845–1918",
+ tag_en:"born here, counted infinity", tag_vi:"sinh ở đây, đếm vô hạn",
+ bio_en:"Born in a merchant's house in this city, he later proved that some infinities are bigger than others.",
+ bio_vi:"Sinh trong một ngôi nhà thương gia ở thành phố này, sau này chứng minh có vô hạn lớn hơn vô hạn khác.",
+ why_en:"He gave us a way to compare things that never end.",
+ why_vi:"Ông cho ta cách so sánh những thứ không bao giờ kết thúc.",
+ q_en:"Which set is bigger: all whole numbers, or all fractions?",
+ q_vi:"Tập nào lớn hơn: mọi số nguyên, hay mọi phân số?",
+ a_en:"Exactly the same size — you can pair them off one by one. But all decimals is strictly bigger.",
+ a_vi:"Bằng nhau y hệt — có thể ghép cặp từng cái. Nhưng tập mọi số thập phân thì thực sự lớn hơn.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Georg_Cantor_%28Portr%C3%A4t%29.jpg/500px-Georg_Cantor_%28Portr%C3%A4t%29.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Georg_Cantor",
+ f:{hair:"short",hc:"#2E2822",facial:"beard",collar:"frock19",skin:"#EFD3B6"}},
+
+{y:"1847", line:2, name_en:"Pafnuty Chebyshev", name_vi:"Pafnuty Chebyshev", ru:"Пафнутий Чебышёв", dates:"1821–1894",
+ tag_en:"founder of the school", tag_vi:"người lập trường phái",
+ bio_en:"Taught at the University for 35 years and founded the mathematical school that every later name here grew from.",
+ bio_vi:"Dạy ở trường 35 năm và lập ra trường phái toán học mà mọi cái tên sau này đều xuất thân.",
+ why_en:"He also built walking machines and calculators — mathematics you can hear clanking.",
+ why_vi:"Ông còn chế máy biết đi và máy tính cơ — thứ toán học nghe được tiếng lách cách.",
+ q_en:"Flip a coin 1,000 times. Can you promise heads lands somewhere near 500, without knowing anything else?",
+ q_vi:"Tung đồng xu 1.000 lần. Có thể hứa số mặt ngửa gần 500 mà không cần biết gì thêm không?",
+ a_en:"Yes. Chebyshev's inequality puts a hard limit on how far from average you can stray.",
+ a_vi:"Có. Bất đẳng thức Chebyshev đặt giới hạn cứng cho việc lệch khỏi trung bình.",
+ wiki:"https://en.wikipedia.org/wiki/Pafnuty_Chebyshev", pan:["pantheon/chebyshe/2.jpg"], panpage:"pantheon/chebyshe/index.html",
+ f:{hair:"bald",hc:"#9A9287",facial:"beard",collar:"frock19",skin:"#EDD1B4"}},
+
+{y:"1869", line:2, name_en:"Dmitri Mendeleev", name_vi:"Dmitri Mendeleev", ru:"Дмитрий Менделеев", dates:"1834–1907",
+ tag_en:"the table with holes in it", tag_vi:"bảng có lỗ trống",
+ bio_en:"A professor at this University who laid the chemical elements in a table and left gaps on purpose.",
+ bio_vi:"Giáo sư của chính trường này, xếp các nguyên tố thành bảng và cố ý chừa lại chỗ trống.",
+ why_en:"Those gaps were predictions, and the missing elements turned up later exactly as ordered.",
+ why_vi:"Những chỗ trống đó là dự đoán, và các nguyên tố thiếu xuất hiện sau đúng như ông đặt.",
+ q_en:"Your table has empty holes in it. Is that a mistake?",
+ q_vi:"Bảng của con có ô trống. Đó có phải lỗi không?",
+ a_en:"Not if you can say what will fill them. He described gallium and germanium before anyone found them.",
+ a_vi:"Không, nếu con nói được thứ gì sẽ lấp vào. Ông mô tả gallium và germanium trước khi ai tìm ra.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Dmitri_Mendeleev.jpg/500px-Dmitri_Mendeleev.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Dmitri_Mendeleev",
+ f:{hair:"wild",hc:"#8C837A",facial:"longbeard",collar:"frock19",skin:"#EDD0B2"}},
+
+{y:"1874", line:2, name_en:"Sofya Kovalevskaya", name_vi:"Sofya Kovalevskaya", ru:"Софья Ковалевская", dates:"1850–1891",
+ tag_en:"first woman with a maths chair", tag_vi:"nữ giáo sư toán đầu tiên",
+ bio_en:"Grew up in a house beside this University and became the first woman in Europe to hold a professorship in mathematics.",
+ bio_vi:"Lớn lên trong căn nhà cạnh trường này và trở thành nữ giáo sư toán đầu tiên của châu Âu.",
+ why_en:"Universities refused to enroll her, so she studied privately and then out-published them.",
+ why_vi:"Các đại học không nhận bà, nên bà tự học riêng rồi công bố nhiều hơn họ.",
+ q_en:"A spinning top wobbles in a complicated way. Can anyone predict the wobble?",
+ q_vi:"Con quay lắc lư rất phức tạp. Có ai đoán trước được không?",
+ a_en:"She solved the one spinning case nobody else could — it is now called the Kovalevskaya top.",
+ a_vi:"Bà giải được đúng trường hợp mà không ai giải nổi — nay gọi là con quay Kovalevskaya.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Sofja_Wassiljewna_Kowalewskaja_1.jpg/500px-Sofja_Wassiljewna_Kowalewskaja_1.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Sofya_Kovalevskaya",
+ f:{hair:"bun",hc:"#2B231C",facial:"none",collar:"dress19",skin:"#F0D5BA"}},
+
+{y:"1875", line:2, name_en:"Ivan Pavlov", name_vi:"Ivan Pavlov", ru:"Иван Павлов", dates:"1849–1936",
+ tag_en:"the dog and the bell", tag_vi:"con chó và cái chuông",
+ bio_en:"Studied natural science at this University, then showed that an animal can learn to expect food from a sound.",
+ bio_vi:"Học khoa học tự nhiên ở trường này, rồi chứng minh con vật có thể học cách chờ thức ăn từ một âm thanh.",
+ why_en:"First Russian Nobel Prize, and the start of measuring how learning actually happens.",
+ why_vi:"Giải Nobel đầu tiên của Nga, và khởi đầu của việc đo xem học tập diễn ra thế nào.",
+ q_en:"Ring a bell, then feed the dog. Repeat for a week. Now ring the bell and bring nothing.",
+ q_vi:"Rung chuông rồi cho chó ăn. Lặp lại một tuần. Giờ chỉ rung chuông, không mang gì.",
+ a_en:"The dog still drools. The brain glued the sound to the food — a conditioned reflex.",
+ a_vi:"Con chó vẫn chảy nước dãi. Não đã dán âm thanh vào thức ăn — phản xạ có điều kiện.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Ivan_Pavlov_NLM3.jpg/500px-Ivan_Pavlov_NLM3.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Ivan_Pavlov",
+ f:{hair:"bald",hc:"#D8D2C6",facial:"longbeard",collar:"frock19",skin:"#EFD3B6"}},
+
+{y:"1892", line:2, name_en:"Aleksandr Lyapunov", name_vi:"Aleksandr Lyapunov", ru:"Александр Ляпунов", dates:"1857–1918",
+ tag_en:"does it stay put?", tag_vi:"nó có đứng yên không?",
+ bio_en:"Chebyshev's student, who asked a simple question: if you nudge a system, does it settle back or fly apart?",
+ bio_vi:"Học trò của Chebyshev, đặt một câu hỏi đơn giản: đẩy nhẹ một hệ, nó trở lại hay văng ra?",
+ why_en:"Rockets, robots and power grids are still checked with his stability test today.",
+ why_vi:"Tên lửa, robot và lưới điện ngày nay vẫn được kiểm tra bằng phép thử ổn định của ông.",
+ q_en:"A ball resting in a bowl and a ball balanced on a hilltop are both 'at rest'. Same thing?",
+ q_vi:"Quả bóng nằm trong bát và quả bóng đứng trên đỉnh đồi đều 'đứng yên'. Giống nhau chứ?",
+ a_en:"Not at all. He turned that gut feeling into a function you can compute and prove.",
+ a_vi:"Hoàn toàn không. Ông biến cảm giác đó thành một hàm số có thể tính và chứng minh được.",
+ wiki:"https://en.wikipedia.org/wiki/Aleksandr_Lyapunov", pan:["pantheon/lyapunov/Aleksandr_Lyapunov_109px.jpg"], panpage:"pantheon/lyapunov/index.html",
+ f:{hair:"short",hc:"#3B342C",facial:"beard",collar:"frock19",skin:"#EDD1B4"}},
+
+{y:"1895", line:2, name_en:"Alexander Popov", name_vi:"Alexander Popov", ru:"Александр Попов", dates:"1859–1906",
+ tag_en:"a message with no wire", tag_vi:"tin nhắn không cần dây",
+ bio_en:"A graduate of this University who sent and caught signals through empty air.",
+ bio_vi:"Cựu sinh viên của trường, người gửi và bắt tín hiệu xuyên qua không khí trống rỗng.",
+ why_en:"Ship radio came first, then radio, then the wifi in your house. Same idea, smaller box.",
+ why_vi:"Đầu tiên là radio trên tàu, rồi radio, rồi wifi trong nhà. Cùng một ý tưởng, hộp nhỏ hơn.",
+ q_en:"There is no string between you and your friend. How do you send a message anyway?",
+ q_vi:"Không có sợi dây nào giữa con và bạn. Vậy gửi tin nhắn bằng cách nào?",
+ a_en:"Ride a wave. His first receiver listened to lightning; words came next.",
+ a_vi:"Cưỡi lên một con sóng. Máy thu đầu tiên của ông nghe tiếng sét; sau đó mới tới chữ.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Alexander_Stepanovich_Popov.jpg/500px-Alexander_Stepanovich_Popov.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Alexander_Stepanovich_Popov",
+ f:{hair:"short",hc:"#332C25",facial:"beard",collar:"frock19",skin:"#EED2B5"}},
+
+{y:"1906", line:3, name_en:"Andrey Markov", name_vi:"Andrey Markov", ru:"Андрей Марков", dates:"1856–1922",
+ tag_en:"chance with a memory", tag_vi:"xác suất có trí nhớ",
+ bio_en:"Counted vowels and consonants in Pushkin's poem to prove that random steps can depend on the last one.",
+ bio_vi:"Ông đếm nguyên âm và phụ âm trong thơ Pushkin để chứng minh bước ngẫu nhiên có thể phụ thuộc bước trước.",
+ why_en:"Autocomplete, weather models and the AI systems your dad builds are all Markov's grandchildren.",
+ why_vi:"Gợi ý gõ chữ, mô hình thời tiết và các hệ AI ba con làm đều là cháu chắt của Markov.",
+ q_en:"In English, a 'q' has just appeared. What is the next letter likely to be?",
+ q_vi:"Trong tiếng Anh, vừa xuất hiện chữ 'q'. Chữ kế tiếp nhiều khả năng là gì?",
+ a_en:"'u', almost always. When the next step depends on the current one, you have a Markov chain.",
+ a_vi:"'u', gần như luôn luôn. Khi bước sau phụ thuộc bước hiện tại, ta có một chuỗi Markov.",
+ wiki:"https://en.wikipedia.org/wiki/Andrey_Markov", pan:["pantheon/markov-s/portrait.jpg"], panpage:"pantheon/markov-s/index.html",
+ f:{hair:"short",hc:"#4A423A",facial:"beard",collar:"frock19",glasses:true,skin:"#EDD1B4"}},
+
+{y:"1921", line:3, name_en:"Vladimir Steklov", name_vi:"Vladimir Steklov", ru:"Владимир Стеклов", dates:"1864–1926",
+ tag_en:"kept the lights on", tag_vi:"giữ cho đèn còn sáng",
+ bio_en:"In years of hunger and war he fought for food rations and coal so mathematicians could keep working.",
+ bio_vi:"Giữa những năm đói kém và chiến tranh, ông xin khẩu phần và than để các nhà toán học tiếp tục làm việc.",
+ why_en:"The institute he founded still trains the country's strongest mathematicians and carries his name.",
+ why_vi:"Viện do ông lập ra vẫn đào tạo những nhà toán học giỏi nhất nước và mang tên ông.",
+ q_en:"The country is starving. Why spend anything on mathematicians?",
+ q_vi:"Cả nước đang đói. Tại sao còn chi tiền cho các nhà toán học?",
+ a_en:"Because bridges, ships, radios and rations all need someone who can calculate them.",
+ a_vi:"Vì cầu, tàu, radio và cả khẩu phần đều cần người tính được chúng.",
+ wiki:"https://en.wikipedia.org/wiki/Vladimir_Steklov", pan:["pantheon/steklov/portrait.jpg"], panpage:"pantheon/steklov/index.html",
+ f:{hair:"bald",hc:"#A8A196",facial:"mustache",collar:"suit20",glasses:true,skin:"#EED2B5"}},
+
+{y:"1922", line:3, name_en:"Alexander Friedmann", name_vi:"Alexander Friedmann", ru:"Александр Фридман", dates:"1888–1925",
+ tag_en:"the universe can't sit still", tag_vi:"vũ trụ không chịu đứng yên",
+ bio_en:"A graduate of this University who solved Einstein's equations and found a universe that must expand.",
+ bio_vi:"Cựu sinh viên của trường, giải phương trình Einstein và tìm ra một vũ trụ buộc phải giãn nở.",
+ why_en:"Einstein said he was wrong, checked again, and printed an apology. Friedmann died at 37.",
+ why_vi:"Einstein bảo ông sai, kiểm tra lại, rồi đăng lời xin lỗi. Friedmann mất năm 37 tuổi.",
+ q_en:"Every distant galaxy is rushing away from us. Does that make us the centre of everything?",
+ q_vi:"Mọi thiên hà xa đều đang chạy xa khỏi ta. Vậy ta là trung tâm vũ trụ à?",
+ a_en:"No. Space itself is stretching, like raisins drifting apart inside rising bread.",
+ a_vi:"Không. Chính không gian đang giãn ra, như nho khô tách xa nhau trong ổ bánh mì đang nở.",
+ wiki:"https://en.wikipedia.org/wiki/Alexander_Friedmann", pan:["pantheon/friedman/Friedmann.jpg"], panpage:"pantheon/friedman/index.html",
+ f:{hair:"short",hc:"#31291F",facial:"none",collar:"suit20",skin:"#EFD3B6"}},
+
+{y:"1925", line:3, name_en:"Wassily Leontief", name_vi:"Wassily Leontief", ru:"Василий Леонтьев", dates:"1905–1999",
+ tag_en:"everything needs everything", tag_vi:"mọi thứ cần mọi thứ",
+ bio_en:"Finished his degree here at 19, then built a table showing how every industry feeds every other one.",
+ bio_vi:"Tốt nghiệp ở đây năm 19 tuổi, rồi dựng bảng cho thấy mỗi ngành nuôi mọi ngành khác ra sao.",
+ why_en:"Nobel Prize in economics; governments still use his table to plan a whole economy.",
+ why_vi:"Giải Nobel kinh tế; các chính phủ vẫn dùng bảng của ông để hoạch định cả nền kinh tế.",
+ q_en:"To build a car you need steel. To make steel you need machines. To build machines you need steel. Stuck?",
+ q_vi:"Làm ô tô cần thép. Làm thép cần máy. Làm máy lại cần thép. Bế tắc chưa?",
+ a_en:"No. Write the loop as a grid of numbers and solve it all at once — input-output analysis.",
+ a_vi:"Không. Viết vòng lặp đó thành bảng số rồi giải một lượt — phân tích đầu vào–đầu ra.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Wassily_Leontief_1973.jpg/500px-Wassily_Leontief_1973.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Wassily_Leontief",
+ f:{hair:"short",hc:"#413931",facial:"none",collar:"suit20",glasses:true,skin:"#EED2B5"}},
+
+{y:"1927", line:3, name_en:"Lev Landau", name_vi:"Lev Landau", ru:"Лев Ландау", dates:"1908–1968",
+ tag_en:"liquid that climbs walls", tag_vi:"chất lỏng biết leo tường",
+ bio_en:"Finished university here at 19 and later wrote the physics course that taught the next fifty years of physicists.",
+ bio_vi:"Tốt nghiệp ở đây năm 19 tuổi và sau này viết bộ giáo trình dạy các nhà vật lý suốt năm mươi năm.",
+ why_en:"Nobel Prize for explaining helium that flows with no friction at all.",
+ why_vi:"Giải Nobel nhờ giải thích khí heli chảy mà không hề có ma sát.",
+ q_en:"Chill helium near absolute zero and it creeps up the side of its cup and escapes. How?",
+ q_vi:"Làm lạnh heli gần độ không tuyệt đối, nó bò lên thành cốc và trốn ra ngoài. Bằng cách nào?",
+ a_en:"It becomes a superfluid — friction drops to zero, so nothing stops it from climbing.",
+ a_vi:"Nó thành siêu lỏng — ma sát bằng không, nên chẳng gì cản nó leo lên.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Landau.jpg/500px-Landau.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Lev_Landau",
+ f:{hair:"curly",hc:"#241E19",facial:"none",collar:"suit20",skin:"#EED2B5"}},
+
+{y:"1939", line:3, name_en:"Leonid Kantorovich", name_vi:"Leonid Kantorovich", ru:"Леонид Канторович", dates:"1912–1986",
+ tag_en:"the plywood problem", tag_vi:"bài toán ván ép",
+ bio_en:"A plywood factory asked him to waste less wood, and he invented linear programming answering them.",
+ bio_vi:"Một nhà máy ván ép nhờ ông giảm hao gỗ, và khi trả lời ông đã phát minh quy hoạch tuyến tính.",
+ why_en:"Every delivery route, airline schedule and factory plan today runs on his idea.",
+ why_vi:"Mọi lộ trình giao hàng, lịch bay và kế hoạch nhà máy ngày nay đều chạy trên ý tưởng của ông.",
+ q_en:"One big sheet, many shapes to cut out. How do you leave the fewest scraps?",
+ q_vi:"Một tấm lớn, nhiều hình cần cắt. Làm sao để thừa ít nhất?",
+ a_en:"Write the rules as inequalities and let the maths pick the best cut — linear programming.",
+ a_vi:"Viết các ràng buộc thành bất đẳng thức rồi để toán chọn cách cắt tốt nhất — quy hoạch tuyến tính.",
+ wiki:"https://en.wikipedia.org/wiki/Leonid_Kantorovich", pan:["pantheon/kantorov/photo1.jpg"], panpage:"pantheon/kantorov/index.html",
+ f:{hair:"short",hc:"#3A332B",facial:"none",collar:"suit20",glasses:true,skin:"#EFD3B6"}},
+
+{y:"2003", line:3, name_en:"Grigori Perelman", name_vi:"Grigori Perelman", ru:"Григорий Перельман", dates:"1966–",
+ tag_en:"said no to a million", tag_vi:"từ chối một triệu đô",
+ bio_en:"Posted the solution to a hundred-year-old problem on the internet, then refused the Fields Medal and a million-dollar prize.",
+ bio_vi:"Đăng lời giải cho bài toán trăm năm lên internet, rồi từ chối Huy chương Fields và giải thưởng một triệu đô.",
+ why_en:"He still lives in this city. Being right was the whole reward he wanted.",
+ why_vi:"Ông vẫn sống ở thành phố này. Việc đúng đã là toàn bộ phần thưởng ông muốn.",
+ q_en:"Someone offers you a million dollars for your work and you say no. Can that be honest?",
+ q_vi:"Có người trả con một triệu đô cho công trình của con và con từ chối. Điều đó có thể thật lòng không?",
+ a_en:"He thought the credit belonged to others too and the prize was unfair. He has not changed his mind.",
+ a_vi:"Ông cho rằng công lao thuộc về cả người khác và giải thưởng không công bằng. Ông chưa đổi ý.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Grigori_Perelman%2C_1993_%28re-scanned%29_%28cropped%29.jpg/500px-Grigori_Perelman%2C_1993_%28re-scanned%29_%28cropped%29.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Grigori_Perelman",
+ f:{hair:"curly",hc:"#2A2420",facial:"beard",collar:"modern",skin:"#EFD3B6"}},
+
+{y:"2010", line:3, name_en:"Stanislav Smirnov", name_vi:"Stanislav Smirnov", ru:"Станислав Смирнов", dates:"1970–",
+ tag_en:"the line is still running", tag_vi:"tuyến tàu vẫn đang chạy",
+ bio_en:"A graduate of this University who won the Fields Medal for taming randomness on a grid.",
+ bio_vi:"Cựu sinh viên của trường, đoạt Huy chương Fields nhờ thuần hóa sự ngẫu nhiên trên lưới ô.",
+ why_en:"This happened while you were alive. The line did not stop at the old portraits.",
+ why_vi:"Chuyện này xảy ra khi các con đã ra đời. Tuyến tàu không dừng ở những bức chân dung cũ.",
+ q_en:"Pour water onto a sponge. Will it reach the other side?",
+ q_vi:"Đổ nước lên một miếng bọt biển. Nước có sang được mặt bên kia không?",
+ a_en:"It depends on how many holes connect. He proved the answer ignores the shape of the grid entirely.",
+ a_vi:"Tùy bao nhiêu lỗ nối nhau. Ông chứng minh câu trả lời hoàn toàn không phụ thuộc hình dạng lưới.",
+ photo:"https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Stanislav_Smirnov2.jpg/500px-Stanislav_Smirnov2.jpg",
+ wiki:"https://en.wikipedia.org/wiki/Stanislav_Smirnov",
+ f:{hair:"short",hc:"#4C443A",facial:"none",collar:"modern",skin:"#F0D6BA"}},
+
+{y:"NOW", line:4, name_en:"Your dad", name_vi:"Ba của các con", ru:"Ваш папа", dates:"2001–2008 · seven winters",
+ tag_en:"end of the line — for now", tag_vi:"ga cuối — tạm thời",
+ photo:"https://www.lampt.org/assets/img/prof_pic.jpg",
+ site:"https://www.lampt.org", site_en:"Open lampt.org", site_vi:"Mở lampt.org",
+ credit_en:"Photo: lampt.org", credit_vi:"Ảnh: lampt.org",
+ bio_en:"Lam Pham studied computer science at this University for seven years, then carried its mathematics home to Vietnam.",
+ bio_vi:"Phạm Lâm học khoa học máy tính ở chính trường này bảy năm, rồi mang toán học của nó về Việt Nam.",
+ why_en:"He now builds AI that serves 6.5 million banking customers — Markov's chains, Kantorovich's optimisation, still running.",
+ why_vi:"Giờ ba xây AI phục vụ 6,5 triệu khách hàng ngân hàng — chuỗi Markov, tối ưu Kantorovich, vẫn đang chạy.",
+ q_en:"This is the only station where you can actually meet the person. So what do you ask?",
+ q_vi:"Đây là ga duy nhất các con gặp được nhân vật thật. Vậy hỏi gì đây?",
+ a_en:"Which building, which winter, what he ate, and who he missed. Then ask him to show you the maths.",
+ a_vi:"Tòa nhà nào, mùa đông nào, ăn gì, nhớ ai. Rồi bảo ba chỉ cho xem phần toán.",
+ wiki:"",
+ f:{hair:"short",hc:"#141210",facial:"none",collar:"modern",skin:"#E2B98E"}}
+];
+
+const LINECOL = {1:"var(--m1)",2:"var(--m2)",3:"var(--m3)",4:"var(--m4)"};
+const ERAS = {
+ 1:{en:"Line 1 · The founding",   vi:"Tuyến 1 · Thời lập nghiệp", sub_en:"1724–1800 · a new city buys the best minds in Europe", sub_vi:"1724–1800 · thành phố mới mời những bộ óc giỏi nhất châu Âu"},
+ 2:{en:"Line 2 · The golden age", vi:"Tuyến 2 · Thời hoàng kim",  sub_en:"1800–1900 · the University becomes a school of its own", sub_vi:"1800–1900 · trường đại học tự tạo ra trường phái riêng"},
+ 3:{en:"Line 3 · The modern run", vi:"Tuyến 3 · Thời hiện đại",   sub_en:"1900–2010 · war, hunger, Nobels, and a refused million", sub_vi:"1900–2010 · chiến tranh, đói kém, Nobel, và một triệu đô bị từ chối"},
+ 4:{en:"Line 4 · You",            vi:"Tuyến 4 · Các con",          sub_en:"today · the only station with no Wikipedia page", sub_vi:"hôm nay · ga duy nhất không có trang Wikipedia"}
+};
+
+/* ============================================================
+   PORTRAITS — drawn, not fetched. One function, traits per person.
+   ============================================================ */
+const COLLARS = {
+  coat18:{coat:"#3C2F24", inner:'<path d="M60 100 L46 107 Q60 124 74 107Z" fill="#F6F1E6"/><path d="M40 104 L60 100 L52 132" fill="#4A3B2D"/><path d="M80 104 L60 100 L68 132" fill="#4A3B2D"/>'},
+  frock19:{coat:"#221F1C", inner:'<path d="M60 100 L49 105 L60 126 L71 105Z" fill="#F6F1E6"/><path d="M55 110 h10 l-5 12Z" fill="#1A1714"/>'},
+  dress19:{coat:"#2E2536", inner:'<path d="M44 104 Q60 118 76 104 Q60 112 44 104Z" fill="#F6F1E6"/><circle cx="60" cy="112" r="4" fill="#FBD45B" stroke="#14120E" stroke-width="1.5"/>'},
+  suit20:{coat:"#2A2F37", inner:'<path d="M60 100 L50 106 L60 128 L70 106Z" fill="#F6F1E6"/><path d="M56 112 h8 l-4 16Z" fill="#8E2B27"/>'},
+  modern:{coat:"#3F5566", inner:'<path d="M46 104 Q60 116 74 104" fill="none" stroke="#2C3D49" stroke-width="4"/>'}
+};
+
+function portraitSVG(p, scale){
+  const f=p.f, skin=f.skin||"#EFD3B6", hc=f.hc||"#2E2A26";
+  const col=COLLARS[f.collar]||COLLARS.suit20;
+  const bg = p.line===1?"#F3D9D6":p.line===2?"#D8E2F4":p.line===3?"#D7EBDD":"#FAE7CC";
+  let back="",front="";
+  switch(f.hair){
+    case "wig":
+      back=`<ellipse cx="60" cy="58" rx="34" ry="33" fill="${hc}"/><circle cx="27" cy="76" r="12" fill="${hc}"/><circle cx="93" cy="76" r="12" fill="${hc}"/>`;
+      front=`<path d="M33 48 Q60 18 87 48 Q60 36 33 48Z" fill="${hc}"/><circle cx="33" cy="46" r="8" fill="${hc}"/><circle cx="87" cy="46" r="8" fill="${hc}"/>`;
+      break;
+    case "cap":
+      back=`<ellipse cx="60" cy="60" rx="27" ry="28" fill="${hc}"/>`;
+      front=`<path d="M32 44 Q60 12 88 44 Q60 34 32 44Z" fill="#1B1916"/><rect x="31" y="42" width="58" height="7" rx="3" fill="#12100E"/>`;
+      break;
+    case "long":
+      back=`<ellipse cx="60" cy="62" rx="31" ry="32" fill="${hc}"/>`;
+      front=`<path d="M34 46 Q60 20 86 46 Q60 34 34 46Z" fill="${hc}"/>`;
+      break;
+    case "curly":
+      back=`<ellipse cx="60" cy="54" rx="30" ry="28" fill="${hc}"/><circle cx="36" cy="38" r="11" fill="${hc}"/><circle cx="60" cy="28" r="12" fill="${hc}"/><circle cx="84" cy="38" r="11" fill="${hc}"/>`;
+      front=`<path d="M34 46 Q60 24 86 46 Q60 36 34 46Z" fill="${hc}"/>`;
+      break;
+    case "wild":
+      back=`<path d="M60 18 L92 34 L86 52 L102 72 L84 70 L88 92 L60 78 L32 92 L36 70 L18 72 L34 52 L28 34Z" fill="${hc}"/>`;
+      front=`<path d="M34 46 Q60 22 86 46 Q60 34 34 46Z" fill="${hc}"/>`;
+      break;
+    case "bun":
+      back=`<circle cx="60" cy="24" r="11" fill="${hc}"/><ellipse cx="60" cy="56" rx="30" ry="28" fill="${hc}"/>`;
+      front=`<path d="M32 50 Q60 20 88 50 Q74 38 60 40 Q46 38 32 50Z" fill="${hc}"/>`;
+      break;
+    case "bald":
+      front=`<path d="M33 56 Q32 40 42 36 Q38 48 39 58Z" fill="${hc}"/><path d="M87 56 Q88 40 78 36 Q82 48 81 58Z" fill="${hc}"/>`;
+      break;
+    default: /* short */
+      front=`<path d="M34 48 Q60 22 86 48 Q60 33 34 48Z" fill="${hc}"/>`;
+  }
+  let facial="";
+  if(f.facial==="mustache") facial=`<path d="M46 72 Q60 66 74 72 Q60 79 46 72Z" fill="${hc}"/>`;
+  if(f.facial==="chops")    facial=`<path d="M36 50 Q34 72 46 76 Q42 62 42 50Z" fill="${hc}"/><path d="M84 50 Q86 72 74 76 Q78 62 78 50Z" fill="${hc}"/>`;
+  if(f.facial==="beard")    facial=`<path d="M35 56 Q36 96 60 100 Q84 96 85 56 Q76 80 60 80 Q44 80 35 56Z" fill="${hc}"/><path d="M46 70 Q60 64 74 70 Q60 77 46 70Z" fill="${hc}"/>`;
+  if(f.facial==="longbeard")facial=`<path d="M35 56 Q34 104 60 134 Q86 104 85 56 Q76 80 60 80 Q44 80 35 56Z" fill="${hc}"/><path d="M46 70 Q60 64 74 70 Q60 77 46 70Z" fill="${hc}"/>`;
+  const glasses = f.glasses
+    ? `<g fill="none" stroke="#14120E" stroke-width="2"><circle cx="50" cy="55" r="9"/><circle cx="70" cy="55" r="9"/><path d="M59 55h2"/><path d="M41 54 L33 51"/><path d="M79 54 L87 51"/></g>` : "";
+  const mouth = f.facial==="beard"||f.facial==="longbeard"
+    ? `<path d="M53 77 Q60 80 67 77" stroke="#7A4A3C" stroke-width="2" fill="none"/>`
+    : `<path d="M52 76 Q60 81 68 76" stroke="#9A5A48" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Illustrated portrait">
+  <rect width="120" height="140" fill="${bg}"/>
+  <g>${back}</g>
+  <rect x="51" y="72" width="18" height="30" fill="${skin}"/>
+  <path d="M4 140 C6 110 30 99 60 99 C90 99 114 110 116 140Z" fill="${col.coat}"/>
+  ${col.inner}
+  <ellipse cx="37" cy="56" rx="4.5" ry="6.5" fill="${skin}"/><ellipse cx="83" cy="56" rx="4.5" ry="6.5" fill="${skin}"/>
+  <ellipse cx="60" cy="54" rx="23" ry="27" fill="${skin}"/>
+  ${front}
+  <path d="M60 54 L56 67 L63 67" fill="none" stroke="#C79A78" stroke-width="2.2" stroke-linejoin="round"/>
+  <ellipse cx="50" cy="55" rx="2.7" ry="2.2" fill="#14120E"/><ellipse cx="70" cy="55" rx="2.7" ry="2.2" fill="#14120E"/>
+  <path d="M44 47 Q50 44 56 47" stroke="#14120E" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M64 47 Q70 44 76 47" stroke="#14120E" stroke-width="2" fill="none" stroke-linecap="round"/>
+  ${mouth}
+  <g>${facial}</g>
+  ${glasses}
+</svg>`;
+}
+
+/* ============================================================
+   REAL PORTRAITS — pulled live from Wikipedia, cached locally.
+   The drawn SVG above is only the fallback when the network is blocked.
+   ============================================================ */
+const PKEY="spb-photos-v2";
+let PHOTO={};          /* index -> image url */
+let CREDIT={};         /* index -> {artist, license} */
+let photoState="load"; /* load | on | off */
+
+const wikiTitle = p => p.wiki ? decodeURIComponent(p.wiki.split("/wiki/")[1]) : null;
+const bigger = (u,px) => u && /\/\d+px-/.test(u) ? u.replace(/\/\d+px-/, "/"+px+"px-") : u;
+
+function loadPhotoCache(){
+  try{ PHOTO=JSON.parse(localStorage.getItem(PKEY)||"{}"); }catch(e){ PHOTO={}; }
+  D.forEach((p,i)=>{ if(p.photo) PHOTO[i]=p.photo; });   /* hardcoded ones always win */
+}
+const wikiPhotoCount = () => Object.keys(PHOTO).filter(i=>D[i] && D[i].wiki).length;
+function savePhotoCache(){ try{ localStorage.setItem(PKEY,JSON.stringify(PHOTO)); }catch(e){} }
+
+async function fetchPhotos(){
+  const jobs = D.map(async (p,i)=>{
+    const t = wikiTitle(p);
+    if(!t || PHOTO[i]) return;
+    const r = await fetch("https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(t)+"?redirect=true");
+    if(!r.ok) throw new Error("http "+r.status);
+    const j = await r.json();
+    const src = (j.thumbnail && j.thumbnail.source) || (j.originalimage && j.originalimage.source);
+    if(src) PHOTO[i]=src;
+  });
+  const res = await Promise.allSettled(jobs);
+  const ok = wikiPhotoCount() > 0 && res.some(x=>x.status==="fulfilled");
+  photoState = ok ? "on" : "off";
+  savePhotoCache(); paintChip(); refresh();
+}
+
+/* licence + author, fetched only when a card is opened */
+async function fetchCredit(i){
+  if(CREDIT[i] || !PHOTO[i]) return null;
+  const file = decodeURIComponent(PHOTO[i].split("/").pop().replace(/^\d+px-/,""));
+  const url = "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*"
+            + "&prop=imageinfo&iiprop=extmetadata&titles=File:"+encodeURIComponent(file);
+  try{
+    const j = await (await fetch(url)).json();
+    const pg = Object.values(j.query.pages)[0];
+    const m  = pg.imageinfo[0].extmetadata;
+    const strip = s => s ? s.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim() : "";
+    CREDIT[i] = { artist: strip(m.Artist && m.Artist.value), license: strip(m.LicenseShortName && m.LicenseShortName.value) };
+  }catch(e){ CREDIT[i]={artist:"",license:""}; }
+  return CREDIT[i];
+}
+
+/* Portrait sources, tried in order until one loads:
+   1. St Petersburg Mathematical Society pantheon (https, then plain http)
+   2. a hand-set photo (dad)
+   3. whatever Wikipedia returned for this article
+   4. the drawing  */
+const MSOC = "www.mathsoc.spb.ru/";
+function candidates(i){
+  const p=D[i], out=[];
+  if(p.pan) p.pan.forEach(u=>{ out.push("https://"+MSOC+u); out.push("http://"+MSOC+u); });
+  if(p.photo) out.push(p.photo);
+  if(PHOTO[i]) out.push(bigger(PHOTO[i],440));
+  return out;
+}
+function portraitHTML(p,i){
+  const c=candidates(i);
+  if(!c.length) return portraitSVG(p);
+  return `<img class="photo" src="${c[0]}" data-i="${i}" data-k="0" loading="lazy"
+           alt="Portrait of ${T(p,"name")}" onerror="nextSrc(this)">`;
+}
+function nextSrc(img){
+  const i=+img.dataset.i, k=+img.dataset.k+1, c=candidates(i);
+  if(k<c.length){ img.dataset.k=k; img.src=c[k]; }
+  else img.outerHTML = DRAWN[i];
+}
+let DRAWN=[];
+
+function paintChip(){
+  const c=document.getElementById("photochip"), u=UI[lang];
+  c.textContent = photoState==="on" ? u.ph_on : photoState==="off" ? u.ph_off : u.ph_load;
+  c.classList.toggle("on", photoState==="on");
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const KEY="spb-line-stamps-v1";
+let lang="en", view="line", stamps=new Set();
+
+function load(){ try{const r=localStorage.getItem(KEY); if(r) stamps=new Set(JSON.parse(r));}catch(e){ stamps=new Set(); } }
+function save(){ try{localStorage.setItem(KEY,JSON.stringify([...stamps]));}catch(e){} }
+const T=(p,k)=>p[k+"_"+lang];
+
+const UI={
+ en:{line:"Metro line",wall:"Wall of fame",lang:"VI",reset:"Clear stamps",pass:n=>`${n} / ${D.length} stamps`,
+     title:"THE PETERSBURG LINE",
+     sub:"One metro line, 21 stations, 300 years. Every stop is a person who worked where your dad went to school.",
+     s1:"1724 → TODAY",s2:"VASILIEVSKY ISLAND",s3:"KEEP THIS TICKET",
+     stamp:"Stamp my ticket",stamped:"Stamped ✓",wiki:"Read on Wikipedia",close:"Close",
+     lbl_why:"WHY IT MATTERS",lbl_q:"TRY THIS",reveal:"Show the answer",
+     note:"Illustrated portrait, not a photograph.",
+     ph_load:"Photos: loading…", ph_on:"Photos: on", ph_off:"Photos: offline — drawings",
+     credit:"Portrait via Wikipedia", cred_pan:"Portrait: St. Petersburg Mathematical Society",
+     done:"Ticket full. Twenty-one stations, three hundred years, one island. Now go ask your dad which building was his.",
+     f1:"Built from the ECMI post “Mathematical St. Petersburg”.",
+     f2:"Portraits come from the St. Petersburg Mathematical Society pantheon, with Wikipedia as backup and drawings if the network is blocked."},
+ vi:{line:"Tuyến tàu",wall:"Bức tường danh vọng",lang:"EN",reset:"Xóa dấu",pass:n=>`${n} / ${D.length} dấu`,
+     title:"TUYẾN PETERSBURG",
+     sub:"Một tuyến tàu điện, 21 ga, 300 năm. Mỗi ga là một con người từng làm việc nơi ba các con đi học.",
+     s1:"1724 → HÔM NAY",s2:"ĐẢO VASILIEVSKY",s3:"GIỮ VÉ NÀY",
+     stamp:"Đóng dấu vé",stamped:"Đã đóng dấu ✓",wiki:"Đọc trên Wikipedia",close:"Đóng",
+     lbl_why:"VÌ SAO QUAN TRỌNG",lbl_q:"THỬ XEM",reveal:"Xem đáp án",
+     note:"Chân dung vẽ tay, không phải ảnh chụp.",
+     ph_load:"Ảnh: đang tải…", ph_on:"Ảnh: đang bật", ph_off:"Ảnh: ngoại tuyến — dùng tranh vẽ",
+     credit:"Chân dung từ Wikipedia", cred_pan:"Chân dung: Hội Toán học Saint Petersburg",
+     done:"Vé đã đầy dấu. Hai mươi mốt ga, ba trăm năm, một hòn đảo. Giờ đi hỏi ba xem tòa nhà nào là của ba.",
+     f1:"Dựng từ bài viết “Mathematical St. Petersburg” của ECMI.",
+     f2:"Ảnh chân dung lấy từ kho của Hội Toán học Saint Petersburg, dự phòng bằng Wikipedia, và tranh vẽ tay nếu không có mạng."}
+};
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function renderLine(){
+  const box=document.getElementById("view-line"); let html=""; let cur=null;
+  D.forEach((p,i)=>{
+    if(p.line!==cur){
+      cur=p.line; const e=ERAS[cur];
+      html+=`<div class="era" style="--c:${LINECOL[cur]}">${lang==="en"?e.en:e.vi}<small>${lang==="en"?e.sub_en:e.sub_vi}</small></div>`;
+    }
+    const done=stamps.has(i);
+    html+=`<div class="station ${done?"done":""}" style="--c:${LINECOL[p.line]}">
+      <span class="dot"></span>
+      <button class="stbtn" data-i="${i}">
+        ${done?'<span class="seal" aria-label="stamped">✓</span>':""}
+        <div class="yr">${p.y}</div>
+        <div class="nm">${T(p,"name")}</div>
+        <div class="tg">${T(p,"tag")}</div>
+      </button></div>`;
+  });
+  box.innerHTML=html;
+}
+
+function renderWall(){
+  const box=document.getElementById("view-wall");
+  box.innerHTML=D.map((p,i)=>`<button class="frame" data-i="${i}">
+      ${portraitHTML(p,i)}
+      ${stamps.has(i)?'<span class="seal seal-corner" aria-label="stamped">✓</span>':""}
+      <div class="plate"><b>${T(p,"name")}</b><span class="mono">${p.y} · ${p.dates}</span></div>
+    </button>`).join("");
+}
+
+function openCard(i){
+  const p=D[i], u=UI[lang], done=stamps.has(i);
+  document.getElementById("panel").innerHTML=`
+    <div class="top" style="--c:${LINECOL[p.line]}">
+      ${portraitHTML(p,i)}
+      ${done?'<span class="seal seal-corner" aria-label="stamped">✓</span>':""}
+      <div class="who">
+        <h2>${T(p,"name")}</h2>
+        <div class="ru">${p.ru}</div>
+        <div class="dt">${p.y} · ${p.dates}</div>
+      </div>
+    </div>
+    <div class="body">
+      <p>${T(p,"bio")}</p>
+      <div class="lbl mono">${u.lbl_why}</div>
+      <p>${T(p,"why")}</p>
+      <div class="puzzle">
+        <div class="lbl mono">${u.lbl_q}</div>
+        <div>${T(p,"q")}</div>
+        <button class="btn" id="reveal" style="margin-top:9px">${u.reveal}</button>
+        <div class="answer" id="ans">${T(p,"a")}</div>
+      </div>
+    </div>
+    <div class="foot">
+      <button class="btn" id="stampbtn" aria-pressed="${done}">${done?u.stamped:u.stamp}</button>
+      ${p.wiki?`<a class="wikilink" href="${p.wiki}" target="_blank" rel="noopener">${u.wiki}</a>`:""}
+      ${p.site?`<a class="wikilink" href="${p.site}" target="_blank" rel="noopener">${T(p,"site")}</a>`:""}
+      <span class="spacer"></span>
+      <button class="btn" id="closebtn">${u.close}</button>
+    </div>
+    <div class="credit" id="credit">${
+      p.credit_en ? T(p,"credit")
+      : p.pan ? `${u.cred_pan} · <a href="http://${MSOC}${p.panpage}" target="_blank" rel="noopener">mathsoc.spb.ru</a>`
+      : (candidates(i).length ? u.credit : u.note)}</div>`;
+  document.getElementById("overlay").classList.add("open");
+  if(PHOTO[i] && p.wiki && !p.pan) fetchCredit(i).then(c=>{
+    const el=document.getElementById("credit");
+    if(!el || !c) return;
+    const bits=[c.artist,c.license].filter(Boolean).join(" · ");
+    el.innerHTML = `${u.credit}${bits?" — "+bits:""} · <a href="${p.wiki}" target="_blank" rel="noopener">${wikiTitle(p).replace(/_/g," ")}</a>`;
+  });
+  document.getElementById("reveal").onclick=e=>{document.getElementById("ans").classList.add("show"); e.target.style.display="none";};
+  document.getElementById("closebtn").onclick=close;
+  document.getElementById("stampbtn").onclick=()=>{
+    if(stamps.has(i)) stamps.delete(i); else stamps.add(i);
+    save(); openCard(i); refresh(false);
+  };
+}
+function close(){ document.getElementById("overlay").classList.remove("open"); }
+
+function refresh(rerender=true){
+  const u=UI[lang];
+  document.getElementById("pass").textContent=u.pass(stamps.size);
+  document.getElementById("meterfill").style.width=(100*stamps.size/D.length)+"%";
+  document.getElementById("banner").classList.toggle("show",stamps.size===D.length);
+  document.getElementById("banner-text").textContent=u.done;
+  if(rerender){ renderLine(); renderWall(); }
+  else { renderLine(); renderWall(); }
+}
+
+function applyLang(){
+  const u=UI[lang];
+  document.getElementById("t-title").textContent=u.title;
+  document.getElementById("t-sub").textContent=u.sub;
+  document.getElementById("t-stub1").textContent=u.s1;
+  document.getElementById("t-stub2").textContent=u.s2;
+  document.getElementById("t-stub3").textContent=u.s3;
+  document.getElementById("v-line").textContent=u.line;
+  document.getElementById("v-wall").textContent=u.wall;
+  document.getElementById("lang").textContent=u.lang;
+  document.getElementById("reset").textContent=u.reset;
+  document.getElementById("f1").textContent=u.f1;
+  document.getElementById("f2").textContent=u.f2;
+  document.documentElement.lang = lang==="vi"?"vi":"en";
+  paintChip();
+  refresh();
+}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-i]");
+  if(b){ openCard(+b.dataset.i); }
+});
+document.getElementById("overlay").addEventListener("click",e=>{ if(e.target.id==="overlay") close(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") close(); });
+
+document.getElementById("v-line").onclick=()=>setView("line");
+document.getElementById("v-wall").onclick=()=>setView("wall");
+function setView(v){
+  view=v;
+  document.getElementById("view-line").style.display = v==="line"?"":"none";
+  document.getElementById("view-wall").style.display = v==="wall"?"grid":"none";
+  document.getElementById("v-line").setAttribute("aria-pressed", v==="line");
+  document.getElementById("v-wall").setAttribute("aria-pressed", v==="wall");
+}
+document.getElementById("lang").onclick=()=>{ lang = lang==="en"?"vi":"en"; applyLang(); };
+document.getElementById("reset").onclick=()=>{ stamps=new Set(); save(); refresh(); };
+
+load();
+loadPhotoCache();
+DRAWN = D.map(p=>portraitSVG(p));
+if(wikiPhotoCount()||D.some(p=>p.pan)) photoState="on";
+applyLang();
+setView("line");
+fetchPhotos().catch(()=>{ photoState="off"; paintChip(); });
+</script>
+</body>
+</html>
