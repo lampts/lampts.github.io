@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The KV Cache — An Interactive Monograph</title>
+<meta name="description" content="An interactive monograph on the KV cache: why naive decoding is O(n³), what Q, K and V do, one decode step, the size of the cache, the causal mask, memory bandwidth, and prompt caching. With inline demos and a closing assessment.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VC31GENS6S"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-VC31GENS6S');
+</script>
+<script>
+  // Apply saved (or system) theme before first paint to avoid a flash
+  (function(){
+    var saved = localStorage.getItem('cw-theme');
+    var theme = saved || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root, :root[data-theme="light"]{
+    --bg:#fbfbf9; --paper:#ffffff; --ink:#14161b; --muted:#6a6f78; --faint:#9a9ea7;
+    --rule:#e7e6e1; --rule-2:#d8d7d1; --accent:#3a3fb0; --accent-ink:#ffffff;
+    --accent-soft:#ececfa; --v:#6a4fb0; --v-soft:#efeafa;
+    --ok:#1c7a54; --ok-soft:#e6f4ec; --warn:#a35a09; --warn-soft:#f7efe2;
+    --err:#b3261e; --err-soft:#fbeceb;
+    --code-bg:#f6f6f2; --code-ink:#1a1c22; --tag-bg:#f1f1ec; --sel:#dcdcf7;
+    --shadow:0 1px 0 rgba(0,0,0,.02);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d0e11; --paper:#131418; --ink:#e8e8e4; --muted:#969aa2; --faint:#6c7079;
+    --rule:#24262c; --rule-2:#2e3037; --accent:#9aa0ff; --accent-ink:#0b0c14;
+    --accent-soft:#1a1c2c; --v:#b9a4ff; --v-soft:#1f1a2e;
+    --ok:#57d9a3; --ok-soft:#12241d; --warn:#e0a94b; --warn-soft:#2a2110;
+    --err:#ff6b6b; --err-soft:#2a1416;
+    --code-bg:#0a0b0e; --code-ink:#e6e7ea; --tag-bg:#1b1d23; --sel:#2a2d4a;
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  ::selection{background:var(--sel)}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.72;
+    font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13.5px;-webkit-font-smoothing:antialiased;
+    transition:background .18s ease,color .18s ease}
+  a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
+  a:hover{border-bottom-color:var(--accent)}
+  b,strong{font-weight:600}
+  em,i{font-style:italic}
+
+  #app{display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;max-width:1180px;margin:0 auto}
+
+  /* ---- sidebar / contents ---- */
+  #side{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;
+    border-right:1px solid var(--rule);padding:22px 18px 40px}
+  #side .mast{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:2px}
+  #side .mast-t{font-size:13.5px;font-weight:700;letter-spacing:.01em;margin-bottom:18px;color:var(--ink)}
+  .toc-h{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);
+    margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+  .toc-sec{margin:10px 0 2px}
+  .toc-sec>a{display:block;font-size:12px;font-weight:600;color:var(--ink);padding:2px 0}
+  .toc-sec>a .n{color:var(--accent);margin-right:8px}
+  .toc-sub{display:block;font-size:11px;color:var(--muted);padding:2px 0 2px 22px;line-height:1.4}
+  .toc-sub:hover{color:var(--ink)}
+  .toc-sec>a.active{color:var(--accent)}
+  .toc-sec>a .tick{color:var(--ok);margin-left:6px;opacity:0;transition:opacity .2s}
+  .toc-sec>a.done .tick{opacity:1}
+
+  /* ---- main / paper ---- */
+  #main{min-width:0}
+  .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;
+    padding:9px 34px;background:color-mix(in srgb, var(--bg) 86%, transparent);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+  .topbar .k{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);letter-spacing:.02em}
+  .topbar .grow{flex:1}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);display:inline-block}
+  .dot.ok{background:var(--ok)} .dot.run{background:var(--warn);animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  #barprog{position:fixed;top:0;left:0;height:2px;background:var(--accent);z-index:40;width:0;transition:width .1s linear}
+
+  .btn{cursor:pointer;font-family:inherit;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:600;border:1px solid var(--rule-2);background:transparent;color:var(--ink);
+    padding:5px 11px;border-radius:2px;transition:all .15s ease}
+  .btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  .btn.solid{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn.solid:hover:not(:disabled){color:var(--accent-ink);opacity:.9}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  .paper{max-width:800px;margin:0 auto;padding:44px 34px 140px}
+
+  /* title block */
+  .titleblock{text-align:center;border-bottom:1px solid var(--rule-2);padding-bottom:30px;margin-bottom:8px}
+  .kicker{font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+  .titleblock h1{font-size:27px;line-height:1.28;font-weight:700;letter-spacing:-.01em;margin:0 auto 14px;max-width:640px}
+  .authors{font-size:13px;font-weight:500}
+  .affil{font-size:11.5px;color:var(--muted);margin-top:3px;font-style:italic}
+  .abstract{max-width:660px;margin:26px auto 0;padding:2px 0}
+  .abstract .lab{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);text-align:center;margin-bottom:8px}
+  .abstract p{font-size:12.5px;color:var(--ink);margin:0 0 8px;text-align:justify;hyphens:auto}
+  .abstract .how{font-size:11.5px;color:var(--muted);border-top:1px solid var(--rule);margin-top:12px;padding-top:10px;text-align:center}
+  .abstract kbd{font-family:inherit;font-size:10.5px;background:var(--tag-bg);border:1px solid var(--rule-2);border-radius:3px;padding:1px 5px}
+
+  /* section headers */
+  .sec-head{scroll-margin-top:70px;margin:52px 0 4px;padding-bottom:8px;border-bottom:1px solid var(--rule-2)}
+  .sec-head h2{font-size:19px;font-weight:700;margin:0;letter-spacing:-.005em}
+  .sec-head h2 .n{color:var(--accent);margin-right:14px;font-variant-numeric:tabular-nums}
+  .sec-head .lead{font-size:12px;color:var(--muted);margin:8px 0 0}
+
+  /* step */
+  .step{scroll-margin-top:70px;margin:30px 0}
+  .step-h{display:flex;align-items:baseline;gap:12px;margin:0 0 10px}
+  .step-h .sn{font-size:12px;color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;min-width:30px}
+  .step-h .st{font-size:14px;font-weight:600;letter-spacing:-.005em}
+
+  /* commentary */
+  .comment{border-left:2px solid var(--accent);padding:2px 0 2px 16px;margin:12px 0}
+  .comment .who{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}
+  .comment p{margin:0 0 9px;font-size:12.8px;color:var(--ink)}
+  .comment p:last-child{margin-bottom:0}
+  .comment code{font-size:11.5px;background:var(--tag-bg);padding:1px 5px;border-radius:3px}
+  .comment small{color:var(--muted);font-size:11px}
+
+  /* concept cards / lists */
+  .note-body{margin:12px 0}
+  .note-body ul{margin:6px 0;padding-left:20px}
+  .note-body li{margin:4px 0;font-size:12.5px}
+  .note-body p{font-size:12.5px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:14px 0}
+  .card{background:var(--paper);padding:13px 15px}
+  .card h4{margin:0 0 5px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  .card p{margin:0;font-size:11.5px;color:var(--muted);line-height:1.55}
+
+  /* key idea callout */
+  .keyidea{border-left:2px solid var(--accent);background:var(--accent-soft);padding:11px 15px;margin:16px 0;border-radius:0 3px 3px 0}
+  .keyidea .lab{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;font-weight:600}
+  .keyidea p{margin:0;font-size:12.5px;color:var(--ink)}
+
+  /* display formula */
+  .formula{border:1px solid var(--rule-2);background:var(--code-bg);color:var(--code-ink);border-radius:3px;
+    padding:14px;margin:14px 0;font-size:13px;text-align:center;overflow-x:auto;line-height:1.9}
+  .formula .t{color:var(--accent);font-weight:600}
+  .formula .t2{color:var(--v);font-weight:600}
+  .formula .t3{color:var(--warn);font-weight:600}
+
+  /* ---- interactive demo shell ---- */
+  .demo{border:1px solid var(--rule-2);border-radius:3px;background:var(--paper);margin:16px 0;overflow:hidden}
+  .demo-head{display:flex;align-items:center;gap:10px;padding:7px 13px;border-bottom:1px solid var(--rule);background:var(--tag-bg)}
+  .demo-head .in{font-size:10.5px;color:var(--accent);font-weight:600;letter-spacing:.04em}
+  .demo-head .grow{flex:1}
+  .demo-head .hint{font-size:10px;color:var(--faint)}
+  .demo-body{padding:15px 14px}
+  .demo-note{font-size:11.5px;color:var(--muted);margin:0 0 6px;line-height:1.55}
+  .btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:12px 0}
+  .demo-out{font-size:12px;color:var(--ink);text-align:center;margin-top:10px;min-height:1.2em;line-height:1.6}
+  .demo-out.accent{color:var(--accent);font-weight:600}
+
+  /* tokens / chips */
+  .toks{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:4px 0}
+  .tok{font-size:11.5px;font-weight:500;border:1px solid var(--rule-2);border-radius:3px;padding:3px 8px;white-space:nowrap;background:var(--paper);color:var(--muted);transition:all .18s ease}
+  .tok.plain{background:var(--tag-bg);border-color:var(--rule-2);color:var(--muted)}
+  .tok.dep{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .tok.target{background:var(--v-soft);border-color:var(--v);color:var(--v);box-shadow:0 0 0 2px var(--v-soft)}
+  .tok.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+  .tok.bad{background:var(--err-soft);border-color:var(--err);color:var(--err);text-decoration:line-through}
+  .tok.dead{background:var(--paper);border-color:var(--rule);color:var(--faint);opacity:.7}
+  .scan{animation:scan .5s ease-out}
+  @keyframes scan{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%, transparent)}100%{box-shadow:0 0 0 7px transparent}}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin:12px 0}
+  .stat{background:var(--paper);padding:11px 13px;text-align:center}
+  .stat .lab{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+  .stat .val{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat .val.accent{color:var(--accent)} .stat .val.err{color:var(--err)} .stat .val.v{color:var(--v)}
+
+  /* bar chart */
+  .barchart{display:flex;align-items:flex-end;gap:5px;height:120px;margin:10px 0 4px}
+  .barcol{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end}
+  .bar{width:100%;max-width:34px;border-radius:2px 2px 0 0;background:var(--accent);transition:height .5s cubic-bezier(.4,0,.2,1),background .3s}
+  .barcol .bl{font-size:9px;color:var(--faint)}
+
+  /* K/V badges + cache slot */
+  .kv{font-size:9.5px;font-weight:700;border-radius:2px;padding:1px 5px;color:#fff}
+  .kv.k{background:var(--accent)} .kv.v{background:var(--v)}
+  .slot{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:3px;padding:4px 7px}
+  .slot .nm{font-size:11px;font-weight:600;color:var(--ink)}
+
+  /* vector cards (decode) */
+  .veccard{border:1px solid;border-radius:3px;padding:6px 10px;font-weight:700;font-size:12px;display:inline-flex;flex-direction:column;gap:1px}
+  .veccard .sub{font-weight:500;font-size:9.5px;opacity:.85}
+  .vec-q{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
+  .vec-k{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .vec-v{border-color:var(--v);background:var(--v-soft);color:var(--v)}
+
+  /* decode-step cache cells + panels */
+  .cacherow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .ccell{border:1px solid var(--rule-2);border-radius:3px;background:var(--tag-bg);padding:6px;text-align:center}
+  .ccell.fresh{border-style:dashed}
+  .ccell .cn{font-size:10.5px;font-weight:600;color:var(--ink)}
+  .ccell .cv{margin-top:4px;display:flex;justify-content:center;gap:3px}
+  .stbars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+  .stbarcol{text-align:center}
+  .stbarcol .bl{font-size:9px;color:var(--faint)}
+  .stbar{margin:0 auto;width:100%;max-width:30px;border-radius:2px 2px 0 0;background:var(--faint);transition:height .4s ease,background .3s}
+  .panel{border:1px solid var(--rule);border-radius:3px;background:var(--tag-bg);padding:9px 11px;font-size:11.5px;line-height:1.6}
+  .panel.hidden{display:none}
+  .dots{display:flex;gap:5px;justify-content:center}
+  .dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;cursor:pointer;background:var(--rule-2)}
+  .dots button.on{background:var(--accent);transform:scale(1.25)}
+  .dots button.past{background:color-mix(in srgb,var(--accent) 45%,transparent)}
+
+  /* mask grid */
+  .maskgrid{display:grid;gap:3px;max-width:360px;margin:8px auto}
+  .mcell{aspect-ratio:1;min-height:26px;border-radius:2px;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+  .mhead{font-size:9.5px;color:var(--faint);display:flex;align-items:center;justify-content:center}
+  .m-allow{background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 40%,transparent);color:var(--ok)}
+  .m-block{background:var(--err-soft);border:1px solid color-mix(in srgb,var(--err) 40%,transparent);color:var(--err);cursor:pointer}
+  .m-block:hover{filter:brightness(.97)}
+  .m-block.sel{background:var(--err);border-color:var(--err);color:#fff}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:10px;margin-top:8px}
+  .legend span{padding:2px 8px;border-radius:2px}
+  .lg-ok{background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 40%,transparent)}
+  .lg-no{background:var(--err-soft);color:var(--err);border:1px solid color-mix(in srgb,var(--err) 40%,transparent)}
+
+  /* softmax demo columns */
+  .smgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+  .smcol{border:1px solid var(--rule-2);border-radius:3px;background:var(--tag-bg);padding:8px 4px;text-align:center}
+  .smcol.future{border-color:var(--err)}
+  .smcol .cap{font-size:9.5px;color:var(--muted)}
+  .smcol .sc{font-size:10.5px;font-weight:600;margin:2px 0}
+  .smbar{margin:6px auto 0;width:60%;border-radius:2px 2px 0 0;background:var(--accent);transition:height .45s ease}
+  .smbar.future{background:var(--err)}
+  .smlabels{display:flex;justify-content:space-around;font-size:11px;font-weight:600;margin-top:5px}
+
+  /* bandwidth scale */
+  .scale{position:relative;height:52px;margin:10px 0 2px}
+  .scale .axis{position:absolute;left:0;right:0;top:18px;height:1px;background:var(--rule-2)}
+  .scale .mk{position:absolute;transform:translateX(-50%);text-align:center;top:6px}
+  .scale .mk .tick{width:1px;height:8px;background:var(--faint);margin:0 auto}
+  .scale .mk .t{font-size:8.5px;color:var(--faint);margin-top:2px;white-space:nowrap}
+  .scale .you{position:absolute;top:30px;transform:translateX(-50%)}
+  .scale .you .b{font-size:9.5px;font-weight:600;color:var(--accent-ink);background:var(--accent);border-radius:2px;padding:1px 6px;white-space:nowrap}
+  .track{height:14px;border-radius:2px;background:var(--tag-bg);border:1px solid var(--rule-2);overflow:hidden}
+  .track > div{height:100%;background:var(--accent);transition:width .5s ease}
+
+  /* slider */
+  .slider{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--rule-2);outline:none;margin:8px 0}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);border:2px solid var(--paper);cursor:pointer}
+  .slider::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--accent);border:2px solid var(--paper);cursor:pointer}
+  .srow{display:flex;justify-content:space-between;font-size:9.5px;color:var(--faint);margin-top:-2px}
+  select.sel{width:100%;font-family:inherit;font-size:12px;background:var(--paper);color:var(--ink);border:1px solid var(--rule-2);border-radius:3px;padding:6px 8px}
+  label.flab{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+
+  /* size comparison bars */
+  .cmp{display:flex;align-items:center;gap:10px;margin:6px 0}
+  .cmp .nm{width:120px;text-align:right;font-size:10.5px;color:var(--muted);flex-shrink:0}
+  .cmp .nm.bold{color:var(--accent);font-weight:600}
+  .cmp .tk{flex:1;height:14px;border-radius:2px;background:var(--tag-bg);border:1px solid var(--rule);overflow:hidden}
+  .cmp .tk > div{height:100%;transition:width .5s ease}
+  .cmp .vv{width:56px;font-size:10.5px;font-weight:600;flex-shrink:0}
+  .cmp .vv.bold{color:var(--accent)}
+
+  /* layout builder */
+  .blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px;margin:12px 0}
+  .blk{border:1px solid var(--rule-2);border-radius:3px;background:var(--paper);padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px;transition:all .18s}
+  .blk.ok{border-color:var(--ok);background:var(--ok-soft)}
+  .blk.err{border-color:var(--err);background:var(--err-soft)}
+  .blk.warn{box-shadow:0 0 0 1px var(--warn)}
+  .blk .bl{font-size:11px;font-weight:600;color:var(--ink)}
+  .seg{display:flex;gap:4px;flex-shrink:0}
+  .seg button{font-family:inherit;font-size:9px;font-weight:600;border:1px solid var(--rule-2);background:var(--paper);color:var(--faint);border-radius:2px;padding:3px 6px;cursor:pointer;letter-spacing:.04em}
+  .seg button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .msg{font-size:11.5px;border-radius:3px;padding:9px 12px;margin-top:10px;line-height:1.55}
+  .msg.ok{background:var(--ok-soft);color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent)}
+  .msg.err{background:var(--err-soft);color:var(--err);border:1px solid color-mix(in srgb,var(--err) 35%,transparent)}
+  .msg.warn{background:var(--warn-soft);color:var(--warn);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent)}
+
+  /* cache-hit slots */
+  .hitrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:360px;margin:6px auto}
+  .hit{border:1px solid var(--rule-2);border-radius:3px;background:var(--tag-bg);color:var(--muted);text-align:center;padding:11px 4px;font-size:11px;font-weight:600;white-space:pre-line;line-height:1.5}
+  .hit.hit{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+  .hit.fresh{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .hit.bad{border-color:var(--err);background:var(--err-soft);color:var(--err)}
+  .hit.dead{border-color:var(--rule);color:var(--faint)}
+
+  /* check-yourself + quiz options */
+  .check{border:1px dashed var(--accent);border-radius:3px;background:var(--accent-soft);padding:13px 15px;margin:18px 0}
+  .check .cq{font-size:12.5px;font-weight:600;margin:0 0 10px}
+  .check .clab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:600}
+  .opts{display:grid;gap:6px}
+  @media(min-width:560px){.opts{grid-template-columns:1fr 1fr}}
+  .opt{font-family:inherit;text-align:left;font-size:11.5px;border:1px solid var(--rule-2);background:var(--paper);color:var(--ink);
+    border-radius:3px;padding:8px 10px;cursor:pointer;transition:all .15s;line-height:1.45}
+  .opt:hover:not(:disabled){border-color:var(--accent)}
+  .opt.correct{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+  .opt.wrong{border-color:var(--err);background:var(--err-soft);color:var(--err);opacity:.75}
+  .opt:disabled{cursor:default}
+  .expl{margin-top:10px;font-size:11.5px;line-height:1.6;border-top:1px solid var(--rule);padding-top:9px}
+  .expl.ok{color:var(--ok)} .expl.no{color:var(--err)}
+  .expl b{color:var(--ink)}
+  .shake{animation:shake .4s}
+  @keyframes shake{10%,90%{transform:translateX(-1px)}30%,70%{transform:translateX(3px)}50%{transform:translateX(-4px)}}
+
+  /* quiz result ring */
+  .ring-wrap{width:150px;height:150px;margin:8px auto;position:relative}
+  .ring-wrap .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring-wrap .sc{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+  .ring-wrap .sl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .qdots{display:flex;gap:5px;justify-content:center;margin-bottom:12px}
+  .qdots span{width:7px;height:7px;border-radius:50%;background:var(--rule-2)}
+  .qdots span.on{background:var(--accent);transform:scale(1.25)}
+  .qdots span.right{background:var(--ok)} .qdots span.wrong{background:var(--err)}
+
+  footer{border-top:1px solid var(--rule);color:var(--muted);font-size:11px;text-align:center;padding:22px 20px;line-height:1.7}
+
+  @media(max-width:900px){
+    #app{grid-template-columns:1fr}
+    #side{display:none}
+    .paper{padding:30px 20px 120px}
+    .topbar{padding:9px 20px}
+  }
+  @media(max-width:430px){
+    body{font-size:13px}
+    .topbar{padding:8px 12px;gap:8px}
+    .paper{padding:22px 15px 100px}
+    .titleblock h1{font-size:20px}
+    .abstract p,.abstract .how{text-align:left}
+    .sec-head h2{font-size:16px}
+    .cacherow,.stbars{grid-template-columns:repeat(2,1fr)}
+    .cmp .nm{width:88px}
+  }
+</style>
+</head>
+<body>
+<div id="barprog"></div>
+
+<div id="app">
+  <nav id="side">
+    <div class="mast">Interactive Monograph</div>
+    <div class="mast-t">The&nbsp;KV&nbsp;Cache</div>
+    <div class="toc-h">Contents</div>
+    <div id="toc"></div>
+  </nav>
+
+  <div id="main">
+    <div class="topbar">
+      <span class="k"><span class="dot" id="kdot"></span><span id="kstat">0 / 7 checkpoints</span></span>
+      <span class="grow"></span>
+      <button class="btn" id="themeToggle" title="Toggle light / dark">Theme</button>
+      <button class="btn" id="toAssess" title="Jump to the assessment">Assessment</button>
+    </div>
+
+    <div class="paper">
+      <div class="titleblock">
+        <div class="kicker">LLM Inference · Attention at Decode Time</div>
+        <h1>The KV Cache:<br>A Hands-On, In-Browser Walkthrough</h1>
+        <div class="authors">An interactive monograph</div>
+        <div class="affil">Why decoding feels like re-reading the whole conversation for every word — and the one trick that buys back a factor of N</div>
+
+        <div class="abstract">
+          <div class="lab">Abstract</div>
+          <p>To generate the next token, an autoregressive transformer runs its whole attention stack over the entire sequence so far. Do that naively for every token and the first word of your prompt is re-processed for every word of the answer — a single decode step costs <b>O(n²)</b>, and the whole answer costs <b>O(n³)</b>. This walkthrough builds the intuition for the <b>KV cache</b>: why a token's <em>keys</em> and <em>values</em> are worth keeping but its <em>query</em> is not, what one cached decode step actually does, how large the cache grows, why the causal mask uses <b>−∞</b> rather than <b>×0</b>, why decoding is memory-bandwidth bound, and why prompt caching only reuses a contiguous prefix. It closes with a six-question assessment.</p>
+          <p class="how">Every figure is live. Step the demos, drag the sliders, answer the checkpoints. Toggle <kbd>Theme</kbd> for dark mode. No code, no build step — pure in-browser JavaScript.</p>
+        </div>
+      </div>
+      <div id="content"></div>
+      <footer>
+        Built as a single HTML file — vanilla JavaScript, no frameworks, no build step.<br>
+        Styled as an interactive monograph. Inspired by the &ldquo;KV Cache&rdquo; explainer. Made for learning by doing.
+      </footer>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============================================================================
+   THE KV CACHE — interactive monograph
+   Data-driven: a STEPS array of narrated notes + live JS demos, rendered into
+   numbered sections with a sidebar TOC and scroll-spy. No dependencies.
+   ============================================================================ */
+
+/* ---------- tiny helpers ---------- */
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+function el(tag, cls, html){ const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+function softmax(a){ const e = a.map(Math.exp); const s = e.reduce((x,y)=>x+y,0); return e.map(x=>x/s); }
+function animateNum(node, target, { dur = 600, decimals = 0, suffix = '', prefix = '' } = {}) {
+  const from = parseFloat(node.dataset.v || '0'); const t0 = performance.now();
+  cancelAnimationFrame(node._raf);
+  (function tick(t){
+    const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3), v = from + (target - from) * e;
+    node.textContent = prefix + v.toLocaleString('en-US', { maximumFractionDigits: decimals }) + suffix;
+    node.dataset.v = v;
+    if (p < 1) node._raf = requestAnimationFrame(tick);
+  })(performance.now());
+}
+const state = { checks: {} };
+
+/* ============================================================================
+   CONTENT
+   ============================================================================ */
+const STEPS = [
+/* ------------------------------------------------------------------ SECTION 0 */
+{ lesson:'L0', lessonTitle:'Section 0 — The problem',
+  lessonLead:'Why naive autoregressive decoding does a cubic amount of work.',
+  title:'Every word, the model re-reads everything',
+  note:`<p>You ask a model a question and it is halfway through writing the answer. To produce the next word, it looks back at every word before it and runs the entire stack of attention layers over the whole sequence. That part is fine — that is how attention works.</p>
+  <p>The problem: to produce the word <em>after</em> that, it does the same thing again <b>from scratch</b>, over a sequence one token longer. And again. And again.</p>` ,
+  keyidea:`The same words at the start of the prompt get <b>re-embedded, re-mixed, re-attended</b> at every step. If the answer is 1,000 tokens long, the first word of the prompt is processed roughly 1,000 times — and every pass runs attention over the whole sequence. So one decode step costs <b>O(n²)</b>, and the whole answer costs <b>O(n³)</b>.` },
+
+{ lesson:'L0', title:'Watch the waste', widget:'recWaste',
+  note:`<p>Decode token after token. Each step re-scans the <em>entire</em> growing sequence; watch the per-step attention work pile up quadratically.</p>` },
+
+{ lesson:'L0', check:'problem' },
+
+/* ------------------------------------------------------------------ SECTION 1 */
+{ lesson:'L1', lessonTitle:'Section 1 — Query, Key, Value',
+  lessonLead:'The asymmetry that makes the whole trick possible.',
+  title:'Every token splits into Q, K and V',
+  note:`<p>Inside every attention layer, every token is projected into three vectors: a <b>Query</b>, a <b>Key</b> and a <b>Value</b>.</p>`,
+  body:`<div class="cards">
+    <div class="card"><h4>Q · Query</h4><p>&ldquo;What am I looking for?&rdquo; The vector that goes shopping across the earlier tokens.</p></div>
+    <div class="card"><h4>K · Key</h4><p>&ldquo;What do I offer?&rdquo; What a token advertises to every query that comes after it.</p></div>
+    <div class="card"><h4>V · Value</h4><p>&ldquo;What I contribute if attention lands on me.&rdquo; The payload that gets mixed in.</p></div>
+  </div>
+  <div class="note-body"><p>Here is the asymmetry that makes everything work. A token's <b>Q is used at exactly one moment</b> — when that token's own output is computed. After that it is gone; nothing in the future needs it again. But that token's <b>K and V get queried by every future token, at every future decode step</b>.</p></div>`,
+  keyidea:`Q is a <b>consumer</b>; K and V are <b>providers</b>. The trick almost writes itself: <b>cache K and V</b>, because they are reused forever, and <b>throw Q away</b>, because it is not.` },
+
+{ lesson:'L1', title:'You are the cache', widget:'qkvCache',
+  note:`<p>Decode tokens one at a time. Each produces a Q (used once, discarded) and a K and V (stored forever). Watch what the cache keeps — and remember this happens at every layer, for every KV head.</p>` },
+
+{ lesson:'L1', check:'vectors' },
+
+/* ------------------------------------------------------------------ SECTION 2 */
+{ lesson:'L2', lessonTitle:'Section 2 — One decode step',
+  lessonLead:'Follow a single cached decode step from embedding to sample.',
+  title:'The cache, one step at a time',
+  note:`<p>Picture the cache as a row of slots — one per token, holding K and V, at every layer. Here is exactly what happens when the model decodes the next token. Step through it.</p>` },
+
+{ lesson:'L2', title:'Six steps of a cached decode', widget:'decodeStep' },
+
+{ lesson:'L2', keyidea:`The decode step is now <b>linear in the sequence length</b>, not quadratic. The cache literally <b>bought back one factor of N</b>: the new Q dots against each cached K once, softmax, weighted sum of the cached V's — done.` },
+
+{ lesson:'L2', check:'decode' },
+
+/* ------------------------------------------------------------------ SECTION 3 */
+{ lesson:'L3', lessonTitle:'Section 3 — The size of the cache',
+  lessonLead:'The cache is not free: it is K and V for every layer, head and token.',
+  title:'But the cache is not free',
+  note:`<p>It is not one tensor. It is <b>K and V at every attention layer, for every KV head, for every token currently in context</b>. The total, in bytes, is:</p>`,
+  body:`<div class="formula"><span class="t3">2</span> (K&amp;V) &times; <span class="t">layers</span> &times; <span class="t2">KV&nbsp;heads</span> &times; <span class="t">seq&nbsp;len</span> &times; <span class="t2">head&nbsp;dim</span> &times; <span class="t3">bytes/element</span></div>` },
+
+{ lesson:'L3', title:'Cache calculator', widget:'sizeCalc',
+  note:`<p>Drag the context length and switch models. Watch the cache — and the bill — grow, per user, on top of the model weights.</p>` },
+
+{ lesson:'L3', keyidea:`For Llama-3-70B in half precision (80 layers, 8 KV heads via GQA), that is about <b>1.3&nbsp;GB</b> of cache at 4,000 tokens and <b>10.5&nbsp;GB</b> at 32,000 tokens — <b>per user</b>, on top of the 140&nbsp;GB of weights. Serving long context efficiently is largely a fight with this number.` },
+
+{ lesson:'L3', check:'size' },
+
+/* ------------------------------------------------------------------ SECTION 4 */
+{ lesson:'L4', lessonTitle:'Section 4 — The causal mask',
+  lessonLead:'Disabling a position means −∞ additive, never a multiplicative zero.',
+  title:'The mask lives on the scores',
+  note:`<p>During training and prefill the model processes the whole sequence in <b>parallel</b>. But token 3 must not attend to token 5 — token 5 is in its future. So we mask. The mask does not live on Q, K or V (those are just linear projections that know nothing about ordering). It lives on the <b>score matrix</b> — the n&times;n grid of dot products right before softmax.</p>` },
+
+{ lesson:'L4', title:'The score matrix', widget:'maskGrid',
+  note:`<p>Each cell is a dot product Q&middot;K before softmax. Rows are query tokens, columns are key tokens. Click a blocked (future) cell to see the mask applied.</p>` },
+
+{ lesson:'L4', title:'Why not just multiply by zero?', widget:'softmax',
+  note:`<p>One row of scores, right before softmax; the last token is in the future. Try both ways of disabling it and watch where its attention weight lands.</p>` },
+
+{ lesson:'L4', keyidea:`Whenever a score is about to pass through softmax, <b>disable means −∞ additive, never ×0</b>: <code>softmax(0)=e⁰=1</code> still casts a full vote, while <code>e⁻∞=0</code> removes the position entirely. At decode time the mask is trivial — there is one query row, and every cached key is, by definition, in the past.` },
+
+{ lesson:'L4', check:'mask' },
+
+/* ------------------------------------------------------------------ SECTION 5 */
+{ lesson:'L5', lessonTitle:'Section 5 — Memory bandwidth',
+  lessonLead:'Why fast GPUs crawl through decoding — and why quantization helps.',
+  title:'Decoding is memory-bandwidth bound',
+  note:`<p>Per decode step on a 70-billion-parameter model, the GPU must load roughly <b>140&nbsp;GB of weights</b> from high-bandwidth memory (plus the cache) and does roughly <b>140&nbsp;GFLOPs</b> of useful work. Bytes loaded and flops done are almost the same number: arithmetic intensity &asymp; <b>1 flop per byte</b>.</p>` },
+
+{ lesson:'L5', title:'The balance point', widget:'bandwidth',
+  note:`<p>Pick a precision. The flops stay the same — but the bytes you must stream from HBM change, and so does how far you sit from the hardware's balance point.</p>` },
+
+{ lesson:'L5', keyidea:`An H100's balance point is closer to <b>300 flops/byte</b>; at ~1 flop/byte we are ~300&times; off, so the cores idle waiting on memory. That is why <b>quantization</b> helps so much — same flops, fewer bytes; halving the bits doubles the flops extracted per byte. <b>Batching</b> helps too, but only for weights (shared across users). The cache is per user, so cache bandwidth scales straight with the batch.` },
+
+{ lesson:'L5', check:'bandwidth' },
+
+/* ------------------------------------------------------------------ SECTION 6 */
+{ lesson:'L6', lessonTitle:'Section 6 — Reuse across requests',
+  lessonLead:'Why prompt caching only reuses a contiguous prefix from the start.',
+  title:'Why prompt caching works the way it does',
+  note:`<p>When two requests share a prefix, in principle you could keep the cache from the first and reuse it for the second. In practice you can — but <b>only for the prefix, and only contiguous from the start</b>. Never an arbitrary span in the middle. Never a suffix.</p>` },
+
+{ lesson:'L6', title:'The entanglement', widget:'entangle',
+  note:`<p>Track one token — <b>&ldquo;mat&rdquo;</b> — through the layers. Drag the layer slider to see how far back its K and V reach.</p>` },
+
+{ lesson:'L6', title:'One byte changes everything after it', widget:'invalid',
+  note:`<p>Click any token to make one byte of it differ between two requests. Everything from that point on becomes invalid.</p>` },
+
+{ lesson:'L6', title:'Build the prompt layout', widget:'layout',
+  note:`<p>You are designing a prompt sent millions of times. For each block decide: <b>Stable</b> (identical across requests → cacheable prefix) or <b>Variable</b> (unique per request → must come last).</p>` },
+
+{ lesson:'L6', title:'Request 2 comes along', widget:'cacheHit',
+  note:`<p>Request 1 prefilled <code>A B C D</code>. What can request 2 reuse?</p>` },
+
+{ lesson:'L6', keyidea:`<b>Stable content first, variable content last.</b> Get the layout right and you save the prefill cost across millions of requests; get it wrong and you pay it every time. Every optimization — MQA/GQA, sliding windows, paged attention, prompt caching — is one of three moves: <b>shrink it, share it, or extract more compute per cache load</b>.` },
+
+{ lesson:'L6', check:'prefix' },
+
+/* ------------------------------------------------------------------ SECTION 7 */
+{ lesson:'L7', lessonTitle:'Section 7 — Assessment',
+  lessonLead:'Six questions covering the whole walkthrough, with feedback after each.',
+  title:'Final assessment', widget:'quiz' },
+];
+
+/* ============================================================================
+   CHECKPOINTS + QUIZ DATA
+   ============================================================================ */
+const CHECKS = {
+  problem: { q:'If your answer is n tokens long, roughly how much total work does naive decoding do?',
+    opts:['O(n) — it scales linearly','O(n²) — quadratic across the whole answer','O(n³) — cubic across the whole answer','O(1) — the model remembers the prefix'], correct:2,
+    expl:'Each of the n decode steps re-runs the full attention stack over the whole growing sequence, so one step is O(n²) — and n steps make the whole answer O(n³). The first token of your prompt is processed roughly n times.' },
+  vectors: { q:'Which vectors does the KV cache store?',
+    opts:['Q and K — V is recomputed each step','K and V — Q is thrown away','All three: Q, K and V','Only Q — it is the query that matters'], correct:1,
+    expl:'Q is a consumer: used at the single moment a token’s own output is computed, then never needed again. K and V are providers — every future token queries them at every future decode step, so they are cached, at every layer.' },
+  decode: { q:'With a KV cache, the cost of one decode step grows…',
+    opts:['Quadratically with the context length','Linearly with the context length','It stays constant regardless of context','Cubically with the context length'], correct:1,
+    expl:'The new Q dots against every cached K exactly once per layer — an O(n) pass — instead of re-running the full stack over the whole sequence. The cache bought back one factor of n.' },
+  size: { q:'A Llama-3-70B model at a 32,000-token context needs a KV cache of roughly…',
+    opts:['1.3 GB','10.5 GB','140 GB','320 MB'], correct:1,
+    expl:'2 (K and V) × 80 layers × 8 KV heads × 32,000 tokens × 128 head dim × 2 bytes ≈ 10.5 GB — per user, on top of the 140 GB of weights. At 4,000 tokens it is about 1.3 GB. GQA is why there are only 8 KV heads, not 64.' },
+  mask: { q:'To stop a future position from voting during prefill, the causal mask…',
+    opts:['Multiplies that position’s score by 0','Adds −∞ to that position’s score before softmax','Deletes that position’s key from the cache','Sets that position’s value vector to zero'], correct:1,
+    expl:'softmax(0) = e⁰ = 1, so a score multiplied by zero still casts a normal vote. Adding −∞ gives e⁻∞ = 0, which removes the position from the sum. Disable means −∞ additive, never a multiplicative zero.' },
+  bandwidth: { q:'Why does quantization speed up decoding so dramatically?',
+    opts:['It reduces the number of floating-point operations','It streams fewer bytes for the same number of flops','It shrinks the model’s vocabulary','It only speeds up prefill, not decoding'], correct:1,
+    expl:'Same flops, fewer bytes to stream — arithmetic intensity doubles when you halve the bits (16→8) and again (8→4). Decoding is memory-bound, so cutting the bytes you move is almost a direct speedup.' },
+  prefix: { q:'Two requests share a prefix, but one byte differs in the middle of it. What happens to the cached K/V?',
+    opts:['Everything stays valid — each byte is independent','Only that one token’s K/V is invalidated','The cache is invalid from that point on','The whole cache must be recomputed, even the shared start'], correct:2,
+    expl:'At layer 1 a token’s K/V depend only on itself. Each deeper layer mixes attention over all previous tokens, so by layer 80 a token’s K/V are entangled with everything before it. One differing byte invalidates the cache from that point on — only a contiguous prefix from the start can be reused.' },
+};
+
+const QUIZ = [
+  { q:'With no cache, a model writes a 1,000-token answer. Roughly how many times is the very first token of your prompt re-processed?',
+    opts:['Once — it is implicitly remembered','About 1,000 times','About 1,000 × 1,000 times','Exactly 1,000² × layers times'], correct:1,
+    expl:'Each of the ~1,000 decode steps runs the full attention stack over the whole sequence, so the first token is re-embedded, re-mixed and re-attended at every step. Naive decoding is O(n²) per step and O(n³) across the answer.' },
+  { q:'The KV cache stores K and V for every token. Why is Q never cached?',
+    opts:['Q is too large to store','Q changes after the token is generated','Q is used only at the moment the token’s own output is computed — nothing later needs it','Q is reconstructed from K and V on the fly'], correct:2,
+    expl:'Q is a consumer: used exactly once, when the token’s own output is computed, then gone. K and V are providers — every future token queries them at every future decode step, so they are cached, at every layer.' },
+  { q:'During prefill, why does the causal mask add −∞ to future positions instead of multiplying by 0?',
+    opts:['Multiplying by 0 is too slow on GPUs','softmax(0)=e⁰=1, so a zeroed score still casts a full vote; e⁻∞=0 removes the position','−∞ keeps all scores negative, which softmax requires','Multiplying by 0 would corrupt the value vectors'], correct:1,
+    expl:'A score of 0 passes through softmax as e⁰ = 1 — a normal vote. Adding −∞ makes e⁻∞ = 0, which actually removes the position from the weighted sum. Disable means −∞ additive, never ×0.' },
+  { q:'With a KV cache, the cost of one decode step is now…',
+    opts:['O(n²) — quadratic in the context length','O(n) — linear in the context length','O(1) — independent of the context length','O(n³) — cubic in the context length'], correct:1,
+    expl:'The new Q dots against every cached K once per layer, then weights a sum over the cached V’s. No re-processing of early tokens — the step is linear in n, and the cache bought back one factor of N.' },
+  { q:'For Llama-3-70B in half precision, the KV cache at 32,000 tokens is about…',
+    opts:['1.3 GB','10.5 GB','140 GB','800 KB'], correct:1,
+    expl:'2 (K&V) × 80 layers × 8 KV heads × 32,000 tokens × 128 head dim × 2 bytes ≈ 10.5 GB — per user, on top of the 140 GB of weights. At 4,000 tokens it is about 1.3 GB.' },
+  { q:'A byte differs in the middle of a shared prefix. Why is the cache invalid from that point on?',
+    opts:['KV pairs are stored with checksums','K and V depend only on their own token','Each layer mixes attention over all previous tokens, entangling every later KV with the whole prefix','The cache lives in fast but volatile memory'], correct:2,
+    expl:'Layer 1’s K/V are projections of the token itself, but layer 2’s depend on layer 1’s output, which already mixed attention from all previous tokens. Layer by layer the entanglement deepens, so one differing byte invalidates the cache from that point on. Only a contiguous prefix from the start can be reused.' },
+];
+
+/* ============================================================================
+   WIDGET REGISTRY — each mounts into its container `root`
+   ============================================================================ */
+const WIDGETS = {};
+
+/* ---- 0 · watch the waste ------------------------------------------------- */
+WIDGETS.recWaste = function(root){
+  const PROMPT = ['The','cat','sat','on','the','mat'];
+  const DECODE = ['then','it','purred','softly','all','night'];
+  root.innerHTML = `
+    <div class="toks" data-r="toks"></div>
+    <div class="btnrow">
+      <button class="btn solid" data-r="next">Decode next token</button>
+      <button class="btn" data-r="reset">Reset</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="lab">First token re-attended</div><div class="val accent"><span data-r="first">0</span>×</div></div>
+      <div class="stat"><div class="lab">Total attention work (pairs)</div><div class="val err" data-r="work">0</div></div>
+    </div>
+    <div class="barchart" data-r="chart"></div>
+    <div class="demo-out" data-r="note"></div>`;
+  const q = s => root.querySelector(s);
+  let s = 0;
+  const FINAL_M = PROMPT.length + DECODE.length - 1, MAX = FINAL_M * FINAL_M;
+  function render(){
+    const toks = q('[data-r=toks]'); toks.innerHTML = '';
+    PROMPT.forEach(t => toks.appendChild(el('span','tok plain',t)));
+    for (let i=0;i<s;i++) toks.appendChild(el('span','tok dep',DECODE[i]));
+    let work = 0; for (let k=0;k<s;k++){ const m = PROMPT.length + k; work += m*m; }
+    animateNum(q('[data-r=first]'), s); animateNum(q('[data-r=work]'), work);
+    const chart = q('[data-r=chart]'); chart.innerHTML = '';
+    for (let k=0;k<s;k++){
+      const m = PROMPT.length + k, w = m*m;
+      const col = el('div','barcol'); const bar = el('div','bar');
+      bar.style.height = '0px'; bar.style.background = (k===s-1) ? 'var(--v)' : 'var(--accent)';
+      bar.title = 'step '+(k+1)+' · '+m+' tokens · '+w+' pairs';
+      col.appendChild(bar); col.appendChild(el('div','bl',String(k+1))); chart.appendChild(col);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ bar.style.height = Math.round(w/MAX*112)+'px'; }));
+    }
+    q('[data-r=note]').textContent = s >= DECODE.length
+      ? 'Six steps in, the first token has been re-processed '+s+' times and we are at '+work.toLocaleString('en-US')+' attention pairs. Now imagine 1,000 tokens: that is the O(n³) wall.'
+      : (s>0 ? 'Each new word re-scans every word before it…' : 'Press “Decode next token”.');
+    const nx = q('[data-r=next]'); nx.disabled = s >= DECODE.length;
+    nx.textContent = s >= DECODE.length ? 'That is enough' : 'Decode next token';
+    $$('.tok', toks).forEach((c,i)=>{ if(i>=toks.children.length-1) return; setTimeout(()=>{ c.classList.remove('scan'); void c.offsetWidth; c.classList.add('scan'); }, i*45); });
+  }
+  q('[data-r=next]').onclick = ()=>{ if(s<DECODE.length){ s++; render(); } };
+  q('[data-r=reset]').onclick = ()=>{ s=0; render(); };
+  render();
+};
+
+/* ---- 1 · you are the cache ---------------------------------------------- */
+WIDGETS.qkvCache = function(root){
+  const TOKENS = ['The','cat','sat','on','the','mat'];
+  root.innerHTML = `
+    <div style="min-height:5rem;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px" data-r="stage"></div>
+    <div class="btnrow"><button class="btn solid" data-r="next">Decode</button></div>
+    <div class="demo-note" style="text-align:center;margin-top:6px">Key–Value cache — one slot per token, holding K and V</div>
+    <div class="toks" data-r="cache" style="min-height:2rem"></div>
+    <div class="demo-out" data-r="counter"></div>
+    <div class="demo-out accent" data-r="note"></div>`;
+  const q = s => root.querySelector(s);
+  let i = 0, busy = false;
+  function decode(){
+    if (busy || i >= TOKENS.length) return; busy = true;
+    const t = TOKENS[i]; const stage = q('[data-r=stage]'); stage.innerHTML = '';
+    stage.appendChild(el('span','tok plain',t));
+    stage.appendChild(el('span',null,'→'));
+    const mk = (cls,l,sub)=>{ const c = el('div','veccard '+cls,l); c.appendChild(el('span','sub',sub)); return c; };
+    const qc = mk('vec-q','Q','used once'), kc = mk('vec-k','K','cached'), vc = mk('vec-v','V','cached');
+    stage.appendChild(qc); stage.appendChild(kc); stage.appendChild(vc);
+    setTimeout(()=>{ qc.style.opacity = .25; qc.style.textDecoration = 'line-through';
+      const g = el('span','tok bad','Q discarded'); stage.insertBefore(g, stage.children[2]); }, 650);
+    setTimeout(()=>{
+      const slot = el('div','slot'); slot.appendChild(el('span','nm',t));
+      slot.appendChild(el('span','kv k','K')); slot.appendChild(el('span','kv v','V'));
+      slot.title = 'K and V for “'+t+'” — queried by every future token, at every layer';
+      q('[data-r=cache]').appendChild(slot); i++;
+      q('[data-r=counter]').textContent = 'Cache holds '+i+' slot'+(i===1?'':'s')+' · Q discarded '+i+' time'+(i===1?'':'s');
+      q('[data-r=note]').textContent = i >= TOKENS.length
+        ? 'Six tokens decoded — the cache kept 12 vectors (K and V each). Q was thrown away every time.'
+        : '“'+t+'” stored. Its Q is gone for good.';
+      const nx = q('[data-r=next]'); nx.textContent = i >= TOKENS.length ? 'Cache full' : 'Decode'; nx.disabled = i >= TOKENS.length;
+      busy = false;
+    }, 1050);
+  }
+  q('[data-r=next]').onclick = decode;
+};
+
+/* ---- 2 · one decode step ------------------------------------------------ */
+WIDGETS.decodeStep = function(root){
+  const SEQ = ['I','love','warm'], NEW = 'sun';
+  const SCORES = [0.9,0.2,0.7,0.4], W = softmax(SCORES);
+  const STEPS_ = [
+    { t:'Embedding → Q, K, V', c:'The new token’s embedding is projected into its own Q, K and V — at this layer.' },
+    { t:'Append K and V to the cache', c:'The new K and V join the row of cached slots. The cache grew by one — its Q is discarded.' },
+    { t:'Dot Q against every cached K', c:'The new Q is dotted against every K in the cache — one score per slot.' },
+    { t:'Softmax over the scores', c:'The scores run through softmax and become weights that sum to 1.00.' },
+    { t:'Weighted sum over the cached V’s', c:'Each cached V is scaled by its weight and summed — the attention output for this token at this layer.' },
+    { t:'Pass on, sample, cache grows', c:'The output flows through the rest of the network; the next token is sampled; the cache has grown by one slot.' }
+  ];
+  root.innerHTML = `
+    <div class="demo-note"><b data-r="title"></b> · <span data-r="stepno"></span></div>
+    <div class="demo-note" style="margin-top:6px">sequence so far</div>
+    <div class="toks" data-r="seq"></div>
+    <div class="demo-note" style="margin-top:10px">cached K / V slots</div>
+    <div class="cacherow" data-r="cache"></div>
+    <div class="stbars" data-r="bars"></div>
+    <div data-r="panels" style="margin-top:12px"></div>
+    <div class="demo-out" data-r="caption"></div>
+    <div class="btnrow" style="justify-content:space-between">
+      <button class="btn" data-r="back">‹ Back</button>
+      <div class="dots" data-r="dots"></div>
+      <button class="btn solid" data-r="next">Next step ›</button>
+    </div>`;
+  const q = s => root.querySelector(s);
+  let step = 0;
+  // sequence
+  const seq = q('[data-r=seq]');
+  SEQ.forEach(t=>seq.appendChild(el('span','tok plain',t)));
+  seq.appendChild(el('span','tok target',NEW));
+  // cache cells
+  const cr = q('[data-r=cache]');
+  SEQ.forEach((t,idx)=>{ const c = el('div','ccell'); c.appendChild(el('div','cn',t));
+    const kv = el('div','cv'); kv.innerHTML = '<span class="kv k">K</span><span class="kv v">V</span>'; c.appendChild(kv); cr.appendChild(c); });
+  const c4 = el('div','ccell fresh'); c4.appendChild(el('div','cn',NEW));
+  const kv4 = el('div','cv'); kv4.id='dsKV'; kv4.innerHTML = '<span style="font-size:9px;color:var(--faint)">…</span>'; c4.appendChild(kv4); cr.appendChild(c4);
+  // bars
+  const bars = q('[data-r=bars]'); const barEls = [], labEls = [];
+  for (let i=0;i<4;i++){ const col = el('div','stbarcol'); const l = el('div','bl','—');
+    const b = el('div','stbar'); b.style.height='0px'; col.appendChild(l); col.appendChild(b); bars.appendChild(col); barEls.push(b); labEls.push(l); }
+  // panels
+  const P = [
+    '<span class="tok plain">'+NEW+'</span> → <span class="veccard vec-q">Q</span> <span class="veccard vec-k">K</span> <span class="veccard vec-v">V</span>',
+    'K and V for <b>“'+NEW+'”</b> are appended — slot 4 fills in. <span style="color:var(--warn)">Q is thrown away.</span>',
+    'Q·K₁ = 0.9 &nbsp; Q·K₂ = 0.2 &nbsp; Q·K₃ = 0.7 &nbsp; Q·K₄ = 0.4',
+    'Scores → softmax → weights summing to <b>1.00</b>.',
+    'Weighted sum: '+W.map((w,i)=>w.toFixed(2)+'·V'+(i+1)).join(' + ')+' → output',
+    '<b>“'+NEW+'”</b> is sampled as the next token. Sequence +1, cache +1 — and the whole step was <b>O(n)</b>.'
+  ];
+  const panels = q('[data-r=panels]');
+  panels.innerHTML = P.map((p,i)=>'<div class="panel'+(i===0?'':' hidden')+'">'+p+'</div>').join('');
+  const panelEls = [...panels.children];
+  // dots
+  const dots = q('[data-r=dots]');
+  for (let i=0;i<6;i++){ const d = el('button'); d.onclick = ()=>{ step=i; render(); }; dots.appendChild(d); }
+  function setBars(mode){
+    for (let i=0;i<4;i++){ const b = barEls[i], l = labEls[i];
+      if (mode==='scores'){ b.style.background='var(--accent)'; b.style.height=(SCORES[i]*80)+'px'; l.textContent=SCORES[i].toFixed(1); }
+      else if (mode==='weights'){ b.style.background='var(--ok)'; b.style.height=(W[i]*90)+'px'; l.textContent=Math.round(W[i]*100)+'%'; }
+      else { b.style.background='var(--faint)'; b.style.height='0px'; l.textContent='—'; } }
+  }
+  function render(){
+    const n = step;
+    q('[data-r=title]').textContent = STEPS_[n].t;
+    q('[data-r=stepno]').textContent = 'step '+(n+1)+' / 6';
+    q('[data-r=caption]').textContent = STEPS_[n].c;
+    panelEls.forEach((p,i)=> p.classList.toggle('hidden', i!==n));
+    kv4.innerHTML = n>=1 ? '<span class="kv k">K</span><span class="kv v">V</span>' : '<span style="font-size:9px;color:var(--faint)">…</span>';
+    c4.classList.toggle('fresh', n<1);
+    if (n<2) setBars('none'); else if (n===2) setBars('scores'); else setBars('weights');
+    $$('button', dots).forEach((d,i)=> d.className = i===n ? 'on' : (i<n ? 'past' : ''));
+    q('[data-r=back]').disabled = n===0;
+    q('[data-r=next]').textContent = n===5 ? 'Replay ↺' : 'Next step ›';
+  }
+  q('[data-r=next]').onclick = ()=>{ step = step>=5 ? 0 : step+1; render(); };
+  q('[data-r=back]').onclick = ()=>{ if(step>0){ step--; render(); } };
+  render();
+};
+
+/* ---- 3 · cache calculator ----------------------------------------------- */
+WIDGETS.sizeCalc = function(root){
+  const MODELS = {
+    '70b': { name:'Llama-3-70B (bf16)', layers:80, kvHeads:8, headDim:128, bytes:2, weightsGB:140 },
+    '8b':  { name:'Llama-3-8B (bf16)',  layers:32, kvHeads:8, headDim:128, bytes:2, weightsGB:16 }
+  };
+  root.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div><label class="flab">Model</label><select class="sel" data-r="model"></select></div>
+      <div><label class="flab">Context length</label>
+        <input type="range" class="slider" data-r="seq" min="1000" max="128000" step="1000" value="4000">
+        <div class="srow"><span>1k</span><span data-r="seqval" style="color:var(--accent);font-weight:600">4,000</span><span>128k</span></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin:16px 0 6px">
+      <div class="flab">KV cache size</div>
+      <div style="font-size:34px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums" data-r="gb">1.3 GB</div>
+      <div class="demo-note" data-r="formula" style="text-align:center"></div>
+      <div style="font-size:10.5px;color:var(--err);font-weight:600;margin-top:2px">per user — on top of the model weights</div>
+    </div>
+    <div data-r="bars"></div>`;
+  const q = s => root.querySelector(s);
+  const sel = q('[data-r=model]');
+  Object.keys(MODELS).forEach(k=>{ const o = el('option',null,MODELS[k].name); o.value=k; sel.appendChild(o); });
+  sel.value = '70b';
+  function gbOf(m,seq){ return 2*m.layers*m.kvHeads*seq*m.headDim*m.bytes/1e9; }
+  function render(){
+    const m = MODELS[sel.value], seq = parseInt(q('[data-r=seq]').value,10), gb = gbOf(m,seq);
+    q('[data-r=seqval]').textContent = seq.toLocaleString('en-US');
+    animateNum(q('[data-r=gb]'), gb, { decimals: gb<10?1:0, suffix:' GB' });
+    q('[data-r=formula]').textContent = '2 × '+m.layers+' × '+m.kvHeads+' × '+seq.toLocaleString('en-US')+' × '+m.headDim+' × '+m.bytes+' bytes';
+    const refs = [
+      { label:'KV cache (per user)', gb, bold:true, col:'var(--accent)' },
+      { label:'Model weights', gb:m.weightsGB, bold:false, col:'var(--muted)' },
+      { label:'4K movie file', gb:25, bold:false, col:'var(--warn)' },
+      { label:'Typical laptop RAM', gb:16, bold:false, col:'var(--ok)' }
+    ];
+    const scale = Math.max(gb, m.weightsGB, 30) * 1.05;
+    const wrap = q('[data-r=bars]'); wrap.innerHTML = '';
+    refs.forEach(r=>{
+      const row = el('div','cmp');
+      row.appendChild(el('div','nm'+(r.bold?' bold':''), r.label));
+      const tk = el('div','tk'); const b = el('div'); b.style.width='0%'; b.style.background=r.col; tk.appendChild(b);
+      row.appendChild(tk);
+      row.appendChild(el('div','vv'+(r.bold?' bold':''), (r.gb>=10?r.gb.toFixed(0):r.gb.toFixed(1))+' GB'));
+      wrap.appendChild(row);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ b.style.width = Math.min(100, r.gb/scale*100)+'%'; }));
+    });
+  }
+  sel.onchange = render; q('[data-r=seq]').oninput = render; render();
+};
+
+/* ---- 4a · mask grid ----------------------------------------------------- */
+WIDGETS.maskGrid = function(root){
+  const N = 7;
+  root.innerHTML = `
+    <div class="maskgrid" data-r="grid"></div>
+    <div class="legend"><span class="lg-ok">✓ allowed — past or self</span><span class="lg-no">✗ blocked — future</span></div>
+    <div class="demo-out" data-r="note" style="min-height:2.2em"></div>
+    <div style="text-align:center"><button class="btn" data-r="clear">clear highlights</button></div>`;
+  const q = s => root.querySelector(s);
+  const g = q('[data-r=grid]');
+  g.style.gridTemplateColumns = 'repeat('+(N+1)+',1fr)';
+  for (let r=0;r<=N;r++) for (let c=0;c<=N;c++){
+    if (r===0 && c===0){ g.appendChild(el('div','mhead','Q\\K')); continue; }
+    if (r===0){ g.appendChild(el('div','mhead','k'+c)); continue; }
+    if (c===0){ g.appendChild(el('div','mhead','q'+r)); continue; }
+    const allowed = c <= r;
+    const cell = el('button','mcell '+(allowed?'m-allow':'m-block'), allowed?'✓':'✗');
+    if (!allowed) cell.onclick = ()=>{
+      $$('.m-block', g).forEach(x=>x.classList.remove('sel')); cell.classList.add('sel');
+      q('[data-r=note]').innerHTML = 'Score('+r+','+c+') gets <b>−∞</b> added before softmax → <b>e⁻∞ = 0</b> → token '+r+' cannot see token '+c+'.';
+    };
+    g.appendChild(cell);
+  }
+  q('[data-r=clear]').onclick = ()=>{ $$('.m-block', g).forEach(x=>x.classList.remove('sel')); q('[data-r=note]').textContent=''; };
+};
+
+/* ---- 4b · softmax −∞ vs ×0 ---------------------------------------------- */
+WIDGETS.softmax = function(root){
+  const BASE = [0.5,0.5,0.5,0.5];
+  const caps = ['“the” · past','“cat” · past','“sat” · past','FUTURE'];
+  root.innerHTML = `
+    <div class="btnrow">
+      <button class="btn" data-r="zero">✕ multiply by 0</button>
+      <button class="btn solid" data-r="neg">＋ add −∞</button>
+    </div>
+    <div class="smgrid" data-r="grid"></div>
+    <div class="smlabels" data-r="labels"></div>
+    <div class="msg" data-r="verdict" style="margin-top:12px"></div>`;
+  const q = s => root.querySelector(s);
+  const grid = q('[data-r=grid]');
+  caps.forEach((cap,i)=>{ const col = el('div','smcol'+(i===3?' future':''));
+    col.appendChild(el('div','cap',cap)); col.appendChild(el('div','sc','0.5'));
+    const b = el('div','smbar'+(i===3?' future':'')); b.style.height='0px'; b.id='smB'+i; col.appendChild(b); grid.appendChild(col); });
+  let mode = 'neg';
+  function render(){
+    const s = BASE.slice(); s[3] = mode==='zero' ? 0 : -1000;
+    const w = softmax(s);
+    for (let i=0;i<4;i++) root.querySelector('#smB'+i).style.height = (w[i]*70)+'px';
+    q('[data-r=labels]').innerHTML = w.map((x,i)=>'<span style="color:'+(i===3?'var(--err)':'var(--accent)')+'">'+Math.round(x*100)+'%</span>').join('');
+    const v = q('[data-r=verdict]');
+    if (mode==='zero'){ v.className='msg err';
+      v.innerHTML = 'Multiply by <b>0</b>: the score becomes 0, but <b>softmax(0)=e⁰=1</b> — the “disabled” future token still gets <b>'+Math.round(w[3]*100)+'%</b> of the attention. A perfectly normal vote. Nothing was disabled.'; }
+    else { v.className='msg ok';
+      v.innerHTML = 'Add <b>−∞</b>: <b>e⁻∞=0</b>, so the future token gets <b>exactly 0%</b> — the position is removed from the sum entirely.'; }
+    q('[data-r=zero]').className = 'btn'+(mode==='zero'?' solid':'');
+    q('[data-r=neg]').className = 'btn'+(mode==='neg'?' solid':'');
+  }
+  q('[data-r=zero]').onclick = ()=>{ mode='zero'; render(); };
+  q('[data-r=neg]').onclick = ()=>{ mode='neg'; render(); };
+  render();
+};
+
+/* ---- 5 · bandwidth balance ---------------------------------------------- */
+WIDGETS.bandwidth = function(root){
+  const BW = [ {bits:16,bytes:140,intensity:1,speed:1}, {bits:8,bytes:70,intensity:2,speed:2}, {bits:4,bytes:35,intensity:4,speed:4} ];
+  const TICKS = [ {v:1,pct:0},{v:2,pct:12.2},{v:4,pct:24.3},{v:10,pct:40.4},{v:100,pct:80.7},{v:300,pct:100} ];
+  root.innerHTML = `
+    <div class="btnrow" data-r="btns">
+      <button class="btn solid" data-b="0">16-bit (bf16)</button>
+      <button class="btn" data-b="1">8-bit (int8)</button>
+      <button class="btn" data-b="2">4-bit (int4)</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="lab">Weights streamed / step</div><div class="val"><span data-r="w">140</span> GB</div></div>
+      <div class="stat"><div class="lab">Arithmetic intensity</div><div class="val accent"><span data-r="int">1</span> f/B</div></div>
+      <div class="stat"><div class="lab">Decode speed (relative)</div><div class="val v"><span data-r="sp">×1</span></div></div>
+    </div>
+    <div class="track" style="margin-top:6px"><div data-r="wbar" style="width:100%"></div></div>
+    <div class="demo-note" style="margin-top:4px">weights to stream — same 140 GFLOPs either way</div>
+    <div class="demo-note" style="margin-top:12px">flops per byte — where are you vs the balance point?</div>
+    <div class="scale"><div class="axis"></div><div data-r="mk"></div></div>
+    <div class="msg warn" data-r="idle">⏳ The cores finish faster than memory can feed them — and sit idle, waiting on HBM.</div>`;
+  const q = s => root.querySelector(s);
+  let idx = 0;
+  function render(){
+    const b = BW[idx];
+    animateNum(q('[data-r=w]'), b.bytes); animateNum(q('[data-r=int]'), b.intensity);
+    q('[data-r=sp]').textContent = '×'+b.speed;
+    q('[data-r=wbar]').style.width = (b.bytes/140*100)+'%';
+    const mk = q('[data-r=mk]'); mk.innerHTML = '';
+    TICKS.forEach(t=>{ const m = el('div','mk'); m.style.left=t.pct+'%';
+      m.innerHTML = '<div class="tick"'+(t.v===300?' style="background:var(--warn)"':'')+'></div><div class="t"'+(t.v===300?' style="color:var(--warn);font-weight:600"':'')+'>'+(t.v===300?'▲ 300':t.v)+'</div>'; mk.appendChild(m); });
+    const you = el('div','you'); you.style.left = (Math.log10(b.intensity)/Math.log10(300)*100)+'%';
+    you.innerHTML = '<div class="b">◆ you: '+b.intensity+'</div>'; mk.appendChild(you);
+    $$('button', q('[data-r=btns]')).forEach((btn,i)=> btn.className = 'btn'+(i===idx?' solid':''));
+  }
+  $$('button', q('[data-r=btns]')).forEach((btn,i)=> btn.onclick = ()=>{ idx=i; render(); });
+  render();
+};
+
+/* ---- 6a · entanglement -------------------------------------------------- */
+WIDGETS.entangle = function(root){
+  const CTX = ['The','cat','sat','on','the','mat','and','purred'], TARGET = 5;
+  root.innerHTML = `
+    <input type="range" class="slider" data-r="layer" min="1" max="80" value="1">
+    <div class="srow"><span>layer 1</span><span data-r="lv" style="color:var(--accent);font-weight:600">layer 1</span><span>layer 80</span></div>
+    <div class="toks" data-r="toks" style="margin-top:8px"></div>
+    <div class="msg" data-r="text" style="background:var(--tag-bg);border-color:var(--rule);color:var(--ink);margin-top:12px"></div>`;
+  const q = s => root.querySelector(s);
+  function render(){
+    const L = parseInt(q('[data-r=layer]').value,10);
+    q('[data-r=lv]').textContent = 'layer '+L;
+    const dep = L===1 ? new Set([TARGET]) : new Set(Array.from({length:TARGET+1},(_,i)=>i));
+    const toks = q('[data-r=toks]'); toks.innerHTML = '';
+    CTX.forEach((t,i)=>{ const c = el('span','tok '+(dep.has(i)?'dep':'plain')+(i===TARGET?' target':''), i===TARGET ? t+' 🎯' : t); toks.appendChild(c); });
+    q('[data-r=text]').textContent = L===1
+      ? 'Layer 1: the K and V of “mat” depend only on “mat” itself — just a projection of its embedding.'
+      : (L===2 ? 'Layer 2: “mat”’s K and V depend on layer 1’s output — and layer 1 already mixed attention from every previous token. Now they depend on the whole prefix.'
+      : 'Layer '+L+': each layer mixes again. By layer 80, “mat”’s K and V are deeply entangled with every token before it — so one differing byte anywhere in the prefix invalidates the cache from that point on.');
+  }
+  q('[data-r=layer]').oninput = render; render();
+};
+
+/* ---- 6b · invalid zone -------------------------------------------------- */
+WIDGETS.invalid = function(root){
+  const CTX = ['The','cat','sat','on','the','mat','and','purred'];
+  root.innerHTML = `<div class="toks" data-r="toks"></div><div class="msg" data-r="text" style="background:var(--tag-bg);border-color:var(--rule);color:var(--ink);margin-top:12px"></div>`;
+  const q = s => root.querySelector(s);
+  let changed = 2;
+  function render(){
+    const toks = q('[data-r=toks]'); toks.innerHTML = '';
+    CTX.forEach((t,i)=>{ const st = i<changed ? 'ok' : (i===changed ? 'bad' : 'dead');
+      const c = el('button','tok '+st, st==='bad' ? t+' ✗' : t); c.onclick = ()=>{ changed=i; render(); }; toks.appendChild(c); });
+    q('[data-r=text]').textContent = changed===0
+      ? 'The very first byte differs → nothing can be reused; request 2 re-prefills everything.'
+      : 'One byte differs in token '+(changed+1)+' (“'+CTX[changed]+'”). Tokens before it stay valid; everything from that point on is invalid. Only a contiguous prefix from the start can be reused — never a middle span, never a suffix.';
+  }
+  render();
+};
+
+/* ---- 6c · layout builder ------------------------------------------------ */
+WIDGETS.layout = function(root){
+  const LAYOUT = [
+    {id:'sys',label:'System prompt',stable:true}, {id:'tools',label:'Tool definitions',stable:true},
+    {id:'few',label:'Few-shot examples',stable:true}, {id:'name',label:'User’s name',stable:false},
+    {id:'date',label:'Current date',stable:false}, {id:'sid',label:'Session / request ID',stable:false},
+    {id:'q',label:'The question itself',stable:false}
+  ];
+  root.innerHTML = `
+    <div class="blocks" data-r="blocks"></div>
+    <div class="btnrow"><button class="btn solid" data-r="check">Check layout</button><button class="btn" data-r="reset">Reset</button></div>
+    <div data-r="msg"></div>
+    <div class="msg" data-r="strip" style="display:none;background:var(--tag-bg);border-color:var(--rule);color:var(--ink)"></div>`;
+  const q = s => root.querySelector(s);
+  const sel = {};
+  const blocks = q('[data-r=blocks]');
+  LAYOUT.forEach(b=>{
+    const card = el('div','blk'); card.dataset.id = b.id;
+    card.appendChild(el('div','bl',b.label));
+    const seg = el('div','seg');
+    [['stable','Stable ↑'],['variable','Variable ↓']].forEach(([val,lab])=>{
+      const btn = el('button',null,lab); btn.dataset.val = val;
+      btn.onclick = ()=>{ sel[b.id] = val==='stable'; refresh(); };
+      seg.appendChild(btn);
+    });
+    card.appendChild(seg); blocks.appendChild(card);
+  });
+  function refresh(){
+    LAYOUT.forEach(b=>{ const card = blocks.querySelector('[data-id='+b.id+']');
+      card.classList.remove('ok','err','warn');
+      $$('button', card).forEach(btn=> btn.classList.toggle('on', sel[b.id]!==undefined && (btn.dataset.val==='stable')===sel[b.id])); });
+    q('[data-r=msg]').innerHTML = ''; q('[data-r=strip]').style.display = 'none';
+  }
+  function reset(){ LAYOUT.forEach(b=>sel[b.id]=undefined); refresh(); }
+  q('[data-r=check]').onclick = ()=>{
+    let allOk = true, anyUnset = false;
+    LAYOUT.forEach(b=>{ const card = blocks.querySelector('[data-id='+b.id+']'); card.classList.remove('ok','err','warn');
+      if (sel[b.id]===undefined){ anyUnset=true; card.classList.add('warn'); allOk=false; return; }
+      if (sel[b.id]===b.stable) card.classList.add('ok'); else { card.classList.add('err'); allOk=false; } });
+    const msg = q('[data-r=msg]');
+    if (anyUnset){ msg.innerHTML = '<div class="msg warn">Pick Stable or Variable for every block, then check again.</div>'; return; }
+    if (allOk){
+      msg.innerHTML = '<div class="msg ok">✓ Perfect. <b>Stable content first, variable content last.</b> Get this right and you save the prefill cost across millions of requests.</div>';
+      const strip = q('[data-r=strip]'); strip.style.display = 'block';
+      strip.innerHTML = '<b>the winning layout:</b> ' +
+        LAYOUT.filter(b=>b.stable).map(b=>'<span class="tok dep">'+b.label+'</span>').join(' ') + ' → ' +
+        LAYOUT.filter(b=>!b.stable).map(b=>'<span class="tok plain">'+b.label+'</span>').join(' ');
+    } else {
+      msg.innerHTML = '<div class="msg err">Not quite — the red blocks are misplaced. Which content is identical across every request (cacheable), and which is unique to this one (must come last)?</div>';
+    }
+  };
+  q('[data-r=reset]').onclick = reset;
+  reset();
+};
+
+/* ---- 6d · cache-hit story ----------------------------------------------- */
+WIDGETS.cacheHit = function(root){
+  root.innerHTML = `
+    <div class="hitrow" data-r="slots"></div>
+    <div class="btnrow">
+      <button class="btn" data-r="same">Same prefix: A B C</button>
+      <button class="btn" data-r="byte">One byte changed in B</button>
+      <button class="btn" data-r="reset">Reset</button>
+    </div>
+    <div class="msg" data-r="text" style="background:var(--tag-bg);border-color:var(--rule);color:var(--ink)"></div>`;
+  const q = s => root.querySelector(s);
+  let mode = null;
+  function render(){
+    const states = mode==='byte' ? ['hit','bad','dead','dead'] : (mode==='same' ? ['hit','hit','hit','fresh'] : ['','','','']);
+    const labels = ['A','B','C','D'], slots = q('[data-r=slots]'); slots.innerHTML = '';
+    labels.forEach((t,i)=>{ const s = el('div','hit '+states[i]);
+      s.textContent = states[i]==='hit' ? t+'\n✓ reused' : states[i]==='fresh' ? t+'\n⚡ prefill' : states[i]==='bad' ? t+'\n✗ changed' : states[i]==='dead' ? t+'\n✗ invalid' : t;
+      slots.appendChild(s); });
+    q('[data-r=text]').textContent = mode===null
+      ? 'Request 1 prefilled A B C D and its KV cache is in memory. Request 2 arrives with a shared prefix. What can it reuse?'
+      : (mode==='same' ? 'Request 2 reuses the cached K/V for A, B and C — it only pays to prefill D. The shared-prefix prefill is paid once, then amortized across millions of requests.'
+      : 'One byte in B differs. A is still reusable, but from B on every cached KV is invalid — request 2 must re-prefill B, C and D. This is why prompt caching only works for a contiguous prefix from the start.');
+  }
+  q('[data-r=same]').onclick = ()=>{ mode='same'; render(); };
+  q('[data-r=byte]').onclick = ()=>{ mode='byte'; render(); };
+  q('[data-r=reset]').onclick = ()=>{ mode=null; render(); };
+  render();
+};
+
+/* ---- final assessment ---------------------------------------------------- */
+WIDGETS.quiz = function(root){
+  const C = 2 * Math.PI * 52;
+  root.innerHTML = `
+    <div data-r="intro" style="text-align:center">
+      <p class="demo-note" style="text-align:center">Six questions covering the whole walkthrough. Instant feedback and an explanation after every answer.</p>
+      <div class="btnrow"><button class="btn solid" data-r="start">Start assessment</button></div>
+    </div>
+    <div data-r="box" style="display:none">
+      <div class="qdots" data-r="dots"></div>
+      <p style="font-size:13px;font-weight:600" data-r="q"></p>
+      <div class="opts" data-r="opts"></div>
+      <div class="expl" data-r="expl" style="display:none"></div>
+      <div class="btnrow" style="justify-content:flex-end"><button class="btn solid" data-r="next" style="display:none"></button></div>
+    </div>
+    <div data-r="result" style="display:none;text-align:center">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 120 120" style="transform:rotate(-90deg)">
+          <circle cx="60" cy="60" r="52" fill="none" stroke="var(--rule)" stroke-width="9"/>
+          <circle data-r="ring" cx="60" cy="60" r="52" fill="none" stroke="var(--accent)" stroke-width="9" stroke-linecap="round"
+            stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${C.toFixed(1)}" style="transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)"/>
+        </svg>
+        <div class="ctr"><div class="sc" data-r="score">0/6</div><div class="sl">score</div></div>
+      </div>
+      <p style="font-size:14px;font-weight:600" data-r="msg"></p>
+      <p class="demo-note" style="text-align:center" data-r="sub"></p>
+      <div class="btnrow"><button class="btn solid" data-r="retry">Retake</button><button class="btn" data-r="top">Back to top ↑</button></div>
+    </div>`;
+  const q = s => root.querySelector(s);
+  let i=0, score=0, answered=false, results=[];
+  function start(){ i=0; score=0; answered=false; results=[]; q('[data-r=intro]').style.display='none'; q('[data-r=result]').style.display='none'; q('[data-r=box]').style.display='block'; render(); }
+  function render(){
+    const dots = q('[data-r=dots]'); dots.innerHTML='';
+    QUIZ.forEach((_,k)=>{ const s = el('span'); s.className = k<i ? (results[k]?'right':'wrong') : (k===i?'on':''); dots.appendChild(s); });
+    const item = QUIZ[i];
+    q('[data-r=q]').textContent = 'Q'+(i+1)+'. '+item.q;
+    const opts = q('[data-r=opts]'); opts.innerHTML='';
+    item.opts.forEach((t,k)=>{ const b = el('button','opt', String.fromCharCode(65+k)+'.  '+t); b.onclick = ()=>pick(item,k,b); opts.appendChild(b); });
+    q('[data-r=expl]').style.display='none'; q('[data-r=next]').style.display='none';
+  }
+  function pick(item,k,b){
+    if (answered) return; answered = true;
+    const opts = q('[data-r=opts]'); $$('button', opts).forEach(o=>o.disabled=true);
+    const ok = k===item.correct;
+    if (ok){ score++; b.classList.add('correct'); results.push(true); }
+    else { b.classList.add('wrong'); b.classList.add('shake'); setTimeout(()=>b.classList.remove('shake'),400); $$('button',opts)[item.correct].classList.add('correct'); results.push(false); }
+    const ex = q('[data-r=expl]'); ex.className = 'expl '+(ok?'ok':'no');
+    ex.innerHTML = (ok?'✓ Correct. ':'✗ Not quite — the answer is '+String.fromCharCode(65+item.correct)+'. ')+item.expl;
+    ex.style.display='block';
+    const nx = q('[data-r=next]'); nx.textContent = i===QUIZ.length-1 ? 'See results' : 'Next question →'; nx.style.display='inline-block';
+  }
+  q('[data-r=next]').onclick = ()=>{ if (i<QUIZ.length-1){ i++; answered=false; render(); } else results_(); };
+  function results_(){
+    q('[data-r=box]').style.display='none'; const r = q('[data-r=result]'); r.style.display='block';
+    q('[data-r=score]').textContent = score+'/'+QUIZ.length;
+    const msgs = [
+      ['Below the bar','Revisit the sections and checkpoints, then retake.'],
+      ['Below the bar','Revisit the sections and checkpoints, then retake.'],
+      ['Below the bar','Revisit the sections and checkpoints, then retake.'],
+      ['Getting there','A solid start — review the ones you missed, then try again.'],
+      ['Solid','You understand the KV cache. Review the one you missed for perfection.'],
+      ['Excellent','One slip away from mastery.'],
+      ['KV Cache Master 🏆','Flawless. You know why decoding is memory-bound, why −∞ beats ×0, and why stable content comes first.']
+    ];
+    q('[data-r=msg]').textContent = msgs[score][0]; q('[data-r=sub]').textContent = msgs[score][1];
+    const ring = q('[data-r=ring]'); ring.style.strokeDashoffset = C;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ ring.style.strokeDashoffset = (1 - score/QUIZ.length) * C; }));
+  }
+  q('[data-r=start]').onclick = start; q('[data-r=retry]').onclick = start;
+  q('[data-r=top]').onclick = ()=> scrollTo({top:0,behavior:'smooth'});
+};
+
+/* ============================================================================
+   CHECK-YOURSELF (per-section checkpoints)
+   ============================================================================ */
+function mountCheck(root, id){
+  const c = CHECKS[id];
+  root.innerHTML = `<div class="clab">✏ Check yourself</div><p class="cq">${c.q}</p><div class="opts" data-r="opts"></div><div class="expl ok" data-r="expl" style="display:none"></div>`;
+  const opts = root.querySelector('[data-r=opts]');
+  c.opts.forEach((t,i)=>{ const b = el('button','opt', String.fromCharCode(65+i)+'.  '+t);
+    b.onclick = ()=>{
+      if (state.checks[id]) return;
+      if (i===c.correct){ b.classList.add('correct'); $$('button',opts).forEach(o=>o.disabled=true); state.checks[id]=true;
+        const ex = root.querySelector('[data-r=expl]'); ex.innerHTML = '<b>Correct.</b> '+c.expl; ex.style.display='block';
+        markSectionDone(id); updateProgress();
+      } else { b.classList.add('wrong'); b.disabled = true; b.classList.add('shake'); setTimeout(()=>b.classList.remove('shake'),400); }
+    };
+    opts.appendChild(b);
+  });
+}
+
+/* ============================================================================
+   BUILD UI + SCROLL-SPY + PROGRESS
+   ============================================================================ */
+const sectionEls = [];   // {id, tocLink, checkId}
+const checkToSection = {};
+
+function buildUI(){
+  const content = $('#content'), toc = $('#toc');
+  let sec = -1, sub = 0, curToc = null, curSecId = null;
+  STEPS.forEach(s=>{
+    if (s.lessonTitle){
+      sec++; sub = 0;
+      const clean = s.lessonTitle.replace(/^[^—]*—\s*/,'');
+      curSecId = 'sec-'+sec;
+      const head = el('div','sec-head'); head.id = curSecId;
+      head.appendChild(el('h2', null, '<span class="n">'+sec+'</span>'+clean));
+      if (s.lessonLead) head.appendChild(el('p','lead', s.lessonLead));
+      content.appendChild(head);
+      curToc = el('div','toc-sec');
+      const a = el('a', null, '<span class="n">'+sec+'</span>'+clean+'<span class="tick">✓</span>'); a.href = '#'+curSecId; a.dataset.target = curSecId;
+      curToc.appendChild(a); toc.appendChild(curToc);
+      sectionEls.push({ id:curSecId, tocLink:a, secNum:sec });
+    }
+    sub++;
+    const stepId = 'step-'+sec+'-'+sub;
+    const step = el('div','step'); step.id = stepId;
+    if (s.title) step.appendChild(el('div','step-h','<span class="sn">'+sec+'.'+sub+'</span><span class="st">'+s.title+'</span>'));
+    if (curToc && s.title){ const sa = el('a','toc-sub', sec+'.'+sub+'  '+s.title); sa.href = '#'+stepId; curToc.appendChild(sa); }
+
+    if (s.note){ const c = el('div','comment'); c.appendChild(el('div','who','Commentary')); c.insertAdjacentHTML('beforeend', s.note); step.appendChild(c); }
+    if (s.body){ step.appendChild(el('div','note-body', s.body)); }
+    if (s.keyidea){ const k = el('div','keyidea'); k.appendChild(el('div','lab','Key idea')); k.appendChild(el('p', null, s.keyidea)); step.appendChild(k); }
+    if (s.widget){
+      const demo = el('div','demo');
+      const head = el('div','demo-head'); head.appendChild(el('span','in','Figure '+sec+'.'+sub)); head.appendChild(el('span','grow')); head.appendChild(el('span','hint','interactive'));
+      demo.appendChild(head);
+      const bodyEl = el('div','demo-body'); demo.appendChild(bodyEl);
+      step.appendChild(demo);
+      if (WIDGETS[s.widget]) WIDGETS[s.widget](bodyEl);
+    }
+    if (s.check){
+      const box = el('div','check'); step.appendChild(box);
+      mountCheck(box, s.check);
+      checkToSection[s.check] = curSecId;
+    }
+    content.appendChild(step);
+  });
+
+  // scroll-spy
+  const obs = new IntersectionObserver(ents=>{
+    ents.forEach(en=>{ if (en.isIntersecting) sectionEls.forEach(se=> se.tocLink.classList.toggle('active', se.id===en.target.id)); });
+  }, { rootMargin:'-8% 0px -82% 0px' });
+  sectionEls.forEach(se=> obs.observe($('#'+se.id)));
+}
+
+function markSectionDone(checkId){
+  const secId = checkToSection[checkId];
+  const se = sectionEls.find(x=>x.id===secId);
+  if (se) se.tocLink.classList.add('done');
+}
+function updateProgress(){
+  const done = Object.keys(CHECKS).filter(k=>state.checks[k]).length, total = Object.keys(CHECKS).length;
+  $('#kstat').textContent = done+' / '+total+' checkpoints';
+  $('#kdot').className = 'dot '+(done===total ? 'ok' : '');
+}
+
+/* scroll progress bar */
+addEventListener('scroll', ()=>{
+  const d = document.documentElement, p = d.scrollTop / (d.scrollHeight - innerHeight) * 100;
+  $('#barprog').style.width = Math.min(100, p) + '%';
+}, { passive:true });
+
+/* theme toggle */
+function applyThemeLabel(){ $('#themeToggle').textContent = document.documentElement.dataset.theme === 'light' ? 'Dark' : 'Light'; }
+$('#themeToggle').onclick = ()=>{
+  const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = next; localStorage.setItem('cw-theme', next); applyThemeLabel();
+};
+applyThemeLabel();
+$('#toAssess').onclick = ()=>{ const a = $('#sec-7'); if (a) a.scrollIntoView({ behavior:'smooth' }); };
+
+buildUI();
+updateProgress();
+console.log('🧠 KV Cache monograph ready — 7 sections, 7 checkpoints, 6-question assessment.');
+</script>
+</body>
+</html>
