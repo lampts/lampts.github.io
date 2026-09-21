@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Rate — how fast does N tok/s feel?</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>⏱️</text></svg>">
+<script>
+  // Apply saved (or system) theme before first paint to avoid a flash
+  (function(){
+    var saved = localStorage.getItem('tok-theme');
+    var theme = saved || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root, :root[data-theme="light"]{
+    --bg:#fbfbf9; --paper:#ffffff; --ink:#14161b; --muted:#6a6f78; --faint:#9a9ea7;
+    --rule:#e7e6e1; --rule-2:#d8d7d1; --accent:#3a3fb0; --accent-ink:#ffffff;
+    --accent-soft:#ececfa; --ok:#1c7a54; --warn:#a35a09; --err:#b3261e;
+    --code-bg:#f6f6f2; --tag-bg:#f1f1ec; --sel:#dcdcf7; --shadow:0 1px 2px rgba(0,0,0,.04);
+  }
+  :root[data-theme="dark"]{
+    --bg:#0d0e11; --paper:#131418; --ink:#e8e8e4; --muted:#969aa2; --faint:#6c7079;
+    --rule:#24262c; --rule-2:#2e3037; --accent:#9aa0ff; --accent-ink:#0b0c14;
+    --accent-soft:#1a1c2c; --ok:#57d9a3; --warn:#e0a94b; --err:#ff6b6b;
+    --code-bg:#0a0b0e; --tag-bg:#1b1d23; --sel:#2a2d4a; --shadow:none;
+  }
+  *{box-sizing:border-box}
+  ::selection{background:var(--sel)}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13.5px;line-height:1.5;-webkit-font-smoothing:antialiased;
+    display:flex;flex-direction:column;
+    transition:background .18s ease,color .18s ease}
+
+  /* ---------- control bar ---------- */
+  .topbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;
+    padding:10px 18px;border-bottom:1px solid var(--rule);
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(8px);position:sticky;top:0;z-index:20}
+  .brand{display:flex;align-items:baseline;gap:9px;white-space:nowrap}
+  .brand .lam{font-size:15px;font-weight:700;letter-spacing:-.01em}
+  .brand .k{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+  .grow{flex:1 1 200px;min-width:150px;display:flex}
+
+  input[type=text],input[type=number]{
+    font-family:inherit;font-size:12.5px;color:var(--ink);background:var(--paper);
+    border:1px solid var(--rule-2);border-radius:3px;padding:6px 9px;outline:none;
+    transition:border-color .15s ease}
+  input[type=text]{width:100%}
+  input[type=text]:focus,input[type=number]:focus{border-color:var(--accent)}
+  input[type=text]::placeholder{color:var(--faint)}
+  input[type=number]{width:66px;text-align:right;-moz-appearance:textfield}
+
+  .btn{cursor:pointer;font-family:inherit;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:600;border:1px solid var(--rule-2);background:transparent;color:var(--ink);
+    padding:7px 13px;border-radius:3px;transition:all .15s ease;white-space:nowrap}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn.solid{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .btn.solid:hover{color:var(--accent-ink);opacity:.9}
+  .btn.stop{background:var(--err);border-color:var(--err);color:#fff}
+  .btn.icon{padding:7px 9px;font-size:13px}
+
+  /* segmented mode toggle */
+  .seg{display:flex;border:1px solid var(--rule-2);border-radius:3px;overflow:hidden}
+  .seg button{cursor:pointer;font-family:inherit;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    font-weight:600;border:0;background:transparent;color:var(--muted);padding:7px 12px;transition:all .12s ease}
+  .seg button+button{border-left:1px solid var(--rule-2)}
+  .seg button.on{background:var(--accent);color:var(--accent-ink)}
+
+  /* speed chips (per panel) */
+  .chips{display:flex;gap:4px;flex-wrap:wrap}
+  .chip{cursor:pointer;font-size:10.5px;padding:4px 7px;border:1px solid var(--rule-2);border-radius:3px;
+    background:transparent;color:var(--muted);font-family:inherit;transition:all .12s ease;font-variant-numeric:tabular-nums}
+  .chip:hover{border-color:var(--accent);color:var(--accent)}
+  .chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+  /* ---------- stage ---------- */
+  .stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;
+    padding:20px 18px;overflow:auto}
+  .panels{width:100%;height:100%;display:flex;gap:16px;justify-content:center;min-height:0}
+  .panels.solo{max-width:780px}
+  .panels.duo{max-width:1320px}
+  .panels.solo .panel.b{display:none}
+
+  .panel{flex:1 1 0;min-width:0;display:flex;flex-direction:column;background:var(--paper);
+    border:1px solid var(--rule);border-radius:8px;box-shadow:var(--shadow);
+    overflow:hidden;min-height:220px}
+  .panels.solo .panel{resize:both}
+  @media(max-width:640px){
+    .panels.duo{flex-direction:column;overflow:auto}
+    .panel{resize:vertical}
+  }
+
+  .panel-head{display:flex;align-items:center;gap:8px;padding:8px 13px;
+    border-bottom:1px solid var(--rule);font-size:11px;color:var(--muted);flex-wrap:wrap}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
+  .dot.ok{background:var(--ok)} .dot.run{background:var(--warn);animation:pulse 1s infinite} .dot.err{background:var(--err)}
+  @keyframes pulse{50%{opacity:.3}}
+  .panel-head .src{flex:1 1 120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+
+  .rate-ctl{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .rate-ctl .lab{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
+
+  .stream{flex:1;overflow-y:auto;padding:18px 22px 26px;
+    font-size:14.5px;line-height:1.72;white-space:pre-wrap;word-break:break-word;scroll-behavior:auto}
+  .stream .cursor{display:inline-block;width:8px;height:1.05em;vertical-align:text-bottom;
+    background:var(--accent);margin-left:1px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .stream.idle .cursor{animation:none;opacity:.35}
+  .placeholder{color:var(--faint);font-style:italic}
+
+  .panel-foot{display:flex;align-items:center;gap:14px;padding:7px 13px;
+    border-top:1px solid var(--rule);font-size:10.5px;color:var(--muted);
+    font-variant-numeric:tabular-nums;flex-wrap:wrap}
+  .panel-foot b{color:var(--ink);font-weight:600}
+  .panel-foot .spacer{flex:1}
+
+  .hint{width:100%;max-width:1320px;margin-top:12px;font-size:10.5px;color:var(--faint);text-align:center;line-height:1.6}
+  .hint kbd{font-family:inherit;font-size:10px;background:var(--tag-bg);border:1px solid var(--rule-2);border-radius:3px;padding:1px 5px}
+  .hint a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
+  .hint a:hover{border-bottom-color:var(--accent)}
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand"><span class="lam">⏱ Token Rate</span><span class="k">how fast is N&nbsp;tok/s?</span></div>
+
+    <div class="grow">
+      <input type="text" id="url" placeholder="paste any URL — or leave empty for a random Paul Graham essay" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="seg" id="mode">
+      <button data-m="solo" class="on">Solo</button>
+      <button data-m="duo">Duo</button>
+    </div>
+
+    <button class="btn solid" id="go">Start</button>
+    <button class="btn icon" id="theme" title="Toggle theme">◐</button>
+  </div>
+
+  <datalist id="speeds">
+    <option value="5"></option><option value="10"></option><option value="25"></option>
+    <option value="40"></option><option value="70"></option><option value="100"></option>
+    <option value="150"></option><option value="300"></option>
+  </datalist>
+
+  <div class="stage">
+    <div class="panels solo" id="panels"></div>
+    <div class="hint">Text is fetched as plain text through the <a href="https://r.jina.ai" target="_blank">Jina Reader</a> proxy. <b>Duo</b> streams the same text at two rates at once. Press <kbd>Enter</kbd> in the URL box to start · <kbd>Space</kbd> toggles play/pause.</div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const urlIn=$('url'), go=$('go'), panelsEl=$('panels'), modeEl=$('mode');
+
+  // ---- theme ----
+  $('theme').onclick=()=>{
+    const t=document.documentElement.dataset.theme==='dark'?'light':'dark';
+    document.documentElement.dataset.theme=t; localStorage.setItem('tok-theme',t);
+  };
+
+  // ---- Paul Graham essay pool (real slugs) ----
+  const PG=['greatwork','superlinear','getideas','do','smart','words','early','best','google',
+    'read','want','heresy','when','fn','vb','users','alien','weird','makersschedule','cities',
+    'love','wealth','gh','nerds','disagree','say','hs','startupideas','ds','writing44','useful',
+    'simply','procrastination','essay','avg','marginal'];
+  const uniqPG=[...new Set(PG)];
+  const pgURL=()=>'https://paulgraham.com/'+uniqPG[Math.floor(Math.random()*uniqPG.length)]+'.html';
+
+  // ---- fallback text (works offline / if proxy blocked) ----
+  const FALLBACK=`One of the most common types of advice we give at Y Combinator is to do things that don't scale. A lot of would-be founders believe that startups either take off or don't. You build something, make it available, and if you've made a better mousetrap, people beat a path to your door as promised. Or they don't, in which case the market must not exist.
+
+Actually startups take off because the founders make them take off. There may be a handful that just grew by themselves, but usually it takes some sort of push to get them going. A good metaphor would be the cranks that car engines had before they got electric starters. Once the engine was going, it would keep going, but there was a separate and laborious process to get it going.
+
+The most common unscalable thing founders have to do at the start is to recruit users manually. Nearly all startups have to. You can't wait for users to come to you. You have to go out and get them.`;
+
+  // ---- tokenizer: approximate GPT-style subword tokens ----
+  function tokenize(text){
+    const toks=[]; const re=/(\s*)(\S+)/g; let m;
+    while((m=re.exec(text))){
+      const lead=m[1], word=m[2];
+      if(word.length<=5){ toks.push(lead+word); }
+      else { let first=true;
+        for(let i=0;i<word.length;i+=4){ toks.push((first?lead:'')+word.slice(i,i+4)); first=false; } }
+    }
+    return toks;
+  }
+
+  function fmtSrc(u){ try{ const x=new URL(u); return x.hostname.replace(/^www\./,'')+x.pathname; }catch(e){ return u; } }
+
+  // ---- panel factory ----
+  function buildPanel(letter, rate0, placeholder){
+    const el=document.createElement('div');
+    el.className='panel '+letter;
+    el.innerHTML=
+      '<div class="panel-head">'+
+        '<span class="dot"></span>'+
+        '<span class="src">idle</span>'+
+        '<div class="rate-ctl">'+
+          '<span class="lab">tok/s</span>'+
+          '<input type="number" min="1" max="2000" step="1" list="speeds">'+
+          '<div class="chips">'+
+            '<button class="chip" data-r="10">10</button>'+
+            '<button class="chip" data-r="25">25</button>'+
+            '<button class="chip" data-r="40">40</button>'+
+            '<button class="chip" data-r="70">70</button>'+
+            '<button class="chip" data-r="100">100</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="stream idle"><span class="ph placeholder"></span><span class="content"></span><span class="cursor"></span></div>'+
+      '<div class="panel-foot">'+
+        '<span><b class="fTok">0</b> tok</span>'+
+        '<span><b class="fSec">0.0</b>s</span>'+
+        '<span><b class="fRate">0</b> tok/s actual</span>'+
+        '<span class="spacer"></span>'+
+        '<span class="fPct">0%</span>'+
+      '</div>';
+    panelsEl.appendChild(el);
+
+    const q=s=>el.querySelector(s);
+    const p={
+      el, letter,
+      dot:q('.dot'), src:q('.src'), rateIn:q('input'), chips:q('.chips'),
+      stream:q('.stream'), ph:q('.ph'), content:q('.content'), cursor:q('.cursor'),
+      fTok:q('.fTok'), fSec:q('.fSec'), fRate:q('.fRate'), fPct:q('.fPct'),
+      idx:0, acc:0, elapsed:0, t0:0, last:0, running:false,
+      rate(){ let r=parseFloat(this.rateIn.value)||25; return Math.max(1,Math.min(2000,r)); }
+    };
+    p.ph.textContent=placeholder;
+    p.rateIn.value=rate0;
+
+    const mark=()=>{ const v=String(p.rate());
+      [...p.chips.children].forEach(c=>c.classList.toggle('on',c.dataset.r===v)); };
+    p.chips.onclick=e=>{ const b=e.target.closest('.chip'); if(!b)return; p.rateIn.value=b.dataset.r; mark(); };
+    p.rateIn.oninput=mark; mark();
+    return p;
+  }
+
+  const panelA=buildPanel('a',25,'Streams text one token at a time at your chosen rate. Resize this panel (drag the corner) to match a real chat window and eyeball how “70 tok/s” actually reads.');
+  const panelB=buildPanel('b',70,'The second stream. In Duo mode both panels race through the same text so you can feel the gap between two speeds.');
+  const ALL=[panelA,panelB];
+  let mode='solo';
+  const active=()=>mode==='solo'?[panelA]:[panelA,panelB];
+
+  // ---- shared state ----
+  let tokens=[], loading=false, looping=false;
+
+  function resetPanel(p){
+    p.content.textContent=''; p.ph.style.display='none';
+    p.idx=0; p.acc=0; p.elapsed=0; stats(p);
+    p.stream.classList.add('idle');
+  }
+  function stats(p){
+    p.fTok.textContent=p.idx;
+    p.fSec.textContent=p.elapsed.toFixed(1);
+    p.fRate.textContent=p.elapsed>0?(p.idx/p.elapsed).toFixed(1):'0';
+    p.fPct.textContent=tokens.length?Math.round(100*p.idx/tokens.length)+'%':'0%';
+  }
+
+  async function fetchText(u){
+    active().forEach(p=>{ p.dot.className='dot run'; p.src.textContent='fetching '+fmtSrc(u)+' …'; });
+    try{
+      const r=await fetch('https://r.jina.ai/'+u,{headers:{'X-Return-Format':'text'}});
+      if(!r.ok) throw new Error(r.status);
+      let t=(await r.text()).trim();
+      const mk=t.indexOf('Markdown Content:'); if(mk>-1) t=t.slice(mk+17).trim();
+      if(t.length<80) throw new Error('short');
+      return {text:t, ok:true};
+    }catch(err){ return {text:FALLBACK, ok:false}; }
+  }
+
+  async function start(){
+    if(loading) return;
+    loading=true; go.disabled=true;
+    const u=urlIn.value.trim()||pgURL();
+    if(!urlIn.value.trim()) urlIn.value=u;
+    active().forEach(resetPanel);
+    const {text,ok}=await fetchText(u);
+    tokens=tokenize(text);
+    active().forEach(p=>{
+      p.dot.className=ok?'dot ok':'dot err';
+      p.src.textContent=(ok?'':'⚠ sample · ')+fmtSrc(u)+'  ·  '+tokens.length+' tok';
+    });
+    loading=false; go.disabled=false;
+    play(true);
+  }
+
+  function play(fromZero){
+    const now=performance.now();
+    active().forEach(p=>{
+      if(p.idx>=tokens.length && !fromZero) return;
+      p.running=true; p.stream.classList.remove('idle');
+      p.last=now; p.t0=now-p.elapsed*1000;
+    });
+    setBtn('run');
+    if(!looping){ looping=true; requestAnimationFrame(tick); }
+  }
+  function pause(){
+    ALL.forEach(p=>{ p.running=false; p.stream.classList.add('idle'); });
+    setBtn('paused');
+  }
+
+  function tick(now){
+    let any=false;
+    for(const p of active()){
+      if(!p.running) continue;
+      any=true;
+      const dt=now-p.last; p.last=now;
+      p.acc+=(dt/1000)*p.rate();
+      let emitted=false;
+      while(p.acc>=1 && p.idx<tokens.length){
+        p.content.appendChild(document.createTextNode(tokens[p.idx])); p.idx++; p.acc-=1; emitted=true;
+      }
+      p.elapsed=(now-p.t0)/1000;
+      if(emitted) p.stream.scrollTop=p.stream.scrollHeight;
+      stats(p);
+      if(p.idx>=tokens.length){ p.running=false; p.stream.classList.add('idle'); p.dot.className='dot ok'; }
+    }
+    if(any){ requestAnimationFrame(tick); }
+    else { looping=false; setBtn(btnState()); }
+  }
+
+  // ---- button state machine ----
+  function btnState(){
+    const a=active();
+    if(a.some(p=>p.running)) return 'run';
+    if(a.some(p=>p.idx>0 && p.idx<tokens.length)) return 'paused';
+    if(tokens.length && a.every(p=>p.idx>=tokens.length)) return 'done';
+    return 'idle';
+  }
+  function setBtn(s){
+    go.classList.remove('solid','stop');
+    if(s==='run'){ go.textContent='Pause'; go.classList.add('stop'); }
+    else if(s==='paused'){ go.textContent='Resume'; go.classList.add('solid'); }
+    else if(s==='done'){ go.textContent='Restart'; go.classList.add('solid'); }
+    else { go.textContent='Start'; go.classList.add('solid'); }
+  }
+
+  go.onclick=()=>{
+    if(loading) return;
+    const s=btnState();
+    if(s==='run') pause();
+    else if(s==='paused') play(false);
+    else start();
+  };
+
+  // ---- mode switch ----
+  modeEl.onclick=e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    const m=b.dataset.m; if(m===mode) return;
+    mode=m;
+    [...modeEl.children].forEach(x=>x.classList.toggle('on',x.dataset.m===m));
+    panelsEl.classList.toggle('solo',m==='solo');
+    panelsEl.classList.toggle('duo',m==='duo');
+    // stop & reset when switching
+    ALL.forEach(p=>{ p.running=false; });
+    looping=false; tokens=[];
+    ALL.forEach(p=>{ p.content.textContent=''; p.ph.style.display=''; p.idx=0; p.acc=0; p.elapsed=0;
+      p.dot.className='dot'; p.src.textContent='idle'; p.stream.classList.add('idle'); stats(p); });
+    setBtn('idle');
+  };
+
+  // ---- keys ----
+  urlIn.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); tokens=[]; ALL.forEach(p=>p.running=false); looping=false; start(); } });
+  document.addEventListener('keydown',e=>{
+    const t=document.activeElement;
+    if(e.code==='Space' && t.tagName!=='INPUT'){ e.preventDefault(); go.onclick(); }
+  });
+
+  setBtn('idle');
+})();
+</script>
+</body>
+</html>
