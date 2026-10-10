@@ -1,71 +1,139 @@
-# Pham Thanh Lam (Laam)
+# Lam Pham (Pham Thanh Lam)
 
-> Building AI systems that ship at scale
+> Lam Pham (Phạm Thanh Lâm, also written "Laam") is Chief Data Science & AI Officer at Cake by VPBank, a digital bank in Vietnam named Best Digital Bank in Vietnam 2026 by Euromoney. He leads the DSAI team that builds the models behind credit decisions and revenue forecasting, and runs a fleet of 150+ voice agents that have handled 25M+ real customer calls. Based in Ho Chi Minh City, Vietnam. Personal site: https://www.lampt.org
 
-## Overview
+Motto: "Small tools, large systems. AI that handles real money."
 
-Chief Data Science & AI Officer at Cake by VPBank, Vietnam's largest digital bank. Managing 15+ people running 100+ AI models and 150+ voice agents in production. Based in Ho Chi Minh City, Vietnam.
+## Key facts
 
-## Current Work
+- Current role (2024–present): Chief Data Science & AI Officer (CDAO), Cake by VPBank. Cake has ~8M customers, reached EBITDA break-even in Q3 2024 (3.5 years after launch), and grew revenue per customer from $5 (2023) to $25 (2025).
+- Current work: moving Cake from digital bank to "Next Gen AI Bank": causal inference for credit risk, multi-agent orchestration, voice-agent fleet management and evaluation (SNR monitoring, golden QA eval sets), and an intel-brief pipeline (PDF → markdown → SQL) that cut the cost of reading a Vietnamese financial report from $8 to $0.80.
+- 2019–2023: Co-founder of TrueID and Head of AI Products at VNG Corporation (Vietnam's first tech unicorn). Digital identity and eKYC for financial services; $1M+ ARR AI business, 10M+ users (B2B2C). eKYC liveness confirmed under iBeta ISO 30107-3 PAD; face recognition benchmarked in NIST FRVT 1:1.
+- 2015–2018: Lead Data Scientist at Viettel (telco), Sentifi AG (financial sentiment, Switzerland) and VNG (gaming, social).
+- 2012–2015: Deputy Head of Mobile at GNT Inc (Mobion Music, #1 on the Japan App Store), FPT Software, co-founder of Saigonapps.
+- Education: MSc Computer Science, Saint Petersburg State University, Russia (2001–2008); MSc Business Information Systems, Vietnamese-German University (2010–2012).
 
-Transforming traditional banking into agentic AI operations. Building toward unicorn status through:
-- Digital twins and multi-agent systems handling real customer money
-- Causal inference in production environments
-- Revenue forecasting with Monte Carlo methods
-- Personal AI Infrastructure (PAI) systems
+## Achievements
 
-## Background
+- 1st place, WSDM Cup 2019 (ACM WSDM), fake news detection (ByteDance task), 700+ teams, modified BERT: https://github.com/lampts/wsdm19cup
+- Kaggle Master (handle: saigonapps). CIKM 2017 (4th), CIKM 2018 (8th), AICovid Vietnam 2021 (2nd).
+- Keynote, IFC / World Bank FIDN 2020: "Implementing Digital Identity Platforms for a Digital Economy".
+- Speaker: PyCon Singapore 2016 (music2vec, song arithmetic from million playlists), TopDev 2019 (Productionizing AI), VietnamWorks Tech Expo 2016.
+- Open source: bert4vn and albert4vn, among the first openly released Vietnamese language models (2019). VietAI open lectures (2017).
+- Press: TheLEADER, "Sự trỗi dậy của Cake: Từ Việt Nam đến hình mẫu ngân hàng số khu vực" (Sep 2026): https://theleader.vn/su-troi-day-cua-cake-tu-viet-nam-den-hinh-mau-ngan-hang-so-khu-vuc-d47783.html
 
-- **2024-Present**: Chief Data Science & AI Officer, Cake by VPBank
-  - 100+ AI models in production
-  - 150+ voice agents deployed
-  - Agentic banking infrastructure
+## How he builds
 
-- **2019-2023**: Vietnam's First Tech Unicorn
-  - Built AI products: $1M+ ARR, 10M+ users (B2B2C)
-  - Scaled systems under high-stakes production
+- Unix philosophy: small composable tools that multiply force.
+- Slope > intercept: hire and build for learning rate and compounding.
+- Ship > paper: a model in production beats a model in a notebook.
+- Hard to vary: if an element is decorative, remove it.
 
-- **2020**: IFC World Bank FIDN Keynote
-  - Digital identity platforms at banking scale
+## Profiles
 
-- **2019**: WSDM Analytics Cup Winner
-  - Fake news detection with modified BERT
+- [Homepage](https://www.lampt.org/): bio, career, credentials (canonical source for facts above)
+- [GitHub](https://github.com/lampts)
+- [LinkedIn](https://www.linkedin.com/in/lam-pham-thanh-1428602b)
+- [Kaggle](https://www.kaggle.com/saigonapps)
+- Email: laampt@gmail.com
 
-## Philosophy
+<!-- generated:start -->
+## Tools (65 standalone, single-file HTML apps; index: https://www.lampt.org/tools/)
 
-Systems that work at scale. Code that ships beats papers that don't. Agentic workflows replacing human ops. Causal inference in production, not just notebooks. Building tools that multiply force—Unix philosophy for AI systems.
+### ai
+- [Token Rate — How Fast Is N tok/s?](https://www.lampt.org/tools/tok.html): How fast is N tokens per second? Stream any web page at a chosen LLM token rate, or compare two rates side by side, to feel generation speed. (2026-09-21)
+- [The KV Cache — Interactive Monograph](https://www.lampt.org/tools/kvcache.html): An interactive monograph on the KV cache: why naive decoding is O(n³), what Q, K and V do, one decode step, the size of the cache, the causal mask, memory bandwidth, and prompt caching. With inline demos and a closing assessment. (2026-09-20)
+- [Gemini Live — Voice Chat](https://www.lampt.org/tools/live.html): Talk to Gemini 3.8 Live and Gemini 3.8 Live Extended Thinking with live audio, transcripts, and optional document context. (2026-09-19)
+- [Probability Calibration — Interactive Monograph](https://www.lampt.org/tools/calib.html): Probability calibration, an interactive monograph: reliability diagrams, Platt and isotonic scaling and proper scoring rules, run live with Python in the browser. (2026-09-19)
+- [Gemini Flash TTS — Cost & Lyric Sync](https://www.lampt.org/tools/tts.html): Single & multi-speaker text-to-speech via Gemini Flash TTS, with live token counting and cost estimation. (2026-06-21)
+- [microGPT – Karpathy](https://www.lampt.org/tools/gpt.html): Karpathy's microGPT, annotated: walk through the 243-line, dependency-free Python that trains and runs a GPT, from tokenizer and autograd to Adam. (2026-02-12)
+- [AI GTM Playbook](https://www.lampt.org/tools/gtm.html): AI go-to-market playbook: an interactive Bullseye framework to brainstorm 25 traction channels, test a few and focus on the one that works. (2026-01-10)
+- [AI Market Trends 2025-2030](https://www.lampt.org/tools/ai30.html): AI market trends 2025–2030: an interactive strategy board of enterprise AI trends (agentic, sovereign, physical AI) and the pilot-to-scale gap. (2025-11-29)
+- [AI Skills Gap Heatmap](https://www.lampt.org/tools/skill25.html): AI skills gap heatmap, 2015–2025: animated demand intensity by skill and year, based on WEF Future of Jobs and LinkedIn skills data. (2025-11-29)
+- [LLM Comparison](https://www.lampt.org/tools/llm.html): Compare LLMs side by side: send one prompt and system message to OpenAI, Anthropic and Gemini models and read their answers together. (2025-11-27)
+- [LLM Council](https://www.lampt.org/tools/council.html): LLM Council: several LLMs answer your query, review and rank each other's answers, then a chairman model synthesizes a final response. (2025-11-27)
+- [PictureMe – AI Photo](https://www.lampt.org/pictureme.html): PictureMe: transform your photo into themed portraits with Gemini AI. Use your camera or upload, pick a theme or write a custom style. (2025-10-08)
+- [HeadshotPro AI](https://www.lampt.org/headshot.html): HeadshotPro AI: turn any photo into a professional headshot with Gemini. Upload, choose a style (corporate, creative and more), download. (2025-10-04)
+- [Direct Photo Analysis Tool](https://www.lampt.org/photo.html): Photo analysis tool: paste a photo URL and get professional photography feedback on composition, light and technique from Claude. (2025-08-16)
+- [Ao Dai Benchmark – AI Rankings](https://www.lampt.org/aodaibench.html): Ao Dai Benchmark: which AI model draws the best SVG of a Vietnamese girl in ao dai with a conical hat and lotus flowers? Pairwise rankings of 14 models. (2025-06-07)
+- [Loss Landscapes – 3D Viewer](https://www.lampt.org/loss.html): Explore 3D loss landscapes of GPT-2, LLaMA-3.2-1B, DeepSeek-R1-Distill-8B, Gemma-2, Qwen2 and Qwen2.5. Rotate, pan and zoom each surface. (2025-05-24)
+- [Interactive Meta-Prompt Configurator](https://www.lampt.org/prompt.html): Interactive meta-prompt configurator: assemble a structured system prompt from configurable sections and get word, character and line statistics. (2025-05-08)
+- [LeCun Net Digit Recognizer](https://www.lampt.org/lecun.html): Draw a digit and watch a LeCun-style convolutional network classify it in the browser via ONNX, with H1/H2 feature maps and softmax probabilities. (2025-05-04)
 
-## Active Projects
+### dev
+- [minidraw — Shared Canvas](https://www.lampt.org/tools/draw.html): minidraw: a tiny shared canvas. Draw with pen, shapes and text, then share the whole board inside one URL. No server, no account. (2026-06-14)
+- [Python ML Stack – Deps](https://www.lampt.org/tools/xz.html): Python ML stack dependency graph: explore how frameworks, core libraries, compute and system packages depend on each other, with xz-style risk flags. (2026-02-27)
+- [Jina Reader Proxy](https://www.lampt.org/tools/proxy.html): Jina Reader proxy: extract any web page as markdown, HTML or text, then optionally summarize it with Claude Haiku. (2025-12-23)
+- [PDF to Gist](https://www.lampt.org/tools/p2g.html): PDF to Gist: extract PDF pages as compressed images in the browser and publish them to a GitHub Gist with your token. (2025-12-03)
+- [nanotele](https://www.lampt.org/tools/tele.html): Cut through noise. Extract signal from Telegram group chats. (2025-12-02)
+- [HBR Year in Tech 2026](https://www.lampt.org/tools/hbr.html): HBR Year in Tech 2026, analyzed: explore 570+ insights from 10 articles as claims, metrics and actions, filterable and in a timeline view. (2025-11-29)
+- [PyConsole TUI](https://www.lampt.org/tools/code.html): PyConsole: a terminal-style Python console in the browser with NumPy and pandas, powered by Pyodide. Shift+Enter to run. (2025-11-25)
+- [Crypto Signing & Verification](https://www.lampt.org/crypto.html): Interactive playground for cryptographic signatures: pick public parameters and a secret key, then sign and verify messages step by step. (2025-10-12)
+- [QR Code to Go Board Converter](https://www.lampt.org/qr.html): Turn any text or URL into a QR code drawn as black and white Go stones on a Go board. Inspired by Veritasium. (2025-06-12)
+- [Reservoir-Sampling Log Rate Limiter](https://www.lampt.org/reservoir.html): Reservoir sampling explained as a log rate limiter: an animated visualization of keeping at most K random logs per second from a stream. (2025-05-22)
+- [WebAssembly IPython](https://www.lampt.org/ipython.html): Run Python with NumPy in the browser. A minimal IPython-style console powered by Pyodide and WebAssembly, no install needed. (2025-05-01)
 
-- **MAI Agents**: Research review & automation
-- **Revenue Forecasting**: Monte Carlo under uncertainty
-- **Tao**: Minimal attentive writing tool (https://www.lampt.org/tools/tao.html)
-- **Code**: Minimal Python coding tool (https://www.lampt.org/tools/code.html)
-- **Talk**: Self-recording interview video (https://www.lampt.org/tools/ctalk.html)
-- **LLM**: Multi-LLM chat interface (https://www.lampt.org/tools/llm.html)
+### finance
+- [Tục Ngữ Tài Chính](https://www.lampt.org/tools/sa.html): Tục ngữ tài chính: 7 Vietnamese proverbs as timeless financial principles, each proven with an interactive simulation (in Vietnamese). (2026-03-05)
+- [Dodge-meter – Earnings Call](https://www.lampt.org/tools/ometer.html): Dodge-meter: score earnings-call Q&A for evasion. 31 linguistic pattern categories rate question sharpness and answer evasiveness, with optional LLM review. (2026-01-18)
+- [TVM Calculator](https://www.lampt.org/tvm_calculator.html): Time value of money (TVM) calculator: solve for PV, PMT, FV, rate or periods with monthly, quarterly, semi-annual or annual compounding. (2025-04-27)
 
-## Technical Focus
+### fun
+- [In My Life – Solo Guitar](https://www.lampt.org/tools/solo.html): In My Life solo guitar masterclass: a 12-module path with audio, an interactive fretboard and a lick library (explained in Vietnamese). (2026-01-25)
+- [Lucky Draw Simulator](https://www.lampt.org/tools/luck.html): Simulate any probability event. See the true cost. (2026-01-10)
+- [Guitar Lead Trainer](https://www.lampt.org/tools/guitar.html): Guitar lead trainer: load an MP3 or WAV, change speed and pitch independently, loop an A–B section and practice with a tap-tempo metronome. (2026-01-02)
+- [Poker Trainer](https://www.lampt.org/tools/poker.html): Texas Hold'em poker trainer: play hands against villain profiles with a step-by-step decision framework, M-ratio zones and expected value. (2025-12-30)
+- [Dice Roll Simulator](https://www.lampt.org/tools/baby.html): Dice roll simulator for the true cost of a rare event: roll four dice until a ~1/144 outcome appears at $5 per roll, like a blind-box unboxing. (2025-11-18)
+- [Progressive Metal & Rock](https://www.lampt.org/rock.html): Progressive metal and rock as a metro line, 1965–2012: play landmark tracks from bands that broke the line between complexity and brutality. (2025-10-09)
+- [Classical Music Metro Line](https://www.lampt.org/classic.html): Classical music as a metro line, 1678–1893: click any station to play a famous piece. Circle size reflects popularity adjusted for age. (2025-10-06)
+- [Paws & Coffee](https://www.lampt.org/paws.html): Paws & Coffee: a demo website for a dog café in Saigon (Vietnamese), with menu, dogs and contact sections. (2025-06-26)
+- [Bird Stories – by AI](https://www.lampt.org/story.html): Bird Stories: an illustrated collection of short fables about birds, written with AI. (2025-06-02)
+- [Mini Spotify – Offline Player](https://www.lampt.org/mp3.html): Mini Spotify: an offline music player in one HTML file. Upload MP3 or WAV files, build a playlist and play them locally in the browser. (2025-05-25)
+- [The Book of Answers](https://www.lampt.org/tboa.html): The Book of Answers: ask a serious question, meditate, click the crystal ball and receive an answer. A playful digital oracle. (2025-04-27)
 
-- Multi-agent systems and agentic workflows
-- Causal inference at scale
-- Network analysis for fraud detection
-- LLM evaluation frameworks
-- Production ML infrastructure
-- Financial modeling and forecasting
+### learning
+- [The Petersburg Line — Science Metro](https://www.lampt.org/tools/pantheon.html): The Petersburg Line: a time-travel metro of science. 21 stations across 300 years, each a scientist who worked on Vasilievsky Island, St. Petersburg. (2026-09-13)
+- [Drill Forge — Pronunciation Drills](https://www.lampt.org/tools/drill_forge.html): Drill Forge: generate a 120-word English pronunciation drill covering all 44 sounds, set in a world you pick (a band, writer or fairy tale), in RP, American and other accents. (2026-08-23)
+- [Experiment Valley – Competition](https://www.lampt.org/tools/abc.html): Experiment Valley Competition - Test your A/B testing skills against AI opponents. (2026-02-12)
+- [Experiment Valley – Tutorial](https://www.lampt.org/tools/ab.html): Experiment Valley Tutorial - Learn A/B testing through interactive lessons with Python code. (2026-02-11)
+- [ML/DS Quiz Platform](https://www.lampt.org/tools/quiz.html): ML/DS quiz platform: generate machine learning and data science assessments, share them via URL and track results. No server; data lives in the URL. (2026-02-04)
+- [AI English Teacher](https://www.lampt.org/tools/teach.html): AI English teacher: practice spoken English in real time with a voice tutor built on the OpenAI Realtime API. Choose voice and teaching style. (2025-12-11)
+- [NanoFluency: Native Echo](https://www.lampt.org/tools/speak.html): NanoFluency Native Echo: practice English pronunciation by matching the timing and rhythm of AI-generated native speech, word by word. (2025-11-23)
+- [Chinese Learner – HSK 1-2](https://www.lampt.org/tools/hellochinese.html): Learn Chinese for HSK 1–2: a guided lesson roadmap with progress tracking for beginner Mandarin vocabulary and phrases. (2025-11-16)
+- [Flashcard App](https://www.lampt.org/card.html): Flashcard app with flip, keyboard navigation, search, card creation and progress statistics. Ships with Chinese–English example cards. (2025-05-23)
 
-## Connect
+### viz
+- [Marigold Bay — Isometric City](https://www.lampt.org/tools/city.html): Marigold Bay: a living isometric city simulation with citizens, vehicles and a day clock. Pan, zoom and change the simulation speed. (2026-06-14)
+- [Animated Word Cloud](https://www.lampt.org/tools/wc.html): Animated word cloud: paste text and watch the Archimedean spiral placement algorithm build the cloud step by step. Export as PNG. (2026-03-01)
+- [KB Visualization](https://www.lampt.org/tools/kbvis.html): Knowledge-base visualization: embed entries with TF-IDF, project them with UMAP and explore clusters with click and lasso selection. (2026-01-15)
+- [Forest Fire Model](https://www.lampt.org/tools/fire.html): Self-organized criticality simulation - Drossel-Schwabl forest fire model (2025-12-27)
+- [Collatz Conjecture (3N+1)](https://www.lampt.org/collatz.html): Collatz conjecture (3N+1) visualizer: animated trajectories, step and peak statistics, and a Benford's law check of leading digits. (2025-10-14)
+- [Interactive SVG Comparison](https://www.lampt.org/svg.html): Compare two SVGs side by side: paste code, drop files or load by URL (?left= / ?right=) into Before and After panels. (2025-06-07)
+- [Solar System Explorer](https://www.lampt.org/solar.html): Interactive solar system explorer: animated planets orbiting the Sun; click any body for facts and adjust the animation speed. (2025-05-23)
+- [Waveform Visualizer](https://www.lampt.org/wave.html): Waveform visualizer: full-screen animated, glowing sine waves layered with different frequencies, speeds and amplitudes on canvas. (2025-05-22)
+- [Galton Board Simulation](https://www.lampt.org/gemini_galton.html): Galton board simulation: drop balls through rows of pegs at an adjustable rate and watch the binomial distribution build into a bell curve. (2025-04-25)
 
-- Email: laampt@icloud.com
-- GitHub: https://github.com/lampts
-- LinkedIn: https://www.linkedin.com/in/lam-pham-thanh-1428602b
-- Twitter: https://twitter.com/saigonapps
-- Kaggle: https://www.kaggle.com/saigonapps
-- Location: Ho Chi Minh City, Vietnam
+### writing
+- [LexMark](https://www.lampt.org/tools/le.html): LexMark: read Vietnamese legal and banking-compliance documents with AI term explanations for lawyers, risk officers and auditors. (2026-03-06)
+- [Reader](https://www.lampt.org/tools/reader.html): EPUB reader in the browser: a library, chapter navigation, dark mode and layout settings, plus AI dictionary lookups via Claude, GPT or Gemini. (2026-02-20)
+- [Inkflow – Focus Reader](https://www.lampt.org/tools/tao.html): Inkflow: a distraction-free focus reader and writer with highlighting, underlining and Ask AI (fix, rewrite, translate, explain). Share via URL or QR. (2025-11-22)
+- [Annotated Presentation Creator](https://www.lampt.org/annotate.html): Annotated presentation creator: load slide images, OCR them for alt text, and generate an annotated write-up of a talk. (2025-05-16)
 
-## Website
+## Notes (TIL explainers)
 
-https://www.lampt.org
+- [Bayesian Thinking | Interactive Tutorial](https://www.lampt.org/til/bayesian.html): Learn the most powerful framework for reasoning under uncertainty.
+- [How to Deploy AI Agents in Production: The Falconer's Framework](https://www.lampt.org/til/falcon.html): A practical framework for deploying AI agents at scale, based on running 150+ voice agents at Vietnam's largest digital bank. Context engineering, verification patterns, and failure modes.
+- [KB Agent System Design — arxiv-sanity Style](https://www.lampt.org/til/kba.html): Zero-infrastructure KB Agent for Banking Voice Agents
+- [KV Caching: Why Cached Tokens Are 10x Cheaper](https://www.lampt.org/til/kv.html): Interactive tutorial on KV caching in LLMs
+- [Logprobs: Teaching LLMs What They Don't Know](https://www.lampt.org/til/logprob.html): An interactive tutorial on using log probabilities for uncertainty quantification in LLM applications.
+- [Interactive Network Cascade](https://www.lampt.org/til/network.html)
+- [Signal vs. Noise](https://www.lampt.org/til/overthink.html)
+- [The Magic Number | Riffle Shuffle Tutorial](https://www.lampt.org/til/riffle.html): Interactive tutorial on why 7 riffle shuffles randomize a deck - based on Diaconis-Bayer theorem
+- [Agent Skills Mastery](https://www.lampt.org/til/skill.html)
+- [SNR Tutorial - Signal-to-Noise Ratio](https://www.lampt.org/til/snr.html): Learn Signal-to-Noise Ratio in 10 minutes. Interactive tutorial.
+<!-- generated:end -->
 
----
+## Optional
 
-Last updated: 2025
+- [Cake by VPBank](https://cake.vn): the bank where he works
+- [music2vec talk, PyCon SG 2016](https://pyvideo.org/pycon-singapore-2016/music2vec-a-smart-music-recommendation-and-discovery-pyconsg-2016.html)
