@@ -1,7 +1,26 @@
 ---
 permalink: /robots.txt
 ---
-User-agent: *
-Disallow:
+# lampt.org welcomes search engines and AI assistants.
+# LLM-readable summary: {{ site.url }}/llms.txt
 
-Sitemap: {{ site.baseurl | prepend: site.url }}/sitemap.xml
+User-agent: *
+Allow: /
+
+# AI search & assistant crawlers (explicitly allowed)
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: GPTBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: ClaudeBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Bingbot
+User-agent: DuckAssistBot
+User-agent: meta-externalagent
+Allow: /
+
+Sitemap: {{ site.url }}/sitemap.xml

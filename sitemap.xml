@@ -1,0 +1,23 @@
+---
+layout: none
+permalink: /sitemap.xml
+sitemap: false
+---
+<?xml version="1.0" encoding="UTF-8"?>
+{%- comment -%}
+  Hand-rolled sitemap (replaces jekyll-sitemap's output, which listed the al-folio
+  demo posts under the github.io host). Lists the homepage plus every standalone
+  .html page, skipping private/, code/ and assets/.
+{%- endcomment %}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>{{ site.url }}/</loc></url>
+  <url><loc>{{ site.url }}/tools/</loc></url>
+{%- for f in site.static_files %}
+  {%- if f.extname == ".html" %}
+    {%- assign p = f.path | remove_first: site.source %}
+    {%- unless p contains "/private/" or p contains "/code/" or p contains "/assets/" or p contains "/_" or p == "/index.html" or p == "/tools/index.html" %}
+  <url><loc>{{ site.url }}{{ p }}</loc></url>
+    {%- endunless %}
+  {%- endif %}
+{%- endfor %}
+</urlset>

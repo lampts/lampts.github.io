@@ -21,8 +21,10 @@ jobs:
         python-version: '3.9'
     
     - name: Run update script
-      run: python update_readme.py
-    
+      run: |
+        python update_readme.py
+        python update_llms.py
+
     - name: Check for changes
       id: verify-changed-files
       run: |
@@ -37,7 +39,7 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add README.md
+        git add README.md llms.txt tools/index.html
         git commit -m "📄 Update README with HTML files list
 
         🤖 Generated with GitHub Actions"
