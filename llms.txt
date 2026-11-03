@@ -1,37 +1,53 @@
 # Lam Pham (Pham Thanh Lam)
 
-> Lam Pham (Phạm Thanh Lâm, also written "Laam") is Chief Data Science & AI Officer at Cake by VPBank, a digital bank in Vietnam named Best Digital Bank in Vietnam 2026 by Euromoney. He leads the DSAI team that builds the models behind credit decisions and revenue forecasting, and runs a fleet of 150+ voice agents that have handled 25M+ real customer calls. Based in Ho Chi Minh City, Vietnam. Personal site: https://www.lampt.org
+> Lam Pham (Pham Thanh Lam, Phạm Thanh Lâm, also written "Laam") is Chief Data Science & AI Officer at Cake by VPBank, a Vietnamese digital bank with nearly 8 million customers, named Vietnam's Best Digital Bank 2026 by Euromoney. He leads the Data Science & AI team: its models make credit decisions and forecast revenue, and its fleet of 150+ voice agents has handled 25M+ real customer calls. He is based in Ho Chi Minh City, Vietnam. Personal site: https://www.lampt.org
 
 Motto: "Small tools, large systems. AI that handles real money."
 
 ## Key facts
 
-- Current role (2024–present): Chief Data Science & AI Officer (CDAO), Cake by VPBank. Cake has ~8M customers, reached EBITDA break-even in Q3 2024 (3.5 years after launch), and grew revenue per customer from $5 (2023) to $25 (2025).
-- Current work: moving Cake from digital bank to "Next Gen AI Bank": causal inference for credit risk, multi-agent orchestration, voice-agent fleet management and evaluation (SNR monitoring, golden QA eval sets), and an intel-brief pipeline (PDF → markdown → SQL) that cut the cost of reading a Vietnamese financial report from $8 to $0.80.
-- 2019–2023: Co-founder of TrueID and Head of AI Products at VNG Corporation (Vietnam's first tech unicorn). Digital identity and eKYC for financial services; $1M+ ARR AI business, 10M+ users (B2B2C). eKYC liveness confirmed under iBeta ISO 30107-3 PAD; face recognition benchmarked in NIST FRVT 1:1.
-- 2015–2018: Lead Data Scientist at Viettel (telco), Sentifi AG (financial sentiment, Switzerland) and VNG (gaming, social).
-- 2012–2015: Deputy Head of Mobile at GNT Inc (Mobion Music, #1 on the Japan App Store), FPT Software, co-founder of Saigonapps.
+- Current role: Chief Data Science & AI Officer, Cake by VPBank. Leads the Data Science & AI team and owns the bank's AI models in production: credit decision and revenue forecasting models, a fleet of 150+ voice agents, and document automation for financial reports. Teaches the team causal inference on real credit cases.
+- Current work: helping Cake move from digital bank to "Next Gen AI Bank" through causal inference for credit risk, multi-agent orchestration and voice AI fleet management.
+- Voice agent evaluation: his team is writing the evaluation playbook for its 150+ voice agents around signal-to-noise monitoring, golden QA sets (fixed questions with known correct answers) and response-mode systems. In 2025, Cake's voice agents were reported to raise customer reach 80% and debt recovery 30%, and to cut operating cost 40% (Vietnam Banks Association: https://vnba.org.vn/vi/ngan-hang-so-viet-dau-tien-bien-ai-thanh--xuong-song--van-hanh--cake-dang-lam-khac-gi-18974.htm). The same article reports AI credit scoring at Cake raised approvals 20% and cut bad debt 40%.
+- Intel-brief pipeline: converts Vietnamese financial reports from PDF to markdown to SQL, cutting the cost of reading one report from $8 to $0.80.
+- Cake: EBITDA break-even in Q3 2024, 3.5 years after launch; revenue per customer $5 (2023) to $25 (2025), $44 projected for 2026 (TheLEADER: https://theleader.vn/su-troi-day-cua-cake-tu-viet-nam-den-hinh-mau-ngan-hang-so-khu-vuc-d47783.html). For context, BCG estimated about 5% of 450+ digital challenger banks were profitable in 2022; TABInsights put the share below 25% of 400+ digital banks in 2025.
+- 2019–2023: Co-founder of TrueID and Head of AI Products at VNG. Digital identity and eKYC for financial services: 10M+ users, $1M+ ARR.
+- 2015–2018: Lead Data Scientist at Viettel, Sentifi AG (Switzerland) and VNG: social listening, fraud detection, Vietnamese NLP pipelines.
+- 2012–2015: Deputy Head of Mobile at GNT Inc (Mobion Music, reported #1 on the Japan App Store), FPT Software, co-founder of Saigonapps.
 - Education: MSc Computer Science, Saint Petersburg State University, Russia (2001–2008); MSc Business Information Systems, Vietnamese-German University (2010–2012).
 
-## Achievements
+## Competitions, certifications and open source
 
-- 1st place, WSDM Cup 2019 (ACM WSDM), fake news detection (ByteDance task), 700+ teams, modified BERT: https://github.com/lampts/wsdm19cup
-- Kaggle Master (handle: saigonapps). CIKM 2017 (4th), CIKM 2018 (8th), AICovid Vietnam 2021 (2nd).
-- Keynote, IFC / World Bank FIDN 2020: "Implementing Digital Identity Platforms for a Digital Economy".
-- Speaker: PyCon Singapore 2016 (music2vec, song arithmetic from million playlists), TopDev 2019 (Productionizing AI), VietnamWorks Tech Expo 2016.
-- Open source: bert4vn and albert4vn, among the first openly released Vietnamese language models (2019). VietAI open lectures (2017).
-- Press: TheLEADER, "Sự trỗi dậy của Cake: Từ Việt Nam đến hình mẫu ngân hàng số khu vực" (Sep 2026): https://theleader.vn/su-troi-day-cua-cake-tu-viet-nam-den-hinh-mau-ngan-hang-so-khu-vuc-d47783.html
+- 2026: Cake by VPBank named Vietnam's Best Digital Bank 2026, Euromoney Awards for Excellence (Sept 10, 2026): https://vietnamnet.vn/en/cake-named-vietnam-s-best-digital-bank-2026-by-euromoney-2554129.html
+- 2022: TrueID passed iBeta ISO/IEC 30107-3 presentation attack detection testing for eKYC passive liveness; VNG called it a first in Vietnam and Southeast Asia: https://vng.com.vn/news/technology/trueid-la-don-vi-dau-tien-cua-dong-nam-a-dat-iso-30107-3-ve-nhan-dien-nguoi-that-tu-anh-don.html?lang=en
+- 2021: 2nd place, AICovid115M cough classification: https://github.com/lampts/aicovidvn115m
+- 2020: Keynote, IFC World Bank FIDN: "Implementing Digital Identity Platforms for a Digital Economy".
+- 2019: 1st place, WSDM Cup 2019 fake news classification (ByteDance), modified BERT on Chinese title pairs: https://github.com/lampts/wsdm19cup
+- 2019: bert4vn, BERT pre-trained for Vietnamese on news and SQuAD 2: https://github.com/lampts/bert4vn. albert_vi, ALBERT pre-trained on Vietnamese Wikipedia (guided and contributed): https://github.com/ngoanpv/albert_vi
+- 2017: Contributed to VietAI's free open lectures.
+- 2016: Talk, music2vec at PyCon Singapore (word2vec applied to playlists).
+- Kaggle Master (handle: saigonapps).
 
-## How he builds
+## Current projects
 
-- Unix philosophy: small composable tools that multiply force.
-- Slope > intercept: hire and build for learning rate and compounding.
-- Ship > paper: a model in production beats a model in a notebook.
-- Hard to vary: if an element is decorative, remove it.
+- Rach: a small council of AI twins that helps him think through decisions.
+- Small single-file tools in the Unix style (listed below).
+
+## Engineering principles
+
+- Unix: small composable tools that do one thing.
+- Slope over intercept: hiring and building for learning rate rather than current knowledge.
+- Farmer: improving conditions without forcing growth.
+- Hard to vary: removing any part of an explanation or system that is only decorative.
+- Ship over paper: a model in production beats a model in a notebook.
+
+## Notes on evidence
+
+Figures about Lam Pham's own work (voice-agent fleet size and call volume, TrueID users and ARR, report cost, the FIDN keynote, Kaggle Master, the role at Cake) are self-reported. Figures about Cake come from linked press articles and have not been independently audited. Updated November 2026.
 
 ## Profiles
 
-- [Homepage](https://www.lampt.org/): bio, career, credentials (canonical source for facts above)
+- [Homepage](https://www.lampt.org/): canonical source for the facts above
 - [GitHub](https://github.com/lampts)
 - [LinkedIn](https://www.linkedin.com/in/lam-pham-thanh-1428602b)
 - [Kaggle](https://www.kaggle.com/saigonapps)

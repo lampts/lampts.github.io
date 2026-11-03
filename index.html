@@ -3,17 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>λ lampt.org — Lam Pham</title>
-    <meta name="description" content="Lam Pham. Small tools, large systems. CDAO at Cake by VPBank — named Best Digital Bank in Vietnam 2026 by Euromoney. Voice agents handling 25M+ real calls; production AI across telco, FMCG, mobility, gaming, finance.">
-    <meta property="og:title" content="λ lampt.org — Lam Pham">
-    <meta property="og:description" content="Small tools, large systems. AI that handles real money.">
-    <meta property="og:url" content="https://www.lampt.org">
+    <title>Lam Pham: Chief Data Science &amp; AI Officer at Cake by VPBank · λ lampt.org</title>
+    <meta name="description" content="Lam Pham (Pham Thanh Lam) is Chief Data Science & AI Officer at Cake by VPBank, Vietnam's Best Digital Bank 2026 (Euromoney). His team builds credit decision and revenue forecasting models and runs 150+ voice agents that have handled 25M+ customer calls. TrueID co-founder, WSDM Cup 2019 winner, Kaggle Master.">
+    <meta name="author" content="Lam Pham">
+    <meta property="og:type" content="profile">
+    <meta property="og:title" content="Lam Pham: Chief Data Science & AI Officer at Cake by VPBank">
+    <meta property="og:description" content="Leads Data Science & AI at Cake by VPBank: credit decision models, revenue forecasting and a fleet of 150+ voice agents with 25M+ real customer calls.">
+    <meta property="og:url" content="https://www.lampt.org/">
+    <meta property="og:image" content="https://www.lampt.org/assets/img/prof_pic.jpg">
+    <meta property="profile:first_name" content="Lam">
+    <meta property="profile:last_name" content="Pham">
+    <meta name="twitter:card" content="summary">
     <link rel="canonical" href="https://www.lampt.org/">
     <link rel="alternate" type="text/plain" title="llms.txt" href="/llms.txt">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@graph": [
+        {
+          "@type": "ProfilePage",
+          "@id": "https://www.lampt.org/#profile",
+          "url": "https://www.lampt.org/",
+          "name": "Lam Pham: Chief Data Science & AI Officer at Cake by VPBank",
+          "dateModified": "2026-11-03",
+          "inLanguage": "en",
+          "isPartOf": { "@id": "https://www.lampt.org/#website" },
+          "mainEntity": { "@id": "https://www.lampt.org/#person" }
+        },
         {
           "@type": "Person",
           "@id": "https://www.lampt.org/#person",
@@ -23,25 +39,36 @@
           "image": "https://www.lampt.org/assets/img/prof_pic.jpg",
           "email": "mailto:laampt@gmail.com",
           "jobTitle": "Chief Data Science & AI Officer",
-          "description": "Chief Data Science & AI Officer at Cake by VPBank. Leads the team behind credit decisioning, revenue forecasting and a fleet of 150+ voice agents that have handled 25M+ customer calls. Co-founder of TrueID at VNG; WSDM Cup 2019 winner; Kaggle Master.",
-          "worksFor": { "@type": "Organization", "name": "Cake by VPBank", "url": "https://cake.vn" },
+          "description": "Chief Data Science & AI Officer at Cake by VPBank, a Vietnamese digital bank with nearly 8 million customers. Leads the Data Science & AI team behind credit decision and revenue forecasting models and a fleet of 150+ voice agents that has handled 25M+ real customer calls. Co-founder of TrueID at VNG; WSDM Cup 2019 winner; Kaggle Master.",
+          "worksFor": { "@id": "https://www.lampt.org/#cake" },
           "homeLocation": { "@type": "Place", "name": "Ho Chi Minh City, Vietnam" },
           "nationality": "Vietnamese",
           "alumniOf": [
             { "@type": "CollegeOrUniversity", "name": "Saint Petersburg State University" },
             { "@type": "CollegeOrUniversity", "name": "Vietnamese-German University" }
           ],
-          "award": [
-            "1st place, WSDM Cup 2019 (fake news detection)",
-            "Kaggle Master",
-            "2nd place, AICovid Vietnam 2021"
+          "hasCredential": [
+            { "@type": "EducationalOccupationalCredential", "credentialCategory": "degree", "name": "MSc Computer Science", "recognizedBy": { "@type": "CollegeOrUniversity", "name": "Saint Petersburg State University" } },
+            { "@type": "EducationalOccupationalCredential", "credentialCategory": "degree", "name": "MSc Business Information Systems", "recognizedBy": { "@type": "CollegeOrUniversity", "name": "Vietnamese-German University" } }
           ],
-          "knowsAbout": ["Artificial intelligence", "Machine learning", "Voice agents", "Causal inference", "Credit risk modeling", "Digital banking", "eKYC", "Natural language processing", "Vietnamese language models"],
+          "award": [
+            "1st place, WSDM Cup 2019 fake news classification (ByteDance)",
+            "2nd place, AICovid115M cough classification 2021",
+            "Kaggle Master"
+          ],
+          "knowsAbout": ["Artificial intelligence", "Machine learning", "Voice agents", "Voice agent evaluation", "Causal inference", "Credit risk modeling", "Revenue forecasting", "Multi-agent orchestration", "Digital banking", "eKYC", "Digital identity", "Natural language processing", "Vietnamese language models"],
           "sameAs": [
             "https://github.com/lampts",
             "https://www.linkedin.com/in/lam-pham-thanh-1428602b",
             "https://www.kaggle.com/saigonapps"
           ]
+        },
+        {
+          "@type": "BankOrCreditUnion",
+          "@id": "https://www.lampt.org/#cake",
+          "name": "Cake by VPBank",
+          "url": "https://cake.vn",
+          "award": "Vietnam's Best Digital Bank 2026, Euromoney Awards for Excellence"
         },
         {
           "@type": "WebSite",
@@ -68,8 +95,9 @@
             --accent: #FBD45B;
             --black: #111;
             --white: #FAFAFA;
-            --gray: #777;
-            --dim: #999;
+            --gray: #666;
+            --dim: #888;
+            --rule: #E0E0E0;
             --shadow: 3px 3px 0px #000;
             --shadow-sm: 2px 2px 0px #000;
             --font-mono: 'IBM Plex Mono', monospace;
@@ -87,28 +115,28 @@
         }
 
         .container {
-            max-width: 640px;
+            max-width: 720px;
             margin: 0 auto;
             padding: 3rem 1.5rem 4rem;
         }
 
         a { color: var(--black); }
 
-        /* ── Identity block (always visible) ── */
-        .identity { margin-bottom: 2.5rem; }
-
-        .id-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-            margin-bottom: 1rem;
+        p a, td a, li a, .evidence a {
+            text-decoration: none;
+            border-bottom: 1.5px solid var(--accent);
         }
+
+        p a:hover, td a:hover, li a:hover { background: var(--accent); }
+
+        /* ── Identity ── */
+        header { margin-bottom: 2.5rem; }
 
         .id-left {
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            margin-bottom: 1.25rem;
         }
 
         .lambda {
@@ -130,51 +158,10 @@
             flex-shrink: 0;
         }
 
-        /* ── Mode toggle ── */
-        .toggle-wrap {
-            display: flex;
-            border: 1.5px solid var(--black);
-            box-shadow: var(--shadow-sm);
-            flex-shrink: 0;
-            margin-top: 6px;
-        }
-
-        .toggle-btn {
-            font-family: var(--font-mono);
-            font-size: 0.65rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            padding: 6px 14px;
-            border: none;
-            cursor: pointer;
-            background: transparent;
-            color: var(--gray);
-            transition: all 0.15s;
-        }
-
-        .toggle-btn.active {
-            background: var(--black);
-            color: var(--white);
-        }
-
-        .toggle-btn:not(.active):hover {
-            background: var(--accent);
-            color: var(--black);
-        }
-
-        .name {
-            font-family: var(--font-serif);
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.4rem;
-        }
-
         .tagline {
-            font-size: 0.95rem;
+            font-size: 0.78rem;
             font-weight: 500;
-            margin-bottom: 1.25rem;
-            line-height: 1.5;
+            margin-bottom: 0.5rem;
         }
 
         .tagline em {
@@ -183,10 +170,26 @@
             padding: 0 4px;
         }
 
+        h1 {
+            font-family: var(--font-serif);
+            font-size: 1.6rem;
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 1.25rem;
+        }
+
+        .lede p, section p {
+            font-family: var(--font-serif);
+            font-size: 0.95rem;
+            line-height: 1.8;
+            margin-bottom: 0.85rem;
+        }
+
         .links-row {
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
+            margin-top: 1.25rem;
         }
 
         .links-row a {
@@ -204,140 +207,110 @@
             box-shadow: 4px 4px 0px #000;
         }
 
-        /* ── Shared ── */
-        .section { margin-bottom: 2.75rem; }
+        /* ── Sections ── */
+        section { margin-bottom: 2.75rem; }
 
-        .section-head {
-            font-size: 0.68rem;
-            text-transform: uppercase;
-            letter-spacing: 2.5px;
-            font-weight: 600;
-            border-bottom: 2px solid var(--black);
-            padding-bottom: 6px;
-            margin-bottom: 1.25rem;
-        }
-
-        /* ── Mode visibility ── */
-        .mode-builder,
-        .mode-career { display: none; }
-
-        body.builder .mode-builder { display: block; }
-        body.career .mode-career { display: block; }
-
-        /* builder bio / career bio */
-        .bio {
+        h2 {
             font-family: var(--font-serif);
-            font-size: 0.93rem;
-            line-height: 1.8;
-            margin-bottom: 0.75rem;
-        }
-
-        .bio strong { font-weight: 600; }
-
-        .bio a {
-            text-decoration: none;
-            border-bottom: 1.5px solid var(--accent);
-        }
-
-        /* ── Numbers tape ── */
-        .tape {
-            border: 1.5px solid var(--black);
-            box-shadow: var(--shadow);
-            margin-bottom: 2.75rem;
-            padding: 1rem 1.25rem;
-        }
-
-        .tape-row {
-            display: flex;
-            align-items: baseline;
-            gap: 0.5rem;
-            padding: 0.35rem 0;
-        }
-
-        .tape-row + .tape-row {
-            border-top: 1px solid #E0E0E0;
-        }
-
-        .tape-row .t-val {
             font-size: 1.1rem;
-            font-weight: 700;
-            min-width: 70px;
-            flex-shrink: 0;
-        }
-
-        .tape-row .t-lbl {
-            font-size: 0.78rem;
-            color: var(--gray);
-        }
-
-        .tape-row .t-lbl em {
-            font-style: normal;
-            color: var(--black);
-            font-weight: 500;
-        }
-
-        /* ── Now block (builder) ── */
-        .now-text {
-            font-family: var(--font-serif);
-            font-size: 0.9rem;
-            line-height: 1.8;
-            margin-bottom: 0.75rem;
-        }
-
-        .now-text strong { font-weight: 600; }
-
-        .now-date {
-            font-size: 0.65rem;
-            color: var(--dim);
-            margin-top: 0.5rem;
-        }
-
-        /* ── Artifacts (builder) ── */
-        .artifacts { display: grid; gap: 0.75rem; }
-
-        .artifact {
-            border: 1.5px solid var(--black);
-            padding: 0.9rem 1.1rem;
-            box-shadow: var(--shadow);
-            text-decoration: none;
-            color: var(--black);
-            display: block;
-            transition: all 0.12s;
-        }
-
-        .artifact:hover {
-            background: var(--accent);
-            transform: translate(-1px, -1px);
-            box-shadow: 5px 5px 0px #000;
-        }
-
-        .artifact .a-type {
-            font-size: 0.58rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 600;
-            color: var(--gray);
-            margin-bottom: 3px;
-        }
-
-        .artifact .a-title {
-            font-family: var(--font-serif);
-            font-size: 0.95rem;
             font-weight: 600;
             line-height: 1.4;
+            border-bottom: 2px solid var(--black);
+            padding-bottom: 6px;
+            margin-bottom: 1rem;
         }
 
-        .artifact .a-desc {
-            font-size: 0.75rem;
-            color: var(--gray);
-            margin-top: 3px;
+        h2::before {
+            content: "§ ";
+            font-family: var(--font-mono);
+            background: var(--accent);
+            padding: 0 4px;
+            margin-right: 4px;
+        }
+
+        section ul {
+            list-style: none;
+            margin: 0 0 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+
+        section li {
+            font-family: var(--font-serif);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            padding-left: 1rem;
+            border-left: 3px solid var(--accent);
+        }
+
+        strong { font-weight: 600; }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1.5px solid var(--black);
+            box-shadow: var(--shadow);
+            font-size: 0.76rem;
             line-height: 1.5;
+            margin: 0.5rem 0 1rem;
+            background: var(--white);
         }
 
-        /* ── Tools grid (builder) ── */
+        th {
+            text-align: left;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            background: var(--black);
+            color: var(--white);
+            padding: 6px 10px;
+        }
+
+        td {
+            padding: 8px 10px;
+            vertical-align: top;
+            border-top: 1px solid var(--rule);
+        }
+
+        td:first-child { font-weight: 600; white-space: nowrap; }
+
+        tr.current td:first-child { background: var(--accent); }
+
+        /* ── Principles ── */
+        .principles { display: flex; flex-direction: column; gap: 0.9rem; }
+
+        .principle {
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 0.75rem;
+            align-items: baseline;
+        }
+
+        .principle dt {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: var(--accent);
+            padding: 2px 8px;
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .principle dd {
+            font-family: var(--font-serif);
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        /* ── Tools ── */
         .tools-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(3, 1fr);
             gap: 0.6rem;
         }
 
@@ -358,10 +331,7 @@
         .tool .t-name { font-weight: 600; font-size: 0.82rem; }
         .tool .t-what { font-size: 0.68rem; color: var(--gray); margin-top: 1px; }
 
-        .tools-more {
-            margin-top: 0.75rem;
-            font-size: 0.7rem;
-        }
+        .tools-more { margin-top: 0.9rem; font-size: 0.7rem; }
 
         .tools-more a {
             text-decoration: none;
@@ -377,132 +347,22 @@
             box-shadow: 4px 4px 0px #000;
         }
 
-        /* ── Principles (builder) ── */
-        .principles { display: flex; flex-direction: column; gap: 0.9rem; }
-
-        .principle {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 0.75rem;
-            align-items: baseline;
+        /* ── Evidence note ── */
+        .evidence {
+            border: 1.5px dashed var(--black);
+            padding: 0.9rem 1.1rem;
         }
 
-        .principle .p-label {
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: var(--accent);
-            padding: 2px 8px;
-            box-shadow: var(--shadow-sm);
-            text-align: center;
-            white-space: nowrap;
-        }
-
-        .principle .p-text {
-            font-family: var(--font-serif);
-            font-size: 0.85rem;
-            line-height: 1.6;
-        }
-
-        /* ── Timeline (career) ── */
-        .timeline { display: flex; flex-direction: column; gap: 1.25rem; }
-
-        .t-item {
-            padding-left: 1.15rem;
-            border-left: 3px solid var(--black);
-        }
-
-        .t-item.current { border-left-color: var(--accent); }
-
-        .t-item .t-year {
-            font-size: 0.62rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--dim);
-        }
-
-        .t-item .t-role {
-            font-family: var(--font-serif);
-            font-size: 0.95rem;
-            font-weight: 600;
-            margin: 2px 0;
-        }
-
-        .t-item .t-org { font-size: 0.8rem; }
-        .t-item .t-org a { text-decoration: none; border-bottom: 1.5px solid var(--accent); }
-
-        .t-item .t-desc {
-            font-size: 0.75rem;
+        .evidence p {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            line-height: 1.65;
             color: var(--gray);
-            line-height: 1.55;
-            margin-top: 4px;
+            margin: 0;
         }
-
-        /* ── Credentials (career) ── */
-        .creds { display: flex; flex-direction: column; gap: 0.9rem; }
-
-        .cred { display: flex; gap: 0.75rem; align-items: baseline; }
-
-        .cred .tag {
-            font-size: 0.58rem;
-            font-weight: 700;
-            background: var(--accent);
-            padding: 2px 8px;
-            box-shadow: var(--shadow-sm);
-            white-space: nowrap;
-            flex-shrink: 0;
-            letter-spacing: 0.5px;
-        }
-
-        .cred .info { font-size: 0.8rem; line-height: 1.55; }
-        .cred .info a { text-decoration: none; border-bottom: 1.5px solid var(--accent); }
-
-        /* ── Education (career) ── */
-        .edu {
-            font-family: var(--font-serif);
-            font-size: 0.88rem;
-            line-height: 1.8;
-        }
-
-        .edu p + p { margin-top: 0.4rem; }
-
-        /* ── OSS (career) ── */
-        .oss { display: flex; flex-direction: column; gap: 0.6rem; }
-
-        .oss-row { display: flex; gap: 0.75rem; align-items: baseline; }
-
-        .oss-row .oss-name {
-            font-weight: 600;
-            font-size: 0.8rem;
-            min-width: 95px;
-            flex-shrink: 0;
-        }
-
-        .oss-row .oss-name a { text-decoration: none; border-bottom: 1.5px solid var(--accent); }
-        .oss-row .oss-desc { font-size: 0.75rem; color: var(--gray); }
-
-        /* ── Contact (career) ── */
-        .contact-grid {
-            display: grid;
-            grid-template-columns: 75px 1fr;
-            gap: 0.4rem 1rem;
-            font-size: 0.8rem;
-        }
-
-        .contact-grid .c-label {
-            font-weight: 600;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--gray);
-        }
-
-        .contact-grid a { text-decoration: none; border-bottom: 1.5px solid var(--accent); }
 
         /* ── Footer ── */
-        .footer {
+        footer {
             margin-top: 3.5rem;
             padding-top: 1.25rem;
             border-top: 2px solid var(--black);
@@ -514,372 +374,268 @@
         }
 
         .footer-left { font-size: 0.65rem; color: var(--dim); }
-
         .footer-right { display: flex; gap: 0.75rem; }
         .footer-right a { font-size: 0.65rem; color: var(--gray); text-decoration: none; }
         .footer-right a:hover { color: var(--black); }
 
-        /* ── Transition ── */
-        .mode-builder, .mode-career {
-            animation: fadeIn 0.25s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 480px) {
-            .tools-grid { grid-template-columns: 1fr; }
-            .principle { grid-template-columns: 1fr; }
-            .cred { flex-direction: column; gap: 0.2rem; }
-            .oss-row { flex-direction: column; gap: 0.1rem; }
-            .id-row { flex-direction: column; }
+        @media (max-width: 560px) {
+            .container { padding: 2rem 1rem 3rem; }
+            h1 { font-size: 1.3rem; }
             .lambda { font-size: 2.2rem; }
-            .name { font-size: 1.3rem; }
+            .tools-grid { grid-template-columns: 1fr; }
+            .principle { grid-template-columns: 1fr; gap: 0.3rem; }
+            .principle dt { justify-self: start; }
+
+            /* Stack table rows into cards */
+            table, thead, tbody, tr, td { display: block; }
+            thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+            tr { padding: 0.6rem 0.8rem; }
+            tr + tr { border-top: 1.5px solid var(--black); }
+            td { border: none; padding: 2px 0; white-space: normal; }
+            td:first-child { white-space: normal; display: inline-block; padding: 0 6px; margin-bottom: 2px; background: var(--accent); }
+            td[data-label]::before {
+                content: attr(data-label) " · ";
+                font-size: 0.58rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--dim);
+            }
+            td:first-child::before { content: none; }
         }
     </style>
 </head>
-<body class="builder">
-    <div class="container">
+<body>
+    <main class="container">
 
-        <!-- IDENTITY (always visible) -->
-        <div class="identity">
-            <div class="id-row">
-                <div class="id-left">
-                    <div class="lambda">λ</div>
-                    <img class="avatar" src="/assets/img/prof_pic.jpg" alt="Lam Pham">
-                </div>
-                <div class="toggle-wrap">
-                    <button class="toggle-btn active" data-mode="builder">Build</button>
-                    <button class="toggle-btn" data-mode="career">CV</button>
-                </div>
+        <header>
+            <div class="id-left">
+                <div class="lambda" aria-hidden="true">λ</div>
+                <img class="avatar" src="/assets/img/prof_pic.jpg" alt="Lam Pham (Pham Thanh Lam)" width="56" height="56">
             </div>
-            <div class="name">Lam Pham</div>
             <div class="tagline"><em>Small tools, large systems.</em> AI that handles real money.</div>
+            <h1>Lam Pham: Chief Data Science &amp; AI Officer at Cake by VPBank</h1>
 
-            <!-- Builder bio -->
-            <div class="mode-builder">
-                <div class="bio">
-                    I lead Data Science &amp; AI at <a href="https://cake.vn">Cake by VPBank</a>, named Best Digital Bank in Vietnam 2026 by Euromoney. My team builds the models behind credit decisions, forecasting, and the voice agents that talk to our customers every day. Nearly 8 million people bank with Cake. My job is to make AI earn its place in that bank, one decision at a time.
-                </div>
+            <div class="lede">
+                <p>Lam Pham (Pham Thanh Lam) is Chief Data Science &amp; AI Officer at <a href="https://cake.vn">Cake by VPBank</a>, a Vietnamese digital bank with nearly 8 million customers, named Vietnam's Best Digital Bank 2026 by Euromoney. He leads the Data Science &amp; AI team: its models make credit decisions and forecast revenue, and its fleet of 150+ voice agents has handled 25M+ real customer calls. He is based in Ho Chi Minh City, Vietnam.</p>
+                <p>Lam Pham is helping Cake move from digital bank to <strong>Next Gen AI Bank</strong>, through causal inference for credit risk, multi-agent orchestration and voice AI fleet management.</p>
+                <p>Before Cake: Lam Pham co-founded <strong>TrueID</strong> at VNG, a digital identity and eKYC business for financial services that served 10M+ users and reached $1M+ ARR. Before TrueID, he was a lead data scientist at Viettel, Sentifi AG and VNG.</p>
+                <p>Lam Pham won first place in the WSDM Cup 2019 fake news classification task, set by ByteDance, with a modified BERT model. He is a Kaggle Master and released bert4vn, an open BERT model for Vietnamese.</p>
             </div>
 
-            <!-- Career bio -->
-            <div class="mode-career">
-                <div class="bio">
-                    Chief Data Science &amp; AI Officer at <a href="https://cake.vn">Cake by VPBank</a>, named Best Digital Bank in Vietnam 2026 by Euromoney. My team builds the models behind credit decisions, revenue forecasting, causal inference, and the voice agents that talk to our customers every day — agentic workflows that process real money.
-                </div>
-                <div class="bio">
-                    Before Cake: co-founded <strong>TrueID</strong> at VNG (Vietnam's first tech unicorn) — a $1M+ ARR AI business serving 10M+ users (B2B2C). Earlier, shipped production AI across telco at Viettel, financial sentiment at Sentifi, gaming and FMCG at VNG. Studied computer science in <strong>Saint Petersburg for seven years</strong>. <a href="https://www.kaggle.com/saigonapps">Kaggle Master</a>. <a href="https://github.com/lampts/wsdm19cup">WSDM Cup winner</a>. Tennis player, solo guitarist, father of two pianists (ABRSM Grade 5+).
-                </div>
-            </div>
-
-            <div class="links-row">
-                <a href="https://github.com/lampts">GitHub</a>
-                <a href="https://www.linkedin.com/in/lam-pham-thanh-1428602b">LinkedIn</a>
-                <a href="https://www.kaggle.com/saigonapps">Kaggle</a>
+            <nav class="links-row" aria-label="Profiles">
+                <a href="https://github.com/lampts" rel="me">GitHub</a>
+                <a href="https://www.linkedin.com/in/lam-pham-thanh-1428602b" rel="me">LinkedIn</a>
+                <a href="https://www.kaggle.com/saigonapps" rel="me">Kaggle</a>
                 <a href="mailto:laampt@gmail.com">Email</a>
-            </div>
-        </div>
+                <a href="/tools/">Tools</a>
+            </nav>
+        </header>
 
-        <!-- BUILDER MODE -->
+        <section id="role">
+            <h2>What a Chief Data Science &amp; AI Officer does at Cake</h2>
+            <p>At Cake by VPBank, the Chief Data Science &amp; AI Officer leads the Data Science &amp; AI team and owns the bank's AI models in production: credit decision and revenue forecasting models, a fleet of 150+ voice agents that talk to customers, and document automation for financial reports. Lam Pham holds the role, and also teaches the team causal inference on real credit cases.</p>
+        </section>
 
-        <!-- Now -->
-        <div class="mode-builder section">
-            <div class="section-head">Now</div>
-            <div class="now-text">
-                Helping Cake move from digital bank to <strong>Next Gen AI Bank</strong>. Writing the <strong>voice agent evaluation playbook</strong> for our 150+ agent fleet — SNR monitoring, golden QA eval sets, response-mode systems. Running an <strong>intel-brief pipeline</strong> that cuts the cost of reading a Vietnamese financial report from $8 to $0.80 via a PDF→markdown→SQL cascade.
-            </div>
-            <div class="now-text">
-                Teaching causal inference to the DSAI team using real credit cases. Building <strong>Rach</strong>, a small council of AI twins that helps me think.
-            </div>
-            <div class="now-date">Updated October 2026</div>
-        </div>
+        <section id="career">
+            <h2>Career</h2>
+            <p>Lam Pham has shipped production AI in banking, digital identity, telecom, financial sentiment and gaming, after starting in mobile products. At Cake he leads the Data Science &amp; AI team. At VNG he co-founded TrueID and was its Head of AI Products, building a $1M+ ARR business that served 10M+ users. From 2015 to 2018 he was a lead data scientist across Viettel, Sentifi AG in Switzerland and VNG, building social listening, fraud detection and Vietnamese NLP pipelines. Before that he was Deputy Head of Mobile at GNT, where his team built Mobion Music, reported #1 on the Japan App Store, and he co-founded Saigonapps.</p>
+            <table>
+                <thead>
+                    <tr><th scope="col">Years</th><th scope="col">Role</th><th scope="col">Organization</th><th scope="col">What he built</th></tr>
+                </thead>
+                <tbody>
+                    <tr class="current">
+                        <td>Current</td>
+                        <td data-label="Role">Chief Data Science &amp; AI Officer</td>
+                        <td data-label="Organization"><a href="https://cake.vn">Cake by VPBank</a></td>
+                        <td data-label="Built">Credit decision and revenue forecasting models, causal inference for credit risk, a 150+ voice-agent fleet, Cake's shift to a Next Gen AI Bank</td>
+                    </tr>
+                    <tr>
+                        <td>2019–2023</td>
+                        <td data-label="Role">Co-founder, TrueID; Head of AI Products</td>
+                        <td data-label="Organization"><a href="https://vng.com.vn">VNG</a></td>
+                        <td data-label="Built">Digital identity and eKYC for financial services: 10M+ users, $1M+ ARR</td>
+                    </tr>
+                    <tr>
+                        <td>2015–2018</td>
+                        <td data-label="Role">Lead Data Scientist</td>
+                        <td data-label="Organization">Viettel, Sentifi AG, VNG</td>
+                        <td data-label="Built">Social listening, fraud detection, Vietnamese NLP pipelines</td>
+                    </tr>
+                    <tr>
+                        <td>2012–2015</td>
+                        <td data-label="Role">Deputy Head of Mobile; Co-founder, Saigonapps</td>
+                        <td data-label="Organization">GNT Inc, FPT Software, Saigonapps</td>
+                        <td data-label="Built">Mobion Music (#1 on the Japan App Store, as reported); enterprise software</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
 
-        <!-- Artifacts -->
-        <div class="mode-builder section">
-            <div class="section-head">Work</div>
-            <div class="artifacts">
-                <a class="artifact" href="https://github.com/lampts/wsdm19cup">
-                    <div class="a-type">Competition · 2019</div>
-                    <div class="a-title">WSDM Cup — 1st Place, Fake News Detection</div>
-                    <div class="a-desc">Modified BERT for Chinese text pair matching. 700+ teams, ACM conference. The competitive ML win that shaped how I think about evaluation.</div>
-                </a>
-                <a class="artifact" href="https://github.com/lampts/bert4vn">
-                    <div class="a-type">Open Source · 2019</div>
-                    <div class="a-title">bert4vn — BERT Pre-trained for Vietnamese</div>
-                    <div class="a-desc">Among the first Vietnamese language models released openly. Used across Vietnam's NLP community.</div>
-                </a>
-                <a class="artifact" href="https://pyvideo.org/pycon-singapore-2016/music2vec-a-smart-music-recommendation-and-discovery-pyconsg-2016.html">
-                    <div class="a-type">Talk · PyCon SG 2016</div>
-                    <div class="a-title">music2vec — Song Arithmetic from Million Playlists</div>
-                    <div class="a-desc">Word2vec applied to playlists. Song A − Song B + Playlist X = discovery. The talk that started everything.</div>
-                </a>
-            </div>
-        </div>
+        <section id="voice-agents">
+            <h2>How banks evaluate AI voice agents in production</h2>
+            <p>Voice agents have to be evaluated in production, because a demo cannot show how an agent handles noisy lines or rare questions. Lam Pham's team runs 150+ voice agents at Cake and is writing their evaluation playbook around three checks:</p>
+            <ul>
+                <li><strong>Signal-to-noise monitoring</strong> tests whether the agent still understands the caller when line quality drops.</li>
+                <li><strong>Golden QA sets</strong> are fixed questions with known correct answers, used to check what the agents say.</li>
+                <li><strong>Response-mode systems</strong> set how an agent responds in each type of situation.</li>
+            </ul>
+            <p>In 2025, Cake's voice agents were <a href="https://vnba.org.vn/vi/ngan-hang-so-viet-dau-tien-bien-ai-thanh--xuong-song--van-hanh--cake-dang-lam-khac-gi-18974.htm">reported</a> to raise customer reach 80% and debt recovery 30%, and to cut operating cost 40%.</p>
+        </section>
 
-        <!-- Tools -->
-        <div class="mode-builder section">
-            <div class="section-head">Tools</div>
+        <section id="credit">
+            <h2>How AI is used in credit decisions at Cake</h2>
+            <p>Cake uses AI models to decide who gets credit and to forecast revenue. Lam Pham's team builds those models and teaches the team causal inference on real credit cases, because a model can predict who defaults without showing what a policy change would cause. The same 2025 <a href="https://vnba.org.vn/vi/ngan-hang-so-viet-dau-tien-bien-ai-thanh--xuong-song--van-hanh--cake-dang-lam-khac-gi-18974.htm">Vietnam Banks Association article</a> reports that AI credit scoring at Cake raised approvals 20% and cut bad debt 40%.</p>
+        </section>
+
+        <section id="financial-reports">
+            <h2>How LLMs cut the cost of analyzing Vietnamese financial reports</h2>
+            <p>Lam Pham's intel-brief pipeline cut the cost of reading a Vietnamese financial report from $8 to $0.80. It converts each report from PDF to markdown to SQL, so later questions query tables instead of rereading pages.</p>
+        </section>
+
+        <section id="digital-bank-profitability">
+            <h2>How many digital banks are profitable</h2>
+            <p>About 5% of digital challenger banks worldwide were profitable, according to a BCG <a href="https://fintechnews.sg/72770/digital-banking-news-singapore/there-are-only-11-profitable-challengers-banks-in-asia-heres-the-list/">estimate</a> covering 450+ banks in 2022. TABInsights <a href="https://financialmarkets.tabinsights.com/article/digital-banks-maintain-growth-momentum-with-61-of-the-top-100-reporting-full-year-profitability">put the share</a> below 25% of 400+ digital banks in its 2025 ranking. Cake by VPBank reached EBITDA break-even in Q3 2024, 3.5 years after launch. Its revenue per customer rose from $5 in 2023 to $25 in 2025, with $44 projected for 2026, <a href="https://theleader.vn/su-troi-day-cua-cake-tu-viet-nam-den-hinh-mau-ngan-hang-so-khu-vuc-d47783.html">per TheLEADER</a>.</p>
+        </section>
+
+        <section id="credentials">
+            <h2>Competitions, certifications and open source</h2>
+            <p>Lam Pham won first place in the WSDM Cup 2019 fake news classification task, set by ByteDance, using a modified BERT model on Chinese title pairs. He released bert4vn, an open BERT model pre-trained for Vietnamese, and holds the Kaggle Master title. TrueID, the eKYC product he co-founded, passed iBeta ISO/IEC 30107-3 presentation attack detection testing for passive liveness.</p>
+            <table>
+                <thead>
+                    <tr><th scope="col">Year</th><th scope="col">Type</th><th scope="col">Result</th><th scope="col">Evidence</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2026</td>
+                        <td data-label="Type">Award (Cake)</td>
+                        <td data-label="Result">Vietnam's Best Digital Bank 2026, Euromoney Awards for Excellence, Group Level Banking, Singapore, Sept 10, 2026</td>
+                        <td data-label="Evidence"><a href="https://vietnamnet.vn/en/cake-named-vietnam-s-best-digital-bank-2026-by-euromoney-2554129.html">VietNamNet</a></td>
+                    </tr>
+                    <tr>
+                        <td>2022</td>
+                        <td data-label="Type">Certification</td>
+                        <td data-label="Result">TrueID passed iBeta ISO/IEC 30107-3 presentation attack detection testing for eKYC passive liveness; VNG called it a first in Vietnam and Southeast Asia</td>
+                        <td data-label="Evidence"><a href="https://vng.com.vn/news/technology/trueid-la-don-vi-dau-tien-cua-dong-nam-a-dat-iso-30107-3-ve-nhan-dien-nguoi-that-tu-anh-don.html?lang=en">VNG</a></td>
+                    </tr>
+                    <tr>
+                        <td>2021</td>
+                        <td data-label="Type">Competition</td>
+                        <td data-label="Result">2nd place, AICovid115M cough classification</td>
+                        <td data-label="Evidence"><a href="https://github.com/lampts/aicovidvn115m">aicovidvn115m</a></td>
+                    </tr>
+                    <tr>
+                        <td>2020</td>
+                        <td data-label="Type">Keynote</td>
+                        <td data-label="Result">IFC World Bank FIDN: "Implementing Digital Identity Platforms for a Digital Economy"</td>
+                        <td data-label="Evidence">Lam Pham</td>
+                    </tr>
+                    <tr>
+                        <td>2019</td>
+                        <td data-label="Type">Competition</td>
+                        <td data-label="Result">1st place, WSDM Cup 2019 fake news classification (ByteDance), modified BERT on Chinese title pairs</td>
+                        <td data-label="Evidence"><a href="https://github.com/lampts/wsdm19cup">wsdm19cup</a>; <a href="https://www.wsdm-conference.org/2019/wsdm-cup-2019.php">WSDM Cup 2019 program</a></td>
+                    </tr>
+                    <tr>
+                        <td>2019</td>
+                        <td data-label="Type">Open source</td>
+                        <td data-label="Result"><a href="https://github.com/lampts/bert4vn">bert4vn</a>: BERT pre-trained for Vietnamese on news and SQuAD 2; starting checkpoint in a <a href="https://github.com/ngoanpv/zaloqa2019">Zalo QA solution</a></td>
+                        <td data-label="Evidence">GitHub</td>
+                    </tr>
+                    <tr>
+                        <td>2019</td>
+                        <td data-label="Type">Open source</td>
+                        <td data-label="Result"><a href="https://github.com/ngoanpv/albert_vi">albert_vi</a>: ALBERT pre-trained on Vietnamese Wikipedia, guided and contributed</td>
+                        <td data-label="Evidence">GitHub</td>
+                    </tr>
+                    <tr>
+                        <td>2017</td>
+                        <td data-label="Type">Teaching</td>
+                        <td data-label="Result">Contributed to VietAI's free open lectures</td>
+                        <td data-label="Evidence"><a href="https://github.com/lampts">GitHub</a></td>
+                    </tr>
+                    <tr>
+                        <td>2016</td>
+                        <td data-label="Type">Talk</td>
+                        <td data-label="Result"><a href="https://pyvideo.org/pycon-singapore-2016/music2vec-a-smart-music-recommendation-and-discovery-pyconsg-2016.html">music2vec at PyCon Singapore</a>: word2vec applied to playlists, so song A − song B + playlist X finds new music</td>
+                        <td data-label="Evidence">PyVideo</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="projects">
+            <h2>Current projects</h2>
+            <p>Lam Pham builds <strong>Rach</strong>, a small council of AI twins that helps him think through decisions. He also builds small tools in the Unix style: each does one thing, and they pipe together for complex behavior.</p>
             <div class="tools-grid">
                 <a class="tool" href="/tools/tao.html">
-                    <div class="t-name">Tao</div>
-                    <div class="t-what">Minimal attentive writing</div>
+                    <div class="t-name">Inkflow</div>
+                    <div class="t-what">Focus reader and writer</div>
                 </a>
                 <a class="tool" href="/tools/code.html">
-                    <div class="t-name">Code</div>
+                    <div class="t-name">PyConsole</div>
                     <div class="t-what">Python in the browser</div>
                 </a>
                 <a class="tool" href="/tools/llm.html">
-                    <div class="t-name">LLM</div>
+                    <div class="t-name">LLM Comparison</div>
                     <div class="t-what">Multi-model chat</div>
                 </a>
             </div>
             <div class="tools-more">
-                <a href="/tools/">All 58 tools →</a>
+                <a href="/tools/">All 65 tools →</a>
             </div>
-        </div>
+        </section>
 
-        <!-- Principles -->
-        <div class="mode-builder section">
-            <div class="section-head">How I Build</div>
-            <div class="principles">
+        <section id="principles">
+            <h2>Engineering principles</h2>
+            <p>Lam Pham works by five principles:</p>
+            <dl class="principles">
                 <div class="principle">
-                    <div class="p-label">Unix</div>
-                    <div class="p-text">Small composable tools that multiply force. One tool does one thing. Pipe them for complex behavior.</div>
-                </div>
-                <div class="principle">
-                    <div class="p-label">Slope > Intercept</div>
-                    <div class="p-text">Hire for learning rate, not current knowledge. Build for compounding. Applies to people, models, and systems.</div>
+                    <dt>Unix</dt>
+                    <dd>Small composable tools that do one thing.</dd>
                 </div>
                 <div class="principle">
-                    <div class="p-label">Farmer</div>
-                    <div class="p-text">Optimize conditions, nurture without forcing, accept seasonal variability. Patient cultivation beats forced growth.</div>
+                    <dt>Slope over intercept</dt>
+                    <dd>Hiring and building for learning rate rather than current knowledge.</dd>
                 </div>
                 <div class="principle">
-                    <div class="p-label">Hard to Vary</div>
-                    <div class="p-text">Good explanations have parts you can't swap without breaking the whole. If an element is decorative, remove it.</div>
+                    <dt>Farmer</dt>
+                    <dd>Improving conditions without forcing growth.</dd>
                 </div>
                 <div class="principle">
-                    <div class="p-label">Ship > Paper</div>
-                    <div class="p-text">A model in production beats a model in a notebook. The march of nines starts after the demo works.</div>
+                    <dt>Hard to vary</dt>
+                    <dd>Removing any part of an explanation or system that is only decorative.</dd>
                 </div>
+                <div class="principle">
+                    <dt>Ship over paper</dt>
+                    <dd>A model in production beats a model in a notebook.</dd>
+                </div>
+            </dl>
+        </section>
+
+        <section id="contact">
+            <h2>Education and contact</h2>
+            <p>Lam Pham holds an MSc in Computer Science from Saint Petersburg State University, Russia (2001–2008), and an MSc in Business Information Systems from the Vietnamese-German University (2010–2012). He is based in Ho Chi Minh City.</p>
+            <p><a href="https://github.com/lampts" rel="me">GitHub</a> · <a href="https://www.linkedin.com/in/lam-pham-thanh-1428602b" rel="me">LinkedIn</a> · <a href="https://www.kaggle.com/saigonapps" rel="me">Kaggle</a> · <a href="mailto:laampt@gmail.com">laampt@gmail.com</a></p>
+        </section>
+
+        <section id="evidence">
+            <h2>Notes on evidence</h2>
+            <div class="evidence">
+                <p>Figures about Lam Pham's own work (voice-agent fleet size and call volume, TrueID users and ARR, report cost, the FIDN keynote, Kaggle Master, the role at Cake) are self-reported. Figures about Cake come from the linked press articles and have not been independently audited. Page updated <time datetime="2026-11">November 2026</time>.</p>
             </div>
-        </div>
+        </section>
 
-        <!-- CAREER MODE -->
-
-        <!-- Numbers — the bank -->
-        <div class="mode-career section">
-            <div class="section-head">The Bank I Work At</div>
-            <div class="tape">
-                <div class="tape-row">
-                    <span class="t-val">~8M</span>
-                    <span class="t-lbl"><em>customers</em> bank with Cake</span>
-                </div>
-                <div class="tape-row">
-                    <span class="t-val">Q3 '24</span>
-                    <span class="t-lbl"><em>EBITDA break-even</em> — 3.5 years after launch</span>
-                </div>
-                <div class="tape-row">
-                    <span class="t-val">$5 → $25</span>
-                    <span class="t-lbl"><em>revenue per customer</em>, 2023 → 2025</span>
-                </div>
-                <div class="tape-row">
-                    <span class="t-val">~5%</span>
-                    <span class="t-lbl">share of <em>digital banks worldwide that make money</em> — Cake is one (BCG)</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Numbers — my work -->
-        <div class="mode-career section">
-            <div class="section-head">My Work</div>
-            <div class="tape">
-                <div class="tape-row">
-                    <span class="t-val">25M+</span>
-                    <span class="t-lbl"><em>real customer calls</em> handled by voice agents my team runs</span>
-                </div>
-                <div class="tape-row">
-                    <span class="t-val">10M+</span>
-                    <span class="t-lbl">users on <em>eKYC & identity products</em> built at VNG / TrueID</span>
-                </div>
-                <div class="tape-row">
-                    <span class="t-val">$1M+</span>
-                    <span class="t-lbl"><em>ARR</em> — B2B2C AI products, co-founded and shipped</span>
-                </div>
-                <div class="tape-row">
-                    <span class="t-val">1st</span>
-                    <span class="t-lbl"><em>WSDM Cup 2019</em> — fake news detection, 700+ teams</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Career Timeline -->
-        <div class="mode-career section">
-            <div class="section-head">Career</div>
-            <div class="timeline">
-                <div class="t-item current">
-                    <div class="t-year">2024 — Present</div>
-                    <div class="t-role">Chief Data Science & AI Officer</div>
-                    <div class="t-org"><a href="https://cake.vn">Cake by VPBank</a> — Best Digital Bank in Vietnam 2026 (Euromoney)</div>
-                    <div class="t-desc">Lead the DSAI team. Models behind credit decisions and revenue forecasting, and a fleet of 150+ voice agents in production. Building the bank's shift from digital bank to Next Gen AI Bank — causal inference for credit risk, multi-agent orchestration, voice AI fleet management.</div>
-                </div>
-                <div class="t-item">
-                    <div class="t-year">2019 — 2023</div>
-                    <div class="t-role">Co-founder, TrueID · Head of AI Products</div>
-                    <div class="t-org"><a href="https://vng.com.vn">VNG Corporation</a> — Vietnam's first tech unicorn</div>
-                    <div class="t-desc">Co-founded TrueID — digital identity platform and eKYC for financial services. Built a $1M+ ARR AI business serving 10M+ users across B2B2C. Learned what works when real money and real identity are at stake.</div>
-                </div>
-                <div class="t-item">
-                    <div class="t-year">2015 — 2018</div>
-                    <div class="t-role">Lead Data Scientist</div>
-                    <div class="t-org">Viettel · Sentifi AG · VNG Corp</div>
-                    <div class="t-desc">Production AI across telco (Viettel), financial sentiment (Sentifi AG, Switzerland), gaming & social (VNG). Built data science pipelines for social listening, fraud detection, NLP for Vietnamese text. The years that proved AI generalizes across sectors if you understand the fundamentals.</div>
-                </div>
-                <div class="t-item">
-                    <div class="t-year">2012 — 2015</div>
-                    <div class="t-role">Deputy Head of Mobile · Co-founder, Saigonapps</div>
-                    <div class="t-org">GNT Inc · FPT Software · Saigonapps</div>
-                    <div class="t-desc">Led mobile development at GNT — built Mobion Music, #1 on Japan App Store. Then enterprise software at FPT, then startup co-founder. Built the instinct for shipping products, not just models.</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Credentials -->
-        <div class="mode-career section">
-            <div class="section-head">Credentials</div>
-            <div class="creds">
-                <div class="cred">
-                    <span class="tag">AWARD</span>
-                    <div class="info">Best Digital Bank in Vietnam 2026 — Euromoney Awards for Excellence, Group Level Banking (Cake by VPBank).</div>
-                </div>
-                <div class="cred">
-                    <span class="tag">1ST PLACE</span>
-                    <div class="info"><a href="https://github.com/lampts/wsdm19cup">WSDM Analytics Cup 2019</a> — Fake news detection (ByteDance). Modified BERT, 700+ teams, ACM conference.</div>
-                </div>
-                <div class="cred">
-                    <span class="tag">KEYNOTE</span>
-                    <div class="info">IFC World Bank FIDN 2020 — "Implementing Digital Identity Platforms for a Digital Economy." Banking infrastructure meets AI verification at scale.</div>
-                </div>
-                <div class="cred">
-                    <span class="tag">KAGGLE</span>
-                    <div class="info"><a href="https://www.kaggle.com/saigonapps">Kaggle Master</a>. CIKM 2017 (4th). CIKM 2018 (8th). AICovid Vietnam 2021 (2nd).</div>
-                </div>
-                <div class="cred">
-                    <span class="tag">SPEAKER</span>
-                    <div class="info"><a href="https://pyvideo.org/pycon-singapore-2016/music2vec-a-smart-music-recommendation-and-discovery-pyconsg-2016.html">PyCon SG 2016</a> — music2vec. TopDev 2019 — Productionizing AI. VietnamWorks Tech Expo 2016.</div>
-                </div>
-                <div class="cred">
-                    <span class="tag">OSS</span>
-                    <div class="info"><a href="https://github.com/lampts/bert4vn">bert4vn</a> & albert4vn — first-wave Vietnamese language models. VietAI open lectures (2017).</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Press / Media -->
-        <div class="mode-career section">
-            <div class="section-head">Press & Verification</div>
-            <div class="creds">
-                <div class="cred">
-                    <span class="tag">FEATURE</span>
-                    <div class="info"><a href="https://theleader.vn/su-troi-day-cua-cake-tu-viet-nam-den-hinh-mau-ngan-hang-so-khu-vuc-d47783.html">TheLEADER</a> — "Sự trỗi dậy của Cake: Từ Việt Nam đến hình mẫu ngân hàng số khu vực" (Sep 2026).</div>
-                </div>
-                <div class="cred">
-                    <span class="tag">iBETA</span>
-                    <div class="info"><a href="https://www.ibeta.com/iso-30107-3-presentation-attack-detection-confirmation-letters/">iBeta ISO 30107-3 PAD</a> — presentation-attack detection confirmation for eKYC liveness.</div>
-                </div>
-                <div class="cred">
-                    <span class="tag">NIST</span>
-                    <div class="info"><a href="https://pages.nist.gov/frvt/html/frvt11.html">NIST FRVT 1:1</a> — face-recognition verification benchmark.</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Education -->
-        <div class="mode-career section">
-            <div class="section-head">Education</div>
-            <div class="edu">
-                <p><strong>MSc Computer Science</strong> — Saint Petersburg State University, Russia (2001–2008). Seven years shaped by the mathematical tradition and formal systems thinking.</p>
-                <p><strong>MSc Business Information Systems</strong> — Vietnamese-German University (2010–2012).</p>
-            </div>
-        </div>
-
-        <!-- Open Source -->
-        <div class="mode-career section">
-            <div class="section-head">Open Source</div>
-            <div class="oss">
-                <div class="oss-row">
-                    <div class="oss-name"><a href="https://github.com/lampts/wsdm19cup">wsdm19cup</a></div>
-                    <div class="oss-desc">1st place — WSDM 2019 fake news classification</div>
-                </div>
-                <div class="oss-row">
-                    <div class="oss-name"><a href="https://github.com/lampts/bert4vn">bert4vn</a></div>
-                    <div class="oss-desc">BERT pre-trained for Vietnamese</div>
-                </div>
-                <div class="oss-row">
-                    <div class="oss-name">albert4vn</div>
-                    <div class="oss-desc">Lightweight ALBERT for Vietnamese (2019)</div>
-                </div>
-                <div class="oss-row">
-                    <div class="oss-name"><a href="https://github.com/lampts/aicovidvn115m">aicovidvn</a></div>
-                    <div class="oss-desc">2nd place — COVID cough classification (2021)</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contact -->
-        <div class="mode-career section">
-            <div class="section-head">Contact</div>
-            <div class="contact-grid">
-                <div class="c-label">Email</div>
-                <div><a href="mailto:laampt@gmail.com">laampt@gmail.com</a></div>
-                <div class="c-label">LinkedIn</div>
-                <div><a href="https://www.linkedin.com/in/lam-pham-thanh-1428602b">lam-pham</a></div>
-                <div class="c-label">GitHub</div>
-                <div><a href="https://github.com/lampts">lampts</a></div>
-                <div class="c-label">Kaggle</div>
-                <div><a href="https://www.kaggle.com/saigonapps">saigonapps</a></div>
-                <div class="c-label">Location</div>
-                <div>Ho Chi Minh City, Vietnam</div>
-            </div>
-        </div>
-
-        <!-- FOOTER (always visible) -->
-        <div class="footer">
+        <footer>
             <div class="footer-left">λ lampt.org · HCMC · © 2026</div>
             <div class="footer-right">
                 <a href="mailto:laampt@gmail.com">Email</a>
                 <a href="https://github.com/lampts">GitHub</a>
                 <a href="https://www.kaggle.com/saigonapps">Kaggle</a>
+                <a href="/llms.txt">llms.txt</a>
             </div>
-        </div>
+        </footer>
 
-    </div>
-
-    <script>
-        const buttons = document.querySelectorAll('.toggle-btn');
-        const body = document.body;
-
-        // Load saved mode
-        const saved = localStorage.getItem('lampt-mode');
-        if (saved === 'career') {
-            body.className = 'career';
-            buttons[0].classList.remove('active');
-            buttons[1].classList.add('active');
-        }
-
-        buttons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const mode = btn.dataset.mode;
-                body.className = mode;
-                buttons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                localStorage.setItem('lampt-mode', mode);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-        });
-    </script>
+    </main>
 </body>
 </html>
