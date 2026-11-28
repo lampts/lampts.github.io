@@ -1,6 +1,6 @@
 # Lam Pham (Pham Thanh Lam)
 
-> Lam Pham (Pham Thanh Lam, Phạm Thanh Lâm, also written "Laam") is Chief Data Science & AI Officer at Cake by VPBank, a Vietnamese digital bank with nearly 8 million customers, named Vietnam's Best Digital Bank 2026 by Euromoney. He leads the Data Science & AI team: its models make credit decisions and forecast revenue, and its fleet of 150+ voice agents has handled 25M+ real customer calls. He is based in Ho Chi Minh City, Vietnam. Personal site: https://www.lampt.org
+> Lam Pham (Pham Thanh Lam, Phạm Thành Lâm, also written "Laam") is Chief Data Science & AI Officer at Cake by VPBank, a Vietnamese digital bank with nearly 8 million customers, named Vietnam's Best Digital Bank 2026 by Euromoney. He leads the Data Science & AI team: its models make credit decisions and forecast revenue, and its fleet of 150+ voice agents has handled 25M+ real customer calls. He is based in Ho Chi Minh City, Vietnam. Personal site: https://www.lampt.org
 
 Motto: "Small tools, large systems. AI that handles real money."
 
